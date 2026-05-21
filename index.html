@@ -36,30 +36,10 @@
     #root-gutterbones { font-family: Georgia, serif; }
     #root-gutterbones .font-marker { font-family: Impact, "Arial Black", sans-serif; }
     #root-gutterbones .font-mono { font-family: "Courier New", monospace; }
-    #root-gutterbones .neon-flicker { animation: flicker 6.8s steps(1, end) infinite; }
-    #root-gutterbones .ambient-grid { background-image: radial-gradient(circle at 50% 50%, rgba(38,36,34,0.65) 0 1px, transparent 1.2px), linear-gradient(180deg, rgba(255,0,127,0.05) 0%, rgba(0,221,255,0.05) 100%); background-size: 4px 4px, 100% 100%; opacity: 0.5; }
-    #root-gutterbones .ambient-grain { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E"); background-size: 220px 220px; mix-blend-mode: screen; opacity: 0.08; animation: grainDrift 0.36s steps(3, end) infinite; }
-    #root-gutterbones .ambient-vignette { background: radial-gradient(circle at 50% 42%, rgba(18,17,19,0) 0%, rgba(18,17,19,0.08) 40%, rgba(18,17,19,0.6) 100%); }
-    #root-gutterbones .ambient-light-leak { background: radial-gradient(circle at 88% 10%, rgba(240,180,96,0.24) 0%, rgba(199,139,22,0.16) 22%, rgba(255,0,127,0.1) 42%, rgba(18,17,19,0) 72%); mix-blend-mode: screen; opacity: 0.75; animation: lightLeakPulse 4.4s ease-in-out infinite; transform-origin: top right; }
-    #root-gutterbones .smoke-wisp { position: absolute; border-radius: 999px; background: radial-gradient(circle, rgba(232,230,225,0.2) 0%, rgba(255,0,127,0.08) 32%, rgba(18,17,19,0) 72%); mix-blend-mode: screen; opacity: 0.06; animation: smokeFloat 52s ease-in-out infinite alternate; }
-    #root-gutterbones .smoke-a { width: 52%; height: 36%; left: -10%; top: 18%; animation-duration: 46s; }
-    #root-gutterbones .smoke-b { width: 48%; height: 34%; right: -8%; top: 40%; animation-duration: 58s; animation-delay: -14s; background: radial-gradient(circle, rgba(212,207,197,0.16) 0%, rgba(0,221,255,0.07) 28%, rgba(18,17,19,0) 72%); }
-    #root-gutterbones .smoke-c { width: 38%; height: 28%; left: 24%; top: 58%; animation-duration: 64s; animation-delay: -29s; opacity: 0.05; }
-    @keyframes violentRoll {
-        0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-        35% { transform: translate3d(var(--tx1), var(--ty1), 0) rotate(var(--r1)) scale(1.18); }
-        70% { transform: translate3d(var(--tx2), var(--ty2), 0) rotate(var(--r2)) scale(0.95); }
-        100% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1); }
-    }
     @keyframes flicker {
-        0%, 15%, 19%, 54%, 57%, 100% { opacity: 1; text-shadow: 0 0 6px rgba(255,0,127,0.92), 0 0 18px rgba(255,0,127,0.5), 0 0 28px rgba(0,221,255,0.24); }
-        16% { opacity: 0.86; text-shadow: 0 0 4px rgba(255,0,127,0.76), 0 0 12px rgba(0,221,255,0.2); }
-        17% { opacity: 0.42; text-shadow: none; }
-        18% { opacity: 0.98; text-shadow: 0 0 7px rgba(0,221,255,0.85), 0 0 18px rgba(0,221,255,0.3); }
-        20% { opacity: 0.78; text-shadow: 0 0 5px rgba(255,0,127,0.55); }
-        21% { opacity: 0.96; text-shadow: 0 0 6px rgba(255,0,127,0.88), 0 0 18px rgba(0,221,255,0.24); }
-        55% { opacity: 0.34; text-shadow: none; }
-        56% { opacity: 0.92; text-shadow: 0 0 6px rgba(255,0,127,0.88), 0 0 18px rgba(255,0,127,0.42), 0 0 26px rgba(0,221,255,0.2); }
+        0%, 14%, 15%, 33%, 34%, 48%, 49%, 72%, 73%, 100% { opacity: 1; text-shadow: 0 0 6px #ff007f, 0 0 18px #00ddff; }
+        14.2%, 14.6%, 33.2%, 48.2%, 72.5% { opacity: .5; text-shadow: none; }
+        14.8% { opacity: .88; text-shadow: 0 0 5px #00ddff, 0 0 12px #00ddff; }
     }
     @keyframes stampSlam {
         0% { transform: scale(2.5) rotate(15deg); opacity: 0; }
@@ -76,57 +56,218 @@
     }
     @keyframes bossIntro {
         0% { transform: scale(.85); opacity: 0; filter: blur(8px); }
-        35% { transform: scale(1.04); opacity: 1; filter: blur(0); }
         100% { transform: scale(1); opacity: 1; filter: blur(0); }
     }
-    @keyframes grainDrift {
-        0% { background-position: 0 0; }
-        100% { background-position: 220px 160px; }
+    @keyframes grainShift {
+        0% { transform: translate3d(0, 0, 0); }
+        33% { transform: translate3d(-1.5%, 1%, 0); }
+        66% { transform: translate3d(1%, -1.5%, 0); }
+        100% { transform: translate3d(0.5%, 0.5%, 0); }
     }
-    @keyframes lightLeakPulse {
-        0%, 100% { opacity: 0.68; transform: scale(1) translate3d(0, 0, 0); }
-        50% { opacity: 0.92; transform: scale(1.04) translate3d(-1.5%, -1%, 0); }
+    @keyframes leakPulse {
+        0%, 100% { opacity: 0.18; transform: scale(1) translate3d(0, 0, 0); }
+        50% { opacity: 0.3; transform: scale(1.08) translate3d(-1.5%, 1%, 0); }
     }
-    @keyframes smokeFloat {
-        0% { transform: translate3d(-3%, 2%, 0) scale(0.94); opacity: 0.03; }
-        35% { opacity: 0.08; }
-        100% { transform: translate3d(6%, -6%, 0) scale(1.08); opacity: 0.05; }
+    @keyframes smokeDrift {
+        0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.06; }
+        45% { opacity: 0.1; }
+        100% { transform: translate3d(var(--sx, 40px), var(--sy, -24px), 0) scale(1.25); opacity: 0.04; }
     }
-    @keyframes glowRare {
-        0%, 100% { box-shadow: 0 0 10px rgba(0,221,255,.25); }
-        50% { box-shadow: 0 0 22px rgba(0,221,255,.75); }
+    @keyframes feltRollPulse {
+        0% { opacity: 0; box-shadow: inset 0 0 0 rgba(255, 0, 127, 0); }
+        30% { opacity: 0.4; box-shadow: inset 0 0 28px rgba(255, 0, 127, 0.28); }
+        100% { opacity: 0; box-shadow: inset 0 0 6px rgba(255, 0, 127, 0); }
     }
-    @keyframes glowLegendary {
-        0%, 100% { box-shadow: 0 0 10px rgba(250,204,21,.25); }
-        50% { box-shadow: 0 0 24px rgba(250,204,21,.85); }
+    @keyframes boneRoll {
+        0% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)) scale(1); }
+        12% { transform: translate3d(0, 8px, 0) rotate(var(--rest-rotate, 0deg)) scale(0.9); }
+        25% { transform: translate3d(var(--tx1), var(--ty1), 0) rotate(var(--r1)) scale(1.16); }
+        70% { transform: translate3d(var(--tx2), var(--ty2), 0) rotate(var(--r2)) scale(0.95); }
+        86% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1.08); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1); }
     }
-    @keyframes glowDanger {
-        0%, 100% { box-shadow: 0 0 10px rgba(255,0,127,.25); }
-        50% { box-shadow: 0 0 24px rgba(255,0,127,.85); }
+    @keyframes boneIdle {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+        40% { transform: translate3d(1px, -1px, 0) rotate(calc(var(--rest-rotate, 0deg) + 0.5deg)); }
+        70% { transform: translate3d(-1px, 0, 0) rotate(calc(var(--rest-rotate, 0deg) - 0.35deg)); }
+    }
+    @keyframes keptBob {
+        0%, 100% { transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); }
+        50% { transform: translate3d(0, -11px, 0) rotate(var(--rest-rotate, 0deg)); }
+    }
+    @keyframes verdictBloom {
+        0% { opacity: 0; transform: scale(0.8); box-shadow: 0 0 0 var(--verdict-color); }
+        35% { opacity: 0.95; transform: scale(1.1); box-shadow: 0 0 32px var(--verdict-color); }
+        100% { opacity: 0; transform: scale(1.25); box-shadow: 0 0 8px transparent; }
+    }
+    @keyframes badgePop {
+        0% { opacity: 0; transform: translateY(3px) scale(0.9); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes scorePulse {
+        0% { transform: scale(1); }
+        35% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    @keyframes bossKick {
+        0%, 100% { transform: translate3d(0, 0, 0); }
+        25% { transform: translate3d(0, 2px, 0); }
+        50% { transform: translate3d(-2px, 0, 0); }
+        75% { transform: translate3d(2px, 0, 0); }
+    }
+    @keyframes blindSweepTop {
+        0% { transform: translateY(-100%); opacity: 0; }
+        30% { transform: translateY(0); opacity: 0.85; }
+        100% { transform: translateY(-100%); opacity: 0; }
+    }
+    @keyframes blindSweepBottom {
+        0% { transform: translateY(100%); opacity: 0; }
+        30% { transform: translateY(0); opacity: 0.85; }
+        100% { transform: translateY(100%); opacity: 0; }
+    }
+    @keyframes bossScan {
+        0% { transform: translateX(-110%); opacity: 0; }
+        10%, 35% { opacity: 0.3; }
+        100% { transform: translateX(110%); opacity: 0; }
+    }
+    @keyframes paperSway {
+        0%, 100% { transform: rotate(var(--paper-rot, -2deg)); }
+        50% { transform: rotate(calc(var(--paper-rot, -2deg) + 0.4deg)); }
+    }
+    @keyframes stampFade {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(-8deg); }
+        45% { opacity: .95; transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.04) rotate(-4deg); }
+    }
+    @keyframes soldCollapse {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(.9) translateY(12px); opacity: 0; }
+    }
+    @keyframes tagSwing {
+        0%, 100% { transform: rotate(-6deg); }
+        50% { transform: rotate(6deg); }
+    }
+    @keyframes carveSpark {
+        0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        100% { opacity: 0; transform: translate3d(var(--sx), var(--sy), 0) scale(0.2); }
+    }
+    @keyframes sweepIris {
+        0% { clip-path: circle(75% at 50% 50%); opacity: 0; }
+        35% { opacity: 1; }
+        100% { clip-path: circle(0% at 50% 50%); opacity: 1; }
+    }
+    @keyframes sirenWash {
+        0% { background: rgba(255,0,0,.06); }
+        33% { background: rgba(255,0,0,.24); }
+        66% { background: rgba(32,80,255,.2); }
+        100% { background: rgba(255,255,255,.15); }
+    }
+    @keyframes riseSun {
+        0% { transform: translateY(80px); opacity: .5; }
+        100% { transform: translateY(-10px); opacity: 1; }
+    }
+    @keyframes writeSig {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes pillEject {
+        0% { opacity: 1; transform: translate3d(0, 0, 0) scale(0.9); }
+        100% { opacity: 0; transform: translate3d(var(--pill-x), var(--pill-y), 0) scale(0.3); }
+    }
+    @keyframes billSway {
+        0%, 100% { transform: translateX(0) rotate(-4deg); }
+        50% { transform: translateX(12px) rotate(4deg); }
+    }
+    @keyframes cashNear {
+        0% { transform: translateY(-12vh) rotate(0deg) translateX(0); opacity: 0.95; }
+        100% { transform: translateY(112vh) rotate(540deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes cashMid {
+        0% { transform: translateY(-12vh) rotate(0deg) translateX(0); opacity: 0.75; }
+        100% { transform: translateY(112vh) rotate(430deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes cashFar {
+        0% { transform: translateY(-12vh) rotate(0deg) translateX(0); opacity: 0.45; }
+        100% { transform: translateY(112vh) rotate(320deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes cashFlash {
+        0% { color: #4ade80; }
+        100% { color: #f87171; }
+    }
+    @keyframes debtPulse {
+        0%, 100% { opacity: .7; }
+        50% { opacity: 1; }
     }
     #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
     #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
     #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
     #root-gutterbones .risk-badge { display:inline-flex; border:1px solid rgba(255,0,127,.5); background:rgba(127,0,60,.45); color:#fbcfe8; border-radius:999px; padding:1px 6px; font-size:9px; font-weight:bold; font-family:"Courier New", monospace; }
-    #root-gutterbones .glow-rare { animation: glowRare 1.8s ease-in-out infinite; border-color: rgba(0,221,255,.75) !important; }
-    #root-gutterbones .glow-legendary { animation: glowLegendary 2s ease-in-out infinite; border-color: rgba(250,204,21,.85) !important; }
-    #root-gutterbones .glow-danger { animation: glowDanger 1.4s ease-in-out infinite; border-color: rgba(255,0,127,.85) !important; }
-    #root-gutterbones .boss-rule-banner { background: linear-gradient(90deg, rgba(127,0,60,.35), rgba(10,10,10,.92), rgba(127,0,60,.35)); border: 1px solid rgba(255,0,127,.45); box-shadow: 0 0 20px rgba(255,0,127,.15); }
-    #root-gutterbones .score-tooltip { opacity: 0; transform: translateY(-4px); transition: opacity .15s ease, transform .15s ease; }
-    #root-gutterbones .group:hover .score-tooltip, #root-gutterbones .group:focus-within .score-tooltip { opacity: 1; transform: translateY(0); }
-    @media (min-width: 768px) {
-        #root-gutterbones .ambient-light-leak { filter: blur(22px); }
-        #root-gutterbones .smoke-wisp { filter: blur(28px); }
-    }
+    #root-gutterbones .glow-rare { box-shadow: 0 0 18px rgba(0,221,255,.45); border-color: rgba(0,221,255,.75) !important; }
+    #root-gutterbones .glow-danger { box-shadow: 0 0 18px rgba(255,0,127,.45); border-color: rgba(255,0,127,.85) !important; }
+    #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
+    #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
+    #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
+    #root-gutterbones .felt-surface { background: radial-gradient(circle at 50% 48%, #7a2731 0%, #6e1d24 45%, #4a1016 100%); }
+    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.14) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .8; }
+    #root-gutterbones .felt-surface::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+    #root-gutterbones .felt-roll-pulse::after { animation: feltRollPulse .65s ease-out forwards; }
+    #root-gutterbones .felt-smoke { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+    #root-gutterbones .felt-smoke-wisp { position: absolute; width: 45%; aspect-ratio: 1/1; border-radius: 999px; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.15) 0%, rgba(255,255,255,0) 68%); filter: blur(14px); animation: smokeDrift var(--dur, 48s) linear infinite; opacity: .08; }
+    #root-gutterbones .bone-rolling { animation-name: boneRoll; animation-duration: var(--roll-dur, .9s); animation-delay: var(--roll-delay, 0ms); animation-fill-mode: forwards; animation-timing-function: cubic-bezier(.25,1,.5,1); will-change: transform, filter; }
+    #root-gutterbones .bone-idle { animation: boneIdle 6.4s ease-in-out var(--idle-delay, 0s) infinite; }
+    #root-gutterbones .bone-kept { animation: keptBob 2.4s ease-in-out infinite; transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); box-shadow: 0 0 14px rgba(255,0,127,.7); border-color: #ff007f; }
+    #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
+    #root-gutterbones .score-pulse { animation: scorePulse .4s ease-out; }
+    #root-gutterbones .boss-kick { animation: bossKick .26s linear; }
+    #root-gutterbones .boss-blind-top { animation: blindSweepTop .45s ease-out forwards; }
+    #root-gutterbones .boss-blind-bottom { animation: blindSweepBottom .45s ease-out forwards; }
+    #root-gutterbones .boss-banner-scan { position: relative; overflow: hidden; }
+    #root-gutterbones .boss-banner-scan::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent); animation: bossScan 8s linear infinite; pointer-events: none; }
+    #root-gutterbones .paper-card { animation: paperSway 10s ease-in-out infinite; transform-origin: 50% 90%; }
+    #root-gutterbones .paper-lift:hover { transform: translateY(-4px) scale(1.02) rotate(0deg) !important; box-shadow: 0 14px 30px rgba(0,0,0,.45); }
+    #root-gutterbones .stamp-overlay { position: fixed; left: 50%; top: 52%; border: 4px solid var(--stamp-color, #d30000); color: var(--stamp-color, #d30000); background: rgba(255,255,255,.85); font: 900 2rem Impact, sans-serif; letter-spacing: .06em; transform: translate(-50%, -50%); z-index: 650; padding: .35rem .8rem; pointer-events: none; animation: stampFade .9s ease-out forwards; }
+    #root-gutterbones .trigger-cascade { position: fixed; left: 50%; top: 43%; transform: translateX(-50%); z-index: 420; pointer-events: none; }
+    #root-gutterbones .trigger-cascade-row { animation: badgePop .26s ease-out forwards; opacity: 0; }
+    #root-gutterbones .pow-burst { position: fixed; left: 50%; top: 28%; transform: translateX(-50%) rotate(-5deg); z-index: 500; font: 900 4rem Impact, sans-serif; color: #fff; text-shadow: 0 0 10px #ff007f, 0 0 26px #ff007f; pointer-events: none; animation: stampSlam .28s ease-out forwards; }
+    #root-gutterbones .sold-collapse { animation: soldCollapse .22s ease-out forwards; }
+    #root-gutterbones .price-tag { position: absolute; top: -10px; right: 10px; background: #e8e6e1; color: #111; border: 2px solid #111; font: 700 10px "Courier New", monospace; padding: 2px 7px; transform-origin: top center; animation: tagSwing 2.8s ease-in-out infinite; }
+    #root-gutterbones .carve-spark { position: absolute; width: 8px; height: 8px; border-radius: 999px; background: radial-gradient(circle, #ffd166 0%, #ff007f 80%); pointer-events: none; z-index: 40; animation: carveSpark .35s ease-out forwards; }
+    #root-gutterbones .cinematic-iris { position: absolute; inset: 0; z-index: 610; pointer-events: none; background: #000; animation: sweepIris .65s ease-in forwards; }
+    #root-gutterbones .cinematic-siren { position: absolute; inset: 0; z-index: 611; pointer-events: none; animation: sirenWash .75s linear infinite alternate; }
+    #root-gutterbones .badge-pop { opacity: 0; transform: translateY(3px) scale(0.9); }
+    #root-gutterbones .score-row:hover .badge-pop { animation: badgePop .2s ease-out forwards; }
+    #root-gutterbones .paid-stamp { color: #b91c1c; border: 2px solid #b91c1c; background: rgba(255,255,255,.66); font: 900 .7rem Impact, sans-serif; letter-spacing: .08em; transform: rotate(-9deg); padding: 1px 4px; }
+    #root-gutterbones .sunrise { animation: riseSun 1.2s cubic-bezier(.25,1,.5,1) forwards; }
+    #root-gutterbones .signature-path { stroke-dasharray: 240; stroke-dashoffset: 240; animation: writeSig 1s ease-out .2s forwards; }
+    #root-gutterbones .pill-burst { position: absolute; width: 16px; height: 16px; border-radius: 999px; border: 1px solid #0df; background: radial-gradient(circle, #fff 15%, #0df 70%); pointer-events: none; animation: pillEject .35s ease-out forwards; z-index: 90; }
+    #root-gutterbones .cash-bill.near { animation: cashNear 1.55s linear forwards; }
+    #root-gutterbones .cash-bill.mid { animation: cashMid 2.5s linear forwards; }
+    #root-gutterbones .cash-bill.far { animation: cashFar 3.9s linear forwards; filter: blur(.5px); }
+    #root-gutterbones .cash-bill-inner { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,.45); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); background: linear-gradient(120deg, rgba(255,255,255,.24) 5%, rgba(255,255,255,.02) 40%, rgba(0,0,0,.15) 90%); animation: billSway 1.8s ease-in-out infinite; }
+    #root-gutterbones .hud-cash-drop { animation: cashFlash .3s ease-out; }
+    #root-gutterbones .debt-pulse { animation: debtPulse 2s ease-in-out infinite; }
     @media (prefers-reduced-motion: reduce) {
-        #root-gutterbones .neon-flicker,
         #root-gutterbones .ambient-grain,
-        #root-gutterbones .ambient-light-leak,
-        #root-gutterbones .smoke-wisp { animation: none; }
-        #root-gutterbones .neon-flicker { text-shadow: 0 0 6px rgba(255,0,127,0.92), 0 0 16px rgba(0,221,255,0.18); }
-        #root-gutterbones .ambient-grain { opacity: 0.06; }
-        #root-gutterbones .ambient-light-leak { opacity: 0.5; }
-        #root-gutterbones .smoke-wisp { opacity: 0.035; }
+        #root-gutterbones .ambient-leak,
+        #root-gutterbones .felt-smoke-wisp,
+        #root-gutterbones .bone-idle,
+        #root-gutterbones .bone-kept,
+        #root-gutterbones .bone-rolling,
+        #root-gutterbones .bone-verdict-glow,
+        #root-gutterbones .paper-card,
+        #root-gutterbones .price-tag,
+        #root-gutterbones .trigger-cascade-row,
+        #root-gutterbones .pow-burst,
+        #root-gutterbones .boss-banner-scan::after,
+        #root-gutterbones .boss-blind-top,
+        #root-gutterbones .boss-blind-bottom,
+        #root-gutterbones .cinematic-iris,
+        #root-gutterbones .cinematic-siren,
+        #root-gutterbones .boss-kick,
+        #root-gutterbones .signature-path,
+        #root-gutterbones .sunrise,
+        #root-gutterbones .pill-burst,
+        #root-gutterbones .cash-bill,
+        #root-gutterbones .cash-bill-inner { animation: none !important; }
     }
 </style>
 
@@ -136,8 +277,106 @@
     const AudioSystem = {
         ctx: null,
         volume: 1,
+        noiseBuffer: null,
+        ambientNodes: null,
         init() {
             if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        },
+        setVolume(nextVolume) {
+            this.volume = nextVolume;
+            if (!this.ambientNodes || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            this.ambientNodes.humGain.gain.setTargetAtTime(0.02 * this.volume, now, 0.18);
+            this.ambientNodes.noiseGain.gain.setTargetAtTime(0.012 * this.volume, now, 0.18);
+        },
+        ensureNoiseBuffer() {
+            if (!this.ctx) return null;
+            if (this.noiseBuffer) return this.noiseBuffer;
+            const noise = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+            const data = noise.getChannelData(0);
+            for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2) - 1;
+            this.noiseBuffer = noise;
+            return noise;
+        },
+        playNoiseBurst({ duration = 0.08, volume = 0.06, filterFreq = 900, when = 0, pan = 0 } = {}) {
+            if (!this.ctx) return;
+            const buffer = this.ensureNoiseBuffer();
+            if (!buffer) return;
+            const source = this.ctx.createBufferSource();
+            source.buffer = buffer;
+            const lowpass = this.ctx.createBiquadFilter();
+            lowpass.type = 'lowpass';
+            lowpass.frequency.value = filterFreq;
+            const gain = this.ctx.createGain();
+            const startAt = this.ctx.currentTime + when;
+            gain.gain.setValueAtTime(0.0001, startAt);
+            gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * this.volume), startAt + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+            if (this.ctx.createStereoPanner) {
+                const panner = this.ctx.createStereoPanner();
+                panner.pan.value = pan;
+                source.connect(lowpass);
+                lowpass.connect(gain);
+                gain.connect(panner);
+                panner.connect(this.ctx.destination);
+            } else {
+                source.connect(lowpass);
+                lowpass.connect(gain);
+                gain.connect(this.ctx.destination);
+            }
+            source.start(startAt);
+            source.stop(startAt + duration + 0.03);
+        },
+        startAmbient() {
+            if (!this.ctx || this.ambientNodes) return;
+            const hum = this.ctx.createOscillator();
+            hum.type = 'sawtooth';
+            hum.frequency.value = 42;
+            const humGain = this.ctx.createGain();
+            humGain.gain.value = 0.0001;
+            hum.connect(humGain);
+            humGain.connect(this.ctx.destination);
+
+            const roomNoise = this.ctx.createBufferSource();
+            roomNoise.buffer = this.ensureNoiseBuffer();
+            roomNoise.loop = true;
+            const noiseHigh = this.ctx.createBiquadFilter();
+            noiseHigh.type = 'highpass';
+            noiseHigh.frequency.value = 35;
+            const noiseLow = this.ctx.createBiquadFilter();
+            noiseLow.type = 'lowpass';
+            noiseLow.frequency.value = 220;
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.value = 0.0001;
+            roomNoise.connect(noiseHigh);
+            noiseHigh.connect(noiseLow);
+            noiseLow.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+
+            hum.start();
+            roomNoise.start();
+            const now = this.ctx.currentTime;
+            humGain.gain.linearRampToValueAtTime(0.02 * this.volume, now + 0.4);
+            noiseGain.gain.linearRampToValueAtTime(0.012 * this.volume, now + 0.45);
+            this.ambientNodes = { hum, humGain, roomNoise, noiseGain };
+        },
+        stopAmbient() {
+            if (!this.ambientNodes || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const { hum, humGain, roomNoise, noiseGain } = this.ambientNodes;
+            humGain.gain.cancelScheduledValues(now);
+            noiseGain.gain.cancelScheduledValues(now);
+            humGain.gain.setTargetAtTime(0.0001, now, 0.08);
+            noiseGain.gain.setTargetAtTime(0.0001, now, 0.08);
+            setTimeout(() => {
+                try { hum.stop(); } catch (e) {}
+                try { roomNoise.stop(); } catch (e) {}
+                hum.disconnect();
+                roomNoise.disconnect();
+                humGain.disconnect();
+                noiseGain.disconnect();
+            }, 220);
+            this.ambientNodes = null;
         },
         playTone(f, t, d, v = 0.1) {
             if (!this.ctx) return;
@@ -154,11 +393,32 @@
         },
         clatter() {
             this.playTone(150, 'triangle', 0.1, 0.06);
-            setTimeout(() => this.playTone(60, 'sawtooth', 0.2, 0.3), 420);
-            setTimeout(() => this.playTone(40, 'sawtooth', 0.35, 0.35), 760);
+            this.playNoiseBurst({ duration: 0.09, volume: 0.05, filterFreq: 680, pan: -0.2 });
+            setTimeout(() => this.playNoiseBurst({ duration: 0.11, volume: 0.075, filterFreq: 520, pan: 0.25 }), 540);
+            setTimeout(() => this.playTone(60, 'sawtooth', 0.22, 0.3), 520);
+            setTimeout(() => this.playTone(40, 'sawtooth', 0.38, 0.35), 980);
+            setTimeout(() => this.playNoiseBurst({ duration: 0.14, volume: 0.08, filterFreq: 460, pan: 0.1 }), 980);
         },
         payout() {
             [400, 500, 600, 800].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.1), i * 95));
+        },
+        stinger(tier) {
+            if (tier === 'small') {
+                this.playTone(520, 'sine', 0.08, 0.06);
+                return;
+            }
+            if (tier === 'mid') {
+                [480, 620].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.08), i * 80));
+                return;
+            }
+            if (tier === 'big') {
+                [420, 560, 760].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.13, 0.1), i * 75));
+                return;
+            }
+            [180, 220, 280, 420].forEach((f, i) => setTimeout(() => this.playTone(f, 'sawtooth', 0.2, 0.12), i * 90));
+        },
+        bossSting() {
+            [260, 190, 140].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.16, 0.12), i * 90));
         },
         bust() {
             this.playTone(45, 'sawtooth', 0.5, 0.5);
@@ -166,6 +426,7 @@
         paper() {
             this.playTone(600, 'square', 0.05, 0.05);
             setTimeout(() => this.playTone(400, 'sawtooth', 0.1, 0.08), 50);
+            this.playNoiseBurst({ duration: 0.08, volume: 0.06, filterFreq: 760 });
         }
     };
 
@@ -305,58 +566,95 @@
 
     const standardFaces = () => [1,2,3,4,5,6].map(v => ({ id: 'standard', value: v, type: 'standard', label: String(v), style: '' }));
     const makeBone = () => ({ id: Math.random(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
-    const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'legendary' ? 'glow-legendary' : r === 'danger' ? 'glow-danger' : '';
-    const getRiskNotes = (item, context = {}) => {
-        const notes = [];
-        if (!item) return notes;
-        if (item.rarity === 'danger') notes.push('HIGH RISK');
+    const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'danger' ? 'glow-danger' : '';
+    const riskNotes = item => {
+        if (!item) return [];
+        if (item.rarity === 'danger') return ['HIGH RISK'];
         if (item.id === 'GHOST_FACE') return ['STRAIGHTS RISK'];
-        if (item.id === 'BLOOD_PACT') notes.push((context.gold || 0) > 0 ? '-$1 EACH ROLL' : 'ROLL ADDS DEBT');
-        if (item.id === 'WIREBAG_FACE') notes.push('MULT PENALTY');
-        if (item.id === 'SHIV_FACE') notes.push('DESTROYS NEXT SLOT');
-        if (item.id === 'SHADY_LEDGER') notes.push('DEBT SAFE');
-        return notes;
+        if (item.id === 'BLOOD_PACT') return ['ROLL TOLL'];
+        return [];
     };
-    const getBossRuleText = (boss, baseTarget) => {
-        if (!boss) return '';
-        if (boss.id === 'BOUNCER') return `Quota is raised to ${boss.applyTarget ? boss.applyTarget(baseTarget) : baseTarget}. Beat the bigger gate.`;
-        if (boss.id === 'LOAN_SHARK') return 'Every roll costs $2 first. If cash runs dry, the shortfall becomes debt.';
-        if (boss.id === 'JUNKIE') return 'Rolled 6s are converted to 1s before scoring.';
-        if (boss.id === 'CROOKED_COP') return 'Hardware is disabled for this job, but carved faces still count.';
-        if (boss.id === 'INFORMANT') return 'The Stash is frozen until the job is over.';
-        if (boss.id === 'THE_RAID') return `Final raid: quota is ${boss.applyTarget ? boss.applyTarget(baseTarget) : baseTarget}, and each pill costs $2.`;
-        return boss.desc;
+    const verdictGlowForFace = (faceId, type) => {
+        if (!faceId || faceId === 'standard') return null;
+        const byFace = {
+            WILD_FACE: 'rgba(255, 0, 127, 0.65)',
+            BLOOD_6: 'rgba(255, 45, 45, 0.62)',
+            ECHO_FACE: 'rgba(0, 221, 255, 0.6)',
+            SHIV_FACE: 'rgba(255, 72, 38, 0.68)',
+            WIREBAG_FACE: 'rgba(0, 221, 255, 0.55)',
+            GHOST_FACE: 'rgba(234, 234, 255, 0.58)',
+            MULT_FACE: 'rgba(0, 221, 255, 0.5)',
+            GOLD_FACE: 'rgba(214, 184, 92, 0.56)'
+        };
+        if (byFace[faceId]) return byFace[faceId];
+        if (type === 'blood') return 'rgba(255, 45, 45, 0.62)';
+        if (type === 'danger') return 'rgba(255, 0, 127, 0.58)';
+        return 'rgba(214, 184, 92, 0.52)';
     };
 
-    const CashRain = ({ count = 24 }) => (
-        <div className="absolute inset-0 pointer-events-none z-[200]">
-            {Array(count).fill(0).map((_, i) => (
-                <div key={i} className="cash-bill absolute w-16 h-7 bg-[#4a5d23] border-2 border-[#2d3b14] text-[#1a2408] flex items-center justify-center font-bold text-xs shadow-lg" style={{ left: `${Math.random()*100}%`, '--tx': `${(Math.random()-.5)*500}px`, animationDelay: `${Math.random()}s` }}>$100</div>
-            ))}
-        </div>
-    );
+    const CashRain = ({ count = 24, reducedMotion = false }) => {
+        const cappedCount = Math.max(0, Math.min(count, reducedMotion ? 8 : 36));
+        const bills = useMemo(() => Array.from({ length: cappedCount }, (_, i) => ({
+            id: i,
+            depth: reducedMotion ? 'mid' : (i % 3 === 0 ? 'near' : i % 3 === 1 ? 'mid' : 'far'),
+            left: `${Math.random() * 100}%`,
+            tx: `${(Math.random() - .5) * 620}px`,
+            delay: reducedMotion ? '0s' : `${Math.random() * 0.55}s`,
+            label: i % 3 === 0 ? '$100' : i % 3 === 1 ? '$50' : '$20'
+        })), [cappedCount, reducedMotion]);
+        return (
+            <div className="absolute inset-0 pointer-events-none z-[200]">
+                {bills.map((bill) => (
+                    <div key={bill.id} className={`cash-bill ${bill.depth} absolute w-16 h-7`} style={{ left: bill.left, '--tx': bill.tx, animationDelay: bill.delay }}>
+                        <div className="cash-bill-inner text-[#1a2408] font-bold text-xs flex items-center justify-center">{bill.label}</div>
+                    </div>
+                ))}
+            </div>
+        );
+    };
 
     const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill }) => {
-        const ref = useRef({ locked: false, vars: {} });
+        const ref = useRef({
+            locked: false,
+            vars: {
+                '--idle-delay': `${(slot * 0.18) + (Math.random() * 1.2)}s`,
+                '--roll-dur': '0.86s',
+                '--roll-delay': '0ms',
+                '--rf': '0deg'
+            }
+        });
+        const [verdictColor, setVerdictColor] = useState(null);
         if (rolling && !ref.current.locked) {
             ref.current = {
                 locked: true,
                 vars: {
+                    '--idle-delay': ref.current.vars['--idle-delay'],
                     '--tx1': `${(Math.random()-.5)*240}px`,
                     '--ty1': `${(Math.random()-.5)*150-80}px`,
                     '--tx2': `${(Math.random()-.5)*80}px`,
                     '--ty2': `${(Math.random()-.5)*40}px`,
                     '--r1': `${Math.random()*900}deg`,
                     '--r2': `${Math.random()*1200}deg`,
-                    '--rf': `${(Math.random()-.5)*45}deg`
+                    '--rf': `${(Math.random()-.5)*45}deg`,
+                    '--roll-dur': `${(0.72 + Math.random() * 0.33).toFixed(2)}s`,
+                    '--roll-delay': `${Math.floor(Math.random() * 80)}ms`
                 }
             };
         }
         if (!rolling && ref.current.locked) ref.current = { locked: false, vars: ref.current.vars };
+        useEffect(() => {
+            if (rolling) return;
+            const glow = verdictGlowForFace(data.faceId, data.type);
+            if (!glow) return;
+            setVerdictColor(glow);
+            const id = setTimeout(() => setVerdictColor(null), 420);
+            return () => clearTimeout(id);
+        }, [rolling, data.faceId, data.type]);
         return (
             <div className="relative group">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'animate-[violentRoll_0.8s_cubic-bezier(0.25,1,0.5,1)_forwards]' : ''} ${kept ? 'border-[#ff007f] shadow-[0_0_14px_rgba(255,0,127,.7)] -translate-y-2' : ''} ${selected ? 'ring-4 ring-[#0df] scale-110 z-50' : ''}`} style={rolling ? { ...ref.current.vars } : { transform: `rotate(${ref.current.vars['--rf'] || '0deg'})` }}>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
+                    {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
                     {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
                         <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
                             <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
@@ -370,102 +668,75 @@
     };
 
     const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
-        const triggers = (result.triggers || []).slice(0, 3);
-        const showPreview = canScore && !used;
-        const isBust = showPreview && !result.valid;
+        const triggers = (result.triggers || []).slice(0, 2);
         return (
-            <div className="group relative">
-                <button onClick={() => onScore(id)} disabled={!canScore} className={`w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base ${used ? 'opacity-30 border-gray-400 line-through' : showPreview && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : isBust ? 'text-red-700 bg-red-900/10 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
-                    <span className="flex flex-col items-start">
-                        <span>{cat.name}</span>
-                        {showPreview && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge">{t.name} {t.value}</span>)}</span>}
-                    </span>
-                    <span className={showPreview && result.valid ? 'font-mono text-[#0df]' : 'font-mono'}>{used ? 'PAID' : (showPreview && result.valid ? result.total.toLocaleString() : (isBust ? 'BUST' : '-'))}</span>
-                </button>
-                {showPreview && (
-                    <div className="score-tooltip absolute left-0 right-0 top-full mt-1 bg-black/95 text-white border border-[#0df]/40 rounded p-2 font-mono text-[10px] z-50 pointer-events-none shadow-xl">
-                        <div className="tracking-widest text-[#0df] mb-1">LIVE PREVIEW</div>
-                        <div className="flex justify-between"><span>CHIPS</span><b>{result.valid ? result.chips : 0}</b></div>
-                        <div className="flex justify-between"><span>MULT</span><b>{result.valid ? result.mult.toFixed(1) : '0.0'}x</b></div>
-                        <div className="flex justify-between border-t border-gray-700 mt-1 pt-1"><span>TOTAL</span><b>{result.valid ? result.total.toLocaleString() : 0}</b></div>
-                        {result.triggers?.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{result.triggers.map((t, i) => <span key={i} className="preview-badge">{t.name} {t.value}</span>)}</div>}
-                    </div>
-                )}
-            </div>
+            <button onClick={() => onScore(id)} disabled={!canScore} className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
+                <span className="flex flex-col items-start">
+                    <span>{cat.name}</span>
+                    {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}</span>}
+                </span>
+                <span>{used ? <span className="paid-stamp">PAID</span> : (canScore && result.valid ? result.total : (canScore ? 'BUST' : '-'))}</span>
+            </button>
         );
     };
 
     const BossIntro = ({ boss, target, onDone }) => {
+        const [typed, setTyped] = useState('');
+        const [showDesc, setShowDesc] = useState(false);
         useEffect(() => {
             if (!boss) return;
+            setTyped('');
+            setShowDesc(false);
+            const chars = boss.name.split('');
+            let idx = 0;
+            const typer = setInterval(() => {
+                idx += 1;
+                setTyped(chars.slice(0, idx).join(''));
+                if (idx >= chars.length) {
+                    clearInterval(typer);
+                    setTimeout(() => setShowDesc(true), 120);
+                }
+            }, 40);
             const id = setTimeout(onDone, 1600);
-            return () => clearTimeout(id);
+            return () => { clearTimeout(id); clearInterval(typer); };
         }, [boss]);
         if (!boss) return null;
+        const microByBoss = {
+            LOAN_SHARK: 'IOUs flutter onto the table.',
+            JUNKIE: 'Neon sputters. Digits scramble.',
+            CROOKED_COP: 'Red-blue wash sweeps the room.',
+            INFORMANT: 'The stash line freezes over.',
+            BOUNCER: 'Quota stamp slams into place.',
+            THE_RAID: 'Sirens drown out the alley.'
+        };
         return (
             <div className="absolute inset-0 z-[250] bg-black/80 flex items-center justify-center">
-                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+                <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>
+                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
-                    <h2 className={`${boss.color} font-marker text-5xl mb-3`}>{boss.name}</h2>
-                    <p className="font-mono text-gray-300">{getBossRuleText(boss, target)}</p>
-                    <p className="font-mono text-xs text-gray-500 mt-3">Quota: {boss.applyTarget ? boss.applyTarget(target) : target}</p>
+                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}<span className="opacity-60">_</span></h2>
+                    <p className={`font-mono text-gray-300 transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
+                    <p className="font-mono text-xs text-gray-500 mt-3">Quota: {target}</p>
+                    <p className="font-mono text-[10px] text-red-300/70 mt-2">{microByBoss[boss.id]}</p>
                 </div>
             </div>
         );
     };
 
-    const RiskBadges = ({ item, gold }) => {
-        const notes = getRiskNotes(item, { gold });
+    const RiskBadges = ({ item }) => {
+        const notes = riskNotes(item);
         if (!notes.length) return null;
         return <div className="flex flex-wrap gap-1 mt-2">{notes.map(n => <span key={n} className="risk-badge">{n}</span>)}</div>;
-    };
-
-    const ScoreTicker = ({ value, pad = 0 }) => {
-        const [display, setDisplay] = useState(value || 0);
-        const displayRef = useRef(value || 0);
-        useEffect(() => {
-            const from = displayRef.current;
-            const to = Number(value) || 0;
-            if (from === to) return;
-            let raf;
-            const start = performance.now();
-            const duration = 650;
-            const tick = (now) => {
-                const progress = Math.min(1, (now - start) / duration);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                const next = Math.floor(from + (to - from) * eased);
-                displayRef.current = next;
-                setDisplay(next);
-                if (progress < 1) raf = requestAnimationFrame(tick);
-            };
-            raf = requestAnimationFrame(tick);
-            return () => cancelAnimationFrame(raf);
-        }, [value]);
-        const text = display.toLocaleString();
-        return <span>{pad ? text.padStart(pad, '0') : text}</span>;
-    };
-
-    const BossRuleBanner = ({ boss, target }) => {
-        if (!boss) return null;
-        return (
-            <div className="boss-rule-banner px-4 py-2 border-b border-red-900 font-mono text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <div>
-                    <div className="text-[10px] text-red-300 tracking-widest">ACTIVE BOSS RULE</div>
-                    <div className="text-white">{getBossRuleText(boss, target)}</div>
-                </div>
-                <div className={`${boss.color} font-bold uppercase whitespace-nowrap`}>{boss.name}</div>
-            </div>
-        );
     };
 
     const HistoryPanel = ({ history }) => (
         <div className="space-y-2 max-h-48 overflow-y-auto">
             {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 6).map(h => (
                 <div key={h.id} className="border border-black/30 bg-white/30 p-2 font-mono text-xs">
-                    <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total.toLocaleString()}</b></div>
+                    <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total}</b></div>
                     <div className="opacity-70">Bones: [{h.values.join(', ')}]</div>
-                    {typeof h.chips === 'number' && typeof h.mult === 'number' && <div className="flex justify-between opacity-80"><span>{h.chips} chips</span><span>x{h.mult.toFixed(1)}</span></div>}
-                    {(h.triggers || []).length > 0 && <div className="flex flex-wrap gap-1 mt-1">{h.triggers.slice(0, 4).map((t, i) => <span key={i} className="preview-badge">{t.name}</span>)}</div>}
+                    {h.triggers.length > 0 && <div className="opacity-70">Hooks: {h.triggers.map(t => t.name).join(', ')}</div>}
                 </div>
             ))}
         </div>
@@ -498,7 +769,23 @@
         const [swapMode, setSwapMode] = useState(false);
         const [swapIdx, setSwapIdx] = useState(null);
         const [payoutActive, setPayoutActive] = useState(false);
+        const [payoutCount, setPayoutCount] = useState(18);
         const [bustActive, setBustActive] = useState(false);
+        const [feltPulse, setFeltPulse] = useState(false);
+        const [scorePulse, setScorePulse] = useState(false);
+        const [displayScore, setDisplayScore] = useState(0);
+        const [displayGold, setDisplayGold] = useState(20);
+        const [cashDropFlash, setCashDropFlash] = useState(false);
+        const [powBurst, setPowBurst] = useState(false);
+        const [triggerCascade, setTriggerCascade] = useState([]);
+        const [paperStamps, setPaperStamps] = useState([]);
+        const [cinematic, setCinematic] = useState(null);
+        const [bossKick, setBossKick] = useState(false);
+        const [soldItems, setSoldItems] = useState([]);
+        const [carveSparks, setCarveSparks] = useState([]);
+        const [pillBursts, setPillBursts] = useState([]);
+        const [typedCase, setTypedCase] = useState('CASE #');
+        const [showIncarceratedStamp, setShowIncarceratedStamp] = useState(false);
         const [history, setHistory] = useState([]);
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
         const [flyingScores, setFlyingScores] = useState([]);
@@ -507,10 +794,70 @@
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
+        const [muted, setMuted] = useState(false);
+        const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        const scoreAnimRef = useRef(0);
+        const goldAnimRef = useRef(0);
+        const prevGoldRef = useRef(20);
+        const timeoutIdsRef = useRef(new Set());
+        const intervalIdsRef = useRef(new Set());
+
+        const scheduleTimeout = (fn, ms) => {
+            const id = window.setTimeout(() => {
+                timeoutIdsRef.current.delete(id);
+                fn();
+            }, ms);
+            timeoutIdsRef.current.add(id);
+            return id;
+        };
+        const scheduleInterval = (fn, ms) => {
+            const id = window.setInterval(fn, ms);
+            intervalIdsRef.current.add(id);
+            return id;
+        };
+        const clearScheduledTimeout = (id) => {
+            window.clearTimeout(id);
+            timeoutIdsRef.current.delete(id);
+        };
+        const clearScheduledInterval = (id) => {
+            window.clearInterval(id);
+            intervalIdsRef.current.delete(id);
+        };
 
         const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
+
+        useEffect(() => {
+            const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+            if (!mediaQuery) return;
+            const onChange = () => setReducedMotion(mediaQuery.matches);
+            onChange();
+            if (mediaQuery.addEventListener) mediaQuery.addEventListener('change', onChange);
+            else mediaQuery.addListener(onChange);
+            return () => {
+                if (mediaQuery.removeEventListener) mediaQuery.removeEventListener('change', onChange);
+                else mediaQuery.removeListener(onChange);
+            };
+        }, []);
+
+        useEffect(() => {
+            AudioSystem.init();
+            AudioSystem.setVolume(muted ? 0 : 1);
+            if (muted || ['LINEUP', 'SAFEHOUSE'].includes(phase)) {
+                AudioSystem.stopAmbient();
+                return;
+            }
+            AudioSystem.startAmbient();
+        }, [phase, muted]);
+
+        useEffect(() => () => {
+            timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
+            intervalIdsRef.current.forEach((id) => window.clearInterval(id));
+            timeoutIdsRef.current.clear();
+            intervalIdsRef.current.clear();
+            AudioSystem.stopAmbient();
+        }, []);
 
         const serializeRun = (phaseOverride = phase) => ({
             version: 1,
@@ -580,6 +927,10 @@
             setBustActive(false);
             setPayoutActive(false);
             setFlyingScores([]);
+            setCinematic(null);
+            setSoldItems([]);
+            setCarveSparks([]);
+            setPillBursts([]);
             setRunClosed(false);
             setPhase(saved.phase || 'PLAY');
         };
@@ -622,13 +973,80 @@
                 return next;
             });
             AudioSystem.paper();
+            spawnPaperStamp('PAID', '#0f766e');
         };
 
         const spawnFlying = (value) => {
             const id = Math.random();
             setFlyingScores(prev => [...prev, { id, value, x: window.innerWidth / 2, y: window.innerHeight * .45 }]);
-            setTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
+            scheduleTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
         };
+
+        const spawnPaperStamp = (text, color = '#d30000') => {
+            const id = Math.random();
+            setPaperStamps(prev => [...prev, { id, text, color }]);
+            scheduleTimeout(() => setPaperStamps(prev => prev.filter(s => s.id !== id)), 900);
+        };
+
+        const cascadeTriggers = (triggers = []) => {
+            const rows = triggers.slice(0, reducedMotion ? 1 : 4).map((t, i) => ({ id: `${t.name}-${i}-${Math.random()}`, label: `${t.name} ${t.value}`, delay: i * 80 }));
+            setTriggerCascade(rows);
+            scheduleTimeout(() => setTriggerCascade([]), 950);
+        };
+
+        useEffect(() => {
+            cancelAnimationFrame(scoreAnimRef.current);
+            const from = displayScore;
+            const to = score;
+            const start = performance.now();
+            const dur = 600;
+            const tick = (ts) => {
+                const p = Math.min(1, (ts - start) / dur);
+                const eased = 1 - Math.pow(1 - p, 3);
+                setDisplayScore(Math.round(from + (to - from) * eased));
+                if (p < 1) scoreAnimRef.current = requestAnimationFrame(tick);
+            };
+            scoreAnimRef.current = requestAnimationFrame(tick);
+            return () => cancelAnimationFrame(scoreAnimRef.current);
+        }, [score]);
+
+        useEffect(() => {
+            cancelAnimationFrame(goldAnimRef.current);
+            const from = displayGold;
+            const to = gold;
+            const start = performance.now();
+            const dur = 250;
+            const tick = (ts) => {
+                const p = Math.min(1, (ts - start) / dur);
+                const eased = 1 - Math.pow(1 - p, 2);
+                setDisplayGold(Math.round(from + (to - from) * eased));
+                if (p < 1) goldAnimRef.current = requestAnimationFrame(tick);
+            };
+            goldAnimRef.current = requestAnimationFrame(tick);
+            if (gold < prevGoldRef.current) {
+                setCashDropFlash(true);
+                scheduleTimeout(() => setCashDropFlash(false), 320);
+            }
+            prevGoldRef.current = gold;
+            return () => cancelAnimationFrame(goldAnimRef.current);
+        }, [gold]);
+
+        useEffect(() => {
+            if (phase !== 'RAP_SHEET') {
+                setTypedCase('CASE #');
+                setShowIncarceratedStamp(false);
+                return;
+            }
+            const full = 'CASE #77-0492';
+            let idx = 0;
+            const id = scheduleInterval(() => {
+                idx += 1;
+                setTypedCase(full.slice(0, idx));
+                if (idx >= full.length) clearScheduledInterval(id);
+            }, 50);
+            const stampId = scheduleTimeout(() => setShowIncarceratedStamp(true), 450);
+            return () => { clearScheduledInterval(id); clearScheduledTimeout(stampId); };
+        }, [phase, reducedMotion]);
 
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
@@ -655,9 +1073,14 @@
             setUsedCats([]);
             setActiveBoss(null);
             setBossIntro(null);
+            setBossKick(false);
+            setCinematic(null);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setHistory([]);
+            setSoldItems([]);
+            setCarveSparks([]);
+            setPillBursts([]);
             setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
             setInventory(p.id === 'CARD_COUNTER' ? [DEVISES.BLACK_BOOK] : []);
             const bones = Array(5).fill(0).map(makeBone);
@@ -762,6 +1185,7 @@
 
         const rollBones = () => {
             if (rolling || discards <= 0 || hands <= 0) return;
+            const settleMs = 1120;
             let toll = 0;
             if (activeBoss?.id === 'LOAN_SHARK') toll += 2;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
@@ -774,11 +1198,13 @@
             }
             AudioSystem.clatter();
             setRolling(true);
+            setFeltPulse(true);
+            scheduleTimeout(() => setFeltPulse(false), 650);
             setDiscards(d => d - 1);
             setHasRolled(true);
-            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 80);
-            setTimeout(() => {
-                clearInterval(interval);
+            const interval = scheduleInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 70);
+            scheduleTimeout(() => {
+                clearScheduledInterval(interval);
                 setDice(prev => prev.map((d,i) => {
                     if (kept[i]) return d;
                     const face = d.faces[Math.floor(Math.random() * d.faces.length)];
@@ -788,7 +1214,7 @@
                     return { ...d, value, faceId: isStandard ? null : face.id, faceLabel: isStandard ? null : face.label, faceStyle: isStandard ? null : face.style, type: isStandard ? 'standard' : face.type };
                 }));
                 setRolling(false);
-            }, 800);
+            }, settleMs);
         };
 
         const popPill = (idx) => {
@@ -807,6 +1233,11 @@
                 next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard', id: Math.random() };
                 return next;
             });
+            if (!reducedMotion) {
+                const burstId = Math.random();
+                setPillBursts(prev => [...prev, { id: burstId, idx }]);
+                scheduleTimeout(() => setPillBursts(prev => prev.filter(p => p.id !== burstId)), 360);
+            }
             AudioSystem.playTone(600, 'square', 0.1);
         };
 
@@ -822,7 +1253,10 @@
             if (result.valid) {
                 const nextScore = score + result.total;
                 setScore(nextScore);
+                setScorePulse(true);
+                scheduleTimeout(() => setScorePulse(false), 420);
                 spawnFlying(result.total);
+                cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
                 if (activeBoss?.id !== 'INFORMANT') {
@@ -831,9 +1265,19 @@
                     if (persona.id === 'HUSTLER') gain *= 0.5;
                     setStash(s => Math.min(100, s + gain));
                 }
-                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, chips: result.chips, mult: result.mult, values: dice.map(d => d.value), triggers: result.triggers }]);
-                if (result.total >= 50) { setPayoutActive(true); AudioSystem.payout(); setTimeout(() => setPayoutActive(false), 1800); }
-                else AudioSystem.playTone(600, 'sine', 0.1);
+                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
+                spawnPaperStamp('FILED');
+                const tier = result.total >= 250 ? 'max' : result.total >= 100 ? 'big' : result.total >= 30 ? 'mid' : 'small';
+                AudioSystem.stinger(tier);
+                if (result.total >= 30) {
+                    setPayoutCount(reducedMotion ? 4 : (result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8));
+                    setPayoutActive(true);
+                    scheduleTimeout(() => setPayoutActive(false), 1800);
+                }
+                if (result.total >= 250) {
+                    setPowBurst(true);
+                    scheduleTimeout(() => setPowBurst(false), 700);
+                }
             } else {
                 AudioSystem.playTone(80, 'sawtooth', 0.25);
             }
@@ -843,13 +1287,17 @@
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) });
                 setBustActive(true);
+                setCinematic('bust');
                 AudioSystem.bust();
-                setTimeout(() => setPhase('RAP_SHEET'), 1600);
+                scheduleTimeout(() => setPhase('RAP_SHEET'), 1700);
+                scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
                     AudioSystem.paper();
-                    setPhase('VICTORY');
+                    setCinematic('victory');
+                    scheduleTimeout(() => setPhase('VICTORY'), 560);
+                    scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
                     generateShop();
                     setPhase('SHOP');
@@ -888,17 +1336,26 @@
         };
 
         const handlePurchase = (item) => {
-            if (gold >= item.cost) setGold(g => g - item.cost);
-            else { setDebt(d => d + (item.cost - gold)); setGold(0); }
+            if (soldItems.includes(item.id)) return;
+            setSoldItems(prev => [...prev, item.id]);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
-            if (item.type) {
-                setSelectedItem(item);
-                setCarvingDie(null);
-                setPhase('CARVING');
-            } else {
-                setInventory(prev => [...prev, item]);
-                setShopItems(prev => prev.filter(i => i.id !== item.id));
-            }
+            spawnPaperStamp('SOLD');
+            scheduleTimeout(() => {
+                setGold(g => {
+                    if (g >= item.cost) return g - item.cost;
+                    setDebt(d => d + (item.cost - g));
+                    return 0;
+                });
+                if (item.type) {
+                    setSelectedItem(item);
+                    setCarvingDie(null);
+                    setPhase('CARVING');
+                } else {
+                    setInventory(prev => [...prev, item]);
+                    setShopItems(prev => prev.filter(i => i.id !== item.id));
+                }
+                setSoldItems(prev => prev.filter(id => id !== item.id));
+            }, 220);
         };
 
         const executeCarve = (dieIdx, faceIdx) => {
@@ -913,6 +1370,17 @@
             setShopItems(prev => prev.filter(i => i.id !== selectedItem.id));
             setSelectedItem(null);
             setCarvingDie(null);
+            if (!reducedMotion) {
+                const sparks = Array.from({ length: 6 }, (_, i) => ({
+                    id: `${Date.now()}-${i}`,
+                    x: `${45 + ((Math.random() - .5) * 20)}%`,
+                    y: `${45 + ((Math.random() - .5) * 20)}%`,
+                    sx: `${(Math.random() - .5) * 80}px`,
+                    sy: `${(Math.random() - 1.1) * 70}px`
+                }));
+                setCarveSparks(sparks);
+                scheduleTimeout(() => setCarveSparks([]), 360);
+            }
             setPhase('SHOP');
         };
 
@@ -929,7 +1397,12 @@
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setActiveBoss(path.boss || null);
-            if (path.boss) setBossIntro(path.boss);
+            if (path.boss) {
+                setBossIntro(path.boss);
+                setBossKick(true);
+                AudioSystem.bossSting();
+                scheduleTimeout(() => setBossKick(false), 280);
+            }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
             setRunClosed(false);
@@ -937,21 +1410,27 @@
         };
 
         return (
-            <div className="w-full h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none">
-                <div className="absolute inset-0 pointer-events-none z-0">
-                    <div className="absolute inset-0 ambient-grid"></div>
-                    <div className="absolute inset-0 ambient-grain"></div>
-                    <div className="absolute inset-0 ambient-vignette"></div>
-                    <div className="absolute inset-0 ambient-light-leak"></div>
-                </div>
-                {payoutActive && <CashRain count={18} />}
+            <div className={`w-full h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#262422_1px,transparent_1px),linear-gradient(180deg,rgba(255,0,127,0.05)_0%,rgba(0,221,255,0.05)_100%)] bg-[length:4px_4px,100%_100%] pointer-events-none z-0"></div>
+                <div className="ambient-grain"></div>
+                <div className="ambient-vignette"></div>
+                <div className="ambient-leak"></div>
+                <button onClick={() => setMuted(m => !m)} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
+                    {muted ? 'UNMUTE' : 'MUTE'}
+                </button>
+                {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
-                {bossIntro && <BossIntro boss={bossIntro} target={target} onDone={() => setBossIntro(null)} />}
-                {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value.toLocaleString()}</div>)}
+                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
+                {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
+                {triggerCascade.length > 0 && <div className="trigger-cascade">{triggerCascade.map(row => <div key={row.id} className="trigger-cascade-row mb-1 text-xs font-mono bg-black/70 border border-cyan-500/40 px-2 py-1 rounded" style={{ animationDelay: `${row.delay}ms` }}>{row.label}</div>)}</div>}
+                {powBurst && <div className="pow-burst">POW!</div>}
+                {paperStamps.map(stamp => <div key={stamp.id} className="stamp-overlay" style={{ '--stamp-color': stamp.color }}>{stamp.text}</div>)}
+                {cinematic && <div className="cinematic-iris"></div>}
+                {cinematic === 'bust' && <div className="cinematic-siren"></div>}
 
                 {phase === 'LINEUP' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
-                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 neon-flicker">GUTTERBONES 1977</h1>
+                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">GUTTERBONES 1977</h1>
                         <div className="font-mono text-sm text-[#d6b85c] mb-6 flex flex-wrap gap-3 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
@@ -962,7 +1441,7 @@
                                 const unlocked = meta.unlockedPersonaIds.includes(p.id);
                                 const unlock = SAFEHOUSE_UPGRADES.find(u => u.type === 'persona' && u.unlocks.includes(p.id));
                                 return (
-                                    <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); }} className={`relative bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`}>
+                                    <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); spawnPaperStamp('SELECTED', '#be185d'); }} className={`paper-card paper-lift relative bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`} style={{ '--paper-rot': personaIdx === i ? '0deg' : (i % 2 ? '2deg' : '-2deg') }}>
                                         <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
                                             <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${p.color}`}></div>
                                             <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
@@ -995,7 +1474,7 @@
                                     const bought = meta.purchasedUpgradeIds.includes(upgrade.id);
                                     const canBuy = meta.launderedCash >= upgrade.cost && !bought;
                                     return (
-                                        <div key={upgrade.id} className={`border-2 p-4 bg-white/50 ${bought ? 'border-green-700' : 'border-black'}`}>
+                                        <div key={upgrade.id} className={`paper-card border-2 p-4 bg-white/50 ${bought ? 'border-green-700' : 'border-black'}`} style={{ '--paper-rot': '-0.8deg' }}>
                                             <div className="flex justify-between gap-3"><div><div className="font-marker text-2xl">{upgrade.name}</div><div className="font-mono text-xs opacity-70 mt-1">{upgrade.desc}</div></div><div className="font-mono font-bold text-lg">${upgrade.cost}</div></div>
                                             <div className="font-mono text-[10px] mt-3 opacity-60">UNLOCKS: {upgrade.unlocks.join(', ')}</div>
                                             <button onClick={() => purchaseSafehouseUpgrade(upgrade)} disabled={!canBuy} className={`mt-4 w-full py-2 font-mono font-bold border-2 ${bought ? 'border-green-700 text-green-800 bg-green-100' : canBuy ? 'border-black bg-[#c78b16] text-black hover:bg-yellow-500' : 'border-gray-500 text-gray-500 bg-gray-200'}`}>{bought ? 'CONTACT SECURED' : canBuy ? 'PAY THE BRIBE' : 'NEED MORE CASH'}</button>
@@ -1016,12 +1495,12 @@
                 {phase === 'PLAY' && (
                     <div className="h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative">
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
-                            <BossRuleBanner boss={activeBoss} target={target} />
+                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
                                 <div className="hidden sm:block"><div className="text-xs uppercase opacity-50">The Fixer</div><div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div></div>
-                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className="text-3xl md:text-5xl font-black text-red-600 font-mono tracking-tighter"><ScoreTicker value={score} pad={4} /> <span className="text-xl md:text-3xl opacity-50">/ {currentTarget}</span></div></div>
+                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className="text-xl md:text-3xl opacity-50">/ {currentTarget}</span></div></div>
                                 <div className="flex gap-3 md:gap-6 text-right">
-                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''}`}>${gold}{debt > 0 && <span className="text-xs"> (-{debt})</span>}</div></div>
+                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className="text-xs debt-pulse"> (-{debt})</span>}</div></div>
                                     <div><div className="text-[10px] opacity-50">PILLS</div><div className="text-xl md:text-2xl text-[#0df] font-mono">{discards}</div></div>
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className="text-xl md:text-2xl text-white font-mono">{hands}</div></div>
                                 </div>
@@ -1033,13 +1512,14 @@
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 sticky top-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
                                 {Object.values(CATEGORIES).map(cat => <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />)}
                             </div>
-                            <div className="order-1 md:order-2 flex-1 md:col-span-6 bg-[#6e1d24] border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh] overflow-hidden">
-                                <div className="absolute inset-0 pointer-events-none z-10">
-                                    <div className="smoke-wisp smoke-a"></div>
-                                    <div className="smoke-wisp smoke-b"></div>
-                                    <div className="smoke-wisp smoke-c"></div>
+                            <div className={`order-1 md:order-2 flex-1 md:col-span-6 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh] ${feltPulse ? 'felt-roll-pulse' : ''}`}>
+                                <div className="felt-smoke">
+                                    <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
+                                    <div className="felt-smoke-wisp right-[-12%] top-[46%]" style={{ '--sx': '-62px', '--sy': '-36px', '--dur': '44s' }}></div>
+                                    <div className="felt-smoke-wisp left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
                                 </div>
-                                <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic neon-flicker z-20">THE ALLEYWAY</div>
+                                {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
+                                <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 <div className="flex gap-2 md:gap-4 mb-14 md:mb-16 z-30">
                                     {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
@@ -1064,12 +1544,19 @@
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl">
                                     <h3 className={`text-center border-b pb-2 font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500 border-yellow-500' : 'text-[#0df] border-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
-                                    <div className="h-6 bg-black border border-gray-600 rounded-full overflow-hidden mt-4"><div className={`h-full bg-white shadow-[0_0_15px_white] transition-all duration-500 ${activeBoss?.id === 'INFORMANT' ? 'bg-yellow-500' : ''}`} style={{width: `${stash}%`}}></div></div>
+                                    <div className="h-6 bg-black border border-gray-600 rounded overflow-hidden mt-4 p-1 grid grid-cols-10 gap-1">
+                                        {Array.from({ length: 10 }, (_, idx) => {
+                                            const filled = stash >= (idx + 1) * 10;
+                                            const leading = filled && stash < (idx + 2) * 10;
+                                            const segColor = stash >= 80 ? 'bg-white' : stash >= 50 ? 'bg-[#ff007f]' : 'bg-[#0df]';
+                                            return <div key={idx} className={`rounded-sm transition-all duration-300 ${filled ? `${segColor} ${leading ? 'animate-pulse' : ''}` : 'bg-gray-800'}`}></div>;
+                                        })}
+                                    </div>
                                     <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onClick={() => handleProgram(p)} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
-                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} gold={gold} /></div>)}</div>
+                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} /></div>)}</div>
                                 </div>
                             </div>
                         </div>
@@ -1080,18 +1567,21 @@
                     <div className="h-full flex items-center justify-center p-3 md:p-12 bg-black/80 backdrop-blur-sm z-[300] relative overflow-y-auto">
                         <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0">
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
-                                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] neon-flicker">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className="text-3xl text-green-400 font-mono font-bold">${gold}</div></div></div>
+                                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
                                     const isFace = !!item.type;
-                                    return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group ${rarityClass(item.rarity)}`}>
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} gold={gold} /></div></div>
-                                        <button onClick={() => handlePurchase(item)} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
+                                    const sold = soldItems.includes(item.id);
+                                    return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''}`}>
+                                        <div className="price-tag">${item.cost}</div>
+                                        {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} /></div></div>
+                                        <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
                                     </div>;
                                 })}</div>
                             </div>
                             <div className="w-full md:w-1/3 bg-[#1a1a1a] border-4 border-gray-900 p-5 rounded-xl shadow-2xl flex flex-col">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
-                                {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 animate-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
+                                {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
                                 <div className="flex flex-col gap-3 flex-1">{paths.map(p => <button key={p.id} onClick={() => handleAdvance(p)} className={`w-full p-4 border-2 rounded text-left hover:bg-white/5 transition-all ${p.color}`}><div className="font-bold text-xl uppercase tracking-wider">{p.name}</div><div className="text-xs opacity-70 mt-1 font-mono">{p.desc}</div>{p.boss && <div className="mt-2 pt-2 border-t border-current text-[10px] font-bold font-mono"><span className="text-white">BOSS:</span> {p.boss.name} - {p.boss.desc}</div>}</button>)}</div>
                             </div>
                         </div>
@@ -1103,13 +1593,14 @@
                         <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl">
                             <div className="w-full md:w-1/3 bg-[#e8e6e1] text-gray-900 p-6 border-4 border-black shadow-2xl">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
-                                <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
+                                <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
                             </div>
                             <div className="flex-1 bg-[#2b1414] border-[12px] border-[#111] rounded-2xl p-6 md:p-12 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black]">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">
                                     {carvingDie === null ? dice.map((d,i) => <button key={i} onClick={() => setCarvingDie(i)} className="w-20 h-20 md:w-32 md:h-32 rounded-lg bg-[#d4cfc5] border-2 border-[#8c8880] flex flex-col items-center justify-center text-5xl font-serif text-black shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative"><div>{d.value}</div><div className="absolute top-2 text-xs text-gray-500 font-mono">BONE {i+1}</div></button>) : dice[carvingDie].faces.map((f, faceIdx) => <button key={faceIdx} onClick={() => executeCarve(carvingDie, faceIdx)} className="w-20 h-20 md:w-32 md:h-32 rounded-lg bg-[#d4cfc5] border-2 border-[#8c8880] flex items-center justify-center text-5xl font-serif text-black shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative">{f.id && f.type !== 'standard' ? <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${f.style}`}><div className="font-serif text-4xl leading-none">{f.label.charAt(0)}</div></div> : <div>{f.value}</div>}</button>)}
                                 </div>
+                                {carveSparks.map(s => <div key={s.id} className="carve-spark" style={{ left: s.x, top: s.y, '--sx': s.sx, '--sy': s.sy }}></div>)}
                                 {carvingDie !== null && <button onClick={() => setCarvingDie(null)} className="absolute bottom-4 font-mono text-white underline text-sm">BACK TO BONES</button>}
                             </div>
                         </div>
@@ -1118,11 +1609,11 @@
 
                 {phase === 'RAP_SHEET' && (
                     <div className="h-full flex items-center justify-center z-[500] relative bg-black/80 overflow-y-auto p-4">
-                        <div className="bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards' }}>
-                            <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold">CASE #77-0492</div></div>
+                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                            <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`}></div></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                             <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none">INCARCERATED</div>
+                            {showIncarceratedStamp && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards]">INCARCERATED</div>}
                             <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                         </div>
                     </div>
@@ -1130,10 +1621,10 @@
 
                 {phase === 'VICTORY' && (
                     <div className="h-full flex items-center justify-center z-[500] relative bg-black/90 p-4">
-                        <CashRain count={30} />
-                        <div className="bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3">
-                            <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange]"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold">GREYHOUND - ONE WAY</div></div></div>
-                            <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
+                        <CashRain count={30} reducedMotion={reducedMotion} />
+                        <div className="paper-card bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3" style={{ '--paper-rot': '3deg' }}>
+                            <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
+                            <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><svg viewBox="0 0 220 70" className="mx-auto mt-1 w-44"><path className="signature-path" d="M10 44 C40 8, 55 64, 88 32 C115 8, 120 58, 155 30 C170 18, 186 26, 208 18" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/></svg><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
                             <button onClick={() => setPhase('LINEUP')} className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
                         </div>
                     </div>
