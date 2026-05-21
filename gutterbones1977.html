@@ -269,6 +269,10 @@
         #root-gutterbones .cash-bill,
         #root-gutterbones .cash-bill-inner { animation: none !important; }
     }
+    @media (max-width: 767px) {
+        #root-gutterbones .felt-smoke-wisp { filter: none; opacity: .05; }
+        #root-gutterbones .cash-bill.far { filter: none; }
+    }
 </style>
 
 <script type="text/babel">
@@ -281,6 +285,7 @@
         ambientNodes: null,
         init() {
             if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx?.state === 'suspended') this.ctx.resume();
         },
         setVolume(nextVolume) {
             this.volume = nextVolume;
@@ -299,7 +304,7 @@
             return noise;
         },
         playNoiseBurst({ duration = 0.08, volume = 0.06, filterFreq = 900, when = 0, pan = 0 } = {}) {
-            if (!this.ctx) return;
+            if (!this.ctx || this.volume <= 0) return;
             const buffer = this.ensureNoiseBuffer();
             if (!buffer) return;
             const source = this.ctx.createBufferSource();
@@ -328,7 +333,7 @@
             source.stop(startAt + duration + 0.03);
         },
         startAmbient() {
-            if (!this.ctx || this.ambientNodes) return;
+            if (!this.ctx || this.ambientNodes || this.volume <= 0) return;
             const hum = this.ctx.createOscillator();
             hum.type = 'sawtooth';
             hum.frequency.value = 42;
@@ -379,7 +384,7 @@
             this.ambientNodes = null;
         },
         playTone(f, t, d, v = 0.1) {
-            if (!this.ctx) return;
+            if (!this.ctx || this.volume <= 0) return;
             const o = this.ctx.createOscillator();
             const g = this.ctx.createGain();
             o.type = t;
@@ -680,26 +685,37 @@
         );
     };
 
-    const BossIntro = ({ boss, target, onDone }) => {
+    const BossIntro = ({ boss, target, onDone, reducedMotion }) => {
         const [typed, setTyped] = useState('');
         const [showDesc, setShowDesc] = useState(false);
         useEffect(() => {
             if (!boss) return;
+            if (reducedMotion) {
+                setTyped(boss.name);
+                setShowDesc(true);
+                const doneId = window.setTimeout(onDone, 900);
+                return () => window.clearTimeout(doneId);
+            }
             setTyped('');
             setShowDesc(false);
             const chars = boss.name.split('');
             let idx = 0;
-            const typer = setInterval(() => {
+            let revealId = null;
+            const typer = window.setInterval(() => {
                 idx += 1;
                 setTyped(chars.slice(0, idx).join(''));
                 if (idx >= chars.length) {
-                    clearInterval(typer);
-                    setTimeout(() => setShowDesc(true), 120);
+                    window.clearInterval(typer);
+                    revealId = window.setTimeout(() => setShowDesc(true), 120);
                 }
             }, 40);
-            const id = setTimeout(onDone, 1600);
-            return () => { clearTimeout(id); clearInterval(typer); };
-        }, [boss]);
+            const id = window.setTimeout(onDone, 1600);
+            return () => {
+                window.clearTimeout(id);
+                if (revealId) window.clearTimeout(revealId);
+                window.clearInterval(typer);
+            };
+        }, [boss, reducedMotion]);
         if (!boss) return null;
         const microByBoss = {
             LOAN_SHARK: 'IOUs flutter onto the table.',
@@ -711,11 +727,11 @@
         };
         return (
             <div className="absolute inset-0 z-[250] bg-black/80 flex items-center justify-center">
-                <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>
+                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>}
+                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>}
                 <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
-                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}<span className="opacity-60">_</span></h2>
+                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && <span className="opacity-60">_</span>}</h2>
                     <p className={`font-mono text-gray-300 transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
                     <p className="font-mono text-xs text-gray-500 mt-3">Quota: {target}</p>
                     <p className="font-mono text-[10px] text-red-300/70 mt-2">{microByBoss[boss.id]}</p>
@@ -794,7 +810,9 @@
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
-        const [muted, setMuted] = useState(false);
+        const [muted, setMuted] = useState(() => {
+            try { return window.localStorage?.getItem('gutterbones1977:audio-muted:v1') === '1'; } catch { return false; }
+        });
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const scoreAnimRef = useRef(0);
         const goldAnimRef = useRef(0);
@@ -850,6 +868,10 @@
             }
             AudioSystem.startAmbient();
         }, [phase, muted]);
+
+        useEffect(() => {
+            try { window.localStorage?.setItem('gutterbones1977:audio-muted:v1', muted ? '1' : '0'); } catch {}
+        }, [muted]);
 
         useEffect(() => () => {
             timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
@@ -1272,9 +1294,9 @@
                 if (result.total >= 30) {
                     setPayoutCount(reducedMotion ? 4 : (result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8));
                     setPayoutActive(true);
-                    scheduleTimeout(() => setPayoutActive(false), 1800);
+                    scheduleTimeout(() => setPayoutActive(false), reducedMotion ? 900 : 1800);
                 }
-                if (result.total >= 250) {
+                if (result.total >= 250 && !reducedMotion) {
                     setPowBurst(true);
                     scheduleTimeout(() => setPowBurst(false), 700);
                 }
@@ -1287,17 +1309,17 @@
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) });
                 setBustActive(true);
-                setCinematic('bust');
+                if (!reducedMotion) setCinematic('bust');
                 AudioSystem.bust();
-                scheduleTimeout(() => setPhase('RAP_SHEET'), 1700);
-                scheduleTimeout(() => setCinematic(null), 1850);
+                scheduleTimeout(() => setPhase('RAP_SHEET'), reducedMotion ? 950 : 1700);
+                if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
                     AudioSystem.paper();
-                    setCinematic('victory');
-                    scheduleTimeout(() => setPhase('VICTORY'), 560);
-                    scheduleTimeout(() => setCinematic(null), 1400);
+                    if (!reducedMotion) setCinematic('victory');
+                    scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
+                    if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
                     generateShop();
                     setPhase('SHOP');
@@ -1399,9 +1421,9 @@
             setActiveBoss(path.boss || null);
             if (path.boss) {
                 setBossIntro(path.boss);
-                setBossKick(true);
+                if (!reducedMotion) setBossKick(true);
                 AudioSystem.bossSting();
-                scheduleTimeout(() => setBossKick(false), 280);
+                if (!reducedMotion) scheduleTimeout(() => setBossKick(false), 280);
             }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
@@ -1415,12 +1437,12 @@
                 <div className="ambient-grain"></div>
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
-                <button onClick={() => setMuted(m => !m)} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
+                <button onClick={() => setMuted(m => !m)} aria-pressed={muted} title={muted ? 'Unmute audio' : 'Mute audio'} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
                     {muted ? 'UNMUTE' : 'MUTE'}
                 </button>
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
-                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
+                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {triggerCascade.length > 0 && <div className="trigger-cascade">{triggerCascade.map(row => <div key={row.id} className="trigger-cascade-row mb-1 text-xs font-mono bg-black/70 border border-cyan-500/40 px-2 py-1 rounded" style={{ animationDelay: `${row.delay}ms` }}>{row.label}</div>)}</div>}
                 {powBurst && <div className="pow-burst">POW!</div>}
