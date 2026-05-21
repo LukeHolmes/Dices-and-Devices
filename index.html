@@ -264,24 +264,26 @@
     );
 
     const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill }) => {
-        const ref = useRef({});
+        const ref = useRef({ locked: false, vars: {} });
         if (rolling && !ref.current.locked) {
             ref.current = {
-                '--tx1': `${(Math.random()-.5)*240}px`,
-                '--ty1': `${(Math.random()-.5)*150-80}px`,
-                '--tx2': `${(Math.random()-.5)*80}px`,
-                '--ty2': `${(Math.random()-.5)*40}px`,
-                '--r1': `${Math.random()*900}deg`,
-                '--r2': `${Math.random()*1200}deg`,
-                '--rf': `${(Math.random()-.5)*45}deg`,
-                locked: true
+                locked: true,
+                vars: {
+                    '--tx1': `${(Math.random()-.5)*240}px`,
+                    '--ty1': `${(Math.random()-.5)*150-80}px`,
+                    '--tx2': `${(Math.random()-.5)*80}px`,
+                    '--ty2': `${(Math.random()-.5)*40}px`,
+                    '--r1': `${Math.random()*900}deg`,
+                    '--r2': `${Math.random()*1200}deg`,
+                    '--rf': `${(Math.random()-.5)*45}deg`
+                }
             };
         }
-        if (!rolling) ref.current.locked = false;
+        if (!rolling && ref.current.locked) ref.current = { locked: false, vars: ref.current.vars };
         return (
             <div className="relative group">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'animate-[violentRoll_0.8s_cubic-bezier(0.25,1,0.5,1)_forwards]' : ''} ${kept ? 'border-[#ff007f] shadow-[0_0_14px_rgba(255,0,127,.7)] -translate-y-2' : ''} ${selected ? 'ring-4 ring-[#0df] scale-110 z-50' : ''}`} style={rolling ? ref.current : { transform: `rotate(${ref.current['--rf'] || '0deg'})` }}>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'animate-[violentRoll_0.8s_cubic-bezier(0.25,1,0.5,1)_forwards]' : ''} ${kept ? 'border-[#ff007f] shadow-[0_0_14px_rgba(255,0,127,.7)] -translate-y-2' : ''} ${selected ? 'ring-4 ring-[#0df] scale-110 z-50' : ''}`} style={rolling ? { ...ref.current.vars } : { transform: `rotate(${ref.current.vars['--rf'] || '0deg'})` }}>
                     {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
                         <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
                             <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
