@@ -255,6 +255,14 @@
         #root-gutterbones .bone-verdict-glow,
         #root-gutterbones .paper-card,
         #root-gutterbones .price-tag,
+        #root-gutterbones .trigger-cascade-row,
+        #root-gutterbones .pow-burst,
+        #root-gutterbones .boss-banner-scan::after,
+        #root-gutterbones .boss-blind-top,
+        #root-gutterbones .boss-blind-bottom,
+        #root-gutterbones .cinematic-iris,
+        #root-gutterbones .cinematic-siren,
+        #root-gutterbones .boss-kick,
         #root-gutterbones .signature-path,
         #root-gutterbones .sunrise,
         #root-gutterbones .pill-burst,
@@ -269,8 +277,106 @@
     const AudioSystem = {
         ctx: null,
         volume: 1,
+        noiseBuffer: null,
+        ambientNodes: null,
         init() {
             if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        },
+        setVolume(nextVolume) {
+            this.volume = nextVolume;
+            if (!this.ambientNodes || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            this.ambientNodes.humGain.gain.setTargetAtTime(0.02 * this.volume, now, 0.18);
+            this.ambientNodes.noiseGain.gain.setTargetAtTime(0.012 * this.volume, now, 0.18);
+        },
+        ensureNoiseBuffer() {
+            if (!this.ctx) return null;
+            if (this.noiseBuffer) return this.noiseBuffer;
+            const noise = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+            const data = noise.getChannelData(0);
+            for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2) - 1;
+            this.noiseBuffer = noise;
+            return noise;
+        },
+        playNoiseBurst({ duration = 0.08, volume = 0.06, filterFreq = 900, when = 0, pan = 0 } = {}) {
+            if (!this.ctx) return;
+            const buffer = this.ensureNoiseBuffer();
+            if (!buffer) return;
+            const source = this.ctx.createBufferSource();
+            source.buffer = buffer;
+            const lowpass = this.ctx.createBiquadFilter();
+            lowpass.type = 'lowpass';
+            lowpass.frequency.value = filterFreq;
+            const gain = this.ctx.createGain();
+            const startAt = this.ctx.currentTime + when;
+            gain.gain.setValueAtTime(0.0001, startAt);
+            gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * this.volume), startAt + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+            if (this.ctx.createStereoPanner) {
+                const panner = this.ctx.createStereoPanner();
+                panner.pan.value = pan;
+                source.connect(lowpass);
+                lowpass.connect(gain);
+                gain.connect(panner);
+                panner.connect(this.ctx.destination);
+            } else {
+                source.connect(lowpass);
+                lowpass.connect(gain);
+                gain.connect(this.ctx.destination);
+            }
+            source.start(startAt);
+            source.stop(startAt + duration + 0.03);
+        },
+        startAmbient() {
+            if (!this.ctx || this.ambientNodes) return;
+            const hum = this.ctx.createOscillator();
+            hum.type = 'sawtooth';
+            hum.frequency.value = 42;
+            const humGain = this.ctx.createGain();
+            humGain.gain.value = 0.0001;
+            hum.connect(humGain);
+            humGain.connect(this.ctx.destination);
+
+            const roomNoise = this.ctx.createBufferSource();
+            roomNoise.buffer = this.ensureNoiseBuffer();
+            roomNoise.loop = true;
+            const noiseHigh = this.ctx.createBiquadFilter();
+            noiseHigh.type = 'highpass';
+            noiseHigh.frequency.value = 35;
+            const noiseLow = this.ctx.createBiquadFilter();
+            noiseLow.type = 'lowpass';
+            noiseLow.frequency.value = 220;
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.value = 0.0001;
+            roomNoise.connect(noiseHigh);
+            noiseHigh.connect(noiseLow);
+            noiseLow.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+
+            hum.start();
+            roomNoise.start();
+            const now = this.ctx.currentTime;
+            humGain.gain.linearRampToValueAtTime(0.02 * this.volume, now + 0.4);
+            noiseGain.gain.linearRampToValueAtTime(0.012 * this.volume, now + 0.45);
+            this.ambientNodes = { hum, humGain, roomNoise, noiseGain };
+        },
+        stopAmbient() {
+            if (!this.ambientNodes || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const { hum, humGain, roomNoise, noiseGain } = this.ambientNodes;
+            humGain.gain.cancelScheduledValues(now);
+            noiseGain.gain.cancelScheduledValues(now);
+            humGain.gain.setTargetAtTime(0.0001, now, 0.08);
+            noiseGain.gain.setTargetAtTime(0.0001, now, 0.08);
+            setTimeout(() => {
+                try { hum.stop(); } catch (e) {}
+                try { roomNoise.stop(); } catch (e) {}
+                hum.disconnect();
+                roomNoise.disconnect();
+                humGain.disconnect();
+                noiseGain.disconnect();
+            }, 220);
+            this.ambientNodes = null;
         },
         playTone(f, t, d, v = 0.1) {
             if (!this.ctx) return;
@@ -287,8 +393,11 @@
         },
         clatter() {
             this.playTone(150, 'triangle', 0.1, 0.06);
+            this.playNoiseBurst({ duration: 0.09, volume: 0.05, filterFreq: 680, pan: -0.2 });
+            setTimeout(() => this.playNoiseBurst({ duration: 0.11, volume: 0.075, filterFreq: 520, pan: 0.25 }), 540);
             setTimeout(() => this.playTone(60, 'sawtooth', 0.22, 0.3), 520);
             setTimeout(() => this.playTone(40, 'sawtooth', 0.38, 0.35), 980);
+            setTimeout(() => this.playNoiseBurst({ duration: 0.14, volume: 0.08, filterFreq: 460, pan: 0.1 }), 980);
         },
         payout() {
             [400, 500, 600, 800].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.1), i * 95));
@@ -317,6 +426,7 @@
         paper() {
             this.playTone(600, 'square', 0.05, 0.05);
             setTimeout(() => this.playTone(400, 'sawtooth', 0.1, 0.08), 50);
+            this.playNoiseBurst({ duration: 0.08, volume: 0.06, filterFreq: 760 });
         }
     };
 
@@ -482,15 +592,16 @@
         return 'rgba(214, 184, 92, 0.52)';
     };
 
-    const CashRain = ({ count = 24 }) => {
-        const bills = useMemo(() => Array.from({ length: count }, (_, i) => ({
+    const CashRain = ({ count = 24, reducedMotion = false }) => {
+        const cappedCount = Math.max(0, Math.min(count, reducedMotion ? 8 : 36));
+        const bills = useMemo(() => Array.from({ length: cappedCount }, (_, i) => ({
             id: i,
-            depth: i % 3 === 0 ? 'near' : i % 3 === 1 ? 'mid' : 'far',
+            depth: reducedMotion ? 'mid' : (i % 3 === 0 ? 'near' : i % 3 === 1 ? 'mid' : 'far'),
             left: `${Math.random() * 100}%`,
             tx: `${(Math.random() - .5) * 620}px`,
-            delay: `${Math.random() * 0.55}s`,
+            delay: reducedMotion ? '0s' : `${Math.random() * 0.55}s`,
             label: i % 3 === 0 ? '$100' : i % 3 === 1 ? '$50' : '$20'
-        })), [count]);
+        })), [cappedCount, reducedMotion]);
         return (
             <div className="absolute inset-0 pointer-events-none z-[200]">
                 {bills.map((bill) => (
@@ -683,13 +794,70 @@
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
+        const [muted, setMuted] = useState(false);
+        const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const scoreAnimRef = useRef(0);
         const goldAnimRef = useRef(0);
         const prevGoldRef = useRef(20);
+        const timeoutIdsRef = useRef(new Set());
+        const intervalIdsRef = useRef(new Set());
+
+        const scheduleTimeout = (fn, ms) => {
+            const id = window.setTimeout(() => {
+                timeoutIdsRef.current.delete(id);
+                fn();
+            }, ms);
+            timeoutIdsRef.current.add(id);
+            return id;
+        };
+        const scheduleInterval = (fn, ms) => {
+            const id = window.setInterval(fn, ms);
+            intervalIdsRef.current.add(id);
+            return id;
+        };
+        const clearScheduledTimeout = (id) => {
+            window.clearTimeout(id);
+            timeoutIdsRef.current.delete(id);
+        };
+        const clearScheduledInterval = (id) => {
+            window.clearInterval(id);
+            intervalIdsRef.current.delete(id);
+        };
 
         const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
+
+        useEffect(() => {
+            const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+            if (!mediaQuery) return;
+            const onChange = () => setReducedMotion(mediaQuery.matches);
+            onChange();
+            if (mediaQuery.addEventListener) mediaQuery.addEventListener('change', onChange);
+            else mediaQuery.addListener(onChange);
+            return () => {
+                if (mediaQuery.removeEventListener) mediaQuery.removeEventListener('change', onChange);
+                else mediaQuery.removeListener(onChange);
+            };
+        }, []);
+
+        useEffect(() => {
+            AudioSystem.init();
+            AudioSystem.setVolume(muted ? 0 : 1);
+            if (muted || ['LINEUP', 'SAFEHOUSE'].includes(phase)) {
+                AudioSystem.stopAmbient();
+                return;
+            }
+            AudioSystem.startAmbient();
+        }, [phase, muted]);
+
+        useEffect(() => () => {
+            timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
+            intervalIdsRef.current.forEach((id) => window.clearInterval(id));
+            timeoutIdsRef.current.clear();
+            intervalIdsRef.current.clear();
+            AudioSystem.stopAmbient();
+        }, []);
 
         const serializeRun = (phaseOverride = phase) => ({
             version: 1,
@@ -811,19 +979,19 @@
         const spawnFlying = (value) => {
             const id = Math.random();
             setFlyingScores(prev => [...prev, { id, value, x: window.innerWidth / 2, y: window.innerHeight * .45 }]);
-            setTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
+            scheduleTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
         };
 
         const spawnPaperStamp = (text, color = '#d30000') => {
             const id = Math.random();
             setPaperStamps(prev => [...prev, { id, text, color }]);
-            setTimeout(() => setPaperStamps(prev => prev.filter(s => s.id !== id)), 900);
+            scheduleTimeout(() => setPaperStamps(prev => prev.filter(s => s.id !== id)), 900);
         };
 
         const cascadeTriggers = (triggers = []) => {
-            const rows = triggers.slice(0, 4).map((t, i) => ({ id: `${t.name}-${i}-${Math.random()}`, label: `${t.name} ${t.value}`, delay: i * 80 }));
+            const rows = triggers.slice(0, reducedMotion ? 1 : 4).map((t, i) => ({ id: `${t.name}-${i}-${Math.random()}`, label: `${t.name} ${t.value}`, delay: i * 80 }));
             setTriggerCascade(rows);
-            setTimeout(() => setTriggerCascade([]), 950);
+            scheduleTimeout(() => setTriggerCascade([]), 950);
         };
 
         useEffect(() => {
@@ -857,7 +1025,7 @@
             goldAnimRef.current = requestAnimationFrame(tick);
             if (gold < prevGoldRef.current) {
                 setCashDropFlash(true);
-                setTimeout(() => setCashDropFlash(false), 320);
+                scheduleTimeout(() => setCashDropFlash(false), 320);
             }
             prevGoldRef.current = gold;
             return () => cancelAnimationFrame(goldAnimRef.current);
@@ -871,14 +1039,14 @@
             }
             const full = 'CASE #77-0492';
             let idx = 0;
-            const id = setInterval(() => {
+            const id = scheduleInterval(() => {
                 idx += 1;
                 setTypedCase(full.slice(0, idx));
-                if (idx >= full.length) clearInterval(id);
+                if (idx >= full.length) clearScheduledInterval(id);
             }, 50);
-            const stampId = setTimeout(() => setShowIncarceratedStamp(true), 450);
-            return () => { clearInterval(id); clearTimeout(stampId); };
-        }, [phase]);
+            const stampId = scheduleTimeout(() => setShowIncarceratedStamp(true), 450);
+            return () => { clearScheduledInterval(id); clearScheduledTimeout(stampId); };
+        }, [phase, reducedMotion]);
 
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
@@ -1031,12 +1199,12 @@
             AudioSystem.clatter();
             setRolling(true);
             setFeltPulse(true);
-            setTimeout(() => setFeltPulse(false), 650);
+            scheduleTimeout(() => setFeltPulse(false), 650);
             setDiscards(d => d - 1);
             setHasRolled(true);
-            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 70);
-            setTimeout(() => {
-                clearInterval(interval);
+            const interval = scheduleInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 70);
+            scheduleTimeout(() => {
+                clearScheduledInterval(interval);
                 setDice(prev => prev.map((d,i) => {
                     if (kept[i]) return d;
                     const face = d.faces[Math.floor(Math.random() * d.faces.length)];
@@ -1065,9 +1233,11 @@
                 next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard', id: Math.random() };
                 return next;
             });
-            const burstId = Math.random();
-            setPillBursts(prev => [...prev, { id: burstId, idx }]);
-            setTimeout(() => setPillBursts(prev => prev.filter(p => p.id !== burstId)), 360);
+            if (!reducedMotion) {
+                const burstId = Math.random();
+                setPillBursts(prev => [...prev, { id: burstId, idx }]);
+                scheduleTimeout(() => setPillBursts(prev => prev.filter(p => p.id !== burstId)), 360);
+            }
             AudioSystem.playTone(600, 'square', 0.1);
         };
 
@@ -1084,7 +1254,7 @@
                 const nextScore = score + result.total;
                 setScore(nextScore);
                 setScorePulse(true);
-                setTimeout(() => setScorePulse(false), 420);
+                scheduleTimeout(() => setScorePulse(false), 420);
                 spawnFlying(result.total);
                 cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
@@ -1100,13 +1270,13 @@
                 const tier = result.total >= 250 ? 'max' : result.total >= 100 ? 'big' : result.total >= 30 ? 'mid' : 'small';
                 AudioSystem.stinger(tier);
                 if (result.total >= 30) {
-                    setPayoutCount(result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8);
+                    setPayoutCount(reducedMotion ? 4 : (result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8));
                     setPayoutActive(true);
-                    setTimeout(() => setPayoutActive(false), 1800);
+                    scheduleTimeout(() => setPayoutActive(false), 1800);
                 }
                 if (result.total >= 250) {
                     setPowBurst(true);
-                    setTimeout(() => setPowBurst(false), 700);
+                    scheduleTimeout(() => setPowBurst(false), 700);
                 }
             } else {
                 AudioSystem.playTone(80, 'sawtooth', 0.25);
@@ -1119,15 +1289,15 @@
                 setBustActive(true);
                 setCinematic('bust');
                 AudioSystem.bust();
-                setTimeout(() => setPhase('RAP_SHEET'), 1700);
-                setTimeout(() => setCinematic(null), 1850);
+                scheduleTimeout(() => setPhase('RAP_SHEET'), 1700);
+                scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
                     AudioSystem.paper();
                     setCinematic('victory');
-                    setTimeout(() => setPhase('VICTORY'), 560);
-                    setTimeout(() => setCinematic(null), 1400);
+                    scheduleTimeout(() => setPhase('VICTORY'), 560);
+                    scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
                     generateShop();
                     setPhase('SHOP');
@@ -1170,7 +1340,7 @@
             setSoldItems(prev => [...prev, item.id]);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
             spawnPaperStamp('SOLD');
-            setTimeout(() => {
+            scheduleTimeout(() => {
                 setGold(g => {
                     if (g >= item.cost) return g - item.cost;
                     setDebt(d => d + (item.cost - g));
@@ -1200,15 +1370,17 @@
             setShopItems(prev => prev.filter(i => i.id !== selectedItem.id));
             setSelectedItem(null);
             setCarvingDie(null);
-            const sparks = Array.from({ length: 6 }, (_, i) => ({
-                id: `${Date.now()}-${i}`,
-                x: `${45 + ((Math.random() - .5) * 20)}%`,
-                y: `${45 + ((Math.random() - .5) * 20)}%`,
-                sx: `${(Math.random() - .5) * 80}px`,
-                sy: `${(Math.random() - 1.1) * 70}px`
-            }));
-            setCarveSparks(sparks);
-            setTimeout(() => setCarveSparks([]), 360);
+            if (!reducedMotion) {
+                const sparks = Array.from({ length: 6 }, (_, i) => ({
+                    id: `${Date.now()}-${i}`,
+                    x: `${45 + ((Math.random() - .5) * 20)}%`,
+                    y: `${45 + ((Math.random() - .5) * 20)}%`,
+                    sx: `${(Math.random() - .5) * 80}px`,
+                    sy: `${(Math.random() - 1.1) * 70}px`
+                }));
+                setCarveSparks(sparks);
+                scheduleTimeout(() => setCarveSparks([]), 360);
+            }
             setPhase('SHOP');
         };
 
@@ -1229,7 +1401,7 @@
                 setBossIntro(path.boss);
                 setBossKick(true);
                 AudioSystem.bossSting();
-                setTimeout(() => setBossKick(false), 280);
+                scheduleTimeout(() => setBossKick(false), 280);
             }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
@@ -1243,7 +1415,10 @@
                 <div className="ambient-grain"></div>
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
-                {payoutActive && <CashRain count={payoutCount} />}
+                <button onClick={() => setMuted(m => !m)} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
+                    {muted ? 'UNMUTE' : 'MUTE'}
+                </button>
+                {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
@@ -1446,7 +1621,7 @@
 
                 {phase === 'VICTORY' && (
                     <div className="h-full flex items-center justify-center z-[500] relative bg-black/90 p-4">
-                        <CashRain count={30} />
+                        <CashRain count={30} reducedMotion={reducedMotion} />
                         <div className="paper-card bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3" style={{ '--paper-rot': '3deg' }}>
                             <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
                             <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><svg viewBox="0 0 220 70" className="mx-auto mt-1 w-44"><path className="signature-path" d="M10 44 C40 8, 55 64, 88 32 C115 8, 120 58, 155 30 C170 18, 186 26, 208 18" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/></svg><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
