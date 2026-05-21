@@ -10,7 +10,9 @@ The game keeps the Yahtzee-inspired scoring skeleton, but reframes the whole exp
 ## Features
 
 - Single-file deployment through `index.html`
-- Lineup/persona selection with unique starts
+- Lineup/persona selection with unlockable starts
+- Safehouse meta-progression with persistent laundered cash
+- Resume Hustle support through browser localStorage
 - Yahtzee-style score categories renamed for the theme
 - Custom carved bone faces such as Blood 6, Wild, Shiv, Wirebag, Ghost, and Mult
 - Hardware items that change scoring and economy
@@ -23,13 +25,14 @@ The game keeps the Yahtzee-inspired scoring skeleton, but reframes the whole exp
 
 ## Gameplay Overview
 
-1. Pick a persona from The Lineup.
-2. Roll bones and keep the slots you want.
-3. Pop pills to reroll individual bones.
-4. Score into payout categories before your plays run out.
-5. Spend cash in the back alley on carved faces or hardware.
-6. Choose the next job and survive bosses.
-7. Beat The Raid to escape.
+1. Pick an unlocked persona from The Lineup, or visit the Safehouse to spend laundered cash.
+2. Resume an active hustle if a saved run exists, or start a new contract.
+3. Roll bones and keep the slots you want.
+4. Pop pills to reroll individual bones.
+5. Score into payout categories before your plays run out.
+6. Spend cash in the back alley on carved faces or hardware.
+7. Choose the next job and survive bosses.
+8. Beat The Raid to escape, or bank partial Safehouse cash when busted.
 
 ## Important Files
 
@@ -74,12 +77,23 @@ Example iframe embed:
 <iframe src="https://YOUR-HOSTED-LINK/index.html" width="100%" height="900" frameborder="0"></iframe>
 ```
 
+## Persistence
+
+Gutterbones uses browser `localStorage` for two local save records:
+
+```text
+gutterbones1977:run:v1   Active run state for Resume Hustle
+gutterbones1977:meta:v1  Safehouse cash, unlocks, and best-run stats
+```
+
+Runs autosave during play, shop, and carving. Completed or busted runs clear the active run save after awarding Safehouse cash.
+
 ## Future Improvements
 
 - Move to Vite + React + TypeScript once the direction stabilizes
 - Extract scoring, faces, hardware, bosses, and personas into data modules
 - Add automated tests for score calculation and boss effects
-- Add save/load
+- Expand Safehouse upgrades and unlock economy
 - Add balance/debug tooling
 - Expand the face pool and boss pool
 - Improve mobile/touch ergonomics

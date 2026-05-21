@@ -179,6 +179,71 @@
         C: { id: 'C', name: 'Slop' }
     };
 
+    const STORAGE_KEYS = {
+        run: 'gutterbones1977:run:v1',
+        meta: 'gutterbones1977:meta:v1'
+    };
+
+    const DEFAULT_META_STATE = {
+        version: 1,
+        launderedCash: 0,
+        unlockedPersonaIds: ['STREET_RAT', 'HUSTLER'],
+        unlockedFaceIds: ['MULT_FACE', 'GOLD_FACE', 'BLOOD_6'],
+        unlockedHardwareIds: ['BOOKENDS', 'LOADED_DIE', 'BRASS_KNUCKLES', 'BLACK_BOOK', 'BURNER_PHONE', 'CROWBAR'],
+        purchasedUpgradeIds: [],
+        bestHeat: 0,
+        totalRuns: 0,
+        completedRuns: 0
+    };
+
+    const SAFEHOUSE_UPGRADES = [
+        { id: 'unlock-enforcer', name: 'Bring in The Enforcer', desc: 'Adds The Enforcer to The Lineup.', cost: 120, type: 'persona', unlocks: ['ENFORCER'] },
+        { id: 'unlock-counter', name: 'Hire The Counter', desc: 'Adds The Counter and his Black Book start.', cost: 180, type: 'persona', unlocks: ['CARD_COUNTER'] },
+        { id: 'rare-faces', name: 'Bribe the Bone Carver', desc: 'Adds Wild, Echo, and Ghost faces to future shops.', cost: 220, type: 'faces', unlocks: ['WILD_FACE', 'ECHO_FACE', 'GHOST_FACE'] },
+        { id: 'danger-faces', name: 'Meet the Knife Man', desc: 'Adds Shiv and Wirebag faces to future shops.', cost: 260, type: 'faces', unlocks: ['SHIV_FACE', 'WIREBAG_FACE'] },
+        { id: 'high-end-hardware', name: 'Call the Fence', desc: 'Adds Centerpiece, Engine, and Shady Ledger hardware.', cost: 300, type: 'hardware', unlocks: ['CENTERPIECE', 'ENGINE', 'SHADY_LEDGER'] }
+    ];
+
+    const mergeMetaState = (stored = {}) => ({
+        ...DEFAULT_META_STATE,
+        ...stored,
+        unlockedPersonaIds: [...new Set([...(DEFAULT_META_STATE.unlockedPersonaIds || []), ...((stored && stored.unlockedPersonaIds) || [])])],
+        unlockedFaceIds: [...new Set([...(DEFAULT_META_STATE.unlockedFaceIds || []), ...((stored && stored.unlockedFaceIds) || [])])],
+        unlockedHardwareIds: [...new Set([...(DEFAULT_META_STATE.unlockedHardwareIds || []), ...((stored && stored.unlockedHardwareIds) || [])])],
+        purchasedUpgradeIds: [...new Set(((stored && stored.purchasedUpgradeIds) || []))]
+    });
+
+    const loadJson = (key) => {
+        try {
+            const raw = window.localStorage?.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch (err) {
+            console.warn('Unable to load local save data', err);
+            return null;
+        }
+    };
+
+    const saveJson = (key, value) => {
+        try {
+            window.localStorage?.setItem(key, JSON.stringify(value));
+        } catch (err) {
+            console.warn('Unable to save local data', err);
+        }
+    };
+
+    const loadMetaState = () => mergeMetaState(loadJson(STORAGE_KEYS.meta) || {});
+    const saveMetaState = (meta) => saveJson(STORAGE_KEYS.meta, meta);
+    const loadSavedRun = () => loadJson(STORAGE_KEYS.run);
+    const saveSavedRun = (run) => saveJson(STORAGE_KEYS.run, run);
+    const clearSavedRun = () => {
+        try { window.localStorage?.removeItem(STORAGE_KEYS.run); } catch (err) { console.warn('Unable to clear saved run', err); }
+    };
+
+    const itemById = (id) => FACE_DATABASE[id] || DEVISES[id] || null;
+    const bossById = (id) => BOSSES[id] || null;
+    const hydrateItem = (item) => item?.id && itemById(item.id) ? { ...itemById(item.id), ...item } : item;
+    const hydratePath = (path) => path ? { ...path, boss: path.bossId ? bossById(path.bossId) : (path.boss?.id ? bossById(path.boss.id) : path.boss) } : path;
+
     const standardFaces = () => [1,2,3,4,5,6].map(v => ({ id: 'standard', value: v, type: 'standard', label: String(v), style: '' }));
     const makeBone = () => ({ id: Math.random(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
     const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'danger' ? 'glow-danger' : '';
@@ -311,9 +376,126 @@
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
+        const [meta, setMeta] = useState(loadMetaState);
+        const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
+        const [lastLaundered, setLastLaundered] = useState(0);
+        const [runClosed, setRunClosed] = useState(false);
 
         const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
+        const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
+
+        const serializeRun = (phaseOverride = phase) => ({
+            version: 1,
+            phase: phaseOverride,
+            personaId: persona.id,
+            personaIdx,
+            round,
+            score,
+            target,
+            hands,
+            discards,
+            gold,
+            debt,
+            stash,
+            inventory,
+            dice,
+            kept,
+            hasRolled,
+            usedCats,
+            shopItems,
+            paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
+            activeBossId: activeBoss?.id || null,
+            selectedItem,
+            carvingDie,
+            swapMode,
+            swapIdx,
+            history,
+            runStats
+        });
+
+        const persistRun = (phaseOverride = phase) => {
+            if (runClosed || !['PLAY', 'SHOP', 'CARVING'].includes(phaseOverride)) return;
+            const snapshot = serializeRun(phaseOverride);
+            saveSavedRun(snapshot);
+            setHasSavedRun(true);
+        };
+
+        const resumeRun = () => {
+            const saved = loadSavedRun();
+            if (!saved) return;
+            const savedPersona = PERSONAS.find(p => p.id === saved.personaId) || PERSONAS[saved.personaIdx] || PERSONAS[0];
+            setPersona(savedPersona);
+            setPersonaIdx(Math.max(0, PERSONAS.findIndex(p => p.id === savedPersona.id)));
+            setRound(saved.round || 1);
+            setScore(saved.score || 0);
+            setTarget(saved.target || 150);
+            setHands(saved.hands || savedPersona.plays);
+            setDiscards(saved.discards ?? savedPersona.pills);
+            setGold(saved.gold ?? savedPersona.cash);
+            setDebt(saved.debt || 0);
+            setStash(saved.stash || 0);
+            setInventory((saved.inventory || []).map(hydrateItem));
+            setDice(saved.dice || []);
+            setKept(saved.kept || [false,false,false,false,false]);
+            setHasRolled(!!saved.hasRolled);
+            setUsedCats(saved.usedCats || []);
+            setShopItems((saved.shopItems || []).map(hydrateItem));
+            setPaths((saved.paths || []).map(hydratePath));
+            setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
+            setBossIntro(null);
+            setSelectedItem(hydrateItem(saved.selectedItem));
+            setCarvingDie(saved.carvingDie ?? null);
+            setSwapMode(!!saved.swapMode);
+            setSwapIdx(saved.swapIdx ?? null);
+            setHistory(saved.history || []);
+            setRunStats(saved.runStats || { totalHeat: 0, biggestHustle: 0, finalBoss: '' });
+            setBustActive(false);
+            setPayoutActive(false);
+            setFlyingScores([]);
+            setRunClosed(false);
+            setPhase(saved.phase || 'PLAY');
+        };
+
+        const updateMeta = (updater) => {
+            setMeta(prev => {
+                const next = mergeMetaState(typeof updater === 'function' ? updater(prev) : updater);
+                saveMetaState(next);
+                return next;
+            });
+        };
+
+        const awardLaunderedCash = ({ victory, totalHeat, cash }) => {
+            const earned = Math.max(0, victory ? Math.floor(totalHeat / 10) + Math.max(0, cash) : Math.floor(totalHeat / 25));
+            setLastLaundered(earned);
+            setRunClosed(true);
+            updateMeta(prev => ({
+                ...prev,
+                launderedCash: prev.launderedCash + earned,
+                bestHeat: Math.max(prev.bestHeat || 0, totalHeat),
+                totalRuns: (prev.totalRuns || 0) + 1,
+                completedRuns: (prev.completedRuns || 0) + (victory ? 1 : 0)
+            }));
+            clearSavedRun();
+            setHasSavedRun(false);
+            return earned;
+        };
+
+        const purchaseSafehouseUpgrade = (upgrade) => {
+            if (meta.purchasedUpgradeIds.includes(upgrade.id) || meta.launderedCash < upgrade.cost) return;
+            updateMeta(prev => {
+                const next = {
+                    ...prev,
+                    launderedCash: prev.launderedCash - upgrade.cost,
+                    purchasedUpgradeIds: [...new Set([...prev.purchasedUpgradeIds, upgrade.id])]
+                };
+                if (upgrade.type === 'persona') next.unlockedPersonaIds = [...new Set([...prev.unlockedPersonaIds, ...upgrade.unlocks])];
+                if (upgrade.type === 'faces') next.unlockedFaceIds = [...new Set([...prev.unlockedFaceIds, ...upgrade.unlocks])];
+                if (upgrade.type === 'hardware') next.unlockedHardwareIds = [...new Set([...prev.unlockedHardwareIds, ...upgrade.unlocks])];
+                return next;
+            });
+            AudioSystem.paper();
+        };
 
         const spawnFlying = (value) => {
             const id = Math.random();
@@ -321,8 +503,17 @@
             setTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
         };
 
+        useEffect(() => {
+            if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
+            persistRun(phase);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, inventory, dice, kept, hasRolled, usedCats, shopItems, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+
         const startRun = () => {
             const p = PERSONAS[personaIdx];
+            if (!meta.unlockedPersonaIds.includes(p.id)) return;
+            clearSavedRun();
+            setHasSavedRun(false);
+            setRunClosed(false);
             AudioSystem.init();
             AudioSystem.paper();
             setPersona(p);
@@ -520,12 +711,15 @@
             }
             const gained = result.valid ? result.total : 0;
             if (hands <= 1 && score + gained < currentTarget) {
+                const finalHeat = runStats.totalHeat + gained;
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
+                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) });
                 setBustActive(true);
                 AudioSystem.bust();
                 setTimeout(() => setPhase('RAP_SHEET'), 1600);
             } else if (hands <= 1) {
                 if (round >= 10) {
+                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
                     AudioSystem.paper();
                     setPhase('VICTORY');
                 } else {
@@ -549,8 +743,8 @@
         };
 
         const generateShop = () => {
-            const faces = Object.values(FACE_DATABASE);
-            const hardware = Object.values(DEVISES).filter(d => !inventory.some(i => i.id === d.id));
+            const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id));
+            const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const pool = [...faces, ...hardware].sort(() => Math.random() - .5);
             setShopItems(pool.slice(0, 4));
             if (round === 9) {
@@ -609,7 +803,8 @@
             setActiveBoss(path.boss || null);
             if (path.boss) setBossIntro(path.boss);
             if (path.reward) setGold(g => g + path.reward);
-            if (path.fillStash && activeBoss?.id !== 'INFORMANT') setStash(100);
+            if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
+            setRunClosed(false);
             setPhase('PLAY');
         };
 
@@ -623,21 +818,65 @@
 
                 {phase === 'LINEUP' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
-                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-8" style={{ animation: 'flicker 4s infinite' }}>GUTTERBONES 1977</h1>
-                        <div className="grid md:grid-cols-4 gap-4 w-full max-w-6xl mb-8">
-                            {PERSONAS.map((p, i) => (
-                                <button key={p.id} onClick={() => { AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); }} className={`bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'}`}>
-                                    <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
-                                        <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${p.color}`}></div>
-                                        <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
-                                    </div>
-                                    <div className="font-marker text-2xl">{p.name}</div>
-                                    <div className="font-mono text-xs mt-2">Cash ${p.cash} / Pills {p.pills} / Plays {p.plays}</div>
-                                    <p className="text-xs mt-3 italic">{p.quirk}</p>
-                                </button>
-                            ))}
+                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3" style={{ animation: 'flicker 4s infinite' }}>GUTTERBONES 1977</h1>
+                        <div className="font-mono text-sm text-[#d6b85c] mb-6 flex flex-wrap gap-3 items-center justify-center">
+                            <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
+                            <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
+                            <span>Runs: <b>{meta.totalRuns}</b></span>
                         </div>
-                        <button onClick={startRun} className="px-12 py-5 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-3xl font-mono tracking-widest shadow-[0_6px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-2 active:shadow-none transition-all">OFFER CONTRACT</button>
+                        <div className="grid md:grid-cols-4 gap-4 w-full max-w-6xl mb-8">
+                            {PERSONAS.map((p, i) => {
+                                const unlocked = meta.unlockedPersonaIds.includes(p.id);
+                                const unlock = SAFEHOUSE_UPGRADES.find(u => u.type === 'persona' && u.unlocks.includes(p.id));
+                                return (
+                                    <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); }} className={`relative bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`}>
+                                        <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
+                                            <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${p.color}`}></div>
+                                            <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
+                                        </div>
+                                        <div className="font-marker text-2xl">{p.name}</div>
+                                        <div className="font-mono text-xs mt-2">Cash ${p.cash} / Pills {p.pills} / Plays {p.plays}</div>
+                                        <p className="text-xs mt-3 italic">{p.quirk}</p>
+                                        {!unlocked && <div className="absolute inset-0 bg-black/70 text-white flex flex-col items-center justify-center p-4 text-center font-mono"><div className="text-[#ff007f] font-bold mb-2">LOCKED</div><div className="text-xs">Safehouse: {unlock ? `$${unlock.cost}` : 'Unknown Contact'}</div></div>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            {hasSavedRun && <button onClick={resumeRun} className="px-8 py-4 bg-[#0df] border-4 border-[#064b52] text-black text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
+                            <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-12 py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            <button onClick={() => setPhase('SAFEHOUSE')} className="px-8 py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'SAFEHOUSE' && (
+                    <div className="h-full flex items-center justify-center relative z-30 overflow-y-auto p-6 bg-black/50">
+                        <div className="w-full max-w-5xl bg-[#E2D1B8] text-black border-l-[18px] border-[#c4b59d] shadow-[10px_20px_30px_black] p-6 md:p-8">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-black pb-4 mb-6 gap-3">
+                                <div><div className="font-marker text-4xl md:text-5xl">THE SAFEHOUSE</div><div className="font-mono text-sm opacity-70">Spend laundered cash on permanent contacts.</div></div>
+                                <div className="font-mono text-2xl text-green-800 font-bold">${meta.launderedCash}</div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                {SAFEHOUSE_UPGRADES.map(upgrade => {
+                                    const bought = meta.purchasedUpgradeIds.includes(upgrade.id);
+                                    const canBuy = meta.launderedCash >= upgrade.cost && !bought;
+                                    return (
+                                        <div key={upgrade.id} className={`border-2 p-4 bg-white/50 ${bought ? 'border-green-700' : 'border-black'}`}>
+                                            <div className="flex justify-between gap-3"><div><div className="font-marker text-2xl">{upgrade.name}</div><div className="font-mono text-xs opacity-70 mt-1">{upgrade.desc}</div></div><div className="font-mono font-bold text-lg">${upgrade.cost}</div></div>
+                                            <div className="font-mono text-[10px] mt-3 opacity-60">UNLOCKS: {upgrade.unlocks.join(', ')}</div>
+                                            <button onClick={() => purchaseSafehouseUpgrade(upgrade)} disabled={!canBuy} className={`mt-4 w-full py-2 font-mono font-bold border-2 ${bought ? 'border-green-700 text-green-800 bg-green-100' : canBuy ? 'border-black bg-[#c78b16] text-black hover:bg-yellow-500' : 'border-gray-500 text-gray-500 bg-gray-200'}`}>{bought ? 'CONTACT SECURED' : canBuy ? 'PAY THE BRIBE' : 'NEED MORE CASH'}</button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-3 font-mono text-xs bg-black/10 border border-black/20 p-3 mb-6">
+                                <div><b>Personas:</b> {meta.unlockedPersonaIds.length}/{PERSONAS.length}</div>
+                                <div><b>Contraband Faces:</b> {meta.unlockedFaceIds.length}/{Object.keys(FACE_DATABASE).length}</div>
+                                <div><b>Hardware:</b> {meta.unlockedHardwareIds.length}/{Object.keys(DEVISES).length}</div>
+                            </div>
+                            <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                        </div>
                     </div>
                 )}
 
@@ -743,10 +982,10 @@
                     <div className="h-full flex items-center justify-center z-[500] relative bg-black/80 overflow-y-auto p-4">
                         <div className="bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold">CASE #77-0492</div></div>
-                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`}></div></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div></div></div>
+                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`}></div></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                             <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none">INCARCERATED</div>
-                            <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
+                            <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                         </div>
                     </div>
                 )}
@@ -756,7 +995,7 @@
                         <CashRain count={30} />
                         <div className="bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3">
                             <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange]"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold">GREYHOUND - ONE WAY</div></div></div>
-                            <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Laundered: ${gold}</div></div>
+                            <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
                             <button onClick={() => setPhase('LINEUP')} className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
                         </div>
                     </div>
