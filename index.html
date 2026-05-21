@@ -651,15 +651,16 @@
             setRolling(true);
             setDiscards(d => d - 1);
             setHasRolled(true);
-            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null })), 80);
+            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 80);
             setTimeout(() => {
                 clearInterval(interval);
                 setDice(prev => prev.map((d,i) => {
                     if (kept[i]) return d;
                     const face = d.faces[Math.floor(Math.random() * d.faces.length)];
+                    const isStandard = face.type === 'standard';
                     let value = face.value;
                     if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
-                    return { ...d, value, faceId: face.id, faceLabel: face.label, faceStyle: face.style, type: face.type };
+                    return { ...d, value, faceId: isStandard ? null : face.id, faceLabel: isStandard ? null : face.label, faceStyle: isStandard ? null : face.style, type: isStandard ? 'standard' : face.type };
                 }));
                 setRolling(false);
             }, 800);
@@ -678,7 +679,7 @@
             setDiscards(d => d - 1);
             setDice(prev => {
                 const next = [...prev];
-                next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, id: Math.random() };
+                next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard', id: Math.random() };
                 return next;
             });
             AudioSystem.playTone(600, 'square', 0.1);
