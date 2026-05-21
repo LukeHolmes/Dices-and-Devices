@@ -36,15 +36,10 @@
     #root-gutterbones { font-family: Georgia, serif; }
     #root-gutterbones .font-marker { font-family: Impact, "Arial Black", sans-serif; }
     #root-gutterbones .font-mono { font-family: "Courier New", monospace; }
-    @keyframes violentRoll {
-        0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-        35% { transform: translate3d(var(--tx1), var(--ty1), 0) rotate(var(--r1)) scale(1.18); }
-        70% { transform: translate3d(var(--tx2), var(--ty2), 0) rotate(var(--r2)) scale(0.95); }
-        100% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1); }
-    }
     @keyframes flicker {
-        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; text-shadow: 0 0 6px #ff007f, 0 0 18px #00ddff; }
-        20%, 22%, 24%, 55% { opacity: .45; text-shadow: none; }
+        0%, 14%, 15%, 33%, 34%, 48%, 49%, 72%, 73%, 100% { opacity: 1; text-shadow: 0 0 6px #ff007f, 0 0 18px #00ddff; }
+        14.2%, 14.6%, 33.2%, 48.2%, 72.5% { opacity: .5; text-shadow: none; }
+        14.8% { opacity: .88; text-shadow: 0 0 5px #00ddff, 0 0 12px #00ddff; }
     }
     @keyframes stampSlam {
         0% { transform: scale(2.5) rotate(15deg); opacity: 0; }
@@ -63,12 +58,76 @@
         0% { transform: scale(.85); opacity: 0; filter: blur(8px); }
         100% { transform: scale(1); opacity: 1; filter: blur(0); }
     }
+    @keyframes grainShift {
+        0% { transform: translate3d(0, 0, 0); }
+        33% { transform: translate3d(-1.5%, 1%, 0); }
+        66% { transform: translate3d(1%, -1.5%, 0); }
+        100% { transform: translate3d(0.5%, 0.5%, 0); }
+    }
+    @keyframes leakPulse {
+        0%, 100% { opacity: 0.18; transform: scale(1) translate3d(0, 0, 0); }
+        50% { opacity: 0.3; transform: scale(1.08) translate3d(-1.5%, 1%, 0); }
+    }
+    @keyframes smokeDrift {
+        0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.06; }
+        45% { opacity: 0.1; }
+        100% { transform: translate3d(var(--sx, 40px), var(--sy, -24px), 0) scale(1.25); opacity: 0.04; }
+    }
+    @keyframes feltRollPulse {
+        0% { opacity: 0; box-shadow: inset 0 0 0 rgba(255, 0, 127, 0); }
+        30% { opacity: 0.4; box-shadow: inset 0 0 28px rgba(255, 0, 127, 0.28); }
+        100% { opacity: 0; box-shadow: inset 0 0 6px rgba(255, 0, 127, 0); }
+    }
+    @keyframes boneRoll {
+        0% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)) scale(1); }
+        12% { transform: translate3d(0, 8px, 0) rotate(var(--rest-rotate, 0deg)) scale(0.9); }
+        25% { transform: translate3d(var(--tx1), var(--ty1), 0) rotate(var(--r1)) scale(1.16); }
+        70% { transform: translate3d(var(--tx2), var(--ty2), 0) rotate(var(--r2)) scale(0.95); }
+        86% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1.08); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1); }
+    }
+    @keyframes boneIdle {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+        40% { transform: translate3d(1px, -1px, 0) rotate(calc(var(--rest-rotate, 0deg) + 0.5deg)); }
+        70% { transform: translate3d(-1px, 0, 0) rotate(calc(var(--rest-rotate, 0deg) - 0.35deg)); }
+    }
+    @keyframes keptBob {
+        0%, 100% { transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); }
+        50% { transform: translate3d(0, -11px, 0) rotate(var(--rest-rotate, 0deg)); }
+    }
+    @keyframes verdictBloom {
+        0% { opacity: 0; transform: scale(0.8); box-shadow: 0 0 0 var(--verdict-color); }
+        35% { opacity: 0.95; transform: scale(1.1); box-shadow: 0 0 32px var(--verdict-color); }
+        100% { opacity: 0; transform: scale(1.25); box-shadow: 0 0 8px transparent; }
+    }
     #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
     #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
     #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
     #root-gutterbones .risk-badge { display:inline-flex; border:1px solid rgba(255,0,127,.5); background:rgba(127,0,60,.45); color:#fbcfe8; border-radius:999px; padding:1px 6px; font-size:9px; font-weight:bold; font-family:"Courier New", monospace; }
     #root-gutterbones .glow-rare { box-shadow: 0 0 18px rgba(0,221,255,.45); border-color: rgba(0,221,255,.75) !important; }
     #root-gutterbones .glow-danger { box-shadow: 0 0 18px rgba(255,0,127,.45); border-color: rgba(255,0,127,.85) !important; }
+    #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
+    #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
+    #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
+    #root-gutterbones .felt-surface { background: radial-gradient(circle at 50% 48%, #7a2731 0%, #6e1d24 45%, #4a1016 100%); }
+    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.14) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .8; }
+    #root-gutterbones .felt-surface::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+    #root-gutterbones .felt-roll-pulse::after { animation: feltRollPulse .65s ease-out forwards; }
+    #root-gutterbones .felt-smoke { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+    #root-gutterbones .felt-smoke-wisp { position: absolute; width: 45%; aspect-ratio: 1/1; border-radius: 999px; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.15) 0%, rgba(255,255,255,0) 68%); filter: blur(14px); animation: smokeDrift var(--dur, 48s) linear infinite; opacity: .08; }
+    #root-gutterbones .bone-rolling { animation-name: boneRoll; animation-duration: var(--roll-dur, .9s); animation-delay: var(--roll-delay, 0ms); animation-fill-mode: forwards; animation-timing-function: cubic-bezier(.25,1,.5,1); will-change: transform, filter; }
+    #root-gutterbones .bone-idle { animation: boneIdle 6.4s ease-in-out var(--idle-delay, 0s) infinite; }
+    #root-gutterbones .bone-kept { animation: keptBob 2.4s ease-in-out infinite; transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); box-shadow: 0 0 14px rgba(255,0,127,.7); border-color: #ff007f; }
+    #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
+    @media (prefers-reduced-motion: reduce) {
+        #root-gutterbones .ambient-grain,
+        #root-gutterbones .ambient-leak,
+        #root-gutterbones .felt-smoke-wisp,
+        #root-gutterbones .bone-idle,
+        #root-gutterbones .bone-kept,
+        #root-gutterbones .bone-rolling,
+        #root-gutterbones .bone-verdict-glow { animation: none !important; }
+    }
 </style>
 
 <script type="text/babel">
@@ -95,8 +154,8 @@
         },
         clatter() {
             this.playTone(150, 'triangle', 0.1, 0.06);
-            setTimeout(() => this.playTone(60, 'sawtooth', 0.2, 0.3), 420);
-            setTimeout(() => this.playTone(40, 'sawtooth', 0.35, 0.35), 760);
+            setTimeout(() => this.playTone(60, 'sawtooth', 0.22, 0.3), 520);
+            setTimeout(() => this.playTone(40, 'sawtooth', 0.38, 0.35), 980);
         },
         payout() {
             [400, 500, 600, 800].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.1), i * 95));
@@ -254,6 +313,23 @@
         if (item.id === 'BLOOD_PACT') return ['ROLL TOLL'];
         return [];
     };
+    const verdictGlowForFace = (faceId, type) => {
+        if (!faceId || faceId === 'standard') return null;
+        const byFace = {
+            WILD_FACE: 'rgba(255, 0, 127, 0.65)',
+            BLOOD_6: 'rgba(255, 45, 45, 0.62)',
+            ECHO_FACE: 'rgba(0, 221, 255, 0.6)',
+            SHIV_FACE: 'rgba(255, 72, 38, 0.68)',
+            WIREBAG_FACE: 'rgba(0, 221, 255, 0.55)',
+            GHOST_FACE: 'rgba(234, 234, 255, 0.58)',
+            MULT_FACE: 'rgba(0, 221, 255, 0.5)',
+            GOLD_FACE: 'rgba(214, 184, 92, 0.56)'
+        };
+        if (byFace[faceId]) return byFace[faceId];
+        if (type === 'blood') return 'rgba(255, 45, 45, 0.62)';
+        if (type === 'danger') return 'rgba(255, 0, 127, 0.58)';
+        return 'rgba(214, 184, 92, 0.52)';
+    };
 
     const CashRain = ({ count = 24 }) => (
         <div className="absolute inset-0 pointer-events-none z-[200]">
@@ -264,26 +340,47 @@
     );
 
     const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill }) => {
-        const ref = useRef({ locked: false, vars: {} });
+        const ref = useRef({
+            locked: false,
+            vars: {
+                '--idle-delay': `${(slot * 0.18) + (Math.random() * 1.2)}s`,
+                '--roll-dur': '0.86s',
+                '--roll-delay': '0ms',
+                '--rf': '0deg'
+            }
+        });
+        const [verdictColor, setVerdictColor] = useState(null);
         if (rolling && !ref.current.locked) {
             ref.current = {
                 locked: true,
                 vars: {
+                    '--idle-delay': ref.current.vars['--idle-delay'],
                     '--tx1': `${(Math.random()-.5)*240}px`,
                     '--ty1': `${(Math.random()-.5)*150-80}px`,
                     '--tx2': `${(Math.random()-.5)*80}px`,
                     '--ty2': `${(Math.random()-.5)*40}px`,
                     '--r1': `${Math.random()*900}deg`,
                     '--r2': `${Math.random()*1200}deg`,
-                    '--rf': `${(Math.random()-.5)*45}deg`
+                    '--rf': `${(Math.random()-.5)*45}deg`,
+                    '--roll-dur': `${(0.72 + Math.random() * 0.33).toFixed(2)}s`,
+                    '--roll-delay': `${Math.floor(Math.random() * 80)}ms`
                 }
             };
         }
         if (!rolling && ref.current.locked) ref.current = { locked: false, vars: ref.current.vars };
+        useEffect(() => {
+            if (rolling) return;
+            const glow = verdictGlowForFace(data.faceId, data.type);
+            if (!glow) return;
+            setVerdictColor(glow);
+            const id = setTimeout(() => setVerdictColor(null), 420);
+            return () => clearTimeout(id);
+        }, [rolling, data.faceId, data.type]);
         return (
             <div className="relative group">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'animate-[violentRoll_0.8s_cubic-bezier(0.25,1,0.5,1)_forwards]' : ''} ${kept ? 'border-[#ff007f] shadow-[0_0_14px_rgba(255,0,127,.7)] -translate-y-2' : ''} ${selected ? 'ring-4 ring-[#0df] scale-110 z-50' : ''}`} style={rolling ? { ...ref.current.vars } : { transform: `rotate(${ref.current.vars['--rf'] || '0deg'})` }}>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
+                    {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
                     {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
                         <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
                             <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
@@ -374,6 +471,7 @@
         const [swapIdx, setSwapIdx] = useState(null);
         const [payoutActive, setPayoutActive] = useState(false);
         const [bustActive, setBustActive] = useState(false);
+        const [feltPulse, setFeltPulse] = useState(false);
         const [history, setHistory] = useState([]);
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
         const [flyingScores, setFlyingScores] = useState([]);
@@ -637,6 +735,7 @@
 
         const rollBones = () => {
             if (rolling || discards <= 0 || hands <= 0) return;
+            const settleMs = 1120;
             let toll = 0;
             if (activeBoss?.id === 'LOAN_SHARK') toll += 2;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
@@ -649,9 +748,11 @@
             }
             AudioSystem.clatter();
             setRolling(true);
+            setFeltPulse(true);
+            setTimeout(() => setFeltPulse(false), 650);
             setDiscards(d => d - 1);
             setHasRolled(true);
-            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 80);
+            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 70);
             setTimeout(() => {
                 clearInterval(interval);
                 setDice(prev => prev.map((d,i) => {
@@ -663,7 +764,7 @@
                     return { ...d, value, faceId: isStandard ? null : face.id, faceLabel: isStandard ? null : face.label, faceStyle: isStandard ? null : face.style, type: isStandard ? 'standard' : face.type };
                 }));
                 setRolling(false);
-            }, 800);
+            }, settleMs);
         };
 
         const popPill = (idx) => {
@@ -814,6 +915,9 @@
         return (
             <div className="w-full h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#262422_1px,transparent_1px),linear-gradient(180deg,rgba(255,0,127,0.05)_0%,rgba(0,221,255,0.05)_100%)] bg-[length:4px_4px,100%_100%] pointer-events-none z-0"></div>
+                <div className="ambient-grain"></div>
+                <div className="ambient-vignette"></div>
+                <div className="ambient-leak"></div>
                 {payoutActive && <CashRain count={18} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
@@ -821,7 +925,7 @@
 
                 {phase === 'LINEUP' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
-                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3" style={{ animation: 'flicker 4s infinite' }}>GUTTERBONES 1977</h1>
+                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">GUTTERBONES 1977</h1>
                         <div className="font-mono text-sm text-[#d6b85c] mb-6 flex flex-wrap gap-3 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
@@ -903,8 +1007,13 @@
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 sticky top-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
                                 {Object.values(CATEGORIES).map(cat => <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />)}
                             </div>
-                            <div className="order-1 md:order-2 flex-1 md:col-span-6 bg-[#6e1d24] border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh]">
-                                <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic" style={{ animation: 'flicker 4s infinite' }}>THE ALLEYWAY</div>
+                            <div className={`order-1 md:order-2 flex-1 md:col-span-6 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh] ${feltPulse ? 'felt-roll-pulse' : ''}`}>
+                                <div className="felt-smoke">
+                                    <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
+                                    <div className="felt-smoke-wisp right-[-12%] top-[46%]" style={{ '--sx': '-62px', '--sy': '-36px', '--dur': '44s' }}></div>
+                                    <div className="felt-smoke-wisp left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
+                                </div>
+                                <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 <div className="flex gap-2 md:gap-4 mb-14 md:mb-16 z-30">
                                     {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
@@ -945,7 +1054,7 @@
                     <div className="h-full flex items-center justify-center p-3 md:p-12 bg-black/80 backdrop-blur-sm z-[300] relative overflow-y-auto">
                         <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0">
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
-                                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16]" style={{ animation: 'flicker 4s infinite' }}>THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className="text-3xl text-green-400 font-mono font-bold">${gold}</div></div></div>
+                                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className="text-3xl text-green-400 font-mono font-bold">${gold}</div></div></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
                                     const isFace = !!item.type;
                                     return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group ${rarityClass(item.rarity)}`}>
