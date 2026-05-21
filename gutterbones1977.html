@@ -1,0 +1,770 @@
+<div id="root-gutterbones" style="width:100%;min-height:800px;background:#121113;color:#d6b85c;position:relative;overflow:hidden;border-radius:8px;">
+    <div style="font-family:monospace;text-align:center;padding-top:100px;">LOADING GUTTERBONES 1977...</div>
+</div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    gutter: {
+                        felt: '#6e1d24',
+                        paper: '#e8e6e1',
+                        cash: '#c78b16',
+                        neon: '#ff007f',
+                        cyan: '#00ddff',
+                        bone: '#d4cfc5',
+                        ink: '#121113'
+                    }
+                },
+                fontFamily: {
+                    marker: ['Impact', 'Arial Black', 'sans-serif'],
+                    mono: ['Courier New', 'monospace'],
+                    serif: ['Georgia', 'serif']
+                }
+            }
+        }
+    };
+</script>
+
+<style>
+    #root-gutterbones { font-family: Georgia, serif; }
+    #root-gutterbones .font-marker { font-family: Impact, "Arial Black", sans-serif; }
+    #root-gutterbones .font-mono { font-family: "Courier New", monospace; }
+    @keyframes violentRoll {
+        0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+        35% { transform: translate3d(var(--tx1), var(--ty1), 0) rotate(var(--r1)) scale(1.18); }
+        70% { transform: translate3d(var(--tx2), var(--ty2), 0) rotate(var(--r2)) scale(0.95); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1); }
+    }
+    @keyframes flicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; text-shadow: 0 0 6px #ff007f, 0 0 18px #00ddff; }
+        20%, 22%, 24%, 55% { opacity: .45; text-shadow: none; }
+    }
+    @keyframes stampSlam {
+        0% { transform: scale(2.5) rotate(15deg); opacity: 0; }
+        100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+    }
+    @keyframes cashFall {
+        0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 1; }
+        100% { transform: translateY(110vh) rotate(720deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes flyScore {
+        0% { transform: translate(-50%, 0) scale(.7); opacity: 0; }
+        35% { opacity: 1; }
+        100% { transform: translate(-50%, -120px) scale(1.05); opacity: 0; }
+    }
+    @keyframes bossIntro {
+        0% { transform: scale(.85); opacity: 0; filter: blur(8px); }
+        100% { transform: scale(1); opacity: 1; filter: blur(0); }
+    }
+    #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
+    #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
+    #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
+    #root-gutterbones .risk-badge { display:inline-flex; border:1px solid rgba(255,0,127,.5); background:rgba(127,0,60,.45); color:#fbcfe8; border-radius:999px; padding:1px 6px; font-size:9px; font-weight:bold; font-family:"Courier New", monospace; }
+    #root-gutterbones .glow-rare { box-shadow: 0 0 18px rgba(0,221,255,.45); border-color: rgba(0,221,255,.75) !important; }
+    #root-gutterbones .glow-danger { box-shadow: 0 0 18px rgba(255,0,127,.45); border-color: rgba(255,0,127,.85) !important; }
+</style>
+
+<script type="text/babel">
+    const { useEffect, useMemo, useRef, useState } = React;
+
+    const AudioSystem = {
+        ctx: null,
+        volume: 1,
+        init() {
+            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        },
+        playTone(f, t, d, v = 0.1) {
+            if (!this.ctx) return;
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = t;
+            o.frequency.value = f;
+            g.gain.value = v * this.volume;
+            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + d);
+            o.connect(g);
+            g.connect(this.ctx.destination);
+            o.start();
+            o.stop(this.ctx.currentTime + d);
+        },
+        clatter() {
+            this.playTone(150, 'triangle', 0.1, 0.06);
+            setTimeout(() => this.playTone(60, 'sawtooth', 0.2, 0.3), 420);
+            setTimeout(() => this.playTone(40, 'sawtooth', 0.35, 0.35), 760);
+        },
+        payout() {
+            [400, 500, 600, 800].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.1), i * 95));
+        },
+        bust() {
+            this.playTone(45, 'sawtooth', 0.5, 0.5);
+        },
+        paper() {
+            this.playTone(600, 'square', 0.05, 0.05);
+            setTimeout(() => this.playTone(400, 'sawtooth', 0.1, 0.08), 50);
+        }
+    };
+
+    const PERSONAS = [
+        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600' },
+        { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700' },
+        { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900' },
+        { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 20% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900' }
+    ];
+
+    const FACE_DATABASE = {
+        MULT_FACE: { id: 'MULT_FACE', value: 0, label: '+1 MULT', style: 'bg-[#111] text-[#0df] border-[#0df]', type: 'modifier', cost: 12, rarity: 'common' },
+        GOLD_FACE: { id: 'GOLD_FACE', value: 0, label: '+$2 CASH', style: 'bg-[#1a1a00] text-[#d6b85c] border-[#d6b85c]', type: 'modifier', cost: 10, rarity: 'common' },
+        WILD_FACE: { id: 'WILD_FACE', value: 'W', label: 'WILD', style: 'bg-[#1a001a] text-[#ff007f] border-[#ff007f]', type: 'wild', cost: 18, rarity: 'rare' },
+        BLOOD_6: { id: 'BLOOD_6', value: 6, label: 'BLOOD 6', style: 'bg-[#2b0808] text-[#ff1111] border-[#ff1111]', type: 'blood', cost: 16, rarity: 'danger' },
+        ECHO_FACE: { id: 'ECHO_FACE', value: 0, label: 'ECHO', style: 'bg-[#111] text-[#0df] border-[#0df]', type: 'adjacent', cost: 16, rarity: 'rare' },
+        SHIV_FACE: { id: 'SHIV_FACE', value: 0, label: 'THE SHIV', style: 'bg-[#1a0000] text-[#ff1111] border-[#ff1111]', type: 'destructive', cost: 22, rarity: 'danger' },
+        WIREBAG_FACE: { id: 'WIREBAG_FACE', value: 0, label: 'WIREBAG', style: 'bg-[#001111] text-[#0df] border-[#0df] border-dashed', type: 'parasite', cost: 14, rarity: 'danger' },
+        GHOST_FACE: { id: 'GHOST_FACE', value: 0, label: 'GHOST', style: 'bg-transparent text-white border-white border-dashed opacity-70', type: 'ethereal', cost: 20, rarity: 'rare' }
+    };
+
+    const DEVISES = {
+        CENTERPIECE: { id: 'CENTERPIECE', name: 'The Centerpiece', desc: 'Slot 3 bone triggers base value and face bonuses twice.', cost: 20, rarity: 'rare' },
+        BOOKENDS: { id: 'BOOKENDS', name: 'The Bookends', desc: 'If Slot 1 and 5 match exactly, +30 chips.', cost: 18, rarity: 'common' },
+        ENGINE: { id: 'ENGINE', name: 'The Engine', desc: 'Slot 1 adds mult for each higher-value bone to its right. Max +4.', cost: 25, rarity: 'rare' },
+        LOADED_DIE: { id: 'LOADED_DIE', name: 'Weighted Core', desc: '+10 chips on Triad.', cost: 12, rarity: 'common' },
+        BLOOD_PACT: { id: 'BLOOD_PACT', name: 'Blood Pact', desc: 'x3 mult, but -$1 per roll.', cost: 20, rarity: 'danger' },
+        BRASS_KNUCKLES: { id: 'BRASS_KNUCKLES', name: 'Brass Knuckles', desc: 'If all scoring bones are 1s, 2s, or 3s, +3 mult.', cost: 18, rarity: 'common' },
+        BLACK_BOOK: { id: 'BLACK_BOOK', name: 'The Black Book', desc: 'Gain $1 when you pop a pill.', cost: 20, rarity: 'rare' },
+        BURNER_PHONE: { id: 'BURNER_PHONE', name: 'Burner Phone', desc: 'The Stash fills 50% faster.', cost: 25, rarity: 'rare' },
+        SHADY_LEDGER: { id: 'SHADY_LEDGER', name: 'Shady Ledger', desc: 'Debt no longer spikes quota. Lose 1 Play while in debt.', cost: 28, rarity: 'danger' },
+        CROWBAR: { id: 'CROWBAR', name: 'The Crowbar', desc: '+1 mult for each Blood or Destructive face showing. Max +5.', cost: 22, rarity: 'common' }
+    };
+
+    const PROGRAMS = [
+        { id: 'SNIFF', name: 'SNIFF', desc: 'Reroll one random free bone.', cost: 25 },
+        { id: 'BRIBE', name: 'BRIBE', desc: '-15% quota.', cost: 60 },
+        { id: 'FIX', name: 'FIX GAME', desc: 'Match plain bones to Slot 1.', cost: 80 },
+        { id: 'LAUNDER', name: 'LAUNDER', desc: 'Clear debt.', cost: 100 }
+    ];
+
+    const BOSSES = {
+        BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5) },
+        LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500' },
+        JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]' },
+        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware disabled', color: 'text-blue-400' },
+        INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400' },
+        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota 300%. Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 3) }
+    };
+
+    const PATHS = [
+        { id: 'LOCAL', name: 'BACK ALLEY', desc: 'Standard hustle.', mod: 1, color: 'border-gray-600 text-gray-400' },
+        { id: 'PAWN', name: 'PAWN SHOP', desc: '+20% quota, +$15.', mod: 1.2, reward: 15, color: 'border-[#c78b16] text-[#c78b16]' },
+        { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
+    ];
+
+    const CATEGORIES = {
+        ONES: { id: 'ONES', name: 'Aces' },
+        TWOS: { id: 'TWOS', name: 'Deuces' },
+        THREES: { id: 'THREES', name: 'Treys' },
+        FOURS: { id: 'FOURS', name: 'Fours' },
+        FIVES: { id: 'FIVES', name: 'Fives' },
+        SIXES: { id: 'SIXES', name: 'Sixes' },
+        TOK: { id: 'TOK', name: 'Triad' },
+        FOK: { id: 'FOK', name: 'Quad' },
+        FH: { id: 'FH', name: 'Full Ride' },
+        SS: { id: 'SS', name: 'Short Run' },
+        LS: { id: 'LS', name: 'Long Run' },
+        Y: { id: 'Y', name: 'THE JACKPOT' },
+        C: { id: 'C', name: 'Slop' }
+    };
+
+    const standardFaces = () => [1,2,3,4,5,6].map(v => ({ id: 'standard', value: v, type: 'standard', label: String(v), style: '' }));
+    const makeBone = () => ({ id: Math.random(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
+    const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'danger' ? 'glow-danger' : '';
+    const riskNotes = item => {
+        if (!item) return [];
+        if (item.rarity === 'danger') return ['HIGH RISK'];
+        if (item.id === 'GHOST_FACE') return ['STRAIGHTS RISK'];
+        if (item.id === 'BLOOD_PACT') return ['ROLL TOLL'];
+        return [];
+    };
+
+    const CashRain = ({ count = 24 }) => (
+        <div className="absolute inset-0 pointer-events-none z-[200]">
+            {Array(count).fill(0).map((_, i) => (
+                <div key={i} className="cash-bill absolute w-16 h-7 bg-[#4a5d23] border-2 border-[#2d3b14] text-[#1a2408] flex items-center justify-center font-bold text-xs shadow-lg" style={{ left: `${Math.random()*100}%`, '--tx': `${(Math.random()-.5)*500}px`, animationDelay: `${Math.random()}s` }}>$100</div>
+            ))}
+        </div>
+    );
+
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill }) => {
+        const ref = useRef({});
+        if (rolling && !ref.current.locked) {
+            ref.current = {
+                '--tx1': `${(Math.random()-.5)*240}px`,
+                '--ty1': `${(Math.random()-.5)*150-80}px`,
+                '--tx2': `${(Math.random()-.5)*80}px`,
+                '--ty2': `${(Math.random()-.5)*40}px`,
+                '--r1': `${Math.random()*900}deg`,
+                '--r2': `${Math.random()*1200}deg`,
+                '--rf': `${(Math.random()-.5)*45}deg`,
+                locked: true
+            };
+        }
+        if (!rolling) ref.current.locked = false;
+        return (
+            <div className="relative group">
+                <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'animate-[violentRoll_0.8s_cubic-bezier(0.25,1,0.5,1)_forwards]' : ''} ${kept ? 'border-[#ff007f] shadow-[0_0_14px_rgba(255,0,127,.7)] -translate-y-2' : ''} ${selected ? 'ring-4 ring-[#0df] scale-110 z-50' : ''}`} style={rolling ? ref.current : { transform: `rotate(${ref.current['--rf'] || '0deg'})` }}>
+                    {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
+                        <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
+                            <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
+                            <div className="text-[8px] uppercase tracking-tighter text-center leading-none mt-1 hidden sm:block">{data.faceLabel}</div>
+                        </div>
+                    ) : <span className="font-serif text-5xl text-gray-900 opacity-80">{data.value}</span>}
+                </button>
+                {!rolling && <button onClick={(e) => { e.stopPropagation(); onPill(); }} className="absolute -top-2 -right-2 w-6 h-6 bg-black border border-gray-600 rounded-full flex items-center justify-center text-xs opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-50">💊{raidPill && <span className="absolute -bottom-4 text-[8px] text-red-500 font-bold font-mono">-$2</span>}</button>}
+            </div>
+        );
+    };
+
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
+        const triggers = (result.triggers || []).slice(0, 2);
+        return (
+            <button onClick={() => onScore(id)} disabled={!canScore} className={`w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base ${used ? 'opacity-30 border-gray-400 line-through' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
+                <span className="flex flex-col items-start">
+                    <span>{cat.name}</span>
+                    {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge">{t.name} {t.value}</span>)}</span>}
+                </span>
+                <span>{used ? 'PAID' : (canScore && result.valid ? result.total : (canScore ? 'BUST' : '-'))}</span>
+            </button>
+        );
+    };
+
+    const BossIntro = ({ boss, target, onDone }) => {
+        useEffect(() => {
+            if (!boss) return;
+            const id = setTimeout(onDone, 1600);
+            return () => clearTimeout(id);
+        }, [boss]);
+        if (!boss) return null;
+        return (
+            <div className="absolute inset-0 z-[250] bg-black/80 flex items-center justify-center">
+                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+                    <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
+                    <h2 className={`${boss.color} font-marker text-5xl mb-3`}>{boss.name}</h2>
+                    <p className="font-mono text-gray-300">{boss.desc}</p>
+                    <p className="font-mono text-xs text-gray-500 mt-3">Quota: {target}</p>
+                </div>
+            </div>
+        );
+    };
+
+    const RiskBadges = ({ item }) => {
+        const notes = riskNotes(item);
+        if (!notes.length) return null;
+        return <div className="flex flex-wrap gap-1 mt-2">{notes.map(n => <span key={n} className="risk-badge">{n}</span>)}</div>;
+    };
+
+    const HistoryPanel = ({ history }) => (
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+            {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 6).map(h => (
+                <div key={h.id} className="border border-black/30 bg-white/30 p-2 font-mono text-xs">
+                    <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total}</b></div>
+                    <div className="opacity-70">Bones: [{h.values.join(', ')}]</div>
+                    {h.triggers.length > 0 && <div className="opacity-70">Hooks: {h.triggers.map(t => t.name).join(', ')}</div>}
+                </div>
+            ))}
+        </div>
+    );
+
+    function App() {
+        const [phase, setPhase] = useState('LINEUP');
+        const [personaIdx, setPersonaIdx] = useState(0);
+        const [persona, setPersona] = useState(PERSONAS[0]);
+        const [round, setRound] = useState(1);
+        const [score, setScore] = useState(0);
+        const [target, setTarget] = useState(150);
+        const [hands, setHands] = useState(4);
+        const [discards, setDiscards] = useState(3);
+        const [gold, setGold] = useState(20);
+        const [debt, setDebt] = useState(0);
+        const [stash, setStash] = useState(0);
+        const [inventory, setInventory] = useState([]);
+        const [dice, setDice] = useState([]);
+        const [kept, setKept] = useState([false,false,false,false,false]);
+        const [rolling, setRolling] = useState(false);
+        const [hasRolled, setHasRolled] = useState(false);
+        const [usedCats, setUsedCats] = useState([]);
+        const [shopItems, setShopItems] = useState([]);
+        const [paths, setPaths] = useState([]);
+        const [activeBoss, setActiveBoss] = useState(null);
+        const [bossIntro, setBossIntro] = useState(null);
+        const [selectedItem, setSelectedItem] = useState(null);
+        const [carvingDie, setCarvingDie] = useState(null);
+        const [swapMode, setSwapMode] = useState(false);
+        const [swapIdx, setSwapIdx] = useState(null);
+        const [payoutActive, setPayoutActive] = useState(false);
+        const [bustActive, setBustActive] = useState(false);
+        const [history, setHistory] = useState([]);
+        const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
+        const [flyingScores, setFlyingScores] = useState([]);
+        const [showMobileStash, setShowMobileStash] = useState(false);
+
+        const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
+        const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
+
+        const spawnFlying = (value) => {
+            const id = Math.random();
+            setFlyingScores(prev => [...prev, { id, value, x: window.innerWidth / 2, y: window.innerHeight * .45 }]);
+            setTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
+        };
+
+        const startRun = () => {
+            const p = PERSONAS[personaIdx];
+            AudioSystem.init();
+            AudioSystem.paper();
+            setPersona(p);
+            setRound(1);
+            setScore(0);
+            setTarget(p.id === 'CARD_COUNTER' ? Math.floor(150 * 1.2) : 150);
+            setHands(p.plays);
+            setDiscards(p.pills);
+            setGold(p.cash);
+            setDebt(0);
+            setStash(0);
+            setUsedCats([]);
+            setActiveBoss(null);
+            setBossIntro(null);
+            setHasRolled(false);
+            setKept([false,false,false,false,false]);
+            setHistory([]);
+            setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
+            setInventory(p.id === 'CARD_COUNTER' ? [DEVISES.BLACK_BOOK] : []);
+            const bones = Array(5).fill(0).map(makeBone);
+            if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
+            setDice(bones);
+            setPhase('PLAY');
+        };
+
+        const resolveDice = (currentDice) => {
+            let resolved = currentDice.map(d => ({...d}));
+            for (let i = 0; i < 5; i++) {
+                if (resolved[i].faceId === 'ECHO_FACE' && i > 0) resolved[i] = { ...resolved[i-1], faceLabel: 'ECHOED', isEchoed: true };
+            }
+            const destroyed = new Set();
+            resolved.forEach((d, i) => {
+                if (d.faceId === 'SHIV_FACE' || (d.isEchoed && d.faceId === 'SHIV_FACE')) {
+                    if (i < 4) destroyed.add(i + 1);
+                }
+            });
+            return { resolved, destroyed };
+        };
+
+        const calculateScore = (catId, currentDice) => {
+            const { resolved, destroyed } = resolveDice(currentDice);
+            const standardVals = resolved.filter((d, i) => !destroyed.has(i) && typeof d.value === 'number' && d.value > 0 && d.faceId !== 'GHOST_FACE').map(d => d.value);
+            const wilds = resolved.filter((d, i) => !destroyed.has(i) && d.value === 'W').length;
+            const sum = standardVals.reduce((a,b)=>a+b,0) + wilds * 6;
+            const counts = {};
+            standardVals.forEach(x => counts[x] = (counts[x] || 0) + 1);
+            const cArr = Object.values(counts);
+            const maxCount = cArr.length ? Math.max(...cArr) : 0;
+            let chips = 0, mult = 1, valid = false, gDelta = 0, triggers = [];
+            switch(catId) {
+                case 'ONES': valid = true; chips = ((counts[1] || 0) + wilds) * 1; break;
+                case 'TWOS': valid = true; chips = ((counts[2] || 0) + wilds) * 2; break;
+                case 'THREES': valid = true; chips = ((counts[3] || 0) + wilds) * 3; break;
+                case 'FOURS': valid = true; chips = ((counts[4] || 0) + wilds) * 4; break;
+                case 'FIVES': valid = true; chips = ((counts[5] || 0) + wilds) * 5; break;
+                case 'SIXES': valid = true; chips = ((counts[6] || 0) + wilds) * 6; break;
+                case 'TOK': valid = maxCount + wilds >= 3; if (valid) { chips = 20; mult *= 2; } break;
+                case 'FOK': valid = maxCount + wilds >= 4; if (valid) { chips = 35; mult *= 3; } break;
+                case 'FH': valid = (cArr.includes(3) && cArr.includes(2)) || (wilds >= 1 && cArr.length <= 2 && maxCount >= 2); if (valid) { chips = 30; mult *= 3; } break;
+                case 'SS': {
+                    const has = req => req.filter(v => !standardVals.includes(v)).length <= wilds;
+                    valid = has([1,2,3,4]) || has([2,3,4,5]) || has([3,4,5,6]);
+                    if (valid) { chips = 30; mult *= 2; }
+                    break;
+                }
+                case 'LS': {
+                    const has = req => req.filter(v => !standardVals.includes(v)).length <= wilds;
+                    valid = has([1,2,3,4,5]) || has([2,3,4,5,6]);
+                    if (valid) { chips = 40; mult *= 3; }
+                    break;
+                }
+                case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
+                case 'C': valid = true; chips = sum; break;
+            }
+            if (!valid) return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [] };
+            resolved.forEach((d, i) => {
+                if (destroyed.has(i)) return;
+                const face = d.faceId;
+                if (face === 'MULT_FACE') { mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); }
+                if (face === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); }
+                if (face === 'BLOOD_6') { chips += 20; gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); }
+                if (face === 'SHIV_FACE') { chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); }
+                if (face === 'WIREBAG_FACE') { mult -= 1; gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); }
+                if (face === 'GHOST_FACE') { mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); }
+            });
+            mult = Math.max(0.5, mult);
+            if (!hardwareDisabled) {
+                inventory.forEach(item => {
+                    if (item.id === 'CENTERPIECE') {
+                        const center = resolved[2];
+                        if (center && !destroyed.has(2)) {
+                            if (typeof center.value === 'number') chips += center.value;
+                            if (center.faceId === 'MULT_FACE') mult += 1;
+                            if (center.faceId === 'GHOST_FACE') mult += 2;
+                            triggers.push({ name: 'CENTER', value: 'slot 3' });
+                        }
+                    }
+                    if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
+                        chips += 30; triggers.push({ name: 'BOOKENDS', value: '+30' });
+                    }
+                    if (item.id === 'ENGINE') {
+                        const anchor = resolved[0].value;
+                        if (typeof anchor === 'number' && !destroyed.has(0)) {
+                            const bonus = Math.min(4, resolved.slice(1).filter((d, idx) => !destroyed.has(idx + 1) && typeof d.value === 'number' && d.value > anchor).length);
+                            if (bonus) { mult += bonus; triggers.push({ name: 'ENGINE', value: `+${bonus}x` }); }
+                        }
+                    }
+                    if (item.id === 'LOADED_DIE' && catId === 'TOK') { chips += 10; triggers.push({ name: 'LOADED', value: '+10' }); }
+                    if (item.id === 'BLOOD_PACT') { mult *= 3; triggers.push({ name: 'PACT', value: 'x3' }); }
+                    if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) { mult += 3; triggers.push({ name: 'KNUCKLES', value: '+3x' }); }
+                    if (item.id === 'CROWBAR') {
+                        const count = Math.min(5, resolved.filter((d,i) => !destroyed.has(i) && (d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE')).length);
+                        if (count) { mult += count; triggers.push({ name: 'CROWBAR', value: `+${count}x` }); }
+                    }
+                });
+            }
+            return { valid: true, chips, mult, total: Math.floor(chips * mult), gDelta, triggers };
+        };
+
+        const rollBones = () => {
+            if (rolling || discards <= 0 || hands <= 0) return;
+            let toll = 0;
+            if (activeBoss?.id === 'LOAN_SHARK') toll += 2;
+            if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
+            if (toll > 0) {
+                setGold(g => {
+                    if (g >= toll) return g - toll;
+                    setDebt(d => d + (toll - g));
+                    return 0;
+                });
+            }
+            AudioSystem.clatter();
+            setRolling(true);
+            setDiscards(d => d - 1);
+            setHasRolled(true);
+            const interval = setInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null })), 80);
+            setTimeout(() => {
+                clearInterval(interval);
+                setDice(prev => prev.map((d,i) => {
+                    if (kept[i]) return d;
+                    const face = d.faces[Math.floor(Math.random() * d.faces.length)];
+                    let value = face.value;
+                    if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
+                    return { ...d, value, faceId: face.id, faceLabel: face.label, faceStyle: face.style, type: face.type };
+                }));
+                setRolling(false);
+            }, 800);
+        };
+
+        const popPill = (idx) => {
+            if (discards <= 0 || rolling) return;
+            if (activeBoss?.id === 'THE_RAID') {
+                setGold(g => {
+                    if (g >= 2) return g - 2;
+                    setDebt(d => d + (2 - g));
+                    return 0;
+                });
+            }
+            if (inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled) setGold(g => g + 1);
+            setDiscards(d => d - 1);
+            setDice(prev => {
+                const next = [...prev];
+                next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, id: Math.random() };
+                return next;
+            });
+            AudioSystem.playTone(600, 'square', 0.1);
+        };
+
+        const executePayout = (catId) => {
+            const result = calculateScore(catId, dice);
+            setUsedCats(prev => [...prev, catId]);
+            setHands(h => h - 1);
+            setKept([false,false,false,false,false]);
+            setDiscards(persona.pills);
+            setHasRolled(false);
+            setSwapMode(false);
+            setSwapIdx(null);
+            if (result.valid) {
+                const nextScore = score + result.total;
+                setScore(nextScore);
+                spawnFlying(result.total);
+                setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
+                if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
+                if (activeBoss?.id !== 'INFORMANT') {
+                    let gain = Math.min(60, (result.total / currentTarget) * 100 * 2);
+                    if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
+                    if (persona.id === 'HUSTLER') gain *= 0.5;
+                    setStash(s => Math.min(100, s + gain));
+                }
+                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
+                if (result.total >= 50) { setPayoutActive(true); AudioSystem.payout(); setTimeout(() => setPayoutActive(false), 1800); }
+                else AudioSystem.playTone(600, 'sine', 0.1);
+            } else {
+                AudioSystem.playTone(80, 'sawtooth', 0.25);
+            }
+            const gained = result.valid ? result.total : 0;
+            if (hands <= 1 && score + gained < currentTarget) {
+                setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
+                setBustActive(true);
+                AudioSystem.bust();
+                setTimeout(() => setPhase('RAP_SHEET'), 1600);
+            } else if (hands <= 1) {
+                if (round >= 10) {
+                    AudioSystem.paper();
+                    setPhase('VICTORY');
+                } else {
+                    generateShop();
+                    setPhase('SHOP');
+                }
+            }
+        };
+
+        const handleProgram = (p) => {
+            if (stash < p.cost || activeBoss?.id === 'INFORMANT') return;
+            setStash(s => s - p.cost);
+            if (p.id === 'SNIFF') {
+                const free = dice.map((_, i) => i).filter(i => !kept[i]);
+                if (free.length) popPill(free[Math.floor(Math.random() * free.length)]);
+            }
+            if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
+            if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
+            if (p.id === 'LAUNDER') setDebt(0);
+            setShowMobileStash(false);
+        };
+
+        const generateShop = () => {
+            const faces = Object.values(FACE_DATABASE);
+            const hardware = Object.values(DEVISES).filter(d => !inventory.some(i => i.id === d.id));
+            const pool = [...faces, ...hardware].sort(() => Math.random() - .5);
+            setShopItems(pool.slice(0, 4));
+            if (round === 9) {
+                setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
+            } else {
+                const next = [...PATHS];
+                if (round % 2 === 0) {
+                    const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
+                    next[2] = { ...next[2], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
+                }
+                setPaths(next);
+            }
+        };
+
+        const handlePurchase = (item) => {
+            if (gold >= item.cost) setGold(g => g - item.cost);
+            else { setDebt(d => d + (item.cost - gold)); setGold(0); }
+            AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
+            if (item.type) {
+                setSelectedItem(item);
+                setCarvingDie(null);
+                setPhase('CARVING');
+            } else {
+                setInventory(prev => [...prev, item]);
+                setShopItems(prev => prev.filter(i => i.id !== item.id));
+            }
+        };
+
+        const executeCarve = (dieIdx, faceIdx) => {
+            if (!selectedItem) return;
+            setDice(prev => {
+                const next = [...prev];
+                const target = { ...next[dieIdx], faces: [...next[dieIdx].faces] };
+                target.faces[faceIdx] = selectedItem;
+                next[dieIdx] = target;
+                return next;
+            });
+            setShopItems(prev => prev.filter(i => i.id !== selectedItem.id));
+            setSelectedItem(null);
+            setCarvingDie(null);
+            setPhase('SHOP');
+        };
+
+        const handleAdvance = (path) => {
+            const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
+            let nextTarget = Math.floor(target * path.mod) + 50;
+            if (!hasLedger && debt > 0) nextTarget += debt * 2;
+            setRound(r => r + 1);
+            setScore(0);
+            setTarget(nextTarget);
+            setHands(Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0)));
+            setDiscards(persona.pills);
+            setUsedCats([]);
+            setHasRolled(false);
+            setKept([false,false,false,false,false]);
+            setActiveBoss(path.boss || null);
+            if (path.boss) setBossIntro(path.boss);
+            if (path.reward) setGold(g => g + path.reward);
+            if (path.fillStash && activeBoss?.id !== 'INFORMANT') setStash(100);
+            setPhase('PLAY');
+        };
+
+        return (
+            <div className="w-full h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#262422_1px,transparent_1px),linear-gradient(180deg,rgba(255,0,127,0.05)_0%,rgba(0,221,255,0.05)_100%)] bg-[length:4px_4px,100%_100%] pointer-events-none z-0"></div>
+                {payoutActive && <CashRain count={18} />}
+                {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
+                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
+                {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
+
+                {phase === 'LINEUP' && (
+                    <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
+                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-8" style={{ animation: 'flicker 4s infinite' }}>GUTTERBONES 1977</h1>
+                        <div className="grid md:grid-cols-4 gap-4 w-full max-w-6xl mb-8">
+                            {PERSONAS.map((p, i) => (
+                                <button key={p.id} onClick={() => { AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); }} className={`bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'}`}>
+                                    <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
+                                        <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${p.color}`}></div>
+                                        <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
+                                    </div>
+                                    <div className="font-marker text-2xl">{p.name}</div>
+                                    <div className="font-mono text-xs mt-2">Cash ${p.cash} / Pills {p.pills} / Plays {p.plays}</div>
+                                    <p className="text-xs mt-3 italic">{p.quirk}</p>
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={startRun} className="px-12 py-5 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-3xl font-mono tracking-widest shadow-[0_6px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-2 active:shadow-none transition-all">OFFER CONTRACT</button>
+                    </div>
+                )}
+
+                {phase === 'PLAY' && (
+                    <div className="h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative">
+                        <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
+                            {activeBoss && <div className="px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
+                            <div className="flex justify-between items-center p-3 md:p-4">
+                                <div className="hidden sm:block"><div className="text-xs uppercase opacity-50">The Fixer</div><div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div></div>
+                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className="text-3xl md:text-5xl font-black text-red-600 font-mono tracking-tighter">{score.toString().padStart(4, '0')} <span className="text-xl md:text-3xl opacity-50">/ {currentTarget}</span></div></div>
+                                <div className="flex gap-3 md:gap-6 text-right">
+                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''}`}>${gold}{debt > 0 && <span className="text-xs"> (-{debt})</span>}</div></div>
+                                    <div><div className="text-[10px] opacity-50">PILLS</div><div className="text-xl md:text-2xl text-[#0df] font-mono">{discards}</div></div>
+                                    <div><div className="text-[10px] opacity-50">PLAYS</div><div className="text-xl md:text-2xl text-white font-mono">{hands}</div></div>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowMobileStash(true)} className="md:hidden w-full bg-gray-800 text-gray-300 py-2 border-t border-gray-700 text-[10px] font-mono font-bold tracking-widest">OPEN STASH / HARDWARE</button>
+                        </div>
+                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-6 min-h-0">
+                            <div className="order-2 md:order-1 md:col-span-3 bg-[#e8e6e1] text-gray-900 p-3 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-y-auto max-h-[26vh] md:max-h-full">
+                                <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 sticky top-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
+                                {Object.values(CATEGORIES).map(cat => <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />)}
+                            </div>
+                            <div className="order-1 md:order-2 flex-1 md:col-span-6 bg-[#6e1d24] border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh]">
+                                <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic" style={{ animation: 'flicker 4s infinite' }}>THE ALLEYWAY</div>
+                                <div className="flex gap-2 md:gap-4 mb-14 md:mb-16 z-30">
+                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} onPill={() => popPill(i)} onClick={() => {
+                                        if (swapMode) {
+                                            if (swapIdx === null) setSwapIdx(i);
+                                            else {
+                                                setDice(prev => { const n = [...prev]; [n[swapIdx], n[i]] = [n[i], n[swapIdx]]; return n; });
+                                                setKept(prev => { const n = [...prev]; [n[swapIdx], n[i]] = [n[i], n[swapIdx]]; return n; });
+                                                setSwapIdx(null); setSwapMode(false); AudioSystem.playTone(400, 'triangle', .1);
+                                            }
+                                        } else if (!rolling && hasRolled) {
+                                            setKept(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
+                                            AudioSystem.playTone(800, 'sine', .1);
+                                        }
+                                    }} />)}
+                                </div>
+                                <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
+                                    <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
+                                    <button onClick={rollBones} disabled={rolling || discards <= 0 || hands <= 0 || swapMode} className="flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3">ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT')) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
+                                </div>
+                            </div>
+                            <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} md:static md:col-span-3 md:flex flex-col gap-4`}>
+                                <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
+                                <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl">
+                                    <h3 className={`text-center border-b pb-2 font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500 border-yellow-500' : 'text-[#0df] border-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
+                                    <div className="h-6 bg-black border border-gray-600 rounded-full overflow-hidden mt-4"><div className={`h-full bg-white shadow-[0_0_15px_white] transition-all duration-500 ${activeBoss?.id === 'INFORMANT' ? 'bg-yellow-500' : ''}`} style={{width: `${stash}%`}}></div></div>
+                                    <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onClick={() => handleProgram(p)} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
+                                </div>
+                                <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
+                                    <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
+                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} /></div>)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'SHOP' && (
+                    <div className="h-full flex items-center justify-center p-3 md:p-12 bg-black/80 backdrop-blur-sm z-[300] relative overflow-y-auto">
+                        <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0">
+                            <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
+                                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16]" style={{ animation: 'flicker 4s infinite' }}>THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className="text-3xl text-green-400 font-mono font-bold">${gold}</div></div></div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
+                                    const isFace = !!item.type;
+                                    return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group ${rarityClass(item.rarity)}`}>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} /></div></div>
+                                        <button onClick={() => handlePurchase(item)} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
+                                    </div>;
+                                })}</div>
+                            </div>
+                            <div className="w-full md:w-1/3 bg-[#1a1a1a] border-4 border-gray-900 p-5 rounded-xl shadow-2xl flex flex-col">
+                                <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
+                                {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 animate-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
+                                <div className="flex flex-col gap-3 flex-1">{paths.map(p => <button key={p.id} onClick={() => handleAdvance(p)} className={`w-full p-4 border-2 rounded text-left hover:bg-white/5 transition-all ${p.color}`}><div className="font-bold text-xl uppercase tracking-wider">{p.name}</div><div className="text-xs opacity-70 mt-1 font-mono">{p.desc}</div>{p.boss && <div className="mt-2 pt-2 border-t border-current text-[10px] font-bold font-mono"><span className="text-white">BOSS:</span> {p.boss.name} - {p.boss.desc}</div>}</button>)}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'CARVING' && (
+                    <div className="h-full flex items-center justify-center z-[400] relative bg-black/90 backdrop-blur-md p-4 md:p-8 overflow-y-auto">
+                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl">
+                            <div className="w-full md:w-1/3 bg-[#e8e6e1] text-gray-900 p-6 border-4 border-black shadow-2xl">
+                                <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
+                                <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
+                                {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
+                            </div>
+                            <div className="flex-1 bg-[#2b1414] border-[12px] border-[#111] rounded-2xl p-6 md:p-12 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black]">
+                                <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">
+                                    {carvingDie === null ? dice.map((d,i) => <button key={i} onClick={() => setCarvingDie(i)} className="w-20 h-20 md:w-32 md:h-32 rounded-lg bg-[#d4cfc5] border-2 border-[#8c8880] flex flex-col items-center justify-center text-5xl font-serif text-black shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative"><div>{d.value}</div><div className="absolute top-2 text-xs text-gray-500 font-mono">BONE {i+1}</div></button>) : dice[carvingDie].faces.map((f, faceIdx) => <button key={faceIdx} onClick={() => executeCarve(carvingDie, faceIdx)} className="w-20 h-20 md:w-32 md:h-32 rounded-lg bg-[#d4cfc5] border-2 border-[#8c8880] flex items-center justify-center text-5xl font-serif text-black shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative">{f.id && f.type !== 'standard' ? <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${f.style}`}><div className="font-serif text-4xl leading-none">{f.label.charAt(0)}</div></div> : <div>{f.value}</div>}</button>)}
+                                </div>
+                                {carvingDie !== null && <button onClick={() => setCarvingDie(null)} className="absolute bottom-4 font-mono text-white underline text-sm">BACK TO BONES</button>}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'RAP_SHEET' && (
+                    <div className="h-full flex items-center justify-center z-[500] relative bg-black/80 overflow-y-auto p-4">
+                        <div className="bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards' }}>
+                            <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold">CASE #77-0492</div></div>
+                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`}></div></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div></div></div>
+                            <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none">INCARCERATED</div>
+                            <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'VICTORY' && (
+                    <div className="h-full flex items-center justify-center z-[500] relative bg-black/90 p-4">
+                        <CashRain count={30} />
+                        <div className="bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3">
+                            <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange]"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold">GREYHOUND - ONE WAY</div></div></div>
+                            <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Laundered: ${gold}</div></div>
+                            <button onClick={() => setPhase('LINEUP')} className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root-gutterbones'));
+    root.render(<App />);
+</script>
