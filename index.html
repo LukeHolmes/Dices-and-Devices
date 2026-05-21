@@ -98,6 +98,18 @@
     #root-dice-game .swap-btn:hover { background: #fff; color: #000; }
     #root-dice-game .failure-overlay { position: absolute; inset: 0; z-index: 80; background: rgba(255, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; pointer-events: none; animation: fadeIn 0.2s ease-out; }
     #root-dice-game .failure-text { font-size: 5rem; color: #ff3333; font-weight: bold; text-shadow: 0 0 20px red; animation: glitch 0.2s infinite; }
+    @keyframes flyScore { 0% { transform: translate(-50%, -10%) scale(0.7); opacity: 0; } 35% { opacity: 1; } 100% { transform: translate(-50%, -160%) scale(1.05); opacity: 0; } }
+    @keyframes bossIntro { 0% { transform: scale(0.8); opacity: 0; filter: blur(8px); } 35% { transform: scale(1.04); opacity: 1; filter: blur(0); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
+    @keyframes glowRare { 0%, 100% { box-shadow: 0 0 8px rgba(167, 139, 250, 0.25); } 50% { box-shadow: 0 0 20px rgba(167, 139, 250, 0.9); } }
+    @keyframes glowLegendary { 0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.25); } 50% { box-shadow: 0 0 24px rgba(255, 215, 0, 0.85); } }
+    @keyframes glowCursed { 0%, 100% { box-shadow: 0 0 8px rgba(255, 51, 51, 0.25); } 50% { box-shadow: 0 0 22px rgba(255, 51, 51, 0.95); } }
+    #root-dice-game .fly-score { position: fixed; pointer-events: none; z-index: 250; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #ffd700; font-weight: 800; font-size: 2rem; text-shadow: 0 0 12px rgba(255, 215, 0, 0.8), 0 2px 8px #000; }
+    #root-dice-game .preview-badge { display: inline-flex; align-items: center; gap: 2px; border: 1px solid rgba(0, 255, 255, 0.25); background: rgba(0, 255, 255, 0.08); color: #7dd3fc; border-radius: 999px; padding: 1px 5px; font-size: 9px; line-height: 1.1; font-family: 'Share Tech Mono', monospace; }
+    #root-dice-game .risk-badge { display: inline-flex; align-items: center; border: 1px solid rgba(255, 51, 51, 0.45); background: rgba(127, 29, 29, 0.55); color: #fecaca; border-radius: 999px; padding: 1px 6px; font-size: 9px; font-weight: bold; letter-spacing: 0.04em; }
+    #root-dice-game .glow-rare { animation: glowRare 1.8s ease-in-out infinite; border-color: rgba(167, 139, 250, 0.8) !important; }
+    #root-dice-game .glow-legendary { animation: glowLegendary 2s ease-in-out infinite; border-color: rgba(255, 215, 0, 0.85) !important; }
+    #root-dice-game .glow-cursed { animation: glowCursed 1.4s ease-in-out infinite; border-color: rgba(255, 51, 51, 0.85) !important; }
+    #root-dice-game .boss-rule-banner { background: linear-gradient(90deg, rgba(127, 29, 29, 0.4), rgba(10, 10, 18, 0.9), rgba(127, 29, 29, 0.4)); border: 1px solid rgba(255, 51, 51, 0.45); box-shadow: 0 0 20px rgba(255, 51, 51, 0.15); }
 </style>
 
 <script type="text/babel">
@@ -156,8 +168,8 @@
         ODD_AMP: { id: 'ODD_AMP', name: 'Odd Amplifier', desc: '+20 Chips if Sum is Odd', cost: 10, rarity: 'common', tags: ['tech'], type: 'devise' },
         EVEN_AMP: { id: 'EVEN_AMP', name: 'Even Amplifier', desc: '+20 Chips if Sum is Even', cost: 10, rarity: 'common', tags: ['tech'], type: 'devise' },
         MULTIPLIER: { id: 'MULTIPLIER', name: 'Prism', desc: 'x1.5 Mult on Straights', cost: 12, rarity: 'uncommon', tags: ['occult'], type: 'devise' },
-        VOID_MAW: { id: 'VOID_MAW', name: 'Void Maw', desc: '+2 Chips per Reroll used', cost: 14, rarity: 'uncommon', tags: ['void'], type: 'devise' },
-        QUANTUM_PROC: { id: 'QUANTUM_PROC', name: 'Quantum CPU', desc: '+0.5 Mult for every [TECH]', cost: 18, rarity: 'rare', tags: ['tech'], type: 'devise' },
+        VOID_MAW: { id: 'VOID_MAW', name: 'Void Maw', desc: '+2 Chips per Reroll used (max +20)', cost: 14, rarity: 'uncommon', tags: ['void'], type: 'devise' },
+        QUANTUM_PROC: { id: 'QUANTUM_PROC', name: 'Quantum CPU', desc: '+0.5 Mult for every [TECH] (max +3)', cost: 18, rarity: 'rare', tags: ['tech'], type: 'devise' },
         BLOOD_PACT: { id: 'BLOOD_PACT', name: 'Blood Pact', desc: 'x3 Mult, but -1 Gold per roll', cost: 20, rarity: 'rare', tags: ['occult'], type: 'devise' },
         SNIPER: { id: 'SNIPER', name: 'Sniper Scope', desc: '+4 Mult for Yahtzee', cost: 25, rarity: 'rare', tags: ['tech'], type: 'devise' },
         CHAOS_ENGINE: { id: 'CHAOS_ENGINE', name: 'Chaos Engine', desc: '+50 Chips but randomizes discards', cost: 15, rarity: 'uncommon', tags: ['tech', 'void'], type: 'devise' },
@@ -168,7 +180,7 @@
         RECYCLER: { id: 'RECYCLER', name: 'Recycler', desc: 'Gain 1 Reroll when scoring < 50', cost: 12, rarity: 'common', tags: ['tech'], type: 'devise' },
         PRISMATIC_LENS: { id: 'PRISMATIC_LENS', name: 'Prismatic Lens', desc: 'x1.2 Mult for every unique number', cost: 15, rarity: 'uncommon', tags: ['alchemy'], type: 'devise' },
         ECHO_CHAMBER: { id: 'ECHO_CHAMBER', name: 'Echo Chamber', desc: '+10 Chips per item owned', cost: 18, rarity: 'uncommon', tags: ['void'], type: 'devise' },
-        SOUL_JAR: { id: 'SOUL_JAR', name: 'Soul Jar', desc: 'Gain +1 Chip perm when rolling 1', cost: 22, rarity: 'rare', tags: ['occult'], type: 'devise' },
+        SOUL_JAR: { id: 'SOUL_JAR', name: 'Soul Jar', desc: 'Gain +1 Chip perm when rolling 1 (max +50)', cost: 22, rarity: 'rare', tags: ['occult'], type: 'devise' },
         GOLDEN_GUN: { id: 'GOLDEN_GUN', name: 'Golden Gun', desc: 'x3 Mult if Gold is 0', cost: 30, rarity: 'rare', tags: ['tech'], type: 'devise' },
         THE_SINGULARITY: { id: 'THE_SINGULARITY', name: 'The Singularity', desc: 'Set all dice to match first die', cost: 60, rarity: 'legendary', tags: ['void'], type: 'devise' },
         FIREWALL_SHIELD: { id: 'FIREWALL_SHIELD', name: 'Firewall Shield', desc: 'Negates Boss abilities', cost: 40, rarity: 'legendary', tags: ['tech'], type: 'devise' },
@@ -192,6 +204,33 @@
         THE_JESTER: { id: 'THE_JESTER', name: 'The Jester', desc: 'Hidden Dice', roundMod: (t) => t, hideDice: true, theme: 'bg-jester', color: 'text-neon-purple', avatar: 'boss-avatar-jester' },
         THE_CURSED: { id: 'THE_CURSED', name: 'The Cursed', desc: '6s = 1s', roundMod: (t) => t, theme: 'bg-cursed', color: 'text-neon-green', avatar: 'boss-avatar-cursed' },
         THE_SOURCE: { id: 'THE_SOURCE', name: 'THE SOURCE', desc: 'DISABLES SLOT', roundMod: (t) => t*2, theme: 'bg-black', color: 'text-white', avatar: 'boss-avatar-source' }
+    };
+
+    const rarityGlowClass = (rarity) => {
+        if (rarity === 'rare') return 'glow-rare';
+        if (rarity === 'legendary') return 'glow-legendary';
+        if (rarity === 'cursed') return 'glow-cursed';
+        return '';
+    };
+
+    const getRiskNotes = (item, context = {}) => {
+        const notes = [];
+        if (!item) return notes;
+        if (item.rarity === 'cursed') notes.push('CURSED');
+        if (item.id === 'BLOOD_PACT') notes.push((context.gold || 0) > 0 ? '-1G each roll' : 'Cannot roll at 0G');
+        if (item.id === 'GOLDEN_GUN') notes.push((context.gold || 0) === 0 ? 'ARMED: x3' : 'Needs 0G');
+        if (item.id === 'CHAOS_ENGINE') notes.push('Unstable');
+        return notes;
+    };
+
+    const getBossRuleText = (boss, baseTarget) => {
+        if (!boss) return '';
+        if (boss.id === 'THE_WALL') return `Firewall target raised to ${boss.roundMod(baseTarget)}. Beat the larger score gate.`;
+        if (boss.id === 'THE_VAMPIRE') return 'Each roll drains 2 Gold before scoring.';
+        if (boss.id === 'THE_JESTER') return 'Dice values are hidden after rolling. Score from memory and pattern reads.';
+        if (boss.id === 'THE_CURSED') return 'Every rolled 6 is corrupted into a 1.';
+        if (boss.id === 'THE_SOURCE') return `Final protocol: target doubled to ${boss.roundMod(baseTarget)}.`;
+        return boss.desc;
     };
 
     const CATEGORIES = { ONES:{id:'ONES',name:'Ones',desc:'Sum 1s'}, TWOS:{id:'TWOS',name:'Twos',desc:'Sum 2s'}, THREES:{id:'THREES',name:'Threes',desc:'Sum 3s'}, FOURS:{id:'FOURS',name:'Fours',desc:'Sum 4s'}, FIVES:{id:'FIVES',name:'Fives',desc:'Sum 5s'}, SIXES:{id:'SIXES',name:'Sixes',desc:'Sum 6s'}, TOK:{id:'TOK',name:'3 Kind',desc:'Sum All'}, FOK:{id:'FOK',name:'4 Kind',desc:'Sum All'}, FH:{id:'FH',name:'Full House',desc:'30'}, SS:{id:'SS',name:'Sm Str',desc:'30'}, LS:{id:'LS',name:'Lg Str',desc:'40'}, Y:{id:'Y',name:'YAHTZEE',desc:'50'}, C:{id:'C',name:'Chance',desc:'Sum All'} };
@@ -271,7 +310,7 @@
         </div>
     );
 
-    const Die = ({ data, isRolling, isKept, onClick, disabled, jitterX, jitterY, onSwap }) => {
+    const Die = ({ data, isRolling, isKept, onClick, disabled, jitterX, jitterY, onSwap, hidden=false }) => {
         const getPips = (val) => {
             const pos = { 1:['center'], 2:['tl','br'], 3:['tl','center','br'], 4:['tl','tr','bl','br'], 5:['tl','tr','center','bl','br'], 6:['tl','tr','ml','mr','bl','br'] };
             const styles = { tl:{top:'15%',left:'15%'}, tr:{top:'15%',right:'15%'}, ml:{top:'50%',left:'15%',transform:'translateY(-50%)'}, mr:{top:'50%',right:'15%',transform:'translateY(-50%)'}, center:{top:'50%',left:'50%',transform:'translate(-50%,-50%)'}, bl:{bottom:'15%',left:'15%'}, br:{bottom:'15%',right:'15%'} };
@@ -294,7 +333,9 @@
                 )}
                 <button onClick={onClick} disabled={disabled || data.status === 'frozen'} className={`dice-container relative w-16 h-16 sm:w-20 sm:h-20 transition-all duration-300 active:scale-95 ${isKept?'transform -translate-y-4 z-20':''}`}>
                     <div className={`absolute inset-0 dice-face flex items-center justify-center ${shapeClass} ${statusClass} ${isKept?'kept':''} ${isRolling?'rolling':''}`} style={{ transform: transformStyle }}>
-                        {isRolling ? <span className="text-xl font-mono animate-pulse">...</span> : (
+                        {isRolling ? <span className="text-xl font-mono animate-pulse">...</span> : hidden ? (
+                            <span className="text-3xl font-mono text-neon-pink animate-pulse">?</span>
+                        ) : (
                             (data.type!=='d6'||data.value>6) ? <div className="flex flex-col items-center"><span className="text-xs font-bold uppercase">{DICE_TYPES[data.type].name.split(' ')[0]}</span><span className="text-xl font-bold">{data.value}</span></div>
                             : getPips(data.value).map((s,i)=><div key={i} className="pip absolute w-3 h-3 sm:w-3.5 sm:h-3.5" style={s}></div>)
                         )}
@@ -314,6 +355,7 @@
     const ScoreRow = ({ id, cat, result, isUsed, hands, commitScore, hasRolled, level, analysisMode, isCorrupted }) => {
         const canScore = hasRolled && !isUsed;
         const isInvalid = !result.valid;
+        const previewTriggers = (result.triggers || []).slice(0, 3);
         return (
             <div className="group relative">
                 <button 
@@ -328,14 +370,29 @@
                     }`}
                 >
                     {analysisMode && !isUsed && <div className="absolute inset-0 bg-black/90 flex items-center justify-between px-2 text-[10px] font-mono z-20 pointer-events-none"><span className="text-neon-blue">EV: {result.ev}</span><span className="text-gray-400">MAX: {result.max}</span></div>}
-                    <span className="font-bold tracking-wide flex items-center gap-2 z-10">{cat.name}{isCorrupted && <span className="text-[8px] bg-red-900 text-white px-1 rounded animate-pulse">ERR</span>}{level > 1 && <span className="mastery-badge">LVL {level}</span>}</span>
+                    <span className="font-bold tracking-wide flex flex-col items-start gap-1 z-10">
+                        <span className="flex items-center gap-2">{cat.name}{isCorrupted && <span className="text-[8px] bg-red-900 text-white px-1 rounded animate-pulse">ERR</span>}{level > 1 && <span className="mastery-badge">LVL {level}</span>}</span>
+                        {!isUsed && hasRolled && result.valid && previewTriggers.length > 0 && (
+                            <span className="flex flex-wrap gap-1 max-w-[150px]">
+                                {previewTriggers.map((t, i) => <span key={`${t.name}-${i}`} className="preview-badge">{t.name.replace(/\s/g, '_')} {t.value}</span>)}
+                            </span>
+                        )}
+                    </span>
                     <span className={`z-10 ${!isUsed && result.valid ? 'text-neon-blue font-mono font-bold text-lg' : 'font-mono'}`}>{isUsed ? '✓' : (isInvalid && canScore ? 'SCRATCH' : result.total)}</span>
                 </button>
                 <div className="tooltip absolute left-full top-0 ml-3 w-56 p-3 glass-panel rounded-lg z-50 pointer-events-none">
                     <div className="text-xs text-gray-400 font-bold mb-1">{cat.name}</div><div className="text-[10px] text-gray-500 mb-2">{cat.desc}</div>
                     {isCorrupted && <div className="text-red-500 text-[10px] font-bold mb-2">CORRUPTED: Will disable a random item!</div>}
                     <div className="text-[10px] text-neon-gold mb-2">Mastery Lvl {level}: Base Chips +{(level-1)*10}, Mult +{(level-1)*0.5}</div>
-                    {!isUsed && hasRolled && (<div className="flex flex-col gap-1 border-t border-gray-700 pt-2 font-mono"><div className="flex justify-between text-neon-pink">{result.valid?result.chips:0} <span className="text-gray-500">CHIPS</span></div><div className="flex justify-between text-neon-green">{result.valid?result.mult.toFixed(1):0} <span className="text-gray-500">MULT</span></div></div>)}
+                    {!isUsed && hasRolled && (
+                        <div className="flex flex-col gap-1 border-t border-gray-700 pt-2 font-mono">
+                            <div className="text-[9px] text-gray-500 tracking-widest mb-1">LIVE PREVIEW</div>
+                            <div className="flex justify-between text-neon-pink">{result.valid?result.chips:0} <span className="text-gray-500">CHIPS</span></div>
+                            <div className="flex justify-between text-neon-green">{result.valid?result.mult.toFixed(1):0} <span className="text-gray-500">MULT</span></div>
+                            <div className="flex justify-between text-white border-t border-gray-800 pt-1">{result.valid?result.total:0} <span className="text-gray-500">TOTAL</span></div>
+                            {result.triggers?.length > 0 && <div className="mt-2 space-y-1">{result.triggers.map((t, i) => <div key={i} className="flex justify-between text-[9px] text-neon-blue"><span>{t.name}</span><span>{t.value}</span></div>)}</div>}
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -381,6 +438,91 @@
                         <button key={prog.id} onClick={() => onActivate(prog)} disabled={percent < prog.cost} className={`py-3 px-1 rounded border text-[10px] font-bold transition-all flex flex-col items-center gap-1 relative overflow-hidden group ${percent >= prog.cost ? 'border-neon-green text-neon-green hover:bg-neon-green hover:text-black' : 'border-gray-800 text-gray-700 cursor-not-allowed'}`}><span>{prog.name}</span><span className="text-[8px] font-mono">{prog.cost}%</span>{percent >= prog.cost && <div className="absolute inset-0 bg-white/20 animate-ping opacity-0 group-hover:opacity-100"></div>}</button>
                     ))}
                 </div>
+            </div>
+        );
+    };
+
+    const RiskBadges = ({ item, gold }) => {
+        const notes = getRiskNotes(item, { gold });
+        if (notes.length === 0) return null;
+        return <div className="flex flex-wrap gap-1 mt-2 mb-2">{notes.map(note => <span key={note} className="risk-badge">{note}</span>)}</div>;
+    };
+
+    const ScoreTicker = ({ value }) => {
+        const [display, setDisplay] = useState(value || 0);
+        const displayRef = useRef(value || 0);
+        useEffect(() => {
+            const from = displayRef.current;
+            const to = Number(value) || 0;
+            if (from === to) return;
+            let raf;
+            const start = performance.now();
+            const duration = 650;
+            const tick = (now) => {
+                const progress = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const next = Math.floor(from + (to - from) * eased);
+                displayRef.current = next;
+                setDisplay(next);
+                if (progress < 1) raf = requestAnimationFrame(tick);
+            };
+            raf = requestAnimationFrame(tick);
+            return () => cancelAnimationFrame(raf);
+        }, [value]);
+        return <span>{display.toLocaleString()}</span>;
+    };
+
+    const FlyingScore = ({ item }) => (
+        <div className="fly-score" style={{ left: item.x, top: item.y }}>
+            +{item.value.toLocaleString()}
+        </div>
+    );
+
+    const BossIntro = ({ boss, target, onDone }) => {
+        useEffect(() => {
+            if (!boss) return;
+            const id = setTimeout(onDone, 1800);
+            return () => clearTimeout(id);
+        }, [boss]);
+        if (!boss) return null;
+        return (
+            <div className="absolute inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                <div className="glass-panel border border-red-500 p-8 rounded-2xl max-w-xl text-center" style={{ animation: 'bossIntro 0.45s ease-out forwards' }}>
+                    <div className="text-xs text-red-400 tracking-[0.4em] mb-3 font-mono">BOSS PROTOCOL</div>
+                    <div className={`${boss.avatar} mx-auto mb-4`}></div>
+                    <h2 className={`${boss.color} text-4xl font-bold mb-3`}>{boss.name}</h2>
+                    <p className="text-gray-300 font-mono text-sm">{getBossRuleText(boss, target)}</p>
+                </div>
+            </div>
+        );
+    };
+
+    const BossRuleBanner = ({ boss, target }) => {
+        if (!boss) return null;
+        return (
+            <div className="boss-rule-banner rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-4">
+                <div>
+                    <div className="text-[10px] text-red-300 font-mono tracking-widest">ACTIVE BOSS RULE</div>
+                    <div className="text-sm text-white">{getBossRuleText(boss, target)}</div>
+                </div>
+                <div className={`${boss.color} text-xs font-bold uppercase whitespace-nowrap`}>{boss.name}</div>
+            </div>
+        );
+    };
+
+    const HistoryPanel = ({ history }) => {
+        const recent = [...history].reverse().slice(0, 8);
+        if (recent.length === 0) return <div className="text-xs text-gray-600">No scored hands logged.</div>;
+        return (
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {recent.map(entry => (
+                    <div key={entry.id} className="bg-black/40 border border-gray-800 rounded p-2 text-xs">
+                        <div className="flex justify-between text-gray-400 mb-1"><span>R{entry.round} H{entry.handIndex} - {CATEGORIES[entry.category]?.name || entry.category}</span><span className="text-neon-blue">{entry.final.score}</span></div>
+                        <div className="font-mono text-gray-300 mb-1">Dice: [{entry.dice.join(', ')}]</div>
+                        <div className="flex justify-between font-mono"><span className="text-neon-pink">{entry.final.chips} chips</span><span className="text-neon-green">x{entry.final.mult.toFixed(1)}</span></div>
+                        {entry.triggers.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{entry.triggers.slice(0, 4).map((t, i) => <span key={i} className="preview-badge">{t.name}</span>)}</div>}
+                    </div>
+                ))}
             </div>
         );
     };
@@ -514,9 +656,20 @@
         const [soulJarCount, setSoulJarCount] = useState(0);
         const [tiltLevel, setTiltLevel] = useState(0);
         const [ascensionLevel, setAscensionLevel] = useState(0);
+        const [bossIntro, setBossIntro] = useState(null);
+        const [history, setHistory] = useState([]);
+        const [flyingScores, setFlyingScores] = useState([]);
 
         const setDealer = (key) => { const p = DEALER_QUOTES[key] || DEALER_QUOTES.START; setDealerText(p[Math.floor(Math.random()*p.length)]); };
         const triggerShake = (violent = false) => { if(!settings.shake) return; setScreenShake(true); setTimeout(() => setScreenShake(false), violent ? 200 : 500); };
+        const getGoldGainForScore = (total) => Math.min(20, Math.floor(total / 30));
+        const spawnFlyingScore = (value) => {
+            const id = Math.random();
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight * 0.42;
+            setFlyingScores(prev => [...prev, { id, value, x, y }]);
+            setTimeout(() => setFlyingScores(prev => prev.filter(item => item.id !== id)), 1100);
+        };
         
         // --- DECK HELPERS ---
         const drawDice = (count) => {
@@ -555,6 +708,7 @@
             if ((discards <= 0 && overrideIdx === null) || hands <= 0 || rolling) { AudioSystem.playSfx('error'); return; }
             const hasBloodPact = inventory.devises.some(d => d.id === 'BLOOD_PACT' && !disabledItems[d.uid]);
             if (hasBloodPact) { if (gold > 0) setGold(g => g - 1); else return; }
+            if (activeBoss?.rollEffect) setGold(g => activeBoss.rollEffect(g));
 
             setRolling(true); AudioSystem.playSfx('roll'); setHasRolled(true); setRunStats(p=>({rerolls:p.rerolls+1}));
             setDealer(Math.random()>0.5?'ROLL_GOOD':'ROLL_BAD'); setTiltLevel(0);
@@ -637,8 +791,8 @@
 
             if (!valid) return { valid: false, chips: 0, mult: 0, total: 0, triggers: [], ...{ ev: 0, max: 0 } };
             if (lvl > 1) { chips += levelChipBonus; mult += levelMultBonus; triggers.push({ name: `MASTERY L${lvl}`, value: `+${levelChipBonus} / +${levelMultBonus}x`}); }
-            if(discards > 0) { chips += discards * 5; triggers.push({ name: 'EFFICIENCY', value: `+${discards * 5}` }); }
-            if(combo > 0) { const bonus = 1 + (combo * 0.05); mult *= bonus; triggers.push({ name: 'FLOW', value: `x${bonus.toFixed(2)}` }); }
+            if(currentDiscards > 0) { const efficiency = Math.min(currentDiscards * 5, 25); chips += efficiency; triggers.push({ name: 'EFFICIENCY', value: `+${efficiency}` }); }
+            if(combo > 0) { const bonus = 1 + Math.min(combo * 0.05, 0.5); mult *= bonus; triggers.push({ name: 'FLOW', value: `x${bonus.toFixed(2)}` }); }
 
             const techCount = inventory.devises.filter(d => d.tags?.includes('tech') && !disabledItems[d.uid]).length;
             inventory.devises.forEach(d => {
@@ -647,12 +801,12 @@
                 if (d.id === 'ODD_AMP' && sum%2!==0) { chips += 20; triggers.push({ name: 'ODD AMP', value: '+20' }); }
                 if (d.id === 'EVEN_AMP' && sum%2===0) { chips += 20; triggers.push({ name: 'EVEN AMP', value: '+20' }); }
                 if (d.id === 'MULTIPLIER' && (catId === 'SS' || catId === 'LS')) { mult += 0.5; triggers.push({ name: 'PRISM', value: '+0.5x' }); }
-                if (d.id === 'VOID_MAW') { chips += runStats.rerolls * 2; triggers.push({ name: 'VOID MAW', value: `+${runStats.rerolls*2}` }); }
-                if (d.id === 'QUANTUM_PROC' && techCount > 0) { mult += (techCount * 0.5); triggers.push({ name: 'QUANTUM', value: `+${techCount*0.5}x` }); }
+                if (d.id === 'VOID_MAW') { const bonus = Math.min(runStats.rerolls * 2, 20); chips += bonus; triggers.push({ name: 'VOID MAW', value: `+${bonus}` }); }
+                if (d.id === 'QUANTUM_PROC' && techCount > 0) { const bonus = Math.min(techCount * 0.5, 3); mult += bonus; triggers.push({ name: 'QUANTUM', value: `+${bonus}x` }); }
                 if (d.id === 'OMEGA') { mult += 1; triggers.push({ name: 'OMEGA', value: '+1x' }); }
                 if (d.id === 'LUCKY_CLOVER' && vals.includes(6)) { mult += 1; triggers.push({ name: 'CLOVER', value: '+1x' }); }
-                if (d.id === 'SOUL_JAR') { chips += soulJarCount; triggers.push({ name: 'SOUL JAR', value: `+${soulJarCount}` }); }
-                if (d.id === 'ECHO_CHAMBER') { chips += 10; } 
+                if (d.id === 'SOUL_JAR') { const bonus = Math.min(soulJarCount, 50); chips += bonus; triggers.push({ name: 'SOUL JAR', value: `+${bonus}` }); }
+                if (d.id === 'ECHO_CHAMBER') { chips += 10; triggers.push({ name: 'ECHO', value: '+10' }); } 
                 if (d.id === 'GOLDEN_GUN' && gold === 0) { mult *= 3; triggers.push({ name: 'GOLDEN GUN', value: 'x3' }); }
                 if (d.id === 'PRISMATIC_LENS') { const u = new Set(vals).size; mult += (u*0.2); triggers.push({ name: 'PRISM LENS', value: `+${(u*0.2).toFixed(1)}x` }); }
             });
@@ -662,8 +816,10 @@
             return { valid: true, chips, mult, total: Math.floor(chips * mult), triggers, ...{ ev: 0, max: 0 } };
         };
 
+        const computePreviewScore = (catId) => calculateScore(catId, discards);
+
         const triggerScore = (id) => {
-            let res = calculateScore(id, discards);
+            let res = computePreviewScore(id);
             if (corruptedCats.includes(id)) {
                 if (inventory.devises.length > 0) {
                     const targetItem = inventory.devises[Math.floor(Math.random() * inventory.devises.length)];
@@ -692,6 +848,19 @@
                 setActiveWager(null);
             }
 
+            const midasGain = inventory.devises.some(d => d.id === 'MIDAS_TOUCH' && !disabledItems[d.uid]) && res.total > 300 ? 1 : 0;
+            setHistory(prev => [...prev, {
+                id: `${round}-${prev.length}-${Math.random()}`,
+                round,
+                handIndex: prev.filter(h => h.round === round).length + 1,
+                dice: dice.map(d => d.value),
+                kept: [...kept],
+                category: id,
+                final: { chips: res.chips, mult: res.mult, score: res.total },
+                triggers: [...(res.triggers || [])],
+                goldBefore: gold,
+                goldAfter: gold + getGoldGainForScore(res.total) + midasGain
+            }]);
             setVisData(res); setUsedCats([...usedCats, id]);
             const nextDisabled = {}; for(let k in disabledItems) { if(disabledItems[k] > 1) nextDisabled[k] = disabledItems[k] - 1; }
             setDisabledItems(nextDisabled);
@@ -699,6 +868,7 @@
 
         const finishScoring = () => {
             const gained = visData.total;
+            spawnFlyingScore(gained);
             setScore(s => s + gained); setVisData(null); 
             if(activeBoss) { setBossDamage(gained); setIsHit(true); AudioSystem.playSfx('hit'); setDealer('BOSS_HIT'); setTimeout(() => { setBossDamage(null); setIsHit(false); }, 1000); }
             
@@ -718,7 +888,7 @@
             setDiceBag(currentBag); setDiscardPile(tempDiscard);
             setDiscards(selectedOrigin.discards);
             setRam(r => Math.min(100, r + (gained/target)*100*2.0));
-            let goldGain = Math.floor(gained / 30);
+            let goldGain = getGoldGainForScore(gained);
             if (goldGain > 0) setGold(g => g + goldGain);
             if (inventory.devises.some(d => d.id === 'MIDAS_TOUCH' && !disabledItems[d.uid]) && gained > 300) setGold(g => g+1);
             if(hands <= 1) {
@@ -797,8 +967,10 @@
             setDice(hand.map(d => ({...d, value:1, rotation:0}))); setDiceBag(currentBag); setDiscardPile([]);
             setHands(selectedOrigin.hands + (path.hand || 0)); setDiscards(selectedOrigin.discards); setHasRolled(false); setPhase('PLAY'); setDealer('START'); 
             if (path.id === 'BOSS' || path.id === 'FINAL') { 
-                    if(path.id === 'FINAL') setActiveBoss(BOSSES.THE_SOURCE);
-                    else { const keys = Object.keys(BOSSES).filter(k => k!=='THE_SOURCE'); setActiveBoss(BOSSES[keys[Math.floor(Math.random() * keys.length)]]); }
+                    let boss;
+                    if(path.id === 'FINAL') boss = BOSSES.THE_SOURCE;
+                    else { const keys = Object.keys(BOSSES).filter(k => k!=='THE_SOURCE'); boss = BOSSES[keys[Math.floor(Math.random() * keys.length)]]; }
+                    setActiveBoss(boss); setBossIntro(boss);
                     setDealer('BOSS');
             } 
         };
@@ -815,6 +987,7 @@
             setDice(hand); setDiceBag(startDice); setDiscardPile([]);
 
             setRunStats({ rerolls: 0, totalScore: 0 }); setHasRolled(false); setUsedCats([]); setRam(0); setCombo(0); setHandLevels({}); setSoulJarCount(0);
+            setHistory([]); setFlyingScores([]); setBossIntro(null);
             setPhase('PLAY'); setDealer('START'); setFailureAnim(false); setActiveBoss(null); setDebt(0); 
             if(!ascended) setAscensionLevel(0);
         };
@@ -834,6 +1007,8 @@
                 {showWager && <WagerModal gold={gold} onClose={() => setShowWager(false)} onWager={placeWager} />}
                 {phase === 'GAMBLE' && <GambleModal onChoice={handleGambleChoice} />}
                 {phase === 'VICTORY' && <VictoryModal onAscend={ascend} onMenu={() => setPhase('MENU')} />}
+                {bossIntro && <BossIntro boss={bossIntro} target={target} onDone={() => setBossIntro(null)} />}
+                {flyingScores.map(item => <FlyingScore key={item.id} item={item} />)}
                 {failureAnim && <div className="failure-overlay"><div className="failure-text">SYSTEM FAILURE</div></div>}
 
                 <div className="absolute top-4 right-4 z-[100] flex gap-2">
@@ -861,11 +1036,12 @@
                 {phase === 'PLAY' && (
                     <div className={`h-full p-6 flex flex-col max-w-7xl mx-auto w-full relative z-40 ${screenShake ? 'animate-shake' : ''}`}>
                         <Dealer text={hands === 1 ? DEALER_QUOTES.LAST_CHANCE[Math.floor(Math.random()*DEALER_QUOTES.LAST_CHANCE.length)] : dealerText} />
+                        <BossRuleBanner boss={activeBoss} target={target} />
                         
                         {/* HUD */}
                         <div className="glass-panel p-4 rounded-xl mb-6 flex justify-between items-center relative overflow-hidden">
                             <div className="z-10 flex-1">
-                                <div className="text-xs text-gray-500 flex justify-between"><span>{activeBoss ? 'BOSS HP' : 'TARGET SCORE'}</span><span>{score} / {activeBoss ? activeBoss.roundMod(target) : target}</span></div>
+                                <div className="text-xs text-gray-500 flex justify-between"><span>{activeBoss ? 'BOSS HP' : 'TARGET SCORE'}</span><span><ScoreTicker value={score} /> / {(activeBoss ? activeBoss.roundMod(target) : target).toLocaleString()}</span></div>
                                 <div className="h-4 bg-gray-900 rounded-full mt-1 overflow-hidden border border-gray-700 relative"><div className={`h-full transition-all duration-500 ${activeBoss ? 'bg-red-600' : 'bg-neon-blue'}`} style={{width: `${Math.min(100, (score/(activeBoss ? activeBoss.roundMod(target) : target))*100)}%`}}></div></div>
                             </div>
                             {activeBoss && (<div className="mx-8 relative flex flex-col items-center"><div className={`${activeBoss.avatar} ${isHit ? 'hit-flash' : ''}`}></div><div className={`${activeBoss.color} font-bold text-xl mt-2 text-center leading-none`}>{activeBoss.name}</div>{bossDamage && <div className="damage-text">-{bossDamage}</div>}</div>)}
@@ -880,14 +1056,14 @@
                         <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
                             <div className="col-span-3 glass-panel rounded-xl p-4 overflow-y-auto scrollbar-hide">
                                 {Object.values(CATEGORIES).map(c => (
-                                    <ScoreRow key={c.id} id={c.id} cat={c} result={calculateScore(c.id, discards)} isUsed={usedCats.includes(c.id)} hands={hands} commitScore={triggerScore} hasRolled={hasRolled} level={handLevels[c.id]||1} analysisMode={analysisMode} isCorrupted={corruptedCats.includes(c.id)} />
+                                    <ScoreRow key={c.id} id={c.id} cat={c} result={computePreviewScore(c.id)} isUsed={usedCats.includes(c.id)} hands={hands} commitScore={triggerScore} hasRolled={hasRolled} level={handLevels[c.id]||1} analysisMode={analysisMode} isCorrupted={corruptedCats.includes(c.id)} />
                                 ))}
                             </div>
 
                             <div className="col-span-6 flex flex-col gap-6">
                                 <div className="glass-panel flex-1 rounded-xl flex flex-col items-center justify-center relative">
                                     <div className="flex gap-4 mb-8 perspective-1000">
-                                        {dice.map((d, i) => <Die key={i} data={d} isRolling={rolling && !kept[i]} isKept={kept[i]} onClick={() => { if(!rolling && hasRolled) { AudioSystem.playSfx('equip'); setKept(k => { const n=[...k]; n[i]=!n[i]; return n; }); }}} onSwap={() => swapDie(i)} disabled={d.status==='frozen'} />)}
+                                        {dice.map((d, i) => <Die key={i} data={d} isRolling={rolling && !kept[i]} isKept={kept[i]} onClick={() => { if(!rolling && hasRolled) { AudioSystem.playSfx('equip'); setKept(k => { const n=[...k]; n[i]=!n[i]; return n; }); }}} onSwap={() => swapDie(i)} disabled={d.status==='frozen'} hidden={activeBoss?.hideDice && hasRolled && !rolling} />)}
                                     </div>
                                     <div className="flex gap-4">
                                         <button onClick={() => rollDice(null)} disabled={discards <= 0 || hands <= 0 || rolling} className={`px-12 py-3 font-bold text-xl tracking-widest transition-all ${discards > 0 ? 'bg-neon-blue text-black hover:shadow-[0_0_20px_#00ffff]' : 'bg-gray-700 text-gray-500'}`}>{rolling ? 'ROLLING' : `ROLL [${discards}]`}</button>
@@ -908,7 +1084,7 @@
                                 <Cyberdeck ram={ram} maxRam={100} onActivate={useProgram} />
                                 <div className="text-xs text-gray-500 mb-2 mt-4 font-bold">INVENTORY</div>
                                 <div className="space-y-2 overflow-y-auto h-full pb-4">
-                                    {inventory.devises.map((d, i) => <div key={`dev-${i}`} className={`bg-black/40 p-2 rounded border border-gray-700 flex justify-between items-center ${disabledItems[d.uid] ? 'item-disabled' : ''}`}><span className={`text-xs ${d.tags?.includes('tech') ? 'text-neon-blue' : 'text-gray-300'}`}>{d.name}</span></div>)}
+                                    {inventory.devises.map((d, i) => <div key={`dev-${i}`} className={`bg-black/40 p-2 rounded border border-gray-700 ${disabledItems[d.uid] ? 'item-disabled' : ''}`}><div className="flex justify-between items-center"><span className={`text-xs ${d.tags?.includes('tech') ? 'text-neon-blue' : 'text-gray-300'}`}>{d.name}</span></div><RiskBadges item={d} gold={gold} /></div>)}
                                     {inventory.consumables.map((c, i) => <div key={`con-${i}`} className="bg-black/40 p-2 rounded border border-neon-green/50 flex justify-between items-center"><span className="text-xs text-neon-green">{c.name}</span><button onClick={() => useConsumable(c, i)} className="text-[10px] bg-gray-800 hover:bg-neon-green hover:text-black px-2 rounded transition-all">USE</button></div>)}
                                 </div>
                             </div>
@@ -937,9 +1113,10 @@
                                         const cost = item.cost + inflation;
                                         const canAfford = gold >= cost;
                                         return (
-                                            <div key={item.uid} className="bg-black/40 p-4 rounded border border-gray-700 hover:border-neon-blue transition-all group">
+                                            <div key={item.uid} className={`bg-black/40 p-4 rounded border border-gray-700 hover:border-neon-blue transition-all group ${rarityGlowClass(item.rarity)}`}>
                                                 <div className="flex justify-between text-xs text-gray-500 mb-1"><span>{item.type}</span>{item.tags && <span>{item.tags.join(' ')}</span>}</div>
-                                                <div className="font-bold text-white">{item.name}</div><div className="text-xs text-gray-400 mb-4">{item.desc}</div>
+                                                <div className="font-bold text-white">{item.name}</div><div className="text-xs text-gray-400 mb-2">{item.desc}</div>
+                                                <RiskBadges item={item} gold={gold} />
                                                 <div className="flex gap-2">
                                                     <button onClick={() => buyItem(item)} disabled={!canAfford} className={`flex-1 py-1 text-xs font-bold ${canAfford ? 'bg-gray-700 hover:bg-white hover:text-black' : 'bg-gray-900 text-gray-600'}`}>BUY {cost}</button>
                                                     {!canAfford && <button onClick={() => takeLoan(item)} className="flex-1 py-1 bg-red-900 hover:bg-red-700 text-white text-xs font-bold">LOAN</button>}
@@ -960,7 +1137,7 @@
                                     ))}
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-400 mb-4">INVENTORY</h3>
-                                <div className="space-y-2 overflow-y-auto flex-1">{inventory.devises.map((d, i) => <div key={i} className="bg-black/40 p-2 rounded border border-gray-700 flex justify-between items-center"><div><div className="text-sm text-white">{d.name}</div><div className="text-[10px] text-gray-500">{d.type}</div></div><button onClick={() => sellItem('devises', i, d.cost)} className="text-[10px] border border-red-900 text-red-400 hover:bg-red-900 px-2 py-1 rounded">SELL {Math.floor(d.cost/2)}</button></div>)}{inventory.consumables.map((c, i) => <div key={i} className="bg-black/40 p-2 rounded border border-neon-green/30 flex justify-between items-center"><div><div className="text-sm text-neon-green">{c.name}</div><div className="text-[10px] text-gray-500">CONSUMABLE</div></div><button onClick={() => sellItem('consumables', i, c.cost)} className="text-[10px] border border-red-900 text-red-400 hover:bg-red-900 px-2 py-1 rounded">SELL {Math.floor(c.cost/2)}</button></div>)}</div>
+                                <div className="space-y-2 overflow-y-auto flex-1">{inventory.devises.map((d, i) => <div key={i} className="bg-black/40 p-2 rounded border border-gray-700"><div className="flex justify-between items-center"><div><div className="text-sm text-white">{d.name}</div><div className="text-[10px] text-gray-500">{d.type}</div><RiskBadges item={d} gold={gold} /></div><button onClick={() => sellItem('devises', i, d.cost)} className="text-[10px] border border-red-900 text-red-400 hover:bg-red-900 px-2 py-1 rounded">SELL {Math.floor(d.cost/2)}</button></div></div>)}{inventory.consumables.map((c, i) => <div key={i} className="bg-black/40 p-2 rounded border border-neon-green/30 flex justify-between items-center"><div><div className="text-sm text-neon-green">{c.name}</div><div className="text-[10px] text-gray-500">CONSUMABLE</div></div><button onClick={() => sellItem('consumables', i, c.cost)} className="text-[10px] border border-red-900 text-red-400 hover:bg-red-900 px-2 py-1 rounded">SELL {Math.floor(c.cost/2)}</button></div>)}</div>
                             </div>
                         </div>
                     </div>
@@ -969,7 +1146,17 @@
                 {phase === 'GAMEOVER' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-50">
                         <div className="absolute inset-0 flex items-center justify-center z-0 opacity-50 animate-pulse"><WeirdEye size={300} color="#ff0000" isDestroyer={true} /></div>
-                        <div className="glass-panel p-12 rounded-2xl text-center border border-red-900 shadow-[0_0_50px_rgba(255,0,0,0.2)] animate-slam relative z-10"><h2 className="text-6xl font-bold text-neon-red mb-4 tracking-widest">TERMINATED</h2><div className="text-xl mb-8">ROUND: {round} | SCORE: {score}</div><button onClick={() => setPhase('MENU')} className="px-8 py-3 bg-white text-black font-bold rounded hover:scale-105 transition-transform">RETURN TO MENU</button></div>
+                        <div className="glass-panel p-10 rounded-2xl border border-red-900 shadow-[0_0_50px_rgba(255,0,0,0.2)] animate-slam relative z-10 w-full max-w-3xl">
+                            <div className="text-center">
+                                <h2 className="text-6xl font-bold text-neon-red mb-4 tracking-widest">TERMINATED</h2>
+                                <div className="text-xl mb-6">ROUND: {round} | SCORE: {score}</div>
+                            </div>
+                            <div className="border-t border-gray-800 pt-4 mb-6">
+                                <div className="text-xs text-gray-500 mb-3 font-bold tracking-widest">HAND HISTORY</div>
+                                <HistoryPanel history={history} />
+                            </div>
+                            <div className="text-center"><button onClick={() => setPhase('MENU')} className="px-8 py-3 bg-white text-black font-bold rounded hover:scale-105 transition-transform">RETURN TO MENU</button></div>
+                        </div>
                     </div>
                 )}
             </div>
