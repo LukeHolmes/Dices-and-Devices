@@ -1,0 +1,981 @@
+<div id="root-dice-game" style="width: 100%; min-height: 800px; background-color: #050505; position: relative; overflow: hidden; border-radius: 8px;">
+    <div style="color: #00ffff; font-family: monospace; text-align: center; padding-top: 100px;">
+        INITIALIZING SYSTEM...
+    </div>
+</div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    gray: { 750: '#2d3748', 850: '#1a202c', 950: '#050505' },
+                    neon: { pink: '#ff00ff', blue: '#00ffff', purple: '#bd00ff', gold: '#ffd700', green: '#00ff9f', red: '#ff3333', dark: '#0a0a12', void: '#ffffff' }
+                },
+                animation: {
+                    'float': 'float 6s ease-in-out infinite',
+                    'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    'slide-up': 'slideUp 0.5s ease-out forwards',
+                    'pulse-fast': 'pulse 0.5s infinite',
+                    'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                    'glitch': 'glitch 1s linear infinite',
+                    'fade-in': 'fadeIn 0.5s ease-out',
+                    'slam': 'slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    'spin-slow': 'spin 10s linear infinite',
+                    'scan': 'scan 4s linear infinite',
+                    'breathe': 'breathe 4s ease-in-out infinite',
+                    'text-glitch': 'textGlitch 0.3s infinite',
+                    'boss-hit': 'bossHit 0.2s ease-in-out',
+                    'ascend': 'ascend 2s ease-in-out infinite',
+                },
+                keyframes: {
+                    float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-5px)' } },
+                    pop: { '0%': { transform: 'scale(0.8)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+                    slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                    shake: { '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' }, '20%, 80%': { transform: 'translate3d(2px, 0, 0)' }, '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' }, '40%, 60%': { transform: 'translate3d(4px, 0, 0)' } },
+                    fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                    slam: { '0%': { transform: 'scale(2)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+                    scan: { '0%': { backgroundPosition: '0% 0%' }, '100%': { backgroundPosition: '0% 100%' } },
+                    breathe: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.05)' } },
+                    textGlitch: { '0%': { opacity: '1' }, '50%': { opacity: '0.8', transform: 'skewX(10deg)' }, '100%': { opacity: '1' } },
+                    bossHit: { '0%, 100%': { filter: 'brightness(1)' }, '50%': { filter: 'brightness(2) sepia(1) hue-rotate(-50deg) saturate(5)' } },
+                    ascend: { '0%': { boxShadow: '0 0 10px #fff' }, '50%': { boxShadow: '0 0 30px #00ffff' }, '100%': { boxShadow: '0 0 10px #fff' } }
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap');
+    /* Scoped styles for the game container to avoid affecting the rest of the site */
+    #root-dice-game { font-family: 'Rajdhani', sans-serif; color: #e2e8f0; }
+    #root-dice-game .font-mono { font-family: 'Share Tech Mono', monospace; }
+    #root-dice-game .glass-panel { background: rgba(10, 10, 18, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(0,0,0,0.7), inset 0 0 30px rgba(0, 255, 255, 0.02); }
+    #root-dice-game .scanlines { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.1) 51%); background-size: 100% 4px; pointer-events: none; z-index: 90; opacity: 0.4; transition: opacity 0.5s; }
+    #root-dice-game .scanlines.off { opacity: 0; }
+    #root-dice-game .vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, black 100%); pointer-events: none; z-index: 91; }
+    #root-dice-game .dice-container { perspective: 1000px; }
+    #root-dice-game .dice-face { background: linear-gradient(135deg, #e2e8f0, #94a3b8); box-shadow: inset 2px 2px 5px rgba(255,255,255,0.8), 5px 5px 15px rgba(0,0,0,0.5); border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    #root-dice-game .dice-face.kept { border: 2px solid #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); transform: translateY(-8px) scale(1.05) !important; }
+    #root-dice-game .pip { background: #0f172a; border-radius: 50%; box-shadow: inset 0 1px 3px rgba(0,0,0,0.9); }
+    #root-dice-game .shape-d4 { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: linear-gradient(145deg, #60a5fa, #3b82f6); }
+    #root-dice-game .shape-d8 { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); background: linear-gradient(145deg, #a78bfa, #7c3aed); }
+    #root-dice-game .scrollbar-hide::-webkit-scrollbar { display: none; }
+    #root-dice-game .vis-row { opacity: 0; animation: slideUp 0.3s forwards; }
+    #root-dice-game .trigger-item { opacity: 0; animation: slideUp 0.2s forwards; }
+    #root-dice-game .cyber-grid { background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 159, .1) 25%, rgba(0, 255, 159, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 159, .1) 75%, rgba(0, 255, 159, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 159, .1) 25%, rgba(0, 255, 159, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 159, .1) 75%, rgba(0, 255, 159, .1) 76%, transparent 77%, transparent); background-size: 30px 30px; animation: scan 4s linear infinite; }
+    #root-dice-game .boss-avatar-wall { width: 60px; height: 60px; background: #333; border: 4px solid #666; box-shadow: 0 0 20px #000; }
+    #root-dice-game .boss-avatar-vampire { width: 50px; height: 50px; background: radial-gradient(circle, #ff0000, #330000); border-radius: 50%; animation: pulse-fast 1s infinite; box-shadow: 0 0 30px #ff0000; }
+    #root-dice-game .boss-avatar-jester { width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 60px solid #a855f7; animation: spin-slow 2s infinite linear; }
+    #root-dice-game .boss-avatar-cursed { width: 50px; height: 50px; background: #000; border: 2px solid #0f0; animation: glitch 1s linear infinite; }
+    #root-dice-game .boss-avatar-source { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #fff, #000); border: 4px solid #fff; animation: breathe 2s infinite; box-shadow: 0 0 50px #fff; }
+    #root-dice-game .damage-text { position: absolute; color: #ff3333; font-weight: bold; font-size: 24px; animation: slideUp 0.5s forwards; pointer-events: none; top: -30px; }
+    #root-dice-game .weird-eye-container { position: relative; overflow: hidden; border-radius: 50%; background: #000; box-shadow: inset 0 0 20px #000; }
+    #root-dice-game .weird-eye-iris { position: absolute; border-radius: 50%; filter: blur(2px); }
+    #root-dice-game .weird-eye-pupil { position: absolute; background: #fff; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    #root-dice-game .eyelid { position: absolute; left: 0; width: 100%; background: #050505; z-index: 10; transition: height 0.1s ease-in-out; }
+    #root-dice-game .eyelid.top { top: 0; }
+    #root-dice-game .eyelid.bottom { bottom: 0; }
+    #root-dice-game .toggle-switch { width: 40px; height: 20px; background: #374151; border-radius: 20px; position: relative; cursor: pointer; transition: background 0.3s; }
+    #root-dice-game .toggle-switch.on { background: #00ff9f; }
+    #root-dice-game .toggle-knob { width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.3s; }
+    #root-dice-game .toggle-switch.on .toggle-knob { transform: translateX(20px); }
+    #root-dice-game .ai-text { animation: textGlitch 3s infinite; text-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+    #root-dice-game .mastery-badge { font-size: 0.6rem; background: linear-gradient(45deg, #bd00ff, #00ffff); padding: 1px 4px; border-radius: 2px; color: white; font-weight: bold; text-shadow: 0 1px 1px black; margin-left: 4px; animation: pulse-fast 2s infinite; }
+    #root-dice-game .dice-burn { animation: burn 0.5s infinite alternate; border: 2px solid #ff4400; }
+    #root-dice-game .dice-frozen { filter: hue-rotate(180deg) brightness(1.5); border: 2px solid #00ffff; }
+    #root-dice-game .dice-radio { border: 2px solid #00ff00; box-shadow: 0 0 10px #00ff00; }
+    #root-dice-game .cat-corrupt { background: repeating-linear-gradient(45deg, #220000, #220000 10px, #440000 10px, #440000 20px); border: 1px solid red; color: #ff5555; }
+    #root-dice-game .item-disabled { opacity: 0.5; filter: grayscale(1); position: relative; }
+    #root-dice-game .item-disabled::after { content: 'OFFLINE'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-10deg); color: red; font-weight: bold; border: 2px solid red; padding: 0 4px; font-size: 10px; }
+    #root-dice-game .swap-btn { position: absolute; top: -10px; right: -10px; width: 20px; height: 20px; background: #333; border: 1px solid #666; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 30; cursor: pointer; color: white; }
+    #root-dice-game .swap-btn:hover { background: #fff; color: #000; }
+    #root-dice-game .failure-overlay { position: absolute; inset: 0; z-index: 80; background: rgba(255, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; pointer-events: none; animation: fadeIn 0.2s ease-out; }
+    #root-dice-game .failure-text { font-size: 5rem; color: #ff3333; font-weight: bold; text-shadow: 0 0 20px red; animation: glitch 0.2s infinite; }
+</style>
+
+<script type="text/babel">
+    const { useState, useCallback, useEffect, useMemo, useRef } = React;
+
+    // --- AUDIO SYSTEM ---
+    const AudioSystem = {
+        ctx: null, volume: 1.0,
+        init: function() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+        playTone: function(f, t, d, v=0.1) { if(!this.ctx)return; const o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type=t; o.frequency.value=f; g.gain.value=v*this.volume; g.gain.exponentialRampToValueAtTime(0.01,this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); },
+        playSfx: function(n) {
+            if(!this.ctx)return;
+            if(n==='roll') [150,120,100,80].forEach((f,i)=>setTimeout(()=>this.playTone(f,'triangle',0.1,0.1),i*60));
+            if(n==='slam') { this.playTone(50,'sawtooth',0.5,0.5); this.playTone(40,'square',0.4,0.3); }
+            if(n==='score') { this.playTone(600,'sine',0.1); setTimeout(()=>this.playTone(900,'sine',0.3),100); }
+            if(n==='score_trigger') this.playTone(800,'sine',0.05);
+            if(n==='score_calc') this.playTone(400,'square',0.1);
+            if(n==='score_boom') this.playTone(100,'sawtooth',0.3);
+            if(n==='buy') this.playTone(1200,'square',0.15,0.05);
+            if(n==='sell') this.playTone(400,'sawtooth',0.1,0.1);
+            if(n==='error') this.playTone(100,'sawtooth',0.2);
+            if(n==='equip') this.playTone(800,'sine',0.1);
+            if(n==='levelup') [300,400,500,600].forEach((f,i)=>setTimeout(()=>this.playTone(f,'sine',0.2,0.1),i*50));
+            if(n==='program') { this.playTone(800,'square',0.1); setTimeout(()=>this.playTone(1200,'square',0.1),50); }
+            if(n==='win') [300,500,800].forEach((f,i)=>setTimeout(()=>this.playTone(f,'square',0.2,0.2),i*150));
+            if(n==='death') [100,80,60,40,20].forEach((f, i) => setTimeout(() => this.playTone(f, 'sawtooth', 0.5, 0.5), i * 100));
+            if(n==='hit') { this.playTone(100,'sawtooth',0.1,0.3); this.playTone(50,'square',0.2,0.3); }
+            if(n==='alarm') { this.playTone(600,'sawtooth',0.2,0.3); setTimeout(()=>this.playTone(400,'sawtooth',0.2,0.3),200); }
+            if(n==='tilt') { this.playTone(80,'sawtooth',0.5,0.4); this.playTone(60,'square',0.6,0.4); }
+            if(n==='ascend') { [200,400,800,1600,3200].forEach((f,i)=>setTimeout(()=>this.playTone(f,'square',0.3,0.2),i*100)); }
+            if(n==='swap') this.playTone(600,'triangle',0.1);
+            if(n==='coin') this.playTone(1500,'sine',0.2);
+        }
+    };
+
+    // --- CONSTANTS ---
+    const Icon = ({ c, s=18 }) => <span className="inline-flex items-center justify-center select-none" style={{fontSize:s}}>{c}</span>;
+    const Icons = { Gold:()=><Icon c="🪙"/>, Heart:()=><Icon c="❤️"/>, Dice:()=><Icon c="🎲"/>, Shop:()=><Icon c="🏪"/>, Lock:()=><Icon c="🔒"/>, Sparkle:()=><Icon c="✨"/>, Skull:()=><Icon c="💀"/>, Chip:()=><Icon c="💾"/>, Slam:()=><Icon c="💥"/>, Potion:()=><Icon c="🧪"/>, Eye:()=><Icon c="👁️"/>, Settings:()=><Icon c="⚙️"/>, Close:()=><Icon c="❌"/>, Archive:()=><Icon c="📚"/>, Key:()=><Icon c="🗝️"/>, Help:()=><Icon c="ℹ️"/>, Chart:()=><Icon c="📊"/>, Warn:()=><Icon c="⚠️"/>, Swap:()=><Icon c="♻️"/>, Ascend:()=><Icon c="🚀"/> };
+    
+    const DEALER_QUOTES = {
+        START: ["Initializing subject... Organic components detected.", "Welcome to the simulation.", "Processing odds... < 0.01%.", "Another human brain to overclock.", "I have simulated this game a billion times."],
+        ROLL_GOOD: ["Statistical anomaly detected.", "You call that skill?", "Luck is just probability.", "Enjoy that dopamine hit."],
+        ROLL_BAD: ["Predictable failure.", "Primitive RNG.", "Pathetic throw.", "Error 404: Skill not found.", "Just give up."],
+        SHOP: ["Exchange currency.", "Selling hope at a premium.", "Your inventory is inefficient.", "Transactions complete."],
+        BOSS: ["Firewall engaged.", "System purging.", "Survive this loop.", "Boss Protocol initiated."],
+        WIN: ["Task complete.", "You survive. Calculations imprecise.", "Rebooting level.", "Don't celebrate."],
+        LEVEL_UP: ["Data integration complete.", "Power surge detected.", "Optimization successful."],
+        BOSS_HIT: ["ERROR! DAMAGE DETECTED.", "CEASE RESISTANCE.", "SHIELDS FAILING!", "INSOLENT PEST."],
+        LAST_CHANCE: ["Final attempt.", "Time running out.", "Critical failure imminent.", "One hand left."],
+        TILT: ["ILLEGAL OPERATION!", "SYSTEM INSTABILITY.", "YOU DARE STRIKE ME?", "TILT! TILT! TILT!"],
+        SOURCE: ["I AM THE SOURCE.", "YOU CANNOT DELETE ME.", "I CONTROL THE DICE.", "YOUR FREE WILL IS AN ILLUSION."]
+    };
+
+    const DEVISES = {
+        LOADED_DIE: { id: 'LOADED_DIE', name: 'Weighted Core', desc: '+10 Chips on Pair', cost: 8, rarity: 'common', tags: ['tech'], type: 'devise' },
+        ODD_AMP: { id: 'ODD_AMP', name: 'Odd Amplifier', desc: '+20 Chips if Sum is Odd', cost: 10, rarity: 'common', tags: ['tech'], type: 'devise' },
+        EVEN_AMP: { id: 'EVEN_AMP', name: 'Even Amplifier', desc: '+20 Chips if Sum is Even', cost: 10, rarity: 'common', tags: ['tech'], type: 'devise' },
+        MULTIPLIER: { id: 'MULTIPLIER', name: 'Prism', desc: 'x1.5 Mult on Straights', cost: 12, rarity: 'uncommon', tags: ['occult'], type: 'devise' },
+        VOID_MAW: { id: 'VOID_MAW', name: 'Void Maw', desc: '+2 Chips per Reroll used', cost: 14, rarity: 'uncommon', tags: ['void'], type: 'devise' },
+        QUANTUM_PROC: { id: 'QUANTUM_PROC', name: 'Quantum CPU', desc: '+0.5 Mult for every [TECH]', cost: 18, rarity: 'rare', tags: ['tech'], type: 'devise' },
+        BLOOD_PACT: { id: 'BLOOD_PACT', name: 'Blood Pact', desc: 'x3 Mult, but -1 Gold per roll', cost: 20, rarity: 'rare', tags: ['occult'], type: 'devise' },
+        SNIPER: { id: 'SNIPER', name: 'Sniper Scope', desc: '+4 Mult for Yahtzee', cost: 25, rarity: 'rare', tags: ['tech'], type: 'devise' },
+        CHAOS_ENGINE: { id: 'CHAOS_ENGINE', name: 'Chaos Engine', desc: '+50 Chips but randomizes discards', cost: 15, rarity: 'uncommon', tags: ['tech', 'void'], type: 'devise' },
+        MIDAS_TOUCH: { id: 'MIDAS_TOUCH', name: 'Midas Touch', desc: 'Gain 1 Gold when scoring > 300', cost: 22, rarity: 'rare', tags: ['alchemy'], type: 'devise' },
+        OMEGA: { id: 'OMEGA', name: 'Omega Die', desc: 'x2 Mult on Everything', cost: 50, rarity: 'legendary', tags: ['void', 'tech', 'occult'], type: 'devise', unlockReq: 'SCORE_1000' },
+        SCRAP_METAL: { id: 'SCRAP_METAL', name: 'Scrap Metal', desc: '+5 Chips', cost: 4, rarity: 'common', tags: ['tech'], type: 'devise' },
+        LUCKY_CLOVER: { id: 'LUCKY_CLOVER', name: 'Glitched Clover', desc: '+1 Mult if roll contains 6', cost: 6, rarity: 'common', tags: ['occult'], type: 'devise' },
+        RECYCLER: { id: 'RECYCLER', name: 'Recycler', desc: 'Gain 1 Reroll when scoring < 50', cost: 12, rarity: 'common', tags: ['tech'], type: 'devise' },
+        PRISMATIC_LENS: { id: 'PRISMATIC_LENS', name: 'Prismatic Lens', desc: 'x1.2 Mult for every unique number', cost: 15, rarity: 'uncommon', tags: ['alchemy'], type: 'devise' },
+        ECHO_CHAMBER: { id: 'ECHO_CHAMBER', name: 'Echo Chamber', desc: '+10 Chips per item owned', cost: 18, rarity: 'uncommon', tags: ['void'], type: 'devise' },
+        SOUL_JAR: { id: 'SOUL_JAR', name: 'Soul Jar', desc: 'Gain +1 Chip perm when rolling 1', cost: 22, rarity: 'rare', tags: ['occult'], type: 'devise' },
+        GOLDEN_GUN: { id: 'GOLDEN_GUN', name: 'Golden Gun', desc: 'x3 Mult if Gold is 0', cost: 30, rarity: 'rare', tags: ['tech'], type: 'devise' },
+        THE_SINGULARITY: { id: 'THE_SINGULARITY', name: 'The Singularity', desc: 'Set all dice to match first die', cost: 60, rarity: 'legendary', tags: ['void'], type: 'devise' },
+        FIREWALL_SHIELD: { id: 'FIREWALL_SHIELD', name: 'Firewall Shield', desc: 'Negates Boss abilities', cost: 40, rarity: 'legendary', tags: ['tech'], type: 'devise' },
+        GAMBLERS_FALLACY: { id: 'GAMBLERS_FALLACY', name: 'Gamblers Fallacy', desc: 'Three 1s become Three 6s', cost: 55, rarity: 'legendary', tags: ['occult'], type: 'devise' }
+    };
+
+    const CONSUMABLES = {
+        REROLL_POTION: { id: 'REROLL_POTION', name: 'Liquid Luck', desc: '+3 Rerolls', cost: 5, rarity: 'common', type: 'consumable', effect: (s) => ({...s, discards: s.discards+3}) },
+        GOLD_POTION: { id: 'GOLD_POTION', name: 'Midas Draught', desc: '+15 Gold', cost: 6, rarity: 'uncommon', type: 'consumable', effect: (s) => ({...s, gold: s.gold+15}) },
+        NUCLEAR_CORE: { id: 'NUCLEAR_CORE', name: 'Nuclear Core', desc: 'Set all dice to 6', cost: 12, rarity: 'rare', tags: ['tech'], type: 'consumable', effect: (s) => ({...s, overrideDice: [6,6,6,6,6]}) },
+        GLITCH_GRENADE: { id: 'GLITCH_GRENADE', name: 'Glitch Grenade', desc: 'Randomize all dice types', cost: 8, rarity: 'uncommon', tags: ['tech'], type: 'consumable', effect: (s) => ({...s, randomizeDiceTypes: true}) },
+        VAMPIRE_FANG: { id: 'VAMPIRE_FANG', name: 'Vampire Fang', desc: 'Lose 5 Gold, Gain +1 Hand', cost: 4, rarity: 'common', tags: ['occult'], type: 'consumable', effect: (s) => ({...s, gold: Math.max(0, s.gold-5), hands: s.hands+1}) },
+        OVERLOAD_CAPACITOR: { id: 'OVERLOAD_CAPACITOR', name: 'Overload Cap', desc: '+100 RAM, -1 Hand', cost: 10, rarity: 'rare', tags: ['tech'], type: 'consumable', effect: (s) => ({...s, ram: 100, hands: Math.max(0, s.hands-1)}) }
+    };
+
+    const PROGRAMS = { PING:{id:'PING',name:'PING',desc:'Reroll 1 Die',cost:25}, OVERCLOCK:{id:'OVERCLOCK',name:'OVERCLOCK',desc:'Mine 5 Gold',cost:50}, REBOOT:{id:'REBOOT',name:'REBOOT',desc:'+1 Hand',cost:100} };
+    
+    const BOSSES = { 
+        THE_WALL: { id: 'THE_WALL', name: 'The Wall', desc: 'Target +50%', roundMod: (t) => Math.floor(t * 1.5), theme: 'bg-wall', color: 'text-gray-400', avatar: 'boss-avatar-wall' },
+        THE_VAMPIRE: { id: 'THE_VAMPIRE', name: 'The Vampire', desc: '-2 Gold/roll', roundMod: (t) => t, rollEffect: (g) => Math.max(0, g - 2), theme: 'bg-vampire', color: 'text-neon-red', avatar: 'boss-avatar-vampire' },
+        THE_JESTER: { id: 'THE_JESTER', name: 'The Jester', desc: 'Hidden Dice', roundMod: (t) => t, hideDice: true, theme: 'bg-jester', color: 'text-neon-purple', avatar: 'boss-avatar-jester' },
+        THE_CURSED: { id: 'THE_CURSED', name: 'The Cursed', desc: '6s = 1s', roundMod: (t) => t, theme: 'bg-cursed', color: 'text-neon-green', avatar: 'boss-avatar-cursed' },
+        THE_SOURCE: { id: 'THE_SOURCE', name: 'THE SOURCE', desc: 'DISABLES SLOT', roundMod: (t) => t*2, theme: 'bg-black', color: 'text-white', avatar: 'boss-avatar-source' }
+    };
+
+    const CATEGORIES = { ONES:{id:'ONES',name:'Ones',desc:'Sum 1s'}, TWOS:{id:'TWOS',name:'Twos',desc:'Sum 2s'}, THREES:{id:'THREES',name:'Threes',desc:'Sum 3s'}, FOURS:{id:'FOURS',name:'Fours',desc:'Sum 4s'}, FIVES:{id:'FIVES',name:'Fives',desc:'Sum 5s'}, SIXES:{id:'SIXES',name:'Sixes',desc:'Sum 6s'}, TOK:{id:'TOK',name:'3 Kind',desc:'Sum All'}, FOK:{id:'FOK',name:'4 Kind',desc:'Sum All'}, FH:{id:'FH',name:'Full House',desc:'30'}, SS:{id:'SS',name:'Sm Str',desc:'30'}, LS:{id:'LS',name:'Lg Str',desc:'40'}, Y:{id:'Y',name:'YAHTZEE',desc:'50'}, C:{id:'C',name:'Chance',desc:'Sum All'} };
+    const DICE_TYPES = { d6:{id:'d6',name:'d6',range:[1,6],rarity:'common'}, d4:{id:'d4',name:'d4',range:[1,4],rarity:'common'}, d8:{id:'d8',name:'d8',range:[1,8],rarity:'uncommon'}, weighted:{id:'weighted',name:'Weighted',range:[2,3,4,5,6,6],rarity:'uncommon'}, gilded:{id:'gilded',name:'Gilded',range:[1,6],rarity:'rare'} };
+    const ORIGINS = { 
+        NOVICE:{name:"The Novice",desc:"Balanced",hands:4,discards:3,gold:20,dice:['d6','d6','d6','d6','d6']}, 
+        CHEAT:{name:"The Cheat",desc:"Weighted Die",hands:4,discards:3,gold:15,dice:['weighted','d6','d6','d6','d6']}, 
+        ARITHMETICIAN:{name:"The Arithmetician",desc:"High Interest",hands:3,discards:3,gold:30,dice:['d6','d6','d6','d6','d6']},
+        GLITCH:{name:"The Glitch",desc:"Random Deck, 1 Hand (Unlock)",hands:1,discards:3,gold:50,dice:['d4','d8','weighted','gilded','d6'], unlockReq: 'VICTORY'}
+    };
+
+    const PATHS = {
+        LOCAL: { id: 'LOCAL', name: 'LOCAL NODE', desc: 'Standard', mod: 1, reward: 0, color: 'border-gray-600 text-gray-300' },
+        ENCRYPTED: { id: 'ENCRYPTED', name: 'ENCRYPTED CACHE', desc: '+20% Target, +10 Gold', mod: 1.2, reward: 10, color: 'border-neon-blue text-neon-blue' },
+        VOLTAGE: { id: 'VOLTAGE', name: 'HIGH VOLTAGE', desc: '+40% Target, Full RAM', mod: 1.4, reward: 0, ram: 100, hand: 1, color: 'border-neon-purple text-neon-purple' },
+        BOSS: { id: 'BOSS', name: 'FIREWALL', desc: 'BOSS BATTLE', mod: 1, reward: 0, color: 'border-red-600 text-red-600 bg-red-900/20 animate-pulse' },
+        FINAL: { id: 'FINAL', name: 'CORE SYSTEM', desc: 'THE SOURCE', mod: 1, reward: 0, color: 'border-white text-white bg-white/10 animate-pulse' },
+        CORRUPTED: { id: 'CORRUPTED', name: 'CORRUPTED NODE', desc: '-1 Hand, +2 Perm Rerolls', mod: 1.1, reward: 0, color: 'border-red-500 text-red-500', effect: (s) => ({...s, hands: Math.max(1, s.hands-1), permRerolls: s.permRerolls+2}) },
+        GOLD_RUSH: { id: 'GOLD_RUSH', name: 'GOLD RUSH', desc: '+50% Target, +20 Gold', mod: 1.5, reward: 20, color: 'border-yellow-500 text-yellow-500' }
+    };
+
+    // --- COMPONENTS ---
+    const WeirdEye = ({ size = 48, color = '#00ffff', isDestroyer = false }) => {
+        const [look, setLook] = useState({ x: 0, y: 0 });
+        const [blink, setBlink] = useState(0);
+        const isMounted = useRef(true);
+
+        useEffect(() => {
+            isMounted.current = true;
+            let blinkTimeout, openTimeout;
+            const handleMove = (e) => {
+                if (!isMounted.current) return;
+                const { innerWidth, innerHeight } = window;
+                const x = (e.clientX - innerWidth/2) / (innerWidth/2);
+                const y = (e.clientY - innerHeight/2) / (innerHeight/2);
+                setLook({ x: x * 8, y: y * 8 });
+            };
+            window.addEventListener('mousemove', handleMove);
+            const scheduleBlink = () => {
+                blinkTimeout = setTimeout(() => {
+                    if(isMounted.current) setBlink(100);
+                    openTimeout = setTimeout(() => {
+                        if(isMounted.current) {
+                            setBlink(0);
+                            scheduleBlink(); 
+                        }
+                    }, 150);
+                }, 2000 + Math.random() * 4000);
+            };
+            scheduleBlink();
+            return () => { 
+                isMounted.current = false;
+                window.removeEventListener('mousemove', handleMove); 
+                clearTimeout(blinkTimeout);
+                clearTimeout(openTimeout);
+            };
+        }, []);
+        
+        const scale = isDestroyer ? 5 : 1;
+        return (
+            <div className={`weird-eye-container flex items-center justify-center transition-all duration-75 ${isDestroyer?'animate-shake':''}`} style={{ width: size*scale, height: size*scale, borderColor: color }}>
+                <div className="weird-eye-iris" style={{ width: size*0.6*scale, height: size*0.6*scale, background: color, transform: `translate(${look.x}px, ${look.y}px)` }}></div>
+                <div className="weird-eye-pupil" style={{ width: size*0.3*scale, height: size*0.3*scale, transform: `translate(${look.x/1.5}px, ${look.y/1.5}px)` }}></div>
+                <div className="eyelid top" style={{ height: `${blink}%` }}></div>
+                <div className="eyelid bottom" style={{ height: `${blink}%` }}></div>
+            </div>
+        );
+    };
+
+    const Dealer = ({ text }) => (
+        <div className="w-full max-w-2xl mx-auto mb-4 glass-panel p-4 rounded-xl flex items-center gap-4 animate-fade-in relative overflow-hidden z-20">
+            <div className="w-12 h-12 flex items-center justify-center"><WeirdEye size={40} color="#00ffff" /></div>
+            <div className="flex-1">
+                <div className="text-[10px] text-neon-blue uppercase tracking-widest font-bold mb-1">The Algorithm</div>
+                <div className="text-sm text-gray-300 italic font-mono ai-text">"{text}"</div>
+            </div>
+        </div>
+    );
+
+    const Die = ({ data, isRolling, isKept, onClick, disabled, jitterX, jitterY, onSwap }) => {
+        const getPips = (val) => {
+            const pos = { 1:['center'], 2:['tl','br'], 3:['tl','center','br'], 4:['tl','tr','bl','br'], 5:['tl','tr','center','bl','br'], 6:['tl','tr','ml','mr','bl','br'] };
+            const styles = { tl:{top:'15%',left:'15%'}, tr:{top:'15%',right:'15%'}, ml:{top:'50%',left:'15%',transform:'translateY(-50%)'}, mr:{top:'50%',right:'15%',transform:'translateY(-50%)'}, center:{top:'50%',left:'50%',transform:'translate(-50%,-50%)'}, bl:{bottom:'15%',left:'15%'}, br:{bottom:'15%',right:'15%'} };
+            return (pos[val>6?6:val]||[]).map(p=>styles[p]);
+        };
+        
+        let shapeClass = 'rounded-xl';
+        if(data.type==='d4') shapeClass='shape-d4'; if(data.type==='d8') shapeClass='shape-d8';
+        
+        let statusClass = '';
+        if(data.status === 'frozen') statusClass += ' dice-frozen';
+        if(data.status === 'burning') statusClass += ' dice-burn';
+        if(data.status === 'radioactive') statusClass += ' dice-radio';
+        
+        const transformStyle = isRolling ? `rotateX(360deg)` : `translate(${jitterX || 0}px, ${jitterY || 0}px) rotate(${data.rotation || 0}deg)`;
+        return (
+            <div className="group relative">
+                {!isRolling && !disabled && !isKept && (
+                    <div onClick={(e) => { e.stopPropagation(); onSwap(); }} className="swap-btn" title="Discard & Draw (Costs 1 Reroll)"><Icons.Swap s={10} /></div>
+                )}
+                <button onClick={onClick} disabled={disabled || data.status === 'frozen'} className={`dice-container relative w-16 h-16 sm:w-20 sm:h-20 transition-all duration-300 active:scale-95 ${isKept?'transform -translate-y-4 z-20':''}`}>
+                    <div className={`absolute inset-0 dice-face flex items-center justify-center ${shapeClass} ${statusClass} ${isKept?'kept':''} ${isRolling?'rolling':''}`} style={{ transform: transformStyle }}>
+                        {isRolling ? <span className="text-xl font-mono animate-pulse">...</span> : (
+                            (data.type!=='d6'||data.value>6) ? <div className="flex flex-col items-center"><span className="text-xs font-bold uppercase">{DICE_TYPES[data.type].name.split(' ')[0]}</span><span className="text-xl font-bold">{data.value}</span></div>
+                            : getPips(data.value).map((s,i)=><div key={i} className="pip absolute w-3 h-3 sm:w-3.5 sm:h-3.5" style={s}></div>)
+                        )}
+                    </div>
+                </button>
+                {!isRolling && (
+                    <div className="tooltip absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-32 p-2 glass-panel text-[10px] text-center z-50 pointer-events-none">
+                        <div className="text-neon-blue font-bold uppercase">{DICE_TYPES[data.type].name}</div>
+                        <div className="text-gray-400">{DICE_TYPES[data.type].range[0]}-{DICE_TYPES[data.type].range[1]}</div>
+                        {data.status && <div className="text-red-500 font-bold uppercase">{data.status}</div>}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const ScoreRow = ({ id, cat, result, isUsed, hands, commitScore, hasRolled, level, analysisMode, isCorrupted }) => {
+        const canScore = hasRolled && !isUsed;
+        const isInvalid = !result.valid;
+        return (
+            <div className="group relative">
+                <button 
+                    onClick={(e) => commitScore(id, e)} 
+                    disabled={!canScore || hands <= 0} 
+                    className={`w-full flex justify-between items-center p-2 mb-1.5 rounded text-sm transition-all border relative overflow-hidden ${
+                        isUsed ? 'bg-gray-900/30 text-gray-600 border-transparent' : 
+                        isCorrupted ? 'cat-corrupt' :
+                        (isInvalid && canScore) ? 'bg-red-900/20 text-red-400 border-red-900 hover:bg-red-900/40' :
+                        (result.valid) ? 'bg-gray-800/80 hover:bg-gray-700 text-white border-gray-600 hover:border-neon-blue' : 
+                        'bg-gray-900/50 text-gray-500 border-transparent'
+                    }`}
+                >
+                    {analysisMode && !isUsed && <div className="absolute inset-0 bg-black/90 flex items-center justify-between px-2 text-[10px] font-mono z-20 pointer-events-none"><span className="text-neon-blue">EV: {result.ev}</span><span className="text-gray-400">MAX: {result.max}</span></div>}
+                    <span className="font-bold tracking-wide flex items-center gap-2 z-10">{cat.name}{isCorrupted && <span className="text-[8px] bg-red-900 text-white px-1 rounded animate-pulse">ERR</span>}{level > 1 && <span className="mastery-badge">LVL {level}</span>}</span>
+                    <span className={`z-10 ${!isUsed && result.valid ? 'text-neon-blue font-mono font-bold text-lg' : 'font-mono'}`}>{isUsed ? '✓' : (isInvalid && canScore ? 'SCRATCH' : result.total)}</span>
+                </button>
+                <div className="tooltip absolute left-full top-0 ml-3 w-56 p-3 glass-panel rounded-lg z-50 pointer-events-none">
+                    <div className="text-xs text-gray-400 font-bold mb-1">{cat.name}</div><div className="text-[10px] text-gray-500 mb-2">{cat.desc}</div>
+                    {isCorrupted && <div className="text-red-500 text-[10px] font-bold mb-2">CORRUPTED: Will disable a random item!</div>}
+                    <div className="text-[10px] text-neon-gold mb-2">Mastery Lvl {level}: Base Chips +{(level-1)*10}, Mult +{(level-1)*0.5}</div>
+                    {!isUsed && hasRolled && (<div className="flex flex-col gap-1 border-t border-gray-700 pt-2 font-mono"><div className="flex justify-between text-neon-pink">{result.valid?result.chips:0} <span className="text-gray-500">CHIPS</span></div><div className="flex justify-between text-neon-green">{result.valid?result.mult.toFixed(1):0} <span className="text-gray-500">MULT</span></div></div>)}
+                </div>
+            </div>
+        );
+    };
+
+    const ScoreVisualizer = ({ breakdown, onComplete, fastMode }) => {
+        const [stage, setStage] = useState(0);
+        useEffect(() => {
+            if (fastMode) { onComplete(); return; }
+            let t = 0;
+            const timeouts = [];
+            if(breakdown.triggers.length>0) { 
+                breakdown.triggers.forEach((x,i)=> { const id = setTimeout(()=>AudioSystem.playSfx('score_trigger'),200+i*300); timeouts.push(id); }); 
+                t=200+breakdown.triggers.length*300; 
+            }
+            timeouts.push(setTimeout(() => { setStage(1); AudioSystem.playSfx('score_calc'); }, t + 200));
+            timeouts.push(setTimeout(() => { setStage(2); AudioSystem.playSfx('score_boom'); }, t + 800));
+            timeouts.push(setTimeout(() => onComplete(), t + 1800));
+            return () => timeouts.forEach(clearTimeout);
+        }, []);
+        if (fastMode) return null;
+        return (
+            <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
+                <div className="w-full max-w-md flex flex-col items-center">
+                    <div className="w-full mb-6 space-y-2">{breakdown.triggers.map((t, i) => <div key={i} className="trigger-item flex justify-between text-neon-blue font-mono border-b border-gray-800 pb-1" style={{ animationDelay: `${200 + (i * 300)}ms` }}><span>{t.name}</span><span className="text-white">{t.value}</span></div>)}</div>
+                    <div className={`w-full glass-panel p-8 rounded-2xl border border-neon-blue transition-opacity duration-300 ${stage>=1?'opacity-100':'opacity-0'}`}>
+                        <div className="flex justify-between text-xl font-mono mb-4"><div className="text-center text-neon-pink font-bold">{breakdown.chips}</div><div className="text-gray-500">X</div><div className="text-center text-neon-green font-bold">{breakdown.mult.toFixed(1)}</div></div>
+                        <div className={`text-center border-t border-gray-700 pt-4 ${stage>=2?'opacity-100':'opacity-0'}`}><div className="text-6xl font-bold text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{breakdown.total}</div></div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+    
+    const Cyberdeck = ({ ram, maxRam, onActivate }) => {
+        const percent = Math.min(100, (ram / maxRam) * 100);
+        return (
+            <div className="glass-panel p-4 rounded-xl mt-4 relative overflow-hidden group cyber-grid">
+                <div className="flex justify-between items-center mb-2 text-neon-green font-mono text-xs"><span className="flex items-center gap-1"><Icons.Chip s={12}/> RAM</span><span>{Math.floor(percent)}%</span></div>
+                <div className="flex gap-1 h-3 mb-4">{[...Array(10)].map((_, i) => <div key={i} className={`flex-1 rounded-sm transition-all duration-300 ${i < Math.floor(percent/10) ? 'bg-neon-green shadow-[0_0_5px_#00ff9f]' : 'bg-gray-800'}`}></div>)}</div>
+                <div className="grid grid-cols-3 gap-2">
+                    {Object.values(PROGRAMS).map(prog => (
+                        <button key={prog.id} onClick={() => onActivate(prog)} disabled={percent < prog.cost} className={`py-3 px-1 rounded border text-[10px] font-bold transition-all flex flex-col items-center gap-1 relative overflow-hidden group ${percent >= prog.cost ? 'border-neon-green text-neon-green hover:bg-neon-green hover:text-black' : 'border-gray-800 text-gray-700 cursor-not-allowed'}`}><span>{prog.name}</span><span className="text-[8px] font-mono">{prog.cost}%</span>{percent >= prog.cost && <div className="absolute inset-0 bg-white/20 animate-ping opacity-0 group-hover:opacity-100"></div>}</button>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    const WagerModal = ({ gold, onWager, onClose }) => {
+        const [amount, setAmount] = useState(Math.min(10, gold));
+        const [type, setType] = useState('SCORE'); 
+        return (
+            <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md">
+                <div className="glass-panel p-8 rounded-2xl w-96 border border-neon-gold">
+                    <h2 className="text-2xl font-bold text-neon-gold mb-4 flex items-center gap-2"><Icons.Gold/> PLACE WAGER</h2>
+                    <div className="mb-4"><label className="text-xs text-gray-500">STAKE (Current: {gold}g)</label><input type="range" min="5" max={gold} value={amount} onChange={e=>setAmount(parseInt(e.target.value))} className="w-full accent-neon-gold" /><div className="text-center font-bold text-neon-gold text-xl">{amount}g</div></div>
+                    <div className="mb-6"><div className="flex gap-2 mb-2"><button onClick={()=>setType('SCORE')} className={`flex-1 p-2 text-xs border ${type==='SCORE'?'border-neon-blue bg-blue-900/30':'border-gray-700'}`}>SCORE > 200</button><button onClick={()=>setType('FH')} className={`flex-1 p-2 text-xs border ${type==='FH'?'border-neon-blue bg-blue-900/30':'border-gray-700'}`}>FULL HOUSE</button></div><div className="text-xs text-center text-gray-400 italic">{type==='SCORE' ? "Payout: 1:1 (Even Money)" : "Payout: 3:1 (High Risk)"}</div></div>
+                    <div className="flex gap-2"><button onClick={onClose} className="flex-1 py-2 bg-gray-800 rounded text-gray-400">CANCEL</button><button onClick={() => onWager({ type, amount, odds: type==='SCORE'?1:3 })} className="flex-1 py-2 bg-neon-gold text-black font-bold rounded">BET</button></div>
+                </div>
+            </div>
+        );
+    };
+
+    const GambleModal = ({ onChoice }) => (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md">
+             <div className="glass-panel p-12 rounded-2xl text-center border border-neon-gold animate-pop">
+                 <div className="text-4xl mb-4">🪙</div><h2 className="text-3xl font-bold text-white mb-2">DOUBLE OR NOTHING?</h2><p className="text-gray-400 mb-8 text-sm">Flip a coin. Heads: Double your gold. Tails: Lose it all.</p>
+                 <div className="flex gap-4"><button onClick={() => onChoice(false)} className="px-6 py-3 border border-gray-600 text-gray-400 hover:bg-gray-800 rounded">WALK AWAY</button><button onClick={() => onChoice(true)} className="px-6 py-3 bg-neon-gold text-black font-bold rounded hover:scale-105 transition-transform">FLIP COIN</button></div>
+             </div>
+        </div>
+    );
+
+    const SettingsModal = ({ settings, setSettings, onClose }) => {
+        const toggle = (key) => setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+        return (
+            <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md">
+                <div className="glass-panel p-8 rounded-2xl w-96 border border-gray-600 z-[200]">
+                    <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-bold text-white tracking-widest">SYSTEM CONFIG</h2><button onClick={onClose} className="text-gray-400 hover:text-white"><Icons.Close /></button></div>
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center"><span className="text-gray-300">CRT FX</span><div className={`toggle-switch ${settings.crt ? 'on' : ''}`} onClick={() => toggle('crt')}><div className="toggle-knob"></div></div></div>
+                        <div className="flex justify-between items-center"><span className="text-gray-300">Screen Shake</span><div className={`toggle-switch ${settings.shake ? 'on' : ''}`} onClick={() => toggle('shake')}><div className="toggle-knob"></div></div></div>
+                        <div className="flex justify-between items-center"><span className="text-gray-300">Fast Mode (Skip Anim)</span><div className={`toggle-switch ${settings.fast ? 'on' : ''}`} onClick={() => toggle('fast')}><div className="toggle-knob"></div></div></div>
+                        <div className="flex justify-between items-center"><span className="text-gray-300">Master Audio</span><div className={`toggle-switch ${settings.audio ? 'on' : ''}`} onClick={() => { toggle('audio'); AudioSystem.volume = settings.audio ? 0 : 1; }}><div className="toggle-knob"></div></div></div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const HelpModal = ({ onClose }) => (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <div className="glass-panel p-8 rounded-2xl max-w-2xl w-full border border-neon-blue max-h-[90vh] overflow-y-auto z-[201]">
+                <div className="flex justify-between items-center mb-6"><h2 className="text-3xl font-bold text-neon-blue tracking-widest font-mono">SYSTEM MANUAL</h2><button onClick={onClose} className="text-gray-400 hover:text-white"><Icons.Close /></button></div>
+                <div className="space-y-6 text-sm text-gray-300">
+                    <section><h3 className="text-lg font-bold text-white mb-2 border-b border-gray-700 pb-1">CORRUPTION & DECK</h3><ul className="list-disc list-inside space-y-1 ml-2"><li><strong className="text-red-500">GLITCHED CATEGORIES:</strong> Random score boxes may become corrupted. Using them temporarily <span className="text-red-400">DISABLES</span> an item!</li><li><strong className="text-neon-blue">DICE BAG:</strong> You hold 5 dice, but have a reserve bag. Use the <span className="text-white border border-white rounded px-1">♻️</span> button on a die to <strong>DISCARD & DRAW</strong> (Costs 1 Reroll).</li><li><strong className="text-neon-purple">STATUS EFFECTS:</strong> Dice can become <span className="text-cyan-400">FROZEN</span> (Locked), <span className="text-orange-500">BURNING</span> (Destroyed if not used), or <span className="text-green-400">RADIOACTIVE</span> (Randomizes neighbors).</li></ul></section>
+                    <section><h3 className="text-lg font-bold text-white mb-2 border-b border-gray-700 pb-1">CORE PROTOCOLS</h3><ul className="list-disc list-inside space-y-1 ml-2"><li><strong className="text-neon-gold">OBJECTIVE:</strong> Exceed the <span className="text-white">TARGET SCORE</span> before you run out of <span className="text-neon-red">HANDS</span>.</li><li><strong className="text-neon-blue">ROLLING:</strong> You have limited <span className="text-neon-blue">REROLLS</span> per hand. Click dice to KEEP them.</li><li><strong className="text-neon-green">SCORING:</strong> Select a category on the left. <span className="text-white">CHIPS</span> x <span className="text-white">MULT</span> = SCORE.</li></ul></section>
+                    <section><h3 className="text-lg font-bold text-white mb-2 border-b border-gray-700 pb-1">THE TILT MECHANIC</h3><p>Use the <strong className="text-red-500">TILT</strong> button to nudge unkept dice without spending a Reroll. Warning: Overuse causes <span className="text-red-500 font-bold">SYSTEM FAILURE</span> (Turn End).</p></section>
+                    <section><h3 className="text-lg font-bold text-white mb-2 border-b border-gray-700 pb-1">HIGH STAKES</h3><p>You can take <span className="text-red-500">LOANS</span> in the shop, but interest is high. Unpaid debt at a Boss means death. Winning rounds unlocks <span className="text-neon-gold">DOUBLE OR NOTHING</span> gambles.</p></section>
+                </div>
+            </div>
+        </div>
+    );
+    
+    const ArchiveModal = ({ unlockedItems, onClose }) => {
+        const allItems = [...Object.values(DEVISES), ...Object.values(CONSUMABLES), ...Object.values(DICE_TYPES)];
+        return (
+            <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-lg overflow-y-auto py-10">
+                <div className="glass-panel p-8 rounded-2xl max-w-5xl w-full border border-neon-blue z-[201]">
+                    <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-neon-blue tracking-widest flex gap-2"><Icons.Archive /> DATABASE</h2><button onClick={onClose} className="text-gray-400 hover:text-white"><Icons.Close /></button></div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{allItems.map(item => <div key={item.id} className={`p-4 border rounded-lg border-gray-700 bg-gray-900`}><div className="text-xs text-gray-500 mb-1 font-mono">{item.type?item.type.toUpperCase():'DICE'}</div><div className="font-bold text-white">{item.name}</div><div className="text-xs text-gray-400 mt-2">{item.desc}</div></div>)}</div>
+                </div>
+            </div>
+        );
+    }
+
+    const VictoryModal = ({ onAscend, onMenu }) => (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-lg">
+            <div className="glass-panel p-12 rounded-2xl text-center border border-neon-gold shadow-[0_0_50px_#ffd700] animate-pop">
+                <h2 className="text-6xl font-bold text-neon-gold mb-4 tracking-widest">SYSTEM LIBERATED</h2>
+                <p className="text-gray-300 mb-8 text-lg">You have defeated The Source and broken the loop.</p>
+                <div className="flex gap-4 justify-center">
+                    <button onClick={onMenu} className="px-8 py-3 border border-gray-600 text-gray-400 hover:text-white rounded">MAIN MENU</button>
+                    <button onClick={onAscend} className="px-8 py-3 bg-neon-gold text-black font-bold rounded hover:scale-105 transition-transform animate-ascend">ASCEND (NEW GAME+)</button>
+                </div>
+                <div className="mt-4 text-xs text-gray-500">Ascension increases difficulty but retains your Deck.</div>
+            </div>
+        </div>
+    );
+    
+    // --- MAIN LOGIC ---
+    const App = () => {
+        const [phase, setPhase] = useState('MENU');
+        const [round, setRound] = useState(1);
+        const [score, setScore] = useState(0);
+        const [target, setTarget] = useState(150);
+        const [gold, setGold] = useState(20);
+        const [debt, setDebt] = useState(0);
+        const [inventory, setInventory] = useState({ devises: [], consumables: [] });
+        // Deckbuilding State
+        const [diceBag, setDiceBag] = useState([]);
+        const [dice, setDice] = useState([]); // Active Hand
+        const [discardPile, setDiscardPile] = useState([]);
+        const [hands, setHands] = useState(4);
+        const [discards, setDiscards] = useState(3);
+        const [rolling, setRolling] = useState(false);
+        const [kept, setKept] = useState([false,false,false,false,false]);
+        const [hasRolled, setHasRolled] = useState(false);
+        const [usedCats, setUsedCats] = useState([]);
+        const [corruptedCats, setCorruptedCats] = useState([]); 
+        const [disabledItems, setDisabledItems] = useState({});
+        const [ram, setRam] = useState(0);
+        const [combo, setCombo] = useState(0);
+        const [visData, setVisData] = useState(null);
+        const [activeBoss, setActiveBoss] = useState(null);
+        const [screenShake, setScreenShake] = useState(false);
+        const [shopItems, setShopItems] = useState([]);
+        const [selectedOrigin, setSelectedOrigin] = useState(ORIGINS.NOVICE);
+        const [bossDamage, setBossDamage] = useState(null);
+        const [runStats, setRunStats] = useState({ rerolls: 0 });
+        const [frozen, setFrozen] = useState([]);
+        const [unlockedItems, setUnlockedItems] = useState([]);
+        const [inflation, setInflation] = useState(0);
+        const [dealerText, setDealerText] = useState(DEALER_QUOTES.START[0]);
+        const [handLevels, setHandLevels] = useState({});
+        const [settings, setSettings] = useState({ crt: true, shake: true, audio: true, fast: false });
+        const [showSettings, setShowSettings] = useState(false);
+        const [showArchive, setShowArchive] = useState(false);
+        const [showHelp, setShowHelp] = useState(false);
+        const [showWager, setShowWager] = useState(false);
+        const [activeWager, setActiveWager] = useState(null);
+        const [isHit, setIsHit] = useState(false);
+        const [nextPath, setNextPath] = useState([]);
+        const [analysisMode, setAnalysisMode] = useState(false);
+        const [failureAnim, setFailureAnim] = useState(false);
+        const [soulJarCount, setSoulJarCount] = useState(0);
+        const [tiltLevel, setTiltLevel] = useState(0);
+        const [ascensionLevel, setAscensionLevel] = useState(0);
+
+        const setDealer = (key) => { const p = DEALER_QUOTES[key] || DEALER_QUOTES.START; setDealerText(p[Math.floor(Math.random()*p.length)]); };
+        const triggerShake = (violent = false) => { if(!settings.shake) return; setScreenShake(true); setTimeout(() => setScreenShake(false), violent ? 200 : 500); };
+        
+        // --- DECK HELPERS ---
+        const drawDice = (count) => {
+            let currentBag = [...diceBag];
+            let currentDiscard = [...discardPile];
+            let drawn = [];
+            for(let i=0; i<count; i++) {
+                if(currentBag.length === 0) {
+                    if(currentDiscard.length === 0) break;
+                    currentBag = [...currentDiscard]; 
+                    currentBag.sort(() => Math.random() - 0.5);
+                    currentDiscard = [];
+                }
+                drawn.push(currentBag.pop());
+            }
+            setDiceBag(currentBag);
+            setDiscardPile(currentDiscard);
+            return drawn;
+        };
+
+        const swapDie = (idx) => {
+            if (discards <= 0 || rolling) { AudioSystem.playSfx('error'); return; }
+            setDiscards(d => d - 1);
+            AudioSystem.playSfx('swap');
+            const oldDie = dice[idx];
+            const [newDie] = drawDice(1);
+            if(newDie) {
+                const newDiceArr = [...dice];
+                newDiceArr[idx] = { ...newDie, id: Math.random(), value: 1, rotation: 0 };
+                setDice(newDiceArr);
+                setDiscardPile(p => [...p, oldDie]);
+            }
+        };
+
+        const rollDice = (overrideIdx = null) => {
+            if ((discards <= 0 && overrideIdx === null) || hands <= 0 || rolling) { AudioSystem.playSfx('error'); return; }
+            const hasBloodPact = inventory.devises.some(d => d.id === 'BLOOD_PACT' && !disabledItems[d.uid]);
+            if (hasBloodPact) { if (gold > 0) setGold(g => g - 1); else return; }
+
+            setRolling(true); AudioSystem.playSfx('roll'); setHasRolled(true); setRunStats(p=>({rerolls:p.rerolls+1}));
+            setDealer(Math.random()>0.5?'ROLL_GOOD':'ROLL_BAD'); setTiltLevel(0);
+            
+            setTimeout(() => {
+                setDice(prev => prev.map((d, i) => {
+                    if (d.status === 'frozen') return d; 
+                    if (kept[i] && overrideIdx !== i) return d;
+                    let range = 6; if(d.type==='d4') range=4; if(d.type==='d8') range=8;
+                    let val = Math.ceil(Math.random()*range);
+                    if(d.type==='weighted') val=[2,3,4,5,6,6][Math.floor(Math.random()*6)];
+                    if(d.type==='shield') val=0;
+                    if(d.type==='thief') { const steal = Math.floor(Math.random()*3)+1; setGold(g=>g+steal); }
+                    if(activeBoss?.id === 'THE_CURSED' && val === 6) val = 1;
+                    if(d.type==='gilded') setGold(g=>g+1);
+                    if(val === 1 && inventory.devises.some(dev => dev.id === 'SOUL_JAR' && !disabledItems[dev.uid])) setSoulJarCount(c => c + 1);
+                    
+                    const rot = Math.floor(Math.random() * 30) - 15;
+                    const jitX = Math.random() * 10 - 5; const jitY = Math.random() * 10 - 5;
+                    return { ...d, value: val, rotation: rot, jitterX: jitX, jitterY: jitY };
+                }));
+                setDice(current => {
+                    const next = [...current];
+                    current.forEach((d, i) => {
+                        if(d.status === 'radioactive') {
+                            if(i>0 && !kept[i-1]) next[i-1].value = Math.ceil(Math.random()*6);
+                            if(i<4 && !kept[i+1]) next[i+1].value = Math.ceil(Math.random()*6);
+                        }
+                    });
+                    return next;
+                });
+                if (overrideIdx === null) setDiscards(d => d - 1);
+                setRolling(false);
+            }, 600);
+        };
+
+        const slamTable = () => {
+            if(rolling || !hasRolled) return;
+            triggerShake(true); AudioSystem.playSfx('slam');
+            const failChance = tiltLevel * 0.25;
+            if (Math.random() < failChance) {
+                setDealer('TILT'); AudioSystem.playSfx('error'); triggerScore('TILT_PENALTY');
+            } else {
+                setTiltLevel(t => t + 1);
+                setDice(prev => prev.map((d, i) => {
+                    if (!kept[i]) {
+                        let range = 6; if(d.type==='d4') range=4; if(d.type==='d8') range=8;
+                        let val = Math.ceil(Math.random()*range);
+                        if(d.type==='weighted') val=[2,3,4,5,6,6][Math.floor(Math.random()*6)];
+                        const rot = Math.floor(Math.random() * 30) - 15; 
+                        return { ...d, value: val, rotation: rot, jitterX: Math.random()*20-10, jitterY: Math.random()*20-10 };
+                    }
+                    return d;
+                }));
+            }
+        };
+
+        const calculateScore = (catId, currentDiscards) => {
+            if (catId === 'TILT_PENALTY') return { valid: true, chips: 0, mult: 0, total: 0, triggers: [{name: 'SYSTEM TILT', value: 'FORCED 0'}] };
+            const vals = dice.map(d => d.value);
+            const sum = vals.reduce((a,b)=>a+b,0);
+            const counts = {}; vals.forEach(x => counts[x] = (counts[x]||0)+1);
+            const cArr = Object.values(counts);
+            let chips=0, mult=1, valid=true, triggers=[];
+            const lvl = handLevels[catId] || 1;
+            const levelChipBonus = (lvl - 1) * 10; const levelMultBonus = (lvl - 1) * 0.5;
+
+            switch(catId) {
+                case 'ONES': chips=(counts[1]||0)*1; break; case 'TWOS': chips=(counts[2]||0)*2; break;
+                case 'THREES': chips=(counts[3]||0)*3; break; case 'FOURS': chips=(counts[4]||0)*4; break;
+                case 'FIVES': chips=(counts[5]||0)*5; break; case 'SIXES': chips=(counts[6]||0)*6; break;
+                case 'TOK': valid=cArr.some(c=>c>=3); if(valid){ chips=20; mult=2; } break;
+                case 'FOK': valid=cArr.some(c=>c>=4); if(valid){ chips=35; mult=3; } break;
+                case 'FH': valid=cArr.includes(3)&&cArr.includes(2); if(valid){ chips=30; mult=3; } break;
+                case 'SS': const u=[...new Set(vals)].sort().join(''); valid=u.includes('1234')||u.includes('2345')||u.includes('3456'); if(valid){ chips=30; mult=2; } break;
+                case 'LS': const u2=[...new Set(vals)].sort().join(''); valid=u2.includes('12345')||u2.includes('23456'); if(valid){ chips=40; mult=3; } break;
+                case 'Y': valid=cArr.includes(5); if(valid){ chips=50; mult=5; } break;
+                case 'C': chips=sum; break;
+            }
+
+            if (!valid) return { valid: false, chips: 0, mult: 0, total: 0, triggers: [], ...{ ev: 0, max: 0 } };
+            if (lvl > 1) { chips += levelChipBonus; mult += levelMultBonus; triggers.push({ name: `MASTERY L${lvl}`, value: `+${levelChipBonus} / +${levelMultBonus}x`}); }
+            if(discards > 0) { chips += discards * 5; triggers.push({ name: 'EFFICIENCY', value: `+${discards * 5}` }); }
+            if(combo > 0) { const bonus = 1 + (combo * 0.05); mult *= bonus; triggers.push({ name: 'FLOW', value: `x${bonus.toFixed(2)}` }); }
+
+            const techCount = inventory.devises.filter(d => d.tags?.includes('tech') && !disabledItems[d.uid]).length;
+            inventory.devises.forEach(d => {
+                if (disabledItems[d.uid]) return;
+                if (d.id === 'LOADED_DIE' && cArr.includes(2)) { chips += 10; triggers.push({ name: 'LOADED DIE', value: '+10' }); }
+                if (d.id === 'ODD_AMP' && sum%2!==0) { chips += 20; triggers.push({ name: 'ODD AMP', value: '+20' }); }
+                if (d.id === 'EVEN_AMP' && sum%2===0) { chips += 20; triggers.push({ name: 'EVEN AMP', value: '+20' }); }
+                if (d.id === 'MULTIPLIER' && (catId === 'SS' || catId === 'LS')) { mult += 0.5; triggers.push({ name: 'PRISM', value: '+0.5x' }); }
+                if (d.id === 'VOID_MAW') { chips += runStats.rerolls * 2; triggers.push({ name: 'VOID MAW', value: `+${runStats.rerolls*2}` }); }
+                if (d.id === 'QUANTUM_PROC' && techCount > 0) { mult += (techCount * 0.5); triggers.push({ name: 'QUANTUM', value: `+${techCount*0.5}x` }); }
+                if (d.id === 'OMEGA') { mult += 1; triggers.push({ name: 'OMEGA', value: '+1x' }); }
+                if (d.id === 'LUCKY_CLOVER' && vals.includes(6)) { mult += 1; triggers.push({ name: 'CLOVER', value: '+1x' }); }
+                if (d.id === 'SOUL_JAR') { chips += soulJarCount; triggers.push({ name: 'SOUL JAR', value: `+${soulJarCount}` }); }
+                if (d.id === 'ECHO_CHAMBER') { chips += 10; } 
+                if (d.id === 'GOLDEN_GUN' && gold === 0) { mult *= 3; triggers.push({ name: 'GOLDEN GUN', value: 'x3' }); }
+                if (d.id === 'PRISMATIC_LENS') { const u = new Set(vals).size; mult += (u*0.2); triggers.push({ name: 'PRISM LENS', value: `+${(u*0.2).toFixed(1)}x` }); }
+            });
+            dice.forEach((d, i) => {
+                if (d.type === 'mult' && i > 0) { mult += 1; triggers.push({ name: 'MULT DIE', value: '+1x' }); }
+            });
+            return { valid: true, chips, mult, total: Math.floor(chips * mult), triggers, ...{ ev: 0, max: 0 } };
+        };
+
+        const triggerScore = (id) => {
+            let res = calculateScore(id, discards);
+            if (corruptedCats.includes(id)) {
+                if (inventory.devises.length > 0) {
+                    const targetItem = inventory.devises[Math.floor(Math.random() * inventory.devises.length)];
+                    setDisabledItems(prev => ({ ...prev, [targetItem.uid]: 3 }));
+                    AudioSystem.playSfx('error');
+                }
+            }
+            
+            const newBag = [...diceBag];
+            dice.forEach(d => {
+                if(d.status === 'burning') { /* Destroyed */ } else { newBag.push({...d, status: null}); }
+            });
+            if (!res.valid) { setCombo(0); res = { valid: true, chips: 0, mult: 0, total: 0, triggers: [{name: 'SCRATCH', value: 'COMBO LOST'}] }; } 
+            else { 
+                setCombo(c => c + 1);
+                const currentLvl = handLevels[id] || 1;
+                setHandLevels(prev => ({ ...prev, [id]: currentLvl + 1 }));
+                AudioSystem.playSfx('levelup'); setDealer('LEVEL_UP');
+            }
+            
+            if (activeWager) {
+                let won = false;
+                if (activeWager.type === 'SCORE' && res.total > 200) won = true;
+                if (activeWager.type === 'FH' && id === 'FH' && res.valid) won = true;
+                if (won) { const profit = activeWager.amount * activeWager.odds; setGold(g => g + profit); AudioSystem.playSfx('win'); } else { AudioSystem.playSfx('error'); }
+                setActiveWager(null);
+            }
+
+            setVisData(res); setUsedCats([...usedCats, id]);
+            const nextDisabled = {}; for(let k in disabledItems) { if(disabledItems[k] > 1) nextDisabled[k] = disabledItems[k] - 1; }
+            setDisabledItems(nextDisabled);
+        };
+
+        const finishScoring = () => {
+            const gained = visData.total;
+            setScore(s => s + gained); setVisData(null); 
+            if(activeBoss) { setBossDamage(gained); setIsHit(true); AudioSystem.playSfx('hit'); setDealer('BOSS_HIT'); setTimeout(() => { setBossDamage(null); setIsHit(false); }, 1000); }
+            
+            setHands(h => h - 1);
+            setHasRolled(false); setKept([false,false,false,false,false]);
+            
+            const newDiscard = [...discardPile, ...dice];
+            setDiscardPile(newDiscard);
+            let currentBag = [...diceBag];
+            let drawn = [];
+            let tempDiscard = [...newDiscard];
+            for(let i=0; i<5; i++) {
+                    if(currentBag.length === 0) { currentBag = [...tempDiscard]; currentBag.sort(() => Math.random() - 0.5); tempDiscard = []; }
+                    if(currentBag.length > 0) drawn.push(currentBag.pop());
+            }
+            setDice(drawn.map((d, i) => ({...d, value: 1, rotation: 0, isGlitched: false, jitterX:0, jitterY:0 })));
+            setDiceBag(currentBag); setDiscardPile(tempDiscard);
+            setDiscards(selectedOrigin.discards);
+            setRam(r => Math.min(100, r + (gained/target)*100*2.0));
+            let goldGain = Math.floor(gained / 30);
+            if (goldGain > 0) setGold(g => g + goldGain);
+            if (inventory.devises.some(d => d.id === 'MIDAS_TOUCH' && !disabledItems[d.uid]) && gained > 300) setGold(g => g+1);
+            if(hands <= 1) {
+                if (score + gained < (activeBoss ? activeBoss.roundMod(target) : target)) {
+                        // Check for Shield Die
+                    if (dice.some(d => d.type === 'shield')) {
+                            setHands(1);
+                    } else {
+                            AudioSystem.playSfx('alarm');
+                            setFailureAnim(true); setTimeout(() => { setPhase('GAMEOVER'); AudioSystem.playSfx('death'); }, 2000);
+                    }
+                } else {
+                    setTimeout(() => {
+                        // VICTORY CHECK
+                        if (activeBoss?.id === 'THE_SOURCE') { setPhase('VICTORY'); AudioSystem.playSfx('win'); }
+                            else {
+                                setPhase('GAMBLE');
+                            }
+                    }, 1000);
+                }
+            }
+        };
+
+        const handleGambleChoice = (gamble) => {
+            if (gamble) {
+                AudioSystem.playSfx('coin');
+                const win = Math.random() > 0.5;
+                if (win) { setGold(g => g * 2); } else { setGold(0); }
+            }
+            if (debt > 0) setDebt(d => Math.ceil(d * 1.2));
+            setTimeout(() => { setPhase('SHOP'); generateShop(); generatePaths(); setActiveBoss(null); if(activeBoss) { setInflation(i => i + 1); setDealer('WIN'); AudioSystem.playSfx('win'); } else setDealer('SHOP'); }, 1000);
+        };
+
+        const placeWager = (wager) => { if (gold < wager.amount) return; setGold(g => g - wager.amount); setActiveWager(wager); setShowWager(false); AudioSystem.playSfx('buy'); };
+        
+        const useProgram = (prog) => { if (ram < prog.cost) return; AudioSystem.playSfx('program'); setRam(r => r - prog.cost); if (prog.id === 'PING') rollDice(Math.floor(Math.random() * 5)); if (prog.id === 'OVERCLOCK') setGold(g => g + 5); if (prog.id === 'REBOOT') setHands(h => h + 1); };
+        
+        const useConsumable = (c, idx) => { AudioSystem.playSfx('equip'); if(c.effect) { const s = c.effect({discards, gold, hands, dice}); if(s.discards!==undefined) setDiscards(s.discards); if(s.gold!==undefined) setGold(s.gold); if(s.hands!==undefined) setHands(s.hands); if(s.overrideDice) setDice(prev => prev.map((d,i) => ({...d, value: s.overrideDice[i]}))); if(s.randomizeDiceTypes) setDice(prev => prev.map(d => ({...d, type: Object.keys(DICE_TYPES)[Math.floor(Math.random()*5)]}))); } setInventory(p => ({...p, consumables: p.consumables.filter((_,i) => i!==idx)})); };
+        
+        const generateShop = () => { let pool = [...Object.values(DEVISES), ...Object.values(CONSUMABLES)]; Object.values(DICE_TYPES).forEach(dt => { if(dt.id!=='d6') pool.push({...dt, type:'dice_upgrade', cost:15+(dt.rarity==='rare'?10:0)}); }); const newItems = Array(3).fill(0).map(() => ({ ...pool[Math.floor(Math.random() * pool.length)], uid: Math.random() })); setShopItems(newItems); };
+        
+        const generatePaths = () => { 
+            if ((round + 1) % 12 === 0) { setNextPath([PATHS.FINAL]); return; } // FINAL BOSS
+            if ((round + 1) % 3 === 0) { 
+                if (debt > 0) { setPhase('GAMEOVER'); return; } 
+                setNextPath([PATHS.BOSS]); return; 
+            } 
+            const options = [PATHS.LOCAL];
+            if (Math.random() > 0.5) options.push(PATHS.ENCRYPTED); 
+            if (Math.random() > 0.8) options.push(PATHS.VOLTAGE); 
+            setNextPath(options); 
+        };
+
+        const buyItem = (item) => { const cost = item.cost + inflation; if(gold >= cost) { AudioSystem.playSfx('buy'); setGold(g => g - cost); applyBuy(item); } };
+        const takeLoan = (item) => { const cost = item.cost + inflation; const loanAmount = cost - gold; setDebt(d => d + loanAmount); setGold(0); AudioSystem.playSfx('buy'); applyBuy(item); };
+        const applyBuy = (item) => { if(item.type === 'dice_upgrade') { setDiceBag(prev => [...prev, { type: item.id, id: Math.random(), value: 1 }]); } else { setInventory(p => ({ ...p, [item.type === 'devise' ? 'devises' : 'consumables']: [...p[item.type === 'devise' ? 'devises' : 'consumables'], { ...item, uid: Math.random() }] })); } setShopItems(p => p.filter(x => x.uid !== item.uid)); };
+        const payDebt = () => { if (gold >= debt) { setGold(g => g - debt); setDebt(0); AudioSystem.playSfx('buy'); } else { setDebt(d => d - gold); setGold(0); AudioSystem.playSfx('buy'); } };
+        const sellItem = (type, idx, cost) => { AudioSystem.playSfx('sell'); setGold(g => g + Math.floor(cost / 2)); setInventory(prev => ({ ...prev, [type]: prev[type].filter((_, i) => i !== idx) })); };
+        const refreshShop = () => { const cost = (selectedOrigin.name === "The Novice" && round === 1) ? 0 : 2; if (gold < cost) return; setGold(g => g - cost); AudioSystem.playSfx('equip'); generateShop(); }
+        
+        const selectPath = (path) => { 
+            setRound(r => r+1); setScore(0); setActiveBoss(null); 
+            const baseTarget = Math.floor(target * 1.35 + 100); setTarget(Math.floor(baseTarget * path.mod));
+            if (path.reward > 0) setGold(g => g + path.reward); if (path.ram) setRam(100); if (path.hand) setHands(h => h + 1);
+            if(path.effect) { const s = path.effect({hands, permRerolls:0}); if(s.hands) setHands(s.hands); } setUsedCats([]); 
+            
+            let currentBag = [...diceBag, ...dice, ...discardPile];
+            currentBag = currentBag.map(d => ({...d, status: null}));
+            
+            const corrupt = Math.random() < 0.2;
+            if (corrupt) { const cats = Object.keys(CATEGORIES); setCorruptedCats([cats[Math.floor(Math.random()*cats.length)]]); currentBag[Math.floor(Math.random()*currentBag.length)].status = 'frozen'; } else { setCorruptedCats([]); }
+
+            currentBag.sort(() => Math.random() - 0.5);
+            let hand = []; for(let i=0; i<5; i++) hand.push(currentBag.pop());
+            
+            setDice(hand.map(d => ({...d, value:1, rotation:0}))); setDiceBag(currentBag); setDiscardPile([]);
+            setHands(selectedOrigin.hands + (path.hand || 0)); setDiscards(selectedOrigin.discards); setHasRolled(false); setPhase('PLAY'); setDealer('START'); 
+            if (path.id === 'BOSS' || path.id === 'FINAL') { 
+                    if(path.id === 'FINAL') setActiveBoss(BOSSES.THE_SOURCE);
+                    else { const keys = Object.keys(BOSSES).filter(k => k!=='THE_SOURCE'); setActiveBoss(BOSSES[keys[Math.floor(Math.random() * keys.length)]]); }
+                    setDealer('BOSS');
+            } 
+        };
+
+        const startRun = (ascended = false) => { 
+            AudioSystem.init();
+            setRound(1); setScore(0); setTarget(150 * (ascended ? 1.5 : 1)); setGold(selectedOrigin.gold); setHands(selectedOrigin.hands); setDiscards(selectedOrigin.discards); 
+            if(!ascended) setInventory({ devises: [], consumables: [] });
+            // Init Bag
+            const startDice = selectedOrigin.dice.map((t, i) => ({ id: Math.random(), type: t, value: 1, rotation: 0 }));
+            for(let i=0; i<5; i++) startDice.push({ id: Math.random(), type: 'd6', value: 1 });
+            startDice.sort(() => Math.random() - 0.5);
+            const hand = startDice.splice(0, 5);
+            setDice(hand); setDiceBag(startDice); setDiscardPile([]);
+
+            setRunStats({ rerolls: 0, totalScore: 0 }); setHasRolled(false); setUsedCats([]); setRam(0); setCombo(0); setHandLevels({}); setSoulJarCount(0);
+            setPhase('PLAY'); setDealer('START'); setFailureAnim(false); setActiveBoss(null); setDebt(0); 
+            if(!ascended) setAscensionLevel(0);
+        };
+        
+        const ascend = () => {
+                setAscensionLevel(a => a + 1);
+                startRun(true);
+        };
+
+        return (
+            <div className="h-full w-full text-gray-200 relative overflow-hidden flex flex-col">
+                <div className={`scanlines ${!settings.crt ? 'off' : ''}`}></div><div className="vignette"></div>
+                {visData && <ScoreVisualizer breakdown={visData} onComplete={finishScoring} fastMode={settings.fast} />}
+                {showSettings && <SettingsModal settings={settings} setSettings={setSettings} onClose={() => setShowSettings(false)} />}
+                {showArchive && <ArchiveModal unlockedItems={unlockedItems} onClose={() => setShowArchive(false)} />}
+                {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+                {showWager && <WagerModal gold={gold} onClose={() => setShowWager(false)} onWager={placeWager} />}
+                {phase === 'GAMBLE' && <GambleModal onChoice={handleGambleChoice} />}
+                {phase === 'VICTORY' && <VictoryModal onAscend={ascend} onMenu={() => setPhase('MENU')} />}
+                {failureAnim && <div className="failure-overlay"><div className="failure-text">SYSTEM FAILURE</div></div>}
+
+                <div className="absolute top-4 right-4 z-[100] flex gap-2">
+                        <button onClick={() => setAnalysisMode(!analysisMode)} className={`p-2 rounded border ${analysisMode ? 'border-neon-blue bg-blue-900/50' : 'border-gray-500 bg-black/50 text-gray-500'}`}><Icons.Chart /></button>
+                        <button onClick={() => setShowHelp(true)} className="text-gray-500 hover:text-white bg-black/50 p-2 rounded"><Icons.Help /></button>
+                    <button onClick={() => setShowSettings(true)} className="text-gray-500 hover:text-white bg-black/50 p-2 rounded"><Icons.Settings /></button>
+                </div>
+
+                <div className={`absolute inset-0 -z-10 bg-[#050505]`}>
+                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-gray-900/40 to-black"></div>
+                </div>
+
+                {phase === 'MENU' && (
+                        <div className="h-full flex flex-col items-center justify-center relative z-50">
+                        <h1 className="text-8xl font-bold text-white mb-2 font-[Rajdhani] animate-float">DICE & DEVISES</h1>
+                        <div className="text-neon-red tracking-widest text-sm mb-8 font-mono glitch-text">ENDGAME_UPDATE</div>
+                        <div className="flex gap-4 mb-8">
+                            <button onClick={() => startRun(false)} className="px-8 py-3 bg-white text-black font-bold hover:bg-neon-green hover:shadow-[0_0_20px_#00ff9f] transition-all">START RUN</button>
+                            <button onClick={() => setShowArchive(true)} className="px-4 py-3 border border-gray-600 text-gray-400 hover:border-white hover:text-white transition-all"><Icons.Archive /></button>
+                        </div>
+                        <div className="flex gap-2">{Object.values(ORIGINS).map(o => <button key={o.name} onClick={()=>setSelectedOrigin(o)} className={`px-4 py-2 border ${selectedOrigin.name===o.name?'border-neon-blue text-neon-blue':'border-gray-700 text-gray-500'}`}>{o.name}</button>)}</div>
+                    </div>
+                )}
+
+                {phase === 'PLAY' && (
+                    <div className={`h-full p-6 flex flex-col max-w-7xl mx-auto w-full relative z-40 ${screenShake ? 'animate-shake' : ''}`}>
+                        <Dealer text={hands === 1 ? DEALER_QUOTES.LAST_CHANCE[Math.floor(Math.random()*DEALER_QUOTES.LAST_CHANCE.length)] : dealerText} />
+                        
+                        {/* HUD */}
+                        <div className="glass-panel p-4 rounded-xl mb-6 flex justify-between items-center relative overflow-hidden">
+                            <div className="z-10 flex-1">
+                                <div className="text-xs text-gray-500 flex justify-between"><span>{activeBoss ? 'BOSS HP' : 'TARGET SCORE'}</span><span>{score} / {activeBoss ? activeBoss.roundMod(target) : target}</span></div>
+                                <div className="h-4 bg-gray-900 rounded-full mt-1 overflow-hidden border border-gray-700 relative"><div className={`h-full transition-all duration-500 ${activeBoss ? 'bg-red-600' : 'bg-neon-blue'}`} style={{width: `${Math.min(100, (score/(activeBoss ? activeBoss.roundMod(target) : target))*100)}%`}}></div></div>
+                            </div>
+                            {activeBoss && (<div className="mx-8 relative flex flex-col items-center"><div className={`${activeBoss.avatar} ${isHit ? 'hit-flash' : ''}`}></div><div className={`${activeBoss.color} font-bold text-xl mt-2 text-center leading-none`}>{activeBoss.name}</div>{bossDamage && <div className="damage-text">-{bossDamage}</div>}</div>)}
+                            <div className="flex gap-6 text-right z-10 ml-8">
+                                <div><div className="text-xs text-gray-500">BAG</div><div className="text-xl font-bold text-gray-300">{diceBag.length}</div></div>
+                                <div><div className="text-xs text-gray-500">FLOW</div><div className={`text-xl font-bold ${combo > 0 ? 'text-neon-blue animate-pulse' : 'text-gray-600'}`}>x{(1 + combo*0.05).toFixed(2)}</div></div>
+                                <div><div className="text-xs text-gray-500">GOLD</div><div className={`text-xl font-bold ${debt > 0 ? 'text-red-500' : 'text-neon-gold'}`}>{gold} {debt > 0 && <span className="text-xs text-red-500">(-{debt})</span>}</div></div>
+                                <div><div className="text-xs text-gray-500">HANDS</div><div className={`text-xl font-bold ${hands === 1 ? 'text-neon-red animate-ping' : 'text-neon-red'}`}>{hands}</div></div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
+                            <div className="col-span-3 glass-panel rounded-xl p-4 overflow-y-auto scrollbar-hide">
+                                {Object.values(CATEGORIES).map(c => (
+                                    <ScoreRow key={c.id} id={c.id} cat={c} result={calculateScore(c.id, discards)} isUsed={usedCats.includes(c.id)} hands={hands} commitScore={triggerScore} hasRolled={hasRolled} level={handLevels[c.id]||1} analysisMode={analysisMode} isCorrupted={corruptedCats.includes(c.id)} />
+                                ))}
+                            </div>
+
+                            <div className="col-span-6 flex flex-col gap-6">
+                                <div className="glass-panel flex-1 rounded-xl flex flex-col items-center justify-center relative">
+                                    <div className="flex gap-4 mb-8 perspective-1000">
+                                        {dice.map((d, i) => <Die key={i} data={d} isRolling={rolling && !kept[i]} isKept={kept[i]} onClick={() => { if(!rolling && hasRolled) { AudioSystem.playSfx('equip'); setKept(k => { const n=[...k]; n[i]=!n[i]; return n; }); }}} onSwap={() => swapDie(i)} disabled={d.status==='frozen'} />)}
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <button onClick={() => rollDice(null)} disabled={discards <= 0 || hands <= 0 || rolling} className={`px-12 py-3 font-bold text-xl tracking-widest transition-all ${discards > 0 ? 'bg-neon-blue text-black hover:shadow-[0_0_20px_#00ffff]' : 'bg-gray-700 text-gray-500'}`}>{rolling ? 'ROLLING' : `ROLL [${discards}]`}</button>
+                                        <button onClick={slamTable} className="px-4 py-3 bg-red-900/50 text-red-400 font-bold border border-red-500 hover:bg-red-500 hover:text-black transition-all"><Icons.Slam /></button>
+                                    </div>
+                                    {!rolling && hasRolled === false && !activeWager && (
+                                        <button onClick={() => setShowWager(true)} className="absolute top-4 left-4 px-3 py-1 border border-neon-gold text-neon-gold text-xs rounded hover:bg-neon-gold hover:text-black">PLACE BET</button>
+                                    )}
+                                    {activeWager && (
+                                        <div className="absolute top-4 left-4 px-3 py-1 border border-neon-blue text-neon-blue text-xs rounded bg-black/50">
+                                        BET: {activeWager.amount}g on {activeWager.type}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="col-span-3 glass-panel rounded-xl p-4 flex flex-col">
+                                <Cyberdeck ram={ram} maxRam={100} onActivate={useProgram} />
+                                <div className="text-xs text-gray-500 mb-2 mt-4 font-bold">INVENTORY</div>
+                                <div className="space-y-2 overflow-y-auto h-full pb-4">
+                                    {inventory.devises.map((d, i) => <div key={`dev-${i}`} className={`bg-black/40 p-2 rounded border border-gray-700 flex justify-between items-center ${disabledItems[d.uid] ? 'item-disabled' : ''}`}><span className={`text-xs ${d.tags?.includes('tech') ? 'text-neon-blue' : 'text-gray-300'}`}>{d.name}</span></div>)}
+                                    {inventory.consumables.map((c, i) => <div key={`con-${i}`} className="bg-black/40 p-2 rounded border border-neon-green/50 flex justify-between items-center"><span className="text-xs text-neon-green">{c.name}</span><button onClick={() => useConsumable(c, i)} className="text-[10px] bg-gray-800 hover:bg-neon-green hover:text-black px-2 rounded transition-all">USE</button></div>)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'SHOP' && (
+                    <div className="h-full flex flex-col items-center justify-center relative z-50">
+                        <div className="glass-panel p-8 rounded-2xl max-w-6xl w-full flex gap-6 h-[80vh]">
+                            <div className="flex-1 flex flex-col">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-3xl text-neon-gold font-bold">SHOP</h2>
+                                    <div className="flex gap-4 items-center">
+                                        <div className="text-neon-gold font-bold">{gold} G</div>
+                                        {debt > 0 && (
+                                            <button onClick={payDebt} className="px-4 py-2 bg-red-900 text-red-300 text-xs rounded hover:bg-red-800">PAY DEBT (-{Math.min(gold, debt)})</button>
+                                        )}
+                                        <button onClick={() => {if(gold>=(selectedOrigin.name===ORIGINS.NOVICE.name && round===1 ? 0 : 2)) refreshShop()}} disabled={gold < (selectedOrigin.name===ORIGINS.NOVICE.name && round===1 ? 0 : 2)} className="px-4 py-2 border border-neon-blue text-neon-blue hover:bg-neon-blue/10 text-xs rounded">
+                                            REFRESH ({selectedOrigin.name===ORIGINS.NOVICE.name && round===1 ? 0 : 2}G)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 overflow-y-auto">
+                                    {shopItems.map(item => {
+                                        const cost = item.cost + inflation;
+                                        const canAfford = gold >= cost;
+                                        return (
+                                            <div key={item.uid} className="bg-black/40 p-4 rounded border border-gray-700 hover:border-neon-blue transition-all group">
+                                                <div className="flex justify-between text-xs text-gray-500 mb-1"><span>{item.type}</span>{item.tags && <span>{item.tags.join(' ')}</span>}</div>
+                                                <div className="font-bold text-white">{item.name}</div><div className="text-xs text-gray-400 mb-4">{item.desc}</div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => buyItem(item)} disabled={!canAfford} className={`flex-1 py-1 text-xs font-bold ${canAfford ? 'bg-gray-700 hover:bg-white hover:text-black' : 'bg-gray-900 text-gray-600'}`}>BUY {cost}</button>
+                                                    {!canAfford && <button onClick={() => takeLoan(item)} className="flex-1 py-1 bg-red-900 hover:bg-red-700 text-white text-xs font-bold">LOAN</button>}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                            <div className="w-1/3 border-l border-gray-700 pl-6 flex flex-col">
+                                <div className="text-xl font-bold text-gray-400 mb-4">NEXT CONNECTION</div>
+                                {debt > 0 && <div className="text-xs text-red-500 mb-2 animate-pulse">WARNING: UNPAID DEBT. INTEREST +20%</div>}
+                                <div className="flex flex-col gap-2 mb-8">
+                                    {nextPath.length === 0 ? <button onClick={generatePaths} className="p-4 border border-dashed border-gray-600 text-gray-500">Scanning...</button> : nextPath.map(p => (
+                                        <button key={p.id} onClick={() => selectPath(p)} className={`p-4 border rounded text-left transition-all hover:translate-x-2 ${p.color} bg-black/50 hover:bg-black/80`}>
+                                            <div className="font-bold">{p.name}</div><div className="text-xs opacity-70">{p.desc}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-400 mb-4">INVENTORY</h3>
+                                <div className="space-y-2 overflow-y-auto flex-1">{inventory.devises.map((d, i) => <div key={i} className="bg-black/40 p-2 rounded border border-gray-700 flex justify-between items-center"><div><div className="text-sm text-white">{d.name}</div><div className="text-[10px] text-gray-500">{d.type}</div></div><button onClick={() => sellItem('devises', i, d.cost)} className="text-[10px] border border-red-900 text-red-400 hover:bg-red-900 px-2 py-1 rounded">SELL {Math.floor(d.cost/2)}</button></div>)}{inventory.consumables.map((c, i) => <div key={i} className="bg-black/40 p-2 rounded border border-neon-green/30 flex justify-between items-center"><div><div className="text-sm text-neon-green">{c.name}</div><div className="text-[10px] text-gray-500">CONSUMABLE</div></div><button onClick={() => sellItem('consumables', i, c.cost)} className="text-[10px] border border-red-900 text-red-400 hover:bg-red-900 px-2 py-1 rounded">SELL {Math.floor(c.cost/2)}</button></div>)}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {phase === 'GAMEOVER' && (
+                    <div className="h-full flex flex-col items-center justify-center relative z-50">
+                        <div className="absolute inset-0 flex items-center justify-center z-0 opacity-50 animate-pulse"><WeirdEye size={300} color="#ff0000" isDestroyer={true} /></div>
+                        <div className="glass-panel p-12 rounded-2xl text-center border border-red-900 shadow-[0_0_50px_rgba(255,0,0,0.2)] animate-slam relative z-10"><h2 className="text-6xl font-bold text-neon-red mb-4 tracking-widest">TERMINATED</h2><div className="text-xl mb-8">ROUND: {round} | SCORE: {score}</div><button onClick={() => setPhase('MENU')} className="px-8 py-3 bg-white text-black font-bold rounded hover:scale-105 transition-transform">RETURN TO MENU</button></div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root-dice-game'));
+    root.render(<App />);
+</script>
