@@ -61,14 +61,31 @@
     }
     @keyframes bossIntro {
         0% { transform: scale(.85); opacity: 0; filter: blur(8px); }
+        35% { transform: scale(1.04); opacity: 1; filter: blur(0); }
         100% { transform: scale(1); opacity: 1; filter: blur(0); }
+    }
+    @keyframes glowRare {
+        0%, 100% { box-shadow: 0 0 10px rgba(0,221,255,.25); }
+        50% { box-shadow: 0 0 22px rgba(0,221,255,.75); }
+    }
+    @keyframes glowLegendary {
+        0%, 100% { box-shadow: 0 0 10px rgba(250,204,21,.25); }
+        50% { box-shadow: 0 0 24px rgba(250,204,21,.85); }
+    }
+    @keyframes glowDanger {
+        0%, 100% { box-shadow: 0 0 10px rgba(255,0,127,.25); }
+        50% { box-shadow: 0 0 24px rgba(255,0,127,.85); }
     }
     #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
     #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
     #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
     #root-gutterbones .risk-badge { display:inline-flex; border:1px solid rgba(255,0,127,.5); background:rgba(127,0,60,.45); color:#fbcfe8; border-radius:999px; padding:1px 6px; font-size:9px; font-weight:bold; font-family:"Courier New", monospace; }
-    #root-gutterbones .glow-rare { box-shadow: 0 0 18px rgba(0,221,255,.45); border-color: rgba(0,221,255,.75) !important; }
-    #root-gutterbones .glow-danger { box-shadow: 0 0 18px rgba(255,0,127,.45); border-color: rgba(255,0,127,.85) !important; }
+    #root-gutterbones .glow-rare { animation: glowRare 1.8s ease-in-out infinite; border-color: rgba(0,221,255,.75) !important; }
+    #root-gutterbones .glow-legendary { animation: glowLegendary 2s ease-in-out infinite; border-color: rgba(250,204,21,.85) !important; }
+    #root-gutterbones .glow-danger { animation: glowDanger 1.4s ease-in-out infinite; border-color: rgba(255,0,127,.85) !important; }
+    #root-gutterbones .boss-rule-banner { background: linear-gradient(90deg, rgba(127,0,60,.35), rgba(10,10,10,.92), rgba(127,0,60,.35)); border: 1px solid rgba(255,0,127,.45); box-shadow: 0 0 20px rgba(255,0,127,.15); }
+    #root-gutterbones .score-tooltip { opacity: 0; transform: translateY(-4px); transition: opacity .15s ease, transform .15s ease; }
+    #root-gutterbones .group:hover .score-tooltip, #root-gutterbones .group:focus-within .score-tooltip { opacity: 1; transform: translateY(0); }
 </style>
 
 <script type="text/babel">
@@ -246,13 +263,27 @@
 
     const standardFaces = () => [1,2,3,4,5,6].map(v => ({ id: 'standard', value: v, type: 'standard', label: String(v), style: '' }));
     const makeBone = () => ({ id: Math.random(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
-    const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'danger' ? 'glow-danger' : '';
-    const riskNotes = item => {
-        if (!item) return [];
-        if (item.rarity === 'danger') return ['HIGH RISK'];
+    const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'legendary' ? 'glow-legendary' : r === 'danger' ? 'glow-danger' : '';
+    const getRiskNotes = (item, context = {}) => {
+        const notes = [];
+        if (!item) return notes;
+        if (item.rarity === 'danger') notes.push('HIGH RISK');
         if (item.id === 'GHOST_FACE') return ['STRAIGHTS RISK'];
-        if (item.id === 'BLOOD_PACT') return ['ROLL TOLL'];
-        return [];
+        if (item.id === 'BLOOD_PACT') notes.push((context.gold || 0) > 0 ? '-$1 EACH ROLL' : 'ROLL ADDS DEBT');
+        if (item.id === 'WIREBAG_FACE') notes.push('MULT PENALTY');
+        if (item.id === 'SHIV_FACE') notes.push('DESTROYS NEXT SLOT');
+        if (item.id === 'SHADY_LEDGER') notes.push('DEBT SAFE');
+        return notes;
+    };
+    const getBossRuleText = (boss, baseTarget) => {
+        if (!boss) return '';
+        if (boss.id === 'BOUNCER') return `Quota is raised to ${boss.applyTarget ? boss.applyTarget(baseTarget) : baseTarget}. Beat the bigger gate.`;
+        if (boss.id === 'LOAN_SHARK') return 'Every roll costs $2 first. If cash runs dry, the shortfall becomes debt.';
+        if (boss.id === 'JUNKIE') return 'Rolled 6s are converted to 1s before scoring.';
+        if (boss.id === 'CROOKED_COP') return 'Hardware is disabled for this job, but carved faces still count.';
+        if (boss.id === 'INFORMANT') return 'The Stash is frozen until the job is over.';
+        if (boss.id === 'THE_RAID') return `Final raid: quota is ${boss.applyTarget ? boss.applyTarget(baseTarget) : baseTarget}, and each pill costs $2.`;
+        return boss.desc;
     };
 
     const CashRain = ({ count = 24 }) => (
@@ -297,15 +328,28 @@
     };
 
     const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
-        const triggers = (result.triggers || []).slice(0, 2);
+        const triggers = (result.triggers || []).slice(0, 3);
+        const showPreview = canScore && !used;
+        const isBust = showPreview && !result.valid;
         return (
-            <button onClick={() => onScore(id)} disabled={!canScore} className={`w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base ${used ? 'opacity-30 border-gray-400 line-through' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
-                <span className="flex flex-col items-start">
-                    <span>{cat.name}</span>
-                    {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge">{t.name} {t.value}</span>)}</span>}
-                </span>
-                <span>{used ? 'PAID' : (canScore && result.valid ? result.total : (canScore ? 'BUST' : '-'))}</span>
-            </button>
+            <div className="group relative">
+                <button onClick={() => onScore(id)} disabled={!canScore} className={`w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base ${used ? 'opacity-30 border-gray-400 line-through' : showPreview && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : isBust ? 'text-red-700 bg-red-900/10 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
+                    <span className="flex flex-col items-start">
+                        <span>{cat.name}</span>
+                        {showPreview && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge">{t.name} {t.value}</span>)}</span>}
+                    </span>
+                    <span className={showPreview && result.valid ? 'font-mono text-[#0df]' : 'font-mono'}>{used ? 'PAID' : (showPreview && result.valid ? result.total.toLocaleString() : (isBust ? 'BUST' : '-'))}</span>
+                </button>
+                {showPreview && (
+                    <div className="score-tooltip absolute left-0 right-0 top-full mt-1 bg-black/95 text-white border border-[#0df]/40 rounded p-2 font-mono text-[10px] z-50 pointer-events-none shadow-xl">
+                        <div className="tracking-widest text-[#0df] mb-1">LIVE PREVIEW</div>
+                        <div className="flex justify-between"><span>CHIPS</span><b>{result.valid ? result.chips : 0}</b></div>
+                        <div className="flex justify-between"><span>MULT</span><b>{result.valid ? result.mult.toFixed(1) : '0.0'}x</b></div>
+                        <div className="flex justify-between border-t border-gray-700 mt-1 pt-1"><span>TOTAL</span><b>{result.valid ? result.total.toLocaleString() : 0}</b></div>
+                        {result.triggers?.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{result.triggers.map((t, i) => <span key={i} className="preview-badge">{t.name} {t.value}</span>)}</div>}
+                    </div>
+                )}
+            </div>
         );
     };
 
@@ -321,26 +365,65 @@
                 <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
                     <h2 className={`${boss.color} font-marker text-5xl mb-3`}>{boss.name}</h2>
-                    <p className="font-mono text-gray-300">{boss.desc}</p>
-                    <p className="font-mono text-xs text-gray-500 mt-3">Quota: {target}</p>
+                    <p className="font-mono text-gray-300">{getBossRuleText(boss, target)}</p>
+                    <p className="font-mono text-xs text-gray-500 mt-3">Quota: {boss.applyTarget ? boss.applyTarget(target) : target}</p>
                 </div>
             </div>
         );
     };
 
-    const RiskBadges = ({ item }) => {
-        const notes = riskNotes(item);
+    const RiskBadges = ({ item, gold }) => {
+        const notes = getRiskNotes(item, { gold });
         if (!notes.length) return null;
         return <div className="flex flex-wrap gap-1 mt-2">{notes.map(n => <span key={n} className="risk-badge">{n}</span>)}</div>;
+    };
+
+    const ScoreTicker = ({ value, pad = 0 }) => {
+        const [display, setDisplay] = useState(value || 0);
+        const displayRef = useRef(value || 0);
+        useEffect(() => {
+            const from = displayRef.current;
+            const to = Number(value) || 0;
+            if (from === to) return;
+            let raf;
+            const start = performance.now();
+            const duration = 650;
+            const tick = (now) => {
+                const progress = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const next = Math.floor(from + (to - from) * eased);
+                displayRef.current = next;
+                setDisplay(next);
+                if (progress < 1) raf = requestAnimationFrame(tick);
+            };
+            raf = requestAnimationFrame(tick);
+            return () => cancelAnimationFrame(raf);
+        }, [value]);
+        const text = display.toLocaleString();
+        return <span>{pad ? text.padStart(pad, '0') : text}</span>;
+    };
+
+    const BossRuleBanner = ({ boss, target }) => {
+        if (!boss) return null;
+        return (
+            <div className="boss-rule-banner px-4 py-2 border-b border-red-900 font-mono text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <div>
+                    <div className="text-[10px] text-red-300 tracking-widest">ACTIVE BOSS RULE</div>
+                    <div className="text-white">{getBossRuleText(boss, target)}</div>
+                </div>
+                <div className={`${boss.color} font-bold uppercase whitespace-nowrap`}>{boss.name}</div>
+            </div>
+        );
     };
 
     const HistoryPanel = ({ history }) => (
         <div className="space-y-2 max-h-48 overflow-y-auto">
             {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 6).map(h => (
                 <div key={h.id} className="border border-black/30 bg-white/30 p-2 font-mono text-xs">
-                    <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total}</b></div>
+                    <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total.toLocaleString()}</b></div>
                     <div className="opacity-70">Bones: [{h.values.join(', ')}]</div>
-                    {h.triggers.length > 0 && <div className="opacity-70">Hooks: {h.triggers.map(t => t.name).join(', ')}</div>}
+                    {typeof h.chips === 'number' && typeof h.mult === 'number' && <div className="flex justify-between opacity-80"><span>{h.chips} chips</span><span>x{h.mult.toFixed(1)}</span></div>}
+                    {(h.triggers || []).length > 0 && <div className="flex flex-wrap gap-1 mt-1">{h.triggers.slice(0, 4).map((t, i) => <span key={i} className="preview-badge">{t.name}</span>)}</div>}
                 </div>
             ))}
         </div>
@@ -706,7 +789,7 @@
                     if (persona.id === 'HUSTLER') gain *= 0.5;
                     setStash(s => Math.min(100, s + gain));
                 }
-                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
+                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, chips: result.chips, mult: result.mult, values: dice.map(d => d.value), triggers: result.triggers }]);
                 if (result.total >= 50) { setPayoutActive(true); AudioSystem.payout(); setTimeout(() => setPayoutActive(false), 1800); }
                 else AudioSystem.playTone(600, 'sine', 0.1);
             } else {
@@ -816,8 +899,8 @@
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#262422_1px,transparent_1px),linear-gradient(180deg,rgba(255,0,127,0.05)_0%,rgba(0,221,255,0.05)_100%)] bg-[length:4px_4px,100%_100%] pointer-events-none z-0"></div>
                 {payoutActive && <CashRain count={18} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
-                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
-                {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
+                {bossIntro && <BossIntro boss={bossIntro} target={target} onDone={() => setBossIntro(null)} />}
+                {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value.toLocaleString()}</div>)}
 
                 {phase === 'LINEUP' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
@@ -886,10 +969,10 @@
                 {phase === 'PLAY' && (
                     <div className="h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative">
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
-                            {activeBoss && <div className="px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
+                            <BossRuleBanner boss={activeBoss} target={target} />
                             <div className="flex justify-between items-center p-3 md:p-4">
                                 <div className="hidden sm:block"><div className="text-xs uppercase opacity-50">The Fixer</div><div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div></div>
-                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className="text-3xl md:text-5xl font-black text-red-600 font-mono tracking-tighter">{score.toString().padStart(4, '0')} <span className="text-xl md:text-3xl opacity-50">/ {currentTarget}</span></div></div>
+                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className="text-3xl md:text-5xl font-black text-red-600 font-mono tracking-tighter"><ScoreTicker value={score} pad={4} /> <span className="text-xl md:text-3xl opacity-50">/ {currentTarget}</span></div></div>
                                 <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''}`}>${gold}{debt > 0 && <span className="text-xs"> (-{debt})</span>}</div></div>
                                     <div><div className="text-[10px] opacity-50">PILLS</div><div className="text-xl md:text-2xl text-[#0df] font-mono">{discards}</div></div>
@@ -934,7 +1017,7 @@
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
-                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} /></div>)}</div>
+                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} gold={gold} /></div>)}</div>
                                 </div>
                             </div>
                         </div>
@@ -949,7 +1032,7 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
                                     const isFace = !!item.type;
                                     return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group ${rarityClass(item.rarity)}`}>
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} /></div></div>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} gold={gold} /></div></div>
                                         <button onClick={() => handlePurchase(item)} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
                                     </div>;
                                 })}</div>
