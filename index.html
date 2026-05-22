@@ -100,6 +100,17 @@
         35% { opacity: 0.95; transform: scale(1.1); box-shadow: 0 0 32px var(--verdict-color); }
         100% { opacity: 0; transform: scale(1.25); box-shadow: 0 0 8px transparent; }
     }
+    @keyframes settleJolt {
+        0% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+        25% { transform: translate3d(1px, -1px, 0) rotate(calc(var(--rest-rotate, 0deg) + 1.2deg)); }
+        50% { transform: translate3d(-1px, 1px, 0) rotate(calc(var(--rest-rotate, 0deg) - 1deg)); }
+        75% { transform: translate3d(1px, 0, 0) rotate(calc(var(--rest-rotate, 0deg) + 0.7deg)); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+    }
+    @keyframes impactParticle {
+        0% { opacity: .95; transform: translate3d(0, 0, 0) scale(1); }
+        100% { opacity: 0; transform: translate3d(var(--px), var(--py), 0) scale(.2); }
+    }
     @keyframes badgePop {
         0% { opacity: 0; transform: translateY(3px) scale(0.9); }
         100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -197,6 +208,47 @@
         0%, 100% { opacity: .7; }
         50% { opacity: 1; }
     }
+    @keyframes debtTwitch {
+        0%, 90%, 100% { transform: translate3d(0, 0, 0); }
+        92% { transform: translate3d(-1px, 0, 0); }
+        94% { transform: translate3d(1px, 0, 0); }
+        96% { transform: translate3d(-1px, 0, 0); }
+    }
+    @keyframes copSweep {
+        0%, 82% { transform: translateX(-120%); opacity: 0; }
+        86% { opacity: .2; }
+        95% { transform: translateX(120%); opacity: .22; }
+        100% { transform: translateX(120%); opacity: 0; }
+    }
+    @keyframes junkieGlitch {
+        0%, 88%, 100% { text-shadow: none; transform: translate3d(0,0,0); }
+        89% { text-shadow: -1px 0 #ff007f, 1px 0 #00ddff; transform: translate3d(-1px,0,0); }
+        90% { text-shadow: 1px 0 #ff007f, -1px 0 #00ddff; transform: translate3d(1px,0,0); }
+        91% { text-shadow: none; transform: translate3d(0,0,0); }
+    }
+    @keyframes quotaThump {
+        0%, 90%, 100% { transform: scale(1); }
+        93% { transform: scale(1.08); }
+        96% { transform: scale(.98); }
+    }
+    @keyframes informantShimmer {
+        0% { transform: translateX(-120%); opacity: 0; }
+        20% { opacity: .2; }
+        60% { opacity: .28; }
+        100% { transform: translateX(120%); opacity: 0; }
+    }
+    @keyframes cameraKickSoft {
+        0% { transform: translate3d(0, 0, 0); }
+        30% { transform: translate3d(-2px, 1px, 0) rotate(-0.15deg); }
+        70% { transform: translate3d(1px, -1px, 0) rotate(0.12deg); }
+        100% { transform: translate3d(0, 0, 0); }
+    }
+    @keyframes cameraKickHard {
+        0% { transform: translate3d(0, 0, 0); }
+        24% { transform: translate3d(-4px, 2px, 0) rotate(-0.22deg); }
+        58% { transform: translate3d(3px, -2px, 0) rotate(0.2deg); }
+        100% { transform: translate3d(0, 0, 0); }
+    }
     #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
     #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
     #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
@@ -216,6 +268,8 @@
     #root-gutterbones .bone-idle { animation: boneIdle 6.4s ease-in-out var(--idle-delay, 0s) infinite; }
     #root-gutterbones .bone-kept { animation: keptBob 2.4s ease-in-out infinite; transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); box-shadow: 0 0 14px rgba(255,0,127,.7); border-color: #ff007f; }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
+    #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
+    #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
     #root-gutterbones .score-pulse { animation: scorePulse .4s ease-out; }
     #root-gutterbones .boss-kick { animation: bossKick .26s linear; }
     #root-gutterbones .boss-blind-top { animation: blindSweepTop .45s ease-out forwards; }
@@ -245,6 +299,14 @@
     #root-gutterbones .cash-bill-inner { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,.45); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); background: linear-gradient(120deg, rgba(255,255,255,.24) 5%, rgba(255,255,255,.02) 40%, rgba(0,0,0,.15) 90%); animation: billSway 1.8s ease-in-out infinite; }
     #root-gutterbones .hud-cash-drop { animation: cashFlash .3s ease-out; }
     #root-gutterbones .debt-pulse { animation: debtPulse 2s ease-in-out infinite; }
+    #root-gutterbones .loan-shark-debt { animation: debtPulse 2s ease-in-out infinite, debtTwitch 2.4s steps(2, end) infinite; display: inline-block; }
+    #root-gutterbones .cop-lights-sweep { position: absolute; inset: 0; pointer-events: none; z-index: 25; mix-blend-mode: screen; background: linear-gradient(90deg, rgba(255,40,40,.12), rgba(32,125,255,.13)); animation: copSweep 9s linear infinite; }
+    #root-gutterbones .junkie-glitch { animation: junkieGlitch 4.2s steps(2, end) infinite; }
+    #root-gutterbones .bouncer-quota-thump { display: inline-block; animation: quotaThump 3.6s ease-in-out infinite; }
+    #root-gutterbones .informant-shimmer { position: relative; overflow: hidden; }
+    #root-gutterbones .informant-shimmer::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(217,247,255,.36), transparent); animation: informantShimmer 4.6s linear infinite; pointer-events: none; }
+    #root-gutterbones .camera-kick-soft { animation: cameraKickSoft .18s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 46%; }
+    #root-gutterbones .camera-kick-hard { animation: cameraKickHard .24s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 46%; }
     @media (prefers-reduced-motion: reduce) {
         #root-gutterbones .ambient-grain,
         #root-gutterbones .ambient-leak,
@@ -253,6 +315,8 @@
         #root-gutterbones .bone-kept,
         #root-gutterbones .bone-rolling,
         #root-gutterbones .bone-verdict-glow,
+        #root-gutterbones .bone-settle-jolt,
+        #root-gutterbones .impact-particle,
         #root-gutterbones .paper-card,
         #root-gutterbones .price-tag,
         #root-gutterbones .trigger-cascade-row,
@@ -263,11 +327,22 @@
         #root-gutterbones .cinematic-iris,
         #root-gutterbones .cinematic-siren,
         #root-gutterbones .boss-kick,
+        #root-gutterbones .loan-shark-debt,
+        #root-gutterbones .cop-lights-sweep,
+        #root-gutterbones .junkie-glitch,
+        #root-gutterbones .bouncer-quota-thump,
+        #root-gutterbones .informant-shimmer::after,
+        #root-gutterbones .camera-kick-soft,
+        #root-gutterbones .camera-kick-hard,
         #root-gutterbones .signature-path,
         #root-gutterbones .sunrise,
         #root-gutterbones .pill-burst,
         #root-gutterbones .cash-bill,
         #root-gutterbones .cash-bill-inner { animation: none !important; }
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones .felt-smoke-wisp { filter: none; opacity: .05; }
+        #root-gutterbones .cash-bill.far { filter: none; }
     }
 </style>
 
@@ -281,6 +356,7 @@
         ambientNodes: null,
         init() {
             if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx?.state === 'suspended') this.ctx.resume();
         },
         setVolume(nextVolume) {
             this.volume = nextVolume;
@@ -299,7 +375,7 @@
             return noise;
         },
         playNoiseBurst({ duration = 0.08, volume = 0.06, filterFreq = 900, when = 0, pan = 0 } = {}) {
-            if (!this.ctx) return;
+            if (!this.ctx || this.volume <= 0) return;
             const buffer = this.ensureNoiseBuffer();
             if (!buffer) return;
             const source = this.ctx.createBufferSource();
@@ -328,7 +404,7 @@
             source.stop(startAt + duration + 0.03);
         },
         startAmbient() {
-            if (!this.ctx || this.ambientNodes) return;
+            if (!this.ctx || this.ambientNodes || this.volume <= 0) return;
             const hum = this.ctx.createOscillator();
             hum.type = 'sawtooth';
             hum.frequency.value = 42;
@@ -379,7 +455,7 @@
             this.ambientNodes = null;
         },
         playTone(f, t, d, v = 0.1) {
-            if (!this.ctx) return;
+            if (!this.ctx || this.volume <= 0) return;
             const o = this.ctx.createOscillator();
             const g = this.ctx.createGain();
             o.type = t;
@@ -591,6 +667,23 @@
         if (type === 'danger') return 'rgba(255, 0, 127, 0.58)';
         return 'rgba(214, 184, 92, 0.52)';
     };
+    const impactProfileForFace = (faceId, type) => {
+        if (!faceId || faceId === 'standard') return null;
+        const byFace = {
+            BLOOD_6: { colors: ['#ff3131', '#ff6b3d'], count: 7 },
+            SHIV_FACE: { colors: ['#ff5a3d', '#ffd166'], count: 7 },
+            WILD_FACE: { colors: ['#ff007f', '#00ddff'], count: 8 },
+            ECHO_FACE: { colors: ['#00ddff', '#9be7ff'], count: 6 },
+            WIREBAG_FACE: { colors: ['#00ddff', '#67e8f9'], count: 6 },
+            GHOST_FACE: { colors: ['#f5f3ff', '#dbeafe'], count: 5 },
+            GOLD_FACE: { colors: ['#facc15', '#fde68a'], count: 5 },
+            MULT_FACE: { colors: ['#00ddff', '#a5f3fc'], count: 5 }
+        };
+        if (byFace[faceId]) return byFace[faceId];
+        if (type === 'blood') return { colors: ['#ff3131', '#ff6b3d'], count: 6 };
+        if (type === 'danger') return { colors: ['#ff007f', '#ff6b3d'], count: 6 };
+        return null;
+    };
 
     const CashRain = ({ count = 24, reducedMotion = false }) => {
         const cappedCount = Math.max(0, Math.min(count, reducedMotion ? 8 : 36));
@@ -613,7 +706,7 @@
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill }) => {
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill, reducedMotion }) => {
         const ref = useRef({
             locked: false,
             vars: {
@@ -624,6 +717,8 @@
             }
         });
         const [verdictColor, setVerdictColor] = useState(null);
+        const [settleJolt, setSettleJolt] = useState(false);
+        const [impactParticles, setImpactParticles] = useState([]);
         if (rolling && !ref.current.locked) {
             ref.current = {
                 locked: true,
@@ -645,16 +740,45 @@
         useEffect(() => {
             if (rolling) return;
             const glow = verdictGlowForFace(data.faceId, data.type);
-            if (!glow) return;
-            setVerdictColor(glow);
-            const id = setTimeout(() => setVerdictColor(null), 420);
-            return () => clearTimeout(id);
-        }, [rolling, data.faceId, data.type]);
+            const profile = impactProfileForFace(data.faceId, data.type);
+            let glowId = null;
+            let joltId = null;
+            let particleId = null;
+            if (glow) {
+                setVerdictColor(glow);
+                glowId = setTimeout(() => setVerdictColor(null), 420);
+            }
+            if (profile) {
+                setSettleJolt(true);
+                joltId = setTimeout(() => setSettleJolt(false), reducedMotion ? 80 : 150);
+                if (!reducedMotion) {
+                    const particles = Array.from({ length: profile.count }, (_, idx) => ({
+                        id: `${data.id}-${idx}`,
+                        color: profile.colors[idx % profile.colors.length],
+                        px: `${(Math.random() - .5) * 44}px`,
+                        py: `${(Math.random() - 1.05) * 38}px`,
+                        left: `${42 + ((Math.random() - .5) * 22)}%`,
+                        top: `${48 + ((Math.random() - .5) * 16)}%`
+                    }));
+                    setImpactParticles(particles);
+                    particleId = setTimeout(() => setImpactParticles([]), 360);
+                }
+            } else {
+                setSettleJolt(false);
+                setImpactParticles([]);
+            }
+            return () => {
+                if (glowId) clearTimeout(glowId);
+                if (joltId) clearTimeout(joltId);
+                if (particleId) clearTimeout(particleId);
+            };
+        }, [rolling, data.faceId, data.type, data.id, reducedMotion]);
         return (
             <div className="relative group">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${settleJolt ? 'bone-settle-jolt' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
                     {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
+                    {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
                     {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
                         <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
                             <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
@@ -680,26 +804,37 @@
         );
     };
 
-    const BossIntro = ({ boss, target, onDone }) => {
+    const BossIntro = ({ boss, target, onDone, reducedMotion }) => {
         const [typed, setTyped] = useState('');
         const [showDesc, setShowDesc] = useState(false);
         useEffect(() => {
             if (!boss) return;
+            if (reducedMotion) {
+                setTyped(boss.name);
+                setShowDesc(true);
+                const doneId = window.setTimeout(onDone, 900);
+                return () => window.clearTimeout(doneId);
+            }
             setTyped('');
             setShowDesc(false);
             const chars = boss.name.split('');
             let idx = 0;
-            const typer = setInterval(() => {
+            let revealId = null;
+            const typer = window.setInterval(() => {
                 idx += 1;
                 setTyped(chars.slice(0, idx).join(''));
                 if (idx >= chars.length) {
-                    clearInterval(typer);
-                    setTimeout(() => setShowDesc(true), 120);
+                    window.clearInterval(typer);
+                    revealId = window.setTimeout(() => setShowDesc(true), 120);
                 }
             }, 40);
-            const id = setTimeout(onDone, 1600);
-            return () => { clearTimeout(id); clearInterval(typer); };
-        }, [boss]);
+            const id = window.setTimeout(onDone, 1600);
+            return () => {
+                window.clearTimeout(id);
+                if (revealId) window.clearTimeout(revealId);
+                window.clearInterval(typer);
+            };
+        }, [boss, reducedMotion]);
         if (!boss) return null;
         const microByBoss = {
             LOAN_SHARK: 'IOUs flutter onto the table.',
@@ -711,11 +846,11 @@
         };
         return (
             <div className="absolute inset-0 z-[250] bg-black/80 flex items-center justify-center">
-                <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>
+                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>}
+                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>}
                 <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
-                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}<span className="opacity-60">_</span></h2>
+                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && <span className="opacity-60">_</span>}</h2>
                     <p className={`font-mono text-gray-300 transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
                     <p className="font-mono text-xs text-gray-500 mt-3">Quota: {target}</p>
                     <p className="font-mono text-[10px] text-red-300/70 mt-2">{microByBoss[boss.id]}</p>
@@ -754,6 +889,7 @@
         const [gold, setGold] = useState(20);
         const [debt, setDebt] = useState(0);
         const [stash, setStash] = useState(0);
+        const [stashDirection, setStashDirection] = useState(1);
         const [inventory, setInventory] = useState([]);
         const [dice, setDice] = useState([]);
         const [kept, setKept] = useState([false,false,false,false,false]);
@@ -794,11 +930,15 @@
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
-        const [muted, setMuted] = useState(false);
+        const [muted, setMuted] = useState(() => {
+            try { return window.localStorage?.getItem('gutterbones1977:audio-muted:v1') === '1'; } catch { return false; }
+        });
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        const [cameraKick, setCameraKick] = useState('');
         const scoreAnimRef = useRef(0);
         const goldAnimRef = useRef(0);
         const prevGoldRef = useRef(20);
+        const prevStashRef = useRef(0);
         const timeoutIdsRef = useRef(new Set());
         const intervalIdsRef = useRef(new Set());
 
@@ -822,6 +962,12 @@
         const clearScheduledInterval = (id) => {
             window.clearInterval(id);
             intervalIdsRef.current.delete(id);
+        };
+        const triggerCameraKick = (kind = 'soft') => {
+            if (reducedMotion) return;
+            setCameraKick('');
+            requestAnimationFrame(() => setCameraKick(kind));
+            scheduleTimeout(() => setCameraKick(''), kind === 'hard' ? 260 : 200);
         };
 
         const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
@@ -850,6 +996,10 @@
             }
             AudioSystem.startAmbient();
         }, [phase, muted]);
+
+        useEffect(() => {
+            try { window.localStorage?.setItem('gutterbones1977:audio-muted:v1', muted ? '1' : '0'); } catch {}
+        }, [muted]);
 
         useEffect(() => () => {
             timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
@@ -999,16 +1149,28 @@
             const from = displayScore;
             const to = score;
             const start = performance.now();
-            const dur = 600;
+            const dur = reducedMotion ? 260 : 620;
+            const rising = to > from;
+            const overshoot = (!reducedMotion && rising) ? Math.max(1, Math.min(24, Math.round((to - from) * 0.035))) : 0;
+            const peak = to + overshoot;
             const tick = (ts) => {
                 const p = Math.min(1, (ts - start) / dur);
-                const eased = 1 - Math.pow(1 - p, 3);
-                setDisplayScore(Math.round(from + (to - from) * eased));
+                let next = from + (to - from) * (1 - Math.pow(1 - p, 3));
+                if (overshoot > 0) {
+                    if (p < 0.72) {
+                        const p1 = p / 0.72;
+                        next = from + (peak - from) * (1 - Math.pow(1 - p1, 3));
+                    } else {
+                        const p2 = (p - 0.72) / 0.28;
+                        next = peak + (to - peak) * (1 - Math.pow(1 - p2, 2));
+                    }
+                }
+                setDisplayScore(Math.round(next));
                 if (p < 1) scoreAnimRef.current = requestAnimationFrame(tick);
             };
             scoreAnimRef.current = requestAnimationFrame(tick);
             return () => cancelAnimationFrame(scoreAnimRef.current);
-        }, [score]);
+        }, [score, reducedMotion]);
 
         useEffect(() => {
             cancelAnimationFrame(goldAnimRef.current);
@@ -1030,6 +1192,13 @@
             prevGoldRef.current = gold;
             return () => cancelAnimationFrame(goldAnimRef.current);
         }, [gold]);
+
+        useEffect(() => {
+            const prev = prevStashRef.current;
+            if (stash > prev) setStashDirection(1);
+            else if (stash < prev) setStashDirection(-1);
+            prevStashRef.current = stash;
+        }, [stash]);
 
         useEffect(() => {
             if (phase !== 'RAP_SHEET') {
@@ -1199,6 +1368,7 @@
             AudioSystem.clatter();
             setRolling(true);
             setFeltPulse(true);
+            triggerCameraKick('soft');
             scheduleTimeout(() => setFeltPulse(false), 650);
             setDiscards(d => d - 1);
             setHasRolled(true);
@@ -1253,6 +1423,8 @@
             if (result.valid) {
                 const nextScore = score + result.total;
                 setScore(nextScore);
+                if (result.total >= 250) triggerCameraKick('hard');
+                else if (result.total >= 80) triggerCameraKick('soft');
                 setScorePulse(true);
                 scheduleTimeout(() => setScorePulse(false), 420);
                 spawnFlying(result.total);
@@ -1272,9 +1444,9 @@
                 if (result.total >= 30) {
                     setPayoutCount(reducedMotion ? 4 : (result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8));
                     setPayoutActive(true);
-                    scheduleTimeout(() => setPayoutActive(false), 1800);
+                    scheduleTimeout(() => setPayoutActive(false), reducedMotion ? 900 : 1800);
                 }
-                if (result.total >= 250) {
+                if (result.total >= 250 && !reducedMotion) {
                     setPowBurst(true);
                     scheduleTimeout(() => setPowBurst(false), 700);
                 }
@@ -1287,17 +1459,18 @@
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) });
                 setBustActive(true);
-                setCinematic('bust');
+                triggerCameraKick('hard');
+                if (!reducedMotion) setCinematic('bust');
                 AudioSystem.bust();
-                scheduleTimeout(() => setPhase('RAP_SHEET'), 1700);
-                scheduleTimeout(() => setCinematic(null), 1850);
+                scheduleTimeout(() => setPhase('RAP_SHEET'), reducedMotion ? 950 : 1700);
+                if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
                     AudioSystem.paper();
-                    setCinematic('victory');
-                    scheduleTimeout(() => setPhase('VICTORY'), 560);
-                    scheduleTimeout(() => setCinematic(null), 1400);
+                    if (!reducedMotion) setCinematic('victory');
+                    scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
+                    if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
                     generateShop();
                     setPhase('SHOP');
@@ -1399,9 +1572,10 @@
             setActiveBoss(path.boss || null);
             if (path.boss) {
                 setBossIntro(path.boss);
-                setBossKick(true);
+                if (!reducedMotion) setBossKick(true);
+                triggerCameraKick('hard');
                 AudioSystem.bossSting();
-                scheduleTimeout(() => setBossKick(false), 280);
+                if (!reducedMotion) scheduleTimeout(() => setBossKick(false), 280);
             }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
@@ -1415,12 +1589,12 @@
                 <div className="ambient-grain"></div>
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
-                <button onClick={() => setMuted(m => !m)} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
+                <button onClick={() => setMuted(m => !m)} aria-pressed={muted} title={muted ? 'Unmute audio' : 'Mute audio'} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
                     {muted ? 'UNMUTE' : 'MUTE'}
                 </button>
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
-                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
+                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {triggerCascade.length > 0 && <div className="trigger-cascade">{triggerCascade.map(row => <div key={row.id} className="trigger-cascade-row mb-1 text-xs font-mono bg-black/70 border border-cyan-500/40 px-2 py-1 rounded" style={{ animationDelay: `${row.delay}ms` }}>{row.label}</div>)}</div>}
                 {powBurst && <div className="pow-burst">POW!</div>}
@@ -1493,14 +1667,15 @@
                 )}
 
                 {phase === 'PLAY' && (
-                    <div className="h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative">
+                    <div className={`h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
+                        {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
                                 <div className="hidden sm:block"><div className="text-xs uppercase opacity-50">The Fixer</div><div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div></div>
-                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className="text-xl md:text-3xl opacity-50">/ {currentTarget}</span></div></div>
+                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div></div>
                                 <div className="flex gap-3 md:gap-6 text-right">
-                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className="text-xs debt-pulse"> (-{debt})</span>}</div></div>
+                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
                                     <div><div className="text-[10px] opacity-50">PILLS</div><div className="text-xl md:text-2xl text-[#0df] font-mono">{discards}</div></div>
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className="text-xl md:text-2xl text-white font-mono">{hands}</div></div>
                                 </div>
@@ -1521,7 +1696,7 @@
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 <div className="flex gap-2 md:gap-4 mb-14 md:mb-16 z-30">
-                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} onPill={() => popPill(i)} onClick={() => {
+                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
                                             if (swapIdx === null) setSwapIdx(i);
                                             else {
@@ -1544,12 +1719,13 @@
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl">
                                     <h3 className={`text-center border-b pb-2 font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500 border-yellow-500' : 'text-[#0df] border-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
-                                    <div className="h-6 bg-black border border-gray-600 rounded overflow-hidden mt-4 p-1 grid grid-cols-10 gap-1">
+                                    <div className={`h-6 bg-black border border-gray-600 rounded overflow-hidden mt-4 p-1 grid grid-cols-10 gap-1 ${activeBoss?.id === 'INFORMANT' ? 'informant-shimmer' : ''}`}>
                                         {Array.from({ length: 10 }, (_, idx) => {
                                             const filled = stash >= (idx + 1) * 10;
                                             const leading = filled && stash < (idx + 2) * 10;
                                             const segColor = stash >= 80 ? 'bg-white' : stash >= 50 ? 'bg-[#ff007f]' : 'bg-[#0df]';
-                                            return <div key={idx} className={`rounded-sm transition-all duration-300 ${filled ? `${segColor} ${leading ? 'animate-pulse' : ''}` : 'bg-gray-800'}`}></div>;
+                                            const delay = reducedMotion ? 0 : (stashDirection >= 0 ? idx * 36 : (9 - idx) * 22);
+                                            return <div key={idx} className={`rounded-sm transition-[background-color,transform,opacity] duration-200 ease-out ${filled ? `${segColor} ${leading ? 'animate-pulse' : ''} scale-y-100 opacity-100` : 'bg-gray-800 scale-y-75 opacity-60'}`} style={{ transitionDelay: `${delay}ms` }}></div>;
                                         })}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onClick={() => handleProgram(p)} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
