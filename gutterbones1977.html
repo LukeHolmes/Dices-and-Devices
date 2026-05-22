@@ -100,6 +100,17 @@
         35% { opacity: 0.95; transform: scale(1.1); box-shadow: 0 0 32px var(--verdict-color); }
         100% { opacity: 0; transform: scale(1.25); box-shadow: 0 0 8px transparent; }
     }
+    @keyframes settleJolt {
+        0% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+        25% { transform: translate3d(1px, -1px, 0) rotate(calc(var(--rest-rotate, 0deg) + 1.2deg)); }
+        50% { transform: translate3d(-1px, 1px, 0) rotate(calc(var(--rest-rotate, 0deg) - 1deg)); }
+        75% { transform: translate3d(1px, 0, 0) rotate(calc(var(--rest-rotate, 0deg) + 0.7deg)); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+    }
+    @keyframes impactParticle {
+        0% { opacity: .95; transform: translate3d(0, 0, 0) scale(1); }
+        100% { opacity: 0; transform: translate3d(var(--px), var(--py), 0) scale(.2); }
+    }
     @keyframes badgePop {
         0% { opacity: 0; transform: translateY(3px) scale(0.9); }
         100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -216,6 +227,8 @@
     #root-gutterbones .bone-idle { animation: boneIdle 6.4s ease-in-out var(--idle-delay, 0s) infinite; }
     #root-gutterbones .bone-kept { animation: keptBob 2.4s ease-in-out infinite; transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); box-shadow: 0 0 14px rgba(255,0,127,.7); border-color: #ff007f; }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
+    #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
+    #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
     #root-gutterbones .score-pulse { animation: scorePulse .4s ease-out; }
     #root-gutterbones .boss-kick { animation: bossKick .26s linear; }
     #root-gutterbones .boss-blind-top { animation: blindSweepTop .45s ease-out forwards; }
@@ -253,6 +266,8 @@
         #root-gutterbones .bone-kept,
         #root-gutterbones .bone-rolling,
         #root-gutterbones .bone-verdict-glow,
+        #root-gutterbones .bone-settle-jolt,
+        #root-gutterbones .impact-particle,
         #root-gutterbones .paper-card,
         #root-gutterbones .price-tag,
         #root-gutterbones .trigger-cascade-row,
@@ -596,6 +611,23 @@
         if (type === 'danger') return 'rgba(255, 0, 127, 0.58)';
         return 'rgba(214, 184, 92, 0.52)';
     };
+    const impactProfileForFace = (faceId, type) => {
+        if (!faceId || faceId === 'standard') return null;
+        const byFace = {
+            BLOOD_6: { colors: ['#ff3131', '#ff6b3d'], count: 7 },
+            SHIV_FACE: { colors: ['#ff5a3d', '#ffd166'], count: 7 },
+            WILD_FACE: { colors: ['#ff007f', '#00ddff'], count: 8 },
+            ECHO_FACE: { colors: ['#00ddff', '#9be7ff'], count: 6 },
+            WIREBAG_FACE: { colors: ['#00ddff', '#67e8f9'], count: 6 },
+            GHOST_FACE: { colors: ['#f5f3ff', '#dbeafe'], count: 5 },
+            GOLD_FACE: { colors: ['#facc15', '#fde68a'], count: 5 },
+            MULT_FACE: { colors: ['#00ddff', '#a5f3fc'], count: 5 }
+        };
+        if (byFace[faceId]) return byFace[faceId];
+        if (type === 'blood') return { colors: ['#ff3131', '#ff6b3d'], count: 6 };
+        if (type === 'danger') return { colors: ['#ff007f', '#ff6b3d'], count: 6 };
+        return null;
+    };
 
     const CashRain = ({ count = 24, reducedMotion = false }) => {
         const cappedCount = Math.max(0, Math.min(count, reducedMotion ? 8 : 36));
@@ -618,7 +650,7 @@
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill }) => {
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill, reducedMotion }) => {
         const ref = useRef({
             locked: false,
             vars: {
@@ -629,6 +661,8 @@
             }
         });
         const [verdictColor, setVerdictColor] = useState(null);
+        const [settleJolt, setSettleJolt] = useState(false);
+        const [impactParticles, setImpactParticles] = useState([]);
         if (rolling && !ref.current.locked) {
             ref.current = {
                 locked: true,
@@ -650,16 +684,45 @@
         useEffect(() => {
             if (rolling) return;
             const glow = verdictGlowForFace(data.faceId, data.type);
-            if (!glow) return;
-            setVerdictColor(glow);
-            const id = setTimeout(() => setVerdictColor(null), 420);
-            return () => clearTimeout(id);
-        }, [rolling, data.faceId, data.type]);
+            const profile = impactProfileForFace(data.faceId, data.type);
+            let glowId = null;
+            let joltId = null;
+            let particleId = null;
+            if (glow) {
+                setVerdictColor(glow);
+                glowId = setTimeout(() => setVerdictColor(null), 420);
+            }
+            if (profile) {
+                setSettleJolt(true);
+                joltId = setTimeout(() => setSettleJolt(false), reducedMotion ? 80 : 150);
+                if (!reducedMotion) {
+                    const particles = Array.from({ length: profile.count }, (_, idx) => ({
+                        id: `${data.id}-${idx}`,
+                        color: profile.colors[idx % profile.colors.length],
+                        px: `${(Math.random() - .5) * 44}px`,
+                        py: `${(Math.random() - 1.05) * 38}px`,
+                        left: `${42 + ((Math.random() - .5) * 22)}%`,
+                        top: `${48 + ((Math.random() - .5) * 16)}%`
+                    }));
+                    setImpactParticles(particles);
+                    particleId = setTimeout(() => setImpactParticles([]), 360);
+                }
+            } else {
+                setSettleJolt(false);
+                setImpactParticles([]);
+            }
+            return () => {
+                if (glowId) clearTimeout(glowId);
+                if (joltId) clearTimeout(joltId);
+                if (particleId) clearTimeout(particleId);
+            };
+        }, [rolling, data.faceId, data.type, data.id, reducedMotion]);
         return (
             <div className="relative group">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${settleJolt ? 'bone-settle-jolt' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
                     {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
+                    {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
                     {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
                         <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
                             <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
@@ -1543,7 +1606,7 @@
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 <div className="flex gap-2 md:gap-4 mb-14 md:mb-16 z-30">
-                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} onPill={() => popPill(i)} onClick={() => {
+                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
                                             if (swapIdx === null) setSwapIdx(i);
                                             else {
