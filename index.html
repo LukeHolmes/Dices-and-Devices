@@ -499,6 +499,29 @@
         C: { id: 'C', name: 'Slop' }
     };
 
+    const ONBOARDING_THRESHOLDS = {
+        BASIC_COMBOS: 2,
+        ALL_CATEGORIES: 5,
+        RARE_FACES: 3
+    };
+
+    const getAvailableCategories = (meta) => {
+        const runs = meta?.totalRuns || 0;
+        if (runs < ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
+            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','C'];
+        }
+        if (runs < ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
+            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FH','C'];
+        }
+        return Object.keys(CATEGORIES);
+    };
+
+    const isShopFaceAvailable = (face, meta) => {
+        const runs = meta?.totalRuns || 0;
+        if (runs < ONBOARDING_THRESHOLDS.RARE_FACES && face.rarity !== 'common') return false;
+        return true;
+    };
+
     const STORAGE_KEYS = {
         run: 'gutterbones1977:run:v1',
         meta: 'gutterbones1977:meta:v1'
@@ -742,6 +765,60 @@
         </div>
     );
 
+    const ONBOARDING_STEPS = [
+        { title: 'ROLL YOUR BONES', desc: 'Hit ROLL to throw all 5 bones onto the felt.', icon: '🎲' },
+        { title: 'KEEP THE GOOD ONES', desc: 'Click any bone to lock it. Unrolled bones stay safe.', icon: '🔒' },
+        { title: 'PICK A PAYOUT', desc: 'Choose a scoring category on the left. That\'s your hand.', icon: '💰' }
+    ];
+
+    const FirstRunOverlay = ({ onDismiss }) => {
+        const [step, setStep] = useState(0);
+        return (
+            <div className="absolute inset-0 z-[600] bg-black/85 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+                <div className="max-w-md w-full bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-6 md:p-8 shadow-2xl relative">
+                    <div className="font-mono text-[10px] text-[#0df] tracking-[.4em] mb-4 text-center">FIRST TIME ON THE BLOCK</div>
+                    <div className="flex justify-center gap-2 mb-6">
+                        {ONBOARDING_STEPS.map((_, i) => (
+                            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === step ? 'bg-[#ff007f] scale-125' : i < step ? 'bg-[#0df]' : 'bg-gray-700'}`} />
+                        ))}
+                    </div>
+                    <div className="text-center mb-6">
+                        <div className="text-5xl mb-4">{ONBOARDING_STEPS[step].icon}</div>
+                        <h3 className="font-marker text-3xl text-[#ff007f] mb-3">{ONBOARDING_STEPS[step].title}</h3>
+                        <p className="font-mono text-sm text-gray-300 leading-relaxed">{ONBOARDING_STEPS[step].desc}</p>
+                    </div>
+                    <div className="flex gap-3">
+                        {step > 0 && <button onClick={() => setStep(s => s - 1)} className="flex-1 py-3 border-2 border-gray-600 text-gray-400 font-mono text-sm hover:border-[#0df] hover:text-[#0df] transition-colors rounded">BACK</button>}
+                        {step < ONBOARDING_STEPS.length - 1 ? (
+                            <button onClick={() => setStep(s => s + 1)} className="flex-1 py-3 bg-[#c78b16] text-black font-mono font-bold text-sm shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none rounded">NEXT</button>
+                        ) : (
+                            <button onClick={onDismiss} className="flex-1 py-3 bg-[#ff007f] text-white font-marker text-xl italic shadow-[0_4px_0_#7a003d] active:translate-y-1 active:shadow-none rounded">LET'S HUSTLE</button>
+                        )}
+                    </div>
+                    <button onClick={onDismiss} className="absolute top-3 right-3 text-gray-600 hover:text-white font-mono text-xs transition-colors">SKIP</button>
+                </div>
+            </div>
+        );
+    };
+
+    const UnlockNotification = ({ message, onDone }) => {
+        useEffect(() => {
+            const id = setTimeout(onDone, 3200);
+            return () => clearTimeout(id);
+        }, [onDone]);
+        return (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[550] pointer-events-none" style={{ animation: 'badgePop .3s ease-out forwards' }}>
+                <div className="bg-black/90 border-2 border-[#0df] rounded-lg px-5 py-3 shadow-2xl flex items-center gap-3" style={{ boxShadow: '0 0 20px rgba(0,221,255,.3)' }}>
+                    <span className="text-[#0df] text-xl">★</span>
+                    <div>
+                        <div className="font-mono text-[10px] text-[#0df] tracking-[.3em]">UNLOCKED</div>
+                        <div className="font-mono text-sm text-white">{message}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     function App() {
         const [phase, setPhase] = useState('LINEUP');
         const [personaIdx, setPersonaIdx] = useState(0);
@@ -796,6 +873,9 @@
         const [runClosed, setRunClosed] = useState(false);
         const [muted, setMuted] = useState(false);
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
+        const [unlockNotification, setUnlockNotification] = useState(null);
+        const prevTotalRunsRef = useRef(meta.totalRuns);
         const scoreAnimRef = useRef(0);
         const goldAnimRef = useRef(0);
         const prevGoldRef = useRef(20);
@@ -858,6 +938,20 @@
             intervalIdsRef.current.clear();
             AudioSystem.stopAmbient();
         }, []);
+
+        useEffect(() => {
+            const prev = prevTotalRunsRef.current;
+            const curr = meta.totalRuns;
+            prevTotalRunsRef.current = curr;
+            if (prev === curr) return;
+            if (prev < ONBOARDING_THRESHOLDS.BASIC_COMBOS && curr >= ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
+                setUnlockNotification('Triad & Full Ride payouts now available!');
+            } else if (prev < ONBOARDING_THRESHOLDS.RARE_FACES && curr >= ONBOARDING_THRESHOLDS.RARE_FACES) {
+                setUnlockNotification('Rare contraband now appears in shops!');
+            } else if (prev < ONBOARDING_THRESHOLDS.ALL_CATEGORIES && curr >= ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
+                setUnlockNotification('All payout categories unlocked!');
+            }
+        }, [meta.totalRuns]);
 
         const serializeRun = (phaseOverride = phase) => ({
             version: 1,
@@ -1086,6 +1180,7 @@
             const bones = Array(5).fill(0).map(makeBone);
             if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
             setDice(bones);
+            if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
             setPhase('PLAY');
         };
 
@@ -1319,7 +1414,7 @@
         };
 
         const generateShop = () => {
-            const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id));
+            const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const pool = [...faces, ...hardware].sort(() => Math.random() - .5);
             setShopItems(pool.slice(0, 4));
@@ -1421,6 +1516,8 @@
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} />}
+                {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
+                {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {triggerCascade.length > 0 && <div className="trigger-cascade">{triggerCascade.map(row => <div key={row.id} className="trigger-cascade-row mb-1 text-xs font-mono bg-black/70 border border-cyan-500/40 px-2 py-1 rounded" style={{ animationDelay: `${row.delay}ms` }}>{row.label}</div>)}</div>}
                 {powBurst && <div className="pow-burst">POW!</div>}
@@ -1510,7 +1607,20 @@
                         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-6 min-h-0">
                             <div className="order-2 md:order-1 md:col-span-3 bg-[#e8e6e1] text-gray-900 p-3 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-y-auto max-h-[26vh] md:max-h-full">
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 sticky top-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
-                                {Object.values(CATEGORIES).map(cat => <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />)}
+                                {(() => {
+                                    const available = getAvailableCategories(meta);
+                                    const totalCats = Object.keys(CATEGORIES).length;
+                                    const lockedCount = totalCats - available.length;
+                                    const rows = Object.values(CATEGORIES).filter(cat => available.includes(cat.id)).map(cat => (
+                                        <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
+                                    ));
+                                    if (lockedCount > 0) rows.push(
+                                        <div key="locked-hint" className="text-center py-2 text-[10px] font-mono opacity-50 border-t border-dashed border-gray-400 mt-1">
+                                            {lockedCount} more payout{lockedCount > 1 ? 's' : ''} unlock with experience
+                                        </div>
+                                    );
+                                    return rows;
+                                })()}
                             </div>
                             <div className={`order-1 md:order-2 flex-1 md:col-span-6 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh] ${feltPulse ? 'felt-roll-pulse' : ''}`}>
                                 <div className="felt-smoke">
