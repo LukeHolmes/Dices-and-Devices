@@ -273,6 +273,28 @@
         0%, 100% { transform: scale(1); opacity: .95; }
         50% { transform: scale(1.08); opacity: 1; }
     }
+    @keyframes feltEdgeBreath {
+        0%, 100% { opacity: .18; transform: scale(1); }
+        50% { opacity: .3; transform: scale(1.01); }
+    }
+    @keyframes diceLaneFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-2px); }
+    }
+    @keyframes diceLaneRollFocus {
+        0% { transform: translateY(2px) scale(.985); }
+        55% { transform: translateY(-3px) scale(1.02); }
+        100% { transform: translateY(0) scale(1); }
+    }
+    @keyframes boneDepthIdle {
+        0%, 100% { filter: drop-shadow(0 7px 7px rgba(0,0,0,.28)); }
+        50% { filter: drop-shadow(0 10px 10px rgba(0,0,0,.36)); }
+    }
+    @keyframes boneDepthRoll {
+        0% { filter: drop-shadow(0 6px 8px rgba(0,0,0,.24)); }
+        40% { filter: drop-shadow(0 18px 14px rgba(0,0,0,.45)); }
+        100% { filter: drop-shadow(0 10px 10px rgba(0,0,0,.34)); }
+    }
     #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
     #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
     #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
@@ -286,6 +308,10 @@
     #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.14) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .8; }
     #root-gutterbones .felt-surface::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
     #root-gutterbones .felt-roll-pulse::after { animation: feltRollPulse .65s ease-out forwards; }
+    #root-gutterbones .felt-edge-ring { position: absolute; inset: 0; pointer-events: none; z-index: 12; border-radius: inherit; border: 1px solid rgba(255,184,125,.14); box-shadow: inset 0 0 22px rgba(255,63,111,.15), inset 0 -24px 40px rgba(0,0,0,.2); animation: feltEdgeBreath 5.8s ease-in-out infinite; }
+    #root-gutterbones .felt-edge-ring-roll { box-shadow: inset 0 0 28px rgba(255,63,111,.22), inset 0 -30px 48px rgba(0,0,0,.28); }
+    #root-gutterbones .dice-lane-idle { animation: diceLaneFloat 5.4s ease-in-out infinite; transform-origin: 50% 100%; }
+    #root-gutterbones .dice-lane-roll { animation: diceLaneRollFocus .44s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 100%; }
     #root-gutterbones .felt-smoke { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
     #root-gutterbones .felt-smoke-wisp { position: absolute; width: 45%; aspect-ratio: 1/1; border-radius: 999px; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.15) 0%, rgba(255,255,255,0) 68%); filter: blur(14px); animation: smokeDrift var(--dur, 48s) linear infinite; opacity: .08; }
     #root-gutterbones .bone-rolling { animation-name: boneRoll; animation-duration: var(--roll-dur, .9s); animation-delay: var(--roll-delay, 0ms); animation-fill-mode: forwards; animation-timing-function: cubic-bezier(.25,1,.5,1); will-change: transform, filter; }
@@ -294,6 +320,8 @@
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
     #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
     #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
+    #root-gutterbones .bone-depth-idle { animation: boneDepthIdle 4.1s ease-in-out infinite; }
+    #root-gutterbones .bone-depth-roll { animation: boneDepthRoll .62s cubic-bezier(.2,.75,.32,1); }
     #root-gutterbones .score-pulse { animation: scorePulse .4s ease-out; }
     #root-gutterbones .boss-kick { animation: bossKick .26s linear; }
     #root-gutterbones .boss-blind-top { animation: blindSweepTop .45s ease-out forwards; }
@@ -348,6 +376,11 @@
         #root-gutterbones .bone-verdict-glow,
         #root-gutterbones .bone-settle-jolt,
         #root-gutterbones .impact-particle,
+        #root-gutterbones .felt-edge-ring,
+        #root-gutterbones .dice-lane-idle,
+        #root-gutterbones .dice-lane-roll,
+        #root-gutterbones .bone-depth-idle,
+        #root-gutterbones .bone-depth-roll,
         #root-gutterbones .paper-card,
         #root-gutterbones .price-tag,
         #root-gutterbones .trigger-cascade-row,
@@ -812,7 +845,7 @@
         return (
             <div className="relative group">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling' : ''} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${settleJolt ? 'bone-settle-jolt' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
+                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling bone-depth-roll' : 'bone-depth-idle'} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${settleJolt ? 'bone-settle-jolt' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
                     {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
                     {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
                     {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
@@ -1729,6 +1762,7 @@
                                 {Object.values(CATEGORIES).map(cat => <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />)}
                             </div>
                             <div className={`order-1 md:order-2 flex-1 md:col-span-6 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner min-h-[36vh] ${feltPulse ? 'felt-roll-pulse' : ''}`}>
+                                <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
                                     <div className="felt-smoke-wisp right-[-12%] top-[46%]" style={{ '--sx': '-62px', '--sy': '-36px', '--dur': '44s' }}></div>
@@ -1736,7 +1770,7 @@
                                 </div>
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
-                                <div className="flex gap-2 md:gap-4 mb-14 md:mb-16 z-30">
+                                <div className={`flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
                                     {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
                                             if (swapIdx === null) setSwapIdx(i);
