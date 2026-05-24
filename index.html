@@ -559,6 +559,14 @@
         { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
     ];
 
+    const ECONOMY_TUNING = {
+        shortageToDebtRatio: 0.75,
+        hustleCashDivisor: 140,
+        hustleCashCap: 4,
+        debtReliefThreshold: 180,
+        debtReliefPerBigHand: 1
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1361,7 +1369,9 @@
             if (toll > 0) {
                 setGold(g => {
                     if (g >= toll) return g - toll;
-                    setDebt(d => d + (toll - g));
+                    const shortage = toll - g;
+                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+                    setDebt(d => d + debtSpike);
                     return 0;
                 });
             }
@@ -1392,7 +1402,9 @@
             if (activeBoss?.id === 'THE_RAID') {
                 setGold(g => {
                     if (g >= 2) return g - 2;
-                    setDebt(d => d + (2 - g));
+                    const shortage = 2 - g;
+                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+                    setDebt(d => d + debtSpike);
                     return 0;
                 });
             }
@@ -1431,6 +1443,11 @@
                 cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
+                const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
+                if (hustleCash > 0) setGold(g => g + hustleCash);
+                if (result.total >= ECONOMY_TUNING.debtReliefThreshold) {
+                    setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
+                }
                 if (activeBoss?.id !== 'INFORMANT') {
                     let gain = Math.min(60, (result.total / currentTarget) * 100 * 2);
                     if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
@@ -1516,7 +1533,9 @@
             scheduleTimeout(() => {
                 setGold(g => {
                     if (g >= item.cost) return g - item.cost;
-                    setDebt(d => d + (item.cost - g));
+                    const shortage = item.cost - g;
+                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+                    setDebt(d => d + debtSpike);
                     return 0;
                 });
                 if (item.type) {
