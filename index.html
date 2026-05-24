@@ -567,6 +567,17 @@
         debtReliefPerBigHand: 1
     };
 
+    const BOSS_TUNING = {
+        loanSharkToll: 2,
+        loanSharkDebtToll: 1,
+        debtQuotaPenaltyRatio: 1.5,
+        debtQuotaPenaltyCap: 120,
+        earlyBossRoundCap: 4,
+        earlyBouncerRelief: 0.9,
+        raidQuotaRelief: 0.92,
+        bossPathTargetRelief: 0.93
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -978,7 +989,19 @@
             scheduleTimeout(() => setCameraKick(''), kind === 'hard' ? 260 : 200);
         };
 
-        const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
+        const getBossAdjustedTarget = (baseTarget, boss, roundNum) => {
+            if (!boss?.applyTarget) return baseTarget;
+            let adjusted = boss.applyTarget(baseTarget);
+            if (boss.id === 'BOUNCER' && roundNum <= BOSS_TUNING.earlyBossRoundCap) {
+                adjusted = Math.floor(adjusted * BOSS_TUNING.earlyBouncerRelief);
+            }
+            if (boss.id === 'THE_RAID') {
+                adjusted = Math.floor(adjusted * BOSS_TUNING.raidQuotaRelief);
+            }
+            return adjusted;
+        };
+
+        const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
@@ -1364,7 +1387,7 @@
             if (rolling || discards <= 0 || hands <= 0) return;
             const settleMs = 1120;
             let toll = 0;
-            if (activeBoss?.id === 'LOAN_SHARK') toll += 2;
+            if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
             if (toll > 0) {
                 setGold(g => {
@@ -1579,7 +1602,13 @@
         const handleAdvance = (path) => {
             const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
             let nextTarget = Math.floor(target * path.mod) + 50;
-            if (!hasLedger && debt > 0) nextTarget += debt * 2;
+            if (!hasLedger && debt > 0) {
+                const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
+                nextTarget += debtPenalty;
+            }
+            if (path.boss && round <= BOSS_TUNING.earlyBossRoundCap) {
+                nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
+            }
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
