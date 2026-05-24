@@ -590,6 +590,14 @@
         bossPathStartsRound: 4
     };
 
+    const ROUND_CURVE_TUNING = {
+        earlyMaxRound: 3,
+        midMaxRound: 6,
+        early: { pathModWeight: 0.7, flatIncrease: 28 },
+        mid: { pathModWeight: 0.95, flatIncrease: 42 },
+        late: { pathModWeight: 1.1, flatIncrease: 58 }
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1818,12 +1826,19 @@
 
         const handleAdvance = (path) => {
             const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
-            let nextTarget = Math.floor(target * path.mod) + 50;
-            if (!hasLedger && debt > 0 && round >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
+            const nextRound = round + 1;
+            const roundCurve = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
+                ? ROUND_CURVE_TUNING.early
+                : nextRound <= ROUND_CURVE_TUNING.midMaxRound
+                    ? ROUND_CURVE_TUNING.mid
+                    : ROUND_CURVE_TUNING.late;
+            const scaledPathMod = 1 + ((path.mod - 1) * roundCurve.pathModWeight);
+            let nextTarget = Math.floor(target * scaledPathMod) + roundCurve.flatIncrease;
+            if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
                 nextTarget += debtPenalty;
             }
-            if (path.boss && round <= BOSS_TUNING.earlyBossRoundCap) {
+            if (path.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
                 nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
             }
             setRound(r => r + 1);
