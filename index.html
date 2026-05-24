@@ -652,6 +652,30 @@
         maxAffordableBuffer: 25
     };
 
+    const EARLY_GAME_TUNING = {
+        openingTarget: 130,
+        counterOpeningMultiplier: 1.15,
+        debtPenaltyStartsRound: 4,
+        bossPathStartsRound: 4
+    };
+
+    const ROUND_CURVE_TUNING = {
+        earlyMaxRound: 3,
+        midMaxRound: 6,
+        early: { pathModWeight: 0.7, flatIncrease: 28 },
+        mid: { pathModWeight: 0.95, flatIncrease: 42 },
+        late: { pathModWeight: 1.1, flatIncrease: 58 }
+    };
+
+    const PROGRESSION_GUARDRAILS = {
+        minGrowthRate: 1.08,
+        earlyMaxGrowthRate: 1.35,
+        midMaxGrowthRate: 1.42,
+        lateMaxGrowthRate: 1.5,
+        dangerCapRound: 6,
+        maxEarlyDangerOffers: 1
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1313,7 +1337,7 @@
             setPersonaIdx(Math.max(0, PERSONAS.findIndex(p => p.id === savedPersona.id)));
             setRound(saved.round || 1);
             setScore(saved.score || 0);
-            setTarget(saved.target || 150);
+            setTarget(saved.target || EARLY_GAME_TUNING.openingTarget);
             setHands(saved.hands || savedPersona.plays);
             setDiscards(saved.discards ?? savedPersona.pills);
             setGold(saved.gold ?? savedPersona.cash);
@@ -1499,7 +1523,11 @@
             setPersona(p);
             setRound(1);
             setScore(0);
-            setTarget(p.id === 'CARD_COUNTER' ? Math.floor(150 * 1.2) : 150);
+            setTarget(
+                p.id === 'CARD_COUNTER'
+                    ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
+                    : EARLY_GAME_TUNING.openingTarget
+            );
             setHands(p.plays);
             setDiscards(p.pills);
             setGold(p.cash);
@@ -1807,10 +1835,32 @@
             }
 
             if (!picks.some(item => item.cost <= gold)) {
+                const immediateFallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= gold && !picks.some(p => p.id === item.id)))[0];
+                if (immediateFallback) {
+                    const replaceIdx = Math.max(0, picks.length - 1);
+                    picks[replaceIdx] = immediateFallback;
+                }
+            }
+
+            if (!picks.some(item => item.cost <= gold)) {
                 const fallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= affordabilityCeiling))[0];
                 if (fallback && !picks.some(item => item.id === fallback.id)) {
                     const replaceIdx = Math.max(0, picks.length - 1);
                     picks[replaceIdx] = fallback;
+                }
+            }
+
+            if (round <= PROGRESSION_GUARDRAILS.dangerCapRound) {
+                const safePool = weightedSort([...faces, ...hardware].filter(item => item.rarity !== 'danger' && !picks.some(p => p.id === item.id)));
+                const dangerIndices = picks
+                    .map((item, idx) => ({ item, idx }))
+                    .filter(entry => entry.item.rarity === 'danger')
+                    .map(entry => entry.idx);
+                if (dangerIndices.length > PROGRESSION_GUARDRAILS.maxEarlyDangerOffers) {
+                    dangerIndices.slice(PROGRESSION_GUARDRAILS.maxEarlyDangerOffers).forEach((idx) => {
+                        const replacement = safePool.shift();
+                        if (replacement) picks[idx] = replacement;
+                    });
                 }
             }
 
@@ -1819,7 +1869,7 @@
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
                 const next = [...PATHS];
-                if (round % 2 === 0) {
+                if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
                     const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
                     next[2] = { ...next[2], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
@@ -1880,14 +1930,29 @@
 
         const handleAdvance = (path) => {
             const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
-            let nextTarget = Math.floor(target * path.mod) + 50;
-            if (!hasLedger && debt > 0) {
+            const nextRound = round + 1;
+            const roundCurve = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
+                ? ROUND_CURVE_TUNING.early
+                : nextRound <= ROUND_CURVE_TUNING.midMaxRound
+                    ? ROUND_CURVE_TUNING.mid
+                    : ROUND_CURVE_TUNING.late;
+            const scaledPathMod = 1 + ((path.mod - 1) * roundCurve.pathModWeight);
+            let nextTarget = Math.floor(target * scaledPathMod) + roundCurve.flatIncrease;
+            if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
                 nextTarget += debtPenalty;
             }
-            if (path.boss && round <= BOSS_TUNING.earlyBossRoundCap) {
+            if (path.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
                 nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
             }
+            const growthCap = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
+                ? PROGRESSION_GUARDRAILS.earlyMaxGrowthRate
+                : nextRound <= ROUND_CURVE_TUNING.midMaxRound
+                    ? PROGRESSION_GUARDRAILS.midMaxGrowthRate
+                    : PROGRESSION_GUARDRAILS.lateMaxGrowthRate;
+            const minTarget = Math.floor(target * PROGRESSION_GUARDRAILS.minGrowthRate);
+            const maxTarget = Math.floor(target * growthCap);
+            nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
