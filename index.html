@@ -1174,6 +1174,22 @@
         );
     };
 
+    const ScoreResolutionOverlay = ({ data, reducedMotion }) => {
+        if (!data) return null;
+        return (
+            <div className="absolute inset-0 z-[560] pointer-events-none flex items-center justify-center">
+                <div className={`bg-black/85 border-2 border-[#0df] rounded-lg px-6 py-4 shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+                    <div className="font-mono text-[10px] text-[#0df] tracking-[.35em] text-center mb-2">SCORE RESOLUTION</div>
+                    <div className="font-mono text-sm text-center text-gray-200">
+                        <span className="text-yellow-300">{data.chips}</span> CHIPS × <span className="text-cyan-300">{data.mult.toFixed(2)}x</span>
+                        {data.flowMult > 1 && <> × <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
+                    </div>
+                    <div className="font-marker text-4xl text-[#ff007f] text-center mt-1">{data.total}</div>
+                </div>
+            </div>
+        );
+    };
+
     const ActiveModifiers = ({ inventory, boss, insaneContract }) => {
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
@@ -1372,6 +1388,7 @@
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
+        const [scoreResolution, setScoreResolution] = useState(null);
         const [showSystemMenu, setShowSystemMenu] = useState(false);
         const [showHelpOverlay, setShowHelpOverlay] = useState(false);
         const [showLorePanel, setShowLorePanel] = useState(false);
@@ -1595,6 +1612,7 @@
             setPayoutActive(false);
             setFlyingScores([]);
             setCinematic(null);
+            setScoreResolution(null);
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
@@ -1773,6 +1791,7 @@
             setBossIntro(null);
             setBossKick(false);
             setCinematic(null);
+            setScoreResolution(null);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setHistory([]);
@@ -1973,6 +1992,17 @@
                 }));
                 const nextScore = score + result.total;
                 setScore(nextScore);
+                if (result.total >= 120) {
+                    const resolutionPayload = {
+                        id: Math.random(),
+                        chips: result.chips,
+                        mult: result.mult,
+                        flowMult: result.flowMult || 1,
+                        total: result.total
+                    };
+                    setScoreResolution(resolutionPayload);
+                    scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 650 : 950);
+                }
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
                 if (result.total >= 150 && !reducedMotion) {
@@ -2273,6 +2303,7 @@
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
+                {scoreResolution && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
