@@ -578,6 +578,11 @@
         bossPathTargetRelief: 0.93
     };
 
+    const SHOP_TUNING = {
+        earlyDangerRoundGate: 5,
+        maxAffordableBuffer: 25
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1534,8 +1539,45 @@
         const generateShop = () => {
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
-            const pool = [...faces, ...hardware].sort(() => Math.random() - .5);
-            setShopItems(pool.slice(0, 4));
+            const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
+            const baseWeight = (item) => {
+                let weight = 0;
+                if (item.cost <= gold) weight += 4;
+                else if (item.cost <= affordabilityCeiling) weight += 2;
+                else weight -= 1;
+                if (item.rarity === 'common') weight += round <= 3 ? 2 : 1;
+                if (item.rarity === 'rare') weight += round >= 3 ? 2 : 0;
+                if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
+                if (!item.type) weight += 1;
+                return weight;
+            };
+            const weightedSort = (items) => items
+                .map(item => ({ item, weight: baseWeight(item) + (Math.random() * 0.35) }))
+                .sort((a, b) => b.weight - a.weight)
+                .map(entry => entry.item);
+
+            const facePool = weightedSort(faces);
+            const hardwarePool = weightedSort(hardware);
+            const picks = [];
+            if (facePool.length) picks.push(facePool.shift());
+            if (hardwarePool.length) picks.push(hardwarePool.shift());
+
+            const remainder = weightedSort([...facePool, ...hardwarePool]);
+            while (picks.length < 4 && remainder.length) {
+                const next = remainder.shift();
+                if (picks.some(item => item.id === next.id)) continue;
+                picks.push(next);
+            }
+
+            if (!picks.some(item => item.cost <= gold)) {
+                const fallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= affordabilityCeiling))[0];
+                if (fallback && !picks.some(item => item.id === fallback.id)) {
+                    const replaceIdx = Math.max(0, picks.length - 1);
+                    picks[replaceIdx] = fallback;
+                }
+            }
+
+            setShopItems(picks.slice(0, 4));
             if (round === 9) {
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
