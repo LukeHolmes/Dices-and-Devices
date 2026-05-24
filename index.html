@@ -613,6 +613,29 @@
         { id: 'LAUNDER', name: 'LAUNDER', desc: 'Clear debt.', cost: 100 }
     ];
 
+    const MECHANIC_HINTS = {
+        PILL: {
+            title: 'PILL REROLL',
+            body: 'Spend 1 Pill to reroll this single bone. During THE RAID, each pill also costs $2. If The Black Book is active, pill use grants +$1.'
+        },
+        PROGRAM_SNIFF: {
+            title: 'SNIFF (25% STASH)',
+            body: 'Rerolls one random free (unkept) bone. It uses the same reroll rules as pills.'
+        },
+        PROGRAM_BRIBE: {
+            title: 'BRIBE (60% STASH)',
+            body: 'Reduces current quota by 15%. Great when target pressure is getting too high.'
+        },
+        PROGRAM_FIX: {
+            title: 'FIX GAME (80% STASH)',
+            body: 'Matches plain bones to Slot 1 value. Useful for forcing sets or stabilizing weak rolls.'
+        },
+        PROGRAM_LAUNDER: {
+            title: 'LAUNDER (100% STASH)',
+            body: 'Clears current debt immediately.'
+        }
+    };
+
     const BOSSES = {
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5) },
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500' },
@@ -846,7 +869,7 @@
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, raidPill, reducedMotion }) => {
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion }) => {
         const ref = useRef({
             locked: false,
             vars: {
@@ -926,7 +949,7 @@
                         </div>
                     ) : <span className="font-serif text-5xl text-gray-900 opacity-80">{data.value}</span>}
                 </button>
-                {!rolling && <button onClick={(e) => { e.stopPropagation(); onPill(); }} className="absolute -top-2 -right-2 w-6 h-6 bg-black border border-gray-600 rounded-full flex items-center justify-center text-xs opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-50">💊{raidPill && <span className="absolute -bottom-4 text-[8px] text-red-500 font-bold font-mono">-$2</span>}</button>}
+                {!rolling && <button onClick={(e) => { e.stopPropagation(); onPill(); }} onMouseEnter={onExplainPill} onFocus={onExplainPill} title="Pill reroll this bone" className="absolute -top-2 -right-2 w-6 h-6 bg-black border border-gray-600 rounded-full flex items-center justify-center text-xs opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-50">💊{raidPill && <span className="absolute -bottom-4 text-[8px] text-red-500 font-bold font-mono">-$2</span>}</button>}
             </div>
         );
     };
@@ -1102,6 +1125,22 @@
         );
     };
 
+    const MechanicPopup = ({ hint, onDone }) => {
+        useEffect(() => {
+            const id = setTimeout(onDone, 2800);
+            return () => clearTimeout(id);
+        }, [hint, onDone]);
+        if (!hint) return null;
+        return (
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[620] pointer-events-none max-w-[90vw]">
+                <div className="bg-black/92 border border-[#c78b16] rounded-lg px-4 py-3 shadow-2xl">
+                    <div className="font-mono text-[10px] text-[#c78b16] tracking-[.25em] mb-1">{hint.title}</div>
+                    <div className="font-mono text-xs text-gray-200 leading-relaxed">{hint.body}</div>
+                </div>
+            </div>
+        );
+    };
+
     const ActiveModifiers = ({ inventory, boss }) => {
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
@@ -1187,8 +1226,10 @@
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
+        const [mechanicPopup, setMechanicPopup] = useState(null);
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
+        const lastMechanicPopupRef = useRef({ key: '', at: 0 });
         const scoreAnimRef = useRef(0);
         const goldAnimRef = useRef(0);
         const prevGoldRef = useRef(20);
@@ -1216,6 +1257,19 @@
         const clearScheduledInterval = (id) => {
             window.clearInterval(id);
             intervalIdsRef.current.delete(id);
+        };
+        const showMechanicPopup = (hintKey) => {
+            const hint = MECHANIC_HINTS[hintKey];
+            if (!hint) return;
+            const now = Date.now();
+            const prev = lastMechanicPopupRef.current;
+            if (prev.key === hintKey && (now - prev.at) < 1200) return;
+            lastMechanicPopupRef.current = { key: hintKey, at: now };
+            const id = Math.random();
+            setMechanicPopup({ id, ...hint });
+            scheduleTimeout(() => {
+                setMechanicPopup(current => (current?.id === id ? null : current));
+            }, 2800);
         };
         const triggerCameraKick = (kind = 'soft') => {
             if (reducedMotion) return;
@@ -1685,6 +1739,7 @@
         };
 
         const popPill = (idx) => {
+            showMechanicPopup('PILL');
             if (discards <= 0 || rolling) return;
             if (activeBoss?.id === 'THE_RAID') {
                 setGold(g => {
@@ -1789,6 +1844,7 @@
         };
 
         const handleProgram = (p) => {
+            showMechanicPopup(`PROGRAM_${p.id}`);
             if (stash < p.cost || activeBoss?.id === 'INFORMANT') return;
             setStash(s => s - p.cost);
             if (p.id === 'SNIFF') {
@@ -1989,6 +2045,7 @@
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
+                {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
                 {hitFlashActive && <div className="absolute inset-0 z-[340] bg-white/20 pointer-events-none" />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {hitCallouts.map(item => <div key={item.id} className="fly-score text-[#ff007f]" style={{ left: '50%', top: '34%', fontSize: '2.5rem', letterSpacing: '.08em' }}>{item.label}</div>)}
@@ -2108,7 +2165,7 @@
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 <div className={`flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
-                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} onPill={() => popPill(i)} onClick={() => {
+                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} onExplainPill={() => showMechanicPopup('PILL')} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
                                             if (swapIdx === null) setSwapIdx(i);
                                             else {
@@ -2140,7 +2197,7 @@
                                             return <div key={idx} className={`rounded-sm transition-[background-color,transform,opacity] duration-200 ease-out ${filled ? `${segColor} ${leading ? 'animate-pulse' : ''} scale-y-100 opacity-100` : 'bg-gray-800 scale-y-75 opacity-60'}`} style={{ transitionDelay: `${delay}ms` }}></div>;
                                         })}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onClick={() => handleProgram(p)} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
+                                    <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onMouseEnter={() => showMechanicPopup(`PROGRAM_${p.id}`)} onFocus={() => showMechanicPopup(`PROGRAM_${p.id}`)} onClick={() => handleProgram(p)} title={p.desc} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
