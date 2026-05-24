@@ -613,6 +613,12 @@
         { id: 'LAUNDER', name: 'LAUNDER', desc: 'Clear debt.', cost: 100 }
     ];
 
+    const CONSUMABLES = {
+        SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 28, rarity: 'common', type: 'consumable', icon: '🫀' },
+        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 22, rarity: 'common', type: 'consumable', icon: '💨' },
+        DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$15 cash on use.', cost: 25, rarity: 'rare', type: 'consumable', icon: '💵' }
+    };
+
     const BOSSES = {
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5) },
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500' },
@@ -625,6 +631,8 @@
     const PATHS = [
         { id: 'LOCAL', name: 'BACK ALLEY', desc: 'Standard hustle.', mod: 1, color: 'border-gray-600 text-gray-400' },
         { id: 'PAWN', name: 'PAWN SHOP', desc: '+20% quota, +$15.', mod: 1.2, reward: 15, color: 'border-[#c78b16] text-[#c78b16]' },
+        { id: 'HIDEOUT', name: 'SAFEHOUSE CUT', desc: '+12% quota, +1 Play, -1 Pill.', mod: 1.12, handDelta: 1, discardDelta: -1, color: 'border-cyan-500 text-cyan-400' },
+        { id: 'SMUGGLE', name: 'SMUGGLE RUN', desc: '+30% quota, +$20, random one-shot.', mod: 1.3, reward: 20, grantRandomConsumable: true, color: 'border-emerald-500 text-emerald-400' },
         { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
     ];
 
@@ -676,6 +684,121 @@
         maxEarlyDangerOffers: 1
     };
 
+    const SHOP_AGENCY_TUNING = {
+        refreshBaseCost: 10,
+        refreshRoundTax: 2,
+        refreshEscalation: 5,
+        sellRate: 0.6
+    };
+
+    const getShopRefreshCost = (roundNum, refreshCount) => Math.max(
+        6,
+        SHOP_AGENCY_TUNING.refreshBaseCost +
+            ((roundNum - 1) * SHOP_AGENCY_TUNING.refreshRoundTax) +
+            (refreshCount * SHOP_AGENCY_TUNING.refreshEscalation)
+    );
+
+    const getHardwareSellValue = (item) => Math.max(2, Math.floor((item?.cost || 10) * SHOP_AGENCY_TUNING.sellRate));
+
+    const HAND_MASTERY_TUNING = {
+        baseLevel: 1,
+        chipPerLevel: 5,
+        maxLevel: 8
+    };
+
+    const getHandMasteryBonus = (level) => Math.max(
+        0,
+        ((level || HAND_MASTERY_TUNING.baseLevel) - HAND_MASTERY_TUNING.baseLevel) * HAND_MASTERY_TUNING.chipPerLevel
+    );
+
+    const FLOW_TUNING = {
+        streakStep: 0.06,
+        maxStreak: 6
+    };
+
+    const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
+
+    const WAGER_TUNING = {
+        baseThreshold: 95,
+        roundThresholdStep: 5
+    };
+
+    const INSANE_CONTRACT_MODIFIERS = {
+        targetMultiplier: 1.28,
+        debtPenaltyMultiplier: 1.35,
+        stashGainMultiplier: 0.75,
+        extraRollToll: 1,
+        playPenalty: 1
+    };
+
+    const INSANE_CONTRACT_RULES = [
+        'Quota +28%',
+        'Debt pressure +35%',
+        'Stash gain -25%',
+        '+$1 toll on every roll',
+        '-1 Play each round'
+    ];
+
+    const STREET_INTEL = {
+        personas: {
+            STREET_RAT: 'Runs light, moves fast, and survives on instinct. Nothing fancy, but every scrap can become leverage.',
+            HUSTLER: 'Knows every back-room table in the borough. Starts rich, burns bright, and pays for it with slower stash momentum.',
+            ENFORCER: 'An ex-collector with cracked knuckles and no patience. Starts rough, no pills, and swings heavy from hand one.',
+            CARD_COUNTER: 'Reads patterns, marks tells, and weaponizes math. Opens with The Black Book but draws bigger heat from the start.'
+        },
+        bosses: {
+            BOUNCER: 'Owns the club doors and skims every take. If you cannot clear his inflated quota, you are out on the curb.',
+            LOAN_SHARK: 'Fronts cash with a smile and collects with interest. Every roll costs tribute, especially when you already owe.',
+            JUNKIE: 'A chaos broker who salts the bones. Sixes twist into ones when he is around, shredding high-roll plans.',
+            CROOKED_COP: 'Badge on paper, extortionist in practice. Hardware goes dark while the cop watches your table.',
+            INFORMANT: 'Knows every stash route in the district. Locks your stash progress until you force your way through.',
+            THE_RAID: 'Not a person but a citywide crackdown. Triple pressure, expensive pills, and no room for sloppy hands.'
+        }
+    };
+
+    const FIXER_LINES = {
+        start: [
+            'Keep it tidy. Quota is watching.',
+            'Play smart. The alley only forgives once.',
+            'No hero plays. Just clean payouts.'
+        ],
+        roll: [
+            'Bones are live. Make it count.',
+            'Read the table before you lock.',
+            'Don\'t chase ghosts unless you mean it.'
+        ],
+        pressure: [
+            'Toll is up. Keep cash in your coat.',
+            'Debt collectors smell weakness.',
+            'You\'re bleeding cash. Close this hand.'
+        ],
+        hit: [
+            'That hand sang. Keep the rhythm.',
+            'Good cut. File the next one clean.',
+            'Sharp work. Build on it.'
+        ],
+        bust: [
+            'Dead hand. Reset your head.',
+            'You forced it. Don\'t do that twice.',
+            'Cold bones. Next hand, cleaner.'
+        ],
+        boss: [
+            'Boss turf ahead. No sloppy lines.',
+            'You\'re on a watched table now.',
+            'Eyes up. This one bites back.'
+        ],
+        gamble: [
+            'Side action time. No tears either way.',
+            'Fifty-fifty. Your call.',
+            'Take the safe cut or flip the street coin.'
+        ]
+    };
+
+    const pickLine = (bucket) => {
+        if (!bucket || bucket.length === 0) return '';
+        return bucket[Math.floor(Math.random() * bucket.length)];
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -701,10 +824,10 @@
     const getAvailableCategories = (meta) => {
         const runs = meta?.totalRuns || 0;
         if (runs < ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','C'];
+            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FH','C'];
         }
         if (runs < ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
-            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FH','C'];
+            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FOK','FH','C'];
         }
         return Object.keys(CATEGORIES);
     };
@@ -775,7 +898,7 @@
         try { window.localStorage?.removeItem(STORAGE_KEYS.run); } catch (err) { console.warn('Unable to clear saved run', err); }
     };
 
-    const itemById = (id) => FACE_DATABASE[id] || DEVISES[id] || null;
+    const itemById = (id) => FACE_DATABASE[id] || DEVISES[id] || CONSUMABLES[id] || null;
     const bossById = (id) => BOSSES[id] || null;
     const hydrateItem = (item) => item?.id && itemById(item.id) ? { ...itemById(item.id), ...item } : item;
     const hydratePath = (path) => path ? { ...path, boss: path.bossId ? bossById(path.bossId) : (path.boss?.id ? bossById(path.boss.id) : path.boss) } : path;
@@ -952,9 +1075,10 @@
         );
     };
 
-    const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel }) => {
         const [hover, setHover] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
+        const masteryBonus = getHandMasteryBonus(handLevel);
         return (
             <button
                 onClick={() => onScore(id)}
@@ -967,7 +1091,11 @@
             >
                 {hover && canScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex flex-col items-start">
-                    <span>{cat.name}</span>
+                    <span className="flex items-center gap-1">
+                        <span>{cat.name}</span>
+                        <span className="text-[10px] px-1 rounded border border-gray-500 text-gray-600">LV{handLevel}</span>
+                    </span>
+                    {masteryBonus > 0 && <span className="text-[10px] text-green-700 font-mono">+{masteryBonus} mastery chips</span>}
                     {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}</span>}
                 </span>
                 <span>{used ? <span className="paid-stamp">PAID</span> : (canScore && result.valid ? result.total : (canScore ? 'BUST' : '-'))}</span>
@@ -1102,12 +1230,35 @@
         );
     };
 
-    const ActiveModifiers = ({ inventory, boss }) => {
+    const ScoreResolutionOverlay = ({ data, reducedMotion }) => {
+        if (!data) return null;
+        return (
+            <div className="absolute inset-0 z-[560] pointer-events-none flex items-center justify-center">
+                <div className={`bg-black/85 border-2 border-[#0df] rounded-lg px-6 py-4 shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+                    <div className="font-mono text-[10px] text-[#0df] tracking-[.35em] text-center mb-2">SCORE RESOLUTION</div>
+                    <div className="font-mono text-sm text-center text-gray-200">
+                        <span className="text-yellow-300">{data.chips}</span> CHIPS x <span className="text-cyan-300">{data.mult.toFixed(2)}x</span>
+                        {data.flowMult > 1 && <> x <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
+                    </div>
+                    <div className="font-marker text-4xl text-[#ff007f] text-center mt-1">{data.total}</div>
+                </div>
+            </div>
+        );
+    };
+
+    const ActiveModifiers = ({ inventory, boss, insaneContract }) => {
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
+        const hasContract = !!insaneContract;
         return (
             <div className="absolute top-24 left-4 bg-black/75 border border-gray-700 px-2 py-2 text-[10px] font-mono z-50 rounded shadow-xl min-w-40 max-w-52">
                 <div className="text-gray-400 mb-1 tracking-wider">ACTIVE MODIFIERS</div>
+                {hasContract && (
+                    <div className="mb-2">
+                        <div className="text-[#ff007f]">CONTRACT: INSANE</div>
+                        <div className="text-[#ffb3d9]">Quota up, toll up, plays down.</div>
+                    </div>
+                )}
                 {hasBoss && (
                     <div className="mb-2">
                         <div className="text-red-400">BOSS: {boss.name}</div>
@@ -1121,10 +1272,152 @@
                         ))}
                     </div>
                 )}
-                {!hasBoss && !hasInventory && <div className="text-gray-500">No active modifiers</div>}
+                {!hasBoss && !hasInventory && !hasContract && <div className="text-gray-500">No active modifiers</div>}
             </div>
         );
     };
+
+    const HelpOverlay = ({ onClose }) => (
+        <div className="absolute inset-0 z-[760] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
+            <div className="w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-5 md:p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4 border-b border-gray-700 pb-3">
+                    <h3 className="font-marker text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
+                    <button onClick={onClose} className="font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 text-sm font-mono">
+                    <div className="bg-black/50 border border-gray-700 rounded p-3">
+                        <div className="text-[#0df] mb-2 tracking-wider">CORE LOOP</div>
+                        <ul className="space-y-1 text-gray-200">
+                            <li>1. Roll bones.</li>
+                            <li>2. Keep what you want.</li>
+                            <li>3. Pick one payout row.</li>
+                            <li>4. Beat quota before plays run out.</li>
+                        </ul>
+                    </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3">
+                        <div className="text-[#0df] mb-2 tracking-wider">PILLS + STASH</div>
+                        <ul className="space-y-1 text-gray-200">
+                            <li>Pills reroll one slot immediately.</li>
+                            <li>Stash fills from strong hands.</li>
+                            <li>SNIFF rerolls one random free slot.</li>
+                            <li>BRIBE, FIX GAME, and LAUNDER spend stash.</li>
+                        </ul>
+                    </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
+                        <div className="text-[#0df] mb-2 tracking-wider">SURVIVAL NOTES</div>
+                        <p className="text-gray-200 leading-relaxed">
+                            Keep an eye on active boss rules, debt pressure, and hardware synergies.
+                            Cash keeps you flexible in the shop; stash keeps you alive mid-round.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const SystemMenu = ({
+        onResume,
+        onRestart,
+        onOpenHelp,
+        onExitToLineup,
+        muted,
+        onToggleMuted,
+        reducedMotion,
+        onToggleReducedMotion
+    }) => (
+        <div className="absolute inset-0 z-[750] bg-black/70 p-4 md:p-8 flex items-start justify-end" onClick={onResume}>
+            <div className="w-full max-w-sm bg-[#1a1a1a] border-4 border-[#0df] rounded-xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="font-mono text-xs tracking-[.3em] text-[#0df] mb-3">SYSTEM MENU</div>
+                <div className="space-y-2 font-mono text-sm">
+                    <button onClick={onResume} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">RESUME HUSTLE</button>
+                    <button onClick={onRestart} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">RESTART RUN</button>
+                    <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
+                    <button onClick={onToggleMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
+                        AUDIO: {muted ? 'MUTED' : 'LIVE'}
+                    </button>
+                    <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
+                        ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
+                    </button>
+                    <button onClick={onExitToLineup} className="w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">EXIT TO LINEUP</button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const CaseFilesPanel = ({ tab, onChangeTab, onClose }) => (
+        <div className="absolute inset-0 z-[740] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
+            <div className="w-full max-w-4xl bg-[#101010] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-700 pb-3 mb-4">
+                    <div>
+                        <h3 className="font-marker text-3xl text-[#ff007f] italic">CASE FILES</h3>
+                        <div className="font-mono text-xs text-gray-400">Street Intel on operators and heat sources.</div>
+                    </div>
+                    <button onClick={onClose} className="self-start md:self-auto font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
+                </div>
+                <div className="flex gap-2 mb-4">
+                    <button onClick={() => onChangeTab('personas')} className={`px-3 py-2 font-mono text-xs border ${tab === 'personas' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>OPERATORS</button>
+                    <button onClick={() => onChangeTab('bosses')} className={`px-3 py-2 font-mono text-xs border ${tab === 'bosses' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>HEAT BOSSES</button>
+                    <button onClick={() => onChangeTab('archive')} className={`px-3 py-2 font-mono text-xs border ${tab === 'archive' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>ARCHIVE</button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                    {tab === 'personas' && PERSONAS.map((p) => (
+                        <article key={p.id} className="border border-gray-700 bg-black/40 rounded p-3">
+                            <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
+                            <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
+                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
+                            <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                        </article>
+                    ))}
+                    {tab === 'bosses' && Object.values(BOSSES).map((boss) => (
+                        <article key={boss.id} className="border border-gray-700 bg-black/40 rounded p-3">
+                            <div className={`font-marker text-2xl ${boss.color}`}>{boss.name}</div>
+                            <div className="font-mono text-[11px] text-red-300 mb-2">{boss.desc}</div>
+                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.bosses[boss.id]}</p>
+                        </article>
+                    ))}
+                    {tab === 'archive' && (
+                        <div className="md:col-span-2 grid gap-3">
+                            <section className="border border-gray-700 bg-black/40 rounded p-3">
+                                <div className="font-mono text-[11px] tracking-[.25em] text-cyan-300 mb-2">CONTRABAND FACES</div>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                    {Object.values(FACE_DATABASE).map((face) => (
+                                        <article key={face.id} className="border border-gray-800 rounded p-2 bg-black/30">
+                                            <div className="font-mono text-xs text-white">{face.label}</div>
+                                            <div className="font-mono text-[10px] text-gray-400">TYPE: {face.type} / COST: ${face.cost}</div>
+                                        </article>
+                                    ))}
+                                </div>
+                            </section>
+                            <section className="border border-gray-700 bg-black/40 rounded p-3">
+                                <div className="font-mono text-[11px] tracking-[.25em] text-cyan-300 mb-2">HARDWARE</div>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                    {Object.values(DEVISES).map((devise) => (
+                                        <article key={devise.id} className="border border-gray-800 rounded p-2 bg-black/30">
+                                            <div className="font-mono text-xs text-white">{devise.name}</div>
+                                            <div className="font-mono text-[10px] text-gray-300 leading-snug">{devise.desc}</div>
+                                            <div className="font-mono text-[10px] text-gray-500">COST: ${devise.cost}</div>
+                                        </article>
+                                    ))}
+                                </div>
+                            </section>
+                            <section className="border border-gray-700 bg-black/40 rounded p-3">
+                                <div className="font-mono text-[11px] tracking-[.25em] text-cyan-300 mb-2">TACTICAL CONSUMABLES</div>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                    {Object.values(CONSUMABLES).map((item) => (
+                                        <article key={item.id} className="border border-gray-800 rounded p-2 bg-black/30">
+                                            <div className="font-mono text-xs text-white">{item.icon || '[]'} {item.name}</div>
+                                            <div className="font-mono text-[10px] text-gray-300 leading-snug">{item.desc}</div>
+                                            <div className="font-mono text-[10px] text-gray-500">COST: ${item.cost}</div>
+                                        </article>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 
     function App() {
         const [phase, setPhase] = useState('LINEUP');
@@ -1140,12 +1433,16 @@
         const [stash, setStash] = useState(0);
         const [stashDirection, setStashDirection] = useState(1);
         const [inventory, setInventory] = useState([]);
+        const [consumables, setConsumables] = useState([]);
         const [dice, setDice] = useState([]);
         const [kept, setKept] = useState([false,false,false,false,false]);
         const [rolling, setRolling] = useState(false);
         const [hasRolled, setHasRolled] = useState(false);
         const [usedCats, setUsedCats] = useState([]);
+        const [handLevels, setHandLevels] = useState({});
+        const [flowStreak, setFlowStreak] = useState(0);
         const [shopItems, setShopItems] = useState([]);
+        const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
         const [activeBoss, setActiveBoss] = useState(null);
         const [bossIntro, setBossIntro] = useState(null);
@@ -1177,6 +1474,7 @@
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
+        const [insaneContract, setInsaneContract] = useState(false);
         const [meta, setMeta] = useState(loadMetaState);
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
@@ -1187,6 +1485,14 @@
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
+        const [scoreResolution, setScoreResolution] = useState(null);
+        const [showSystemMenu, setShowSystemMenu] = useState(false);
+        const [showHelpOverlay, setShowHelpOverlay] = useState(false);
+        const [showLorePanel, setShowLorePanel] = useState(false);
+        const [loreTab, setLoreTab] = useState('personas');
+        const [gambleStake, setGambleStake] = useState(0);
+        const [activeWager, setActiveWager] = useState(null);
+        const [fixerLine, setFixerLine] = useState(pickLine(FIXER_LINES.start));
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
         const scoreAnimRef = useRef(0);
@@ -1242,6 +1548,11 @@
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
+        const inRunPhase = ['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase);
+        const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
+        const flowMultiplier = getFlowMultiplier(flowStreak);
+        const wagerThreshold = WAGER_TUNING.baseThreshold + Math.max(0, round - 1) * WAGER_TUNING.roundThresholdStep;
+        const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
         useEffect(() => {
@@ -1256,6 +1567,39 @@
                 else mediaQuery.removeListener(onChange);
             };
         }, []);
+
+        useEffect(() => {
+            if (inRunPhase) return;
+            setShowSystemMenu(false);
+            setShowHelpOverlay(false);
+        }, [inRunPhase]);
+
+        useEffect(() => {
+            if (phase === 'LINEUP' || phase === 'SAFEHOUSE') return;
+            setShowLorePanel(false);
+        }, [phase]);
+
+        useEffect(() => {
+            const onKeyDown = (event) => {
+                if (event.key !== 'Escape' || !inRunPhase) return;
+                if (showFirstRunOverlay || bossIntro) return;
+                if (showHelpOverlay) {
+                    setShowHelpOverlay(false);
+                    return;
+                }
+                setShowSystemMenu(open => !open);
+            };
+            window.addEventListener('keydown', onKeyDown);
+            return () => window.removeEventListener('keydown', onKeyDown);
+        }, [inRunPhase, showFirstRunOverlay, showHelpOverlay, bossIntro]);
+
+        useEffect(() => {
+            const onKeyDown = (event) => {
+                if (event.key === 'Escape' && showLorePanel) setShowLorePanel(false);
+            };
+            window.addEventListener('keydown', onKeyDown);
+            return () => window.removeEventListener('keydown', onKeyDown);
+        }, [showLorePanel]);
 
         useEffect(() => {
             AudioSystem.init();
@@ -1285,7 +1629,7 @@
             prevTotalRunsRef.current = curr;
             if (prev === curr) return;
             if (prev < ONBOARDING_THRESHOLDS.BASIC_COMBOS && curr >= ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-                setUnlockNotification('Triad & Full Ride payouts now available!');
+                setUnlockNotification('Quad payouts now available!');
             } else if (prev < ONBOARDING_THRESHOLDS.RARE_FACES && curr >= ONBOARDING_THRESHOLDS.RARE_FACES) {
                 setUnlockNotification('Rare contraband now appears in shops!');
             } else if (prev < ONBOARDING_THRESHOLDS.ALL_CATEGORIES && curr >= ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
@@ -1306,12 +1650,19 @@
             gold,
             debt,
             stash,
+            insaneContract,
             inventory,
+            consumables,
             dice,
             kept,
             hasRolled,
             usedCats,
+            handLevels,
+            flowStreak,
             shopItems,
+            shopRefreshes,
+            gambleStake,
+            activeWager,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
             activeBossId: activeBoss?.id || null,
             selectedItem,
@@ -1323,7 +1674,7 @@
         });
 
         const persistRun = (phaseOverride = phase) => {
-            if (runClosed || !['PLAY', 'SHOP', 'CARVING'].includes(phaseOverride)) return;
+            if (runClosed || !['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phaseOverride)) return;
             const snapshot = serializeRun(phaseOverride);
             saveSavedRun(snapshot);
             setHasSavedRun(true);
@@ -1343,12 +1694,19 @@
             setGold(saved.gold ?? savedPersona.cash);
             setDebt(saved.debt || 0);
             setStash(saved.stash || 0);
+            setInsaneContract(!!saved.insaneContract);
             setInventory((saved.inventory || []).map(hydrateItem));
+            setConsumables((saved.consumables || []).map(hydrateItem));
             setDice(saved.dice || []);
             setKept(saved.kept || [false,false,false,false,false]);
             setHasRolled(!!saved.hasRolled);
             setUsedCats(saved.usedCats || []);
+            setHandLevels(saved.handLevels || {});
+            setFlowStreak(saved.flowStreak || 0);
             setShopItems((saved.shopItems || []).map(hydrateItem));
+            setShopRefreshes(saved.shopRefreshes || 0);
+            setGambleStake(saved.gambleStake || 0);
+            setActiveWager(saved.activeWager || null);
             setPaths((saved.paths || []).map(hydratePath));
             setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
             setBossIntro(null);
@@ -1362,10 +1720,14 @@
             setPayoutActive(false);
             setFlyingScores([]);
             setCinematic(null);
+            setScoreResolution(null);
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
+            setGambleStake(0);
+            setActiveWager(null);
             setRunClosed(false);
+            setFixerLine('Back in the game. Pick your spot.');
             setPhase(saved.phase || 'PLAY');
         };
 
@@ -1508,13 +1870,16 @@
         }, [phase, reducedMotion]);
 
         useEffect(() => {
-            if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
+            if (!['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, inventory, dice, kept, hasRolled, usedCats, shopItems, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
+            const openingTargetBase = p.id === 'CARD_COUNTER'
+                ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
+                : EARLY_GAME_TUNING.openingTarget;
             clearSavedRun();
             setHasSavedRun(false);
             setRunClosed(false);
@@ -1523,33 +1888,39 @@
             setPersona(p);
             setRound(1);
             setScore(0);
-            setTarget(
-                p.id === 'CARD_COUNTER'
-                    ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
-                    : EARLY_GAME_TUNING.openingTarget
-            );
-            setHands(p.plays);
+            setTarget(insaneContract ? Math.floor(openingTargetBase * INSANE_CONTRACT_MODIFIERS.targetMultiplier) : openingTargetBase);
+            setHands(Math.max(1, p.plays - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
             setDiscards(p.pills);
             setGold(p.cash);
             setDebt(0);
             setStash(0);
             setUsedCats([]);
+            setHandLevels({});
+            setFlowStreak(0);
+            setShopRefreshes(0);
             setActiveBoss(null);
             setBossIntro(null);
             setBossKick(false);
             setCinematic(null);
+            setScoreResolution(null);
+            setGambleStake(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setHistory([]);
+            setFixerLine(pickLine(FIXER_LINES.start));
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
+            setActiveWager(null);
             setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
             setInventory(p.id === 'CARD_COUNTER' ? [DEVISES.BLACK_BOOK] : []);
+            setConsumables([]);
             const bones = Array(5).fill(0).map(makeBone);
             if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
             setDice(bones);
             if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
+            setShowSystemMenu(false);
+            setShowHelpOverlay(false);
             setPhase('PLAY');
         };
 
@@ -1576,6 +1947,8 @@
             standardVals.forEach(x => counts[x] = (counts[x] || 0) + 1);
             const cArr = Object.values(counts);
             const maxCount = cArr.length ? Math.max(...cArr) : 0;
+            const handLevel = handLevels[catId] || HAND_MASTERY_TUNING.baseLevel;
+            const flowMult = getFlowMultiplier(flowStreak);
             let chips = 0, mult = 1, valid = false, gDelta = 0, triggers = [];
             switch(catId) {
                 case 'ONES': valid = true; chips = ((counts[1] || 0) + wilds) * 1; break;
@@ -1603,6 +1976,11 @@
                 case 'C': valid = true; chips = sum; break;
             }
             if (!valid) return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [] };
+            const masteryBonus = getHandMasteryBonus(handLevel);
+            if (masteryBonus > 0) {
+                chips += masteryBonus;
+                triggers.push({ name: 'MASTERY', value: `+${masteryBonus}` });
+            }
             resolved.forEach((d, i) => {
                 if (destroyed.has(i)) return;
                 const face = d.faceId;
@@ -1644,7 +2022,8 @@
                     }
                 });
             }
-            return { valid: true, chips, mult, total: Math.floor(chips * mult), gDelta, triggers };
+            if (flowMult > 1) triggers.push({ name: 'FLOW', value: `x${flowMult.toFixed(2)}` });
+            return { valid: true, chips, mult, total: Math.floor(chips * mult * flowMult), flowMult, gDelta, triggers };
         };
 
         const rollBones = () => {
@@ -1653,6 +2032,8 @@
             let toll = 0;
             if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
+            if (insaneContract) toll += INSANE_CONTRACT_MODIFIERS.extraRollToll;
+            setFixerLine(toll > 0 ? pickLine(FIXER_LINES.pressure) : pickLine(FIXER_LINES.roll));
             if (toll > 0) {
                 setGold(g => {
                     if (g >= toll) return g - toll;
@@ -1712,6 +2093,9 @@
 
         const executePayout = (catId) => {
             const result = calculateScore(catId, dice);
+            const wager = activeWager;
+            let wagerNet = 0;
+            let projectedCash = gold;
             setUsedCats(prev => [...prev, catId]);
             setHands(h => h - 1);
             setKept([false,false,false,false,false]);
@@ -1720,8 +2104,25 @@
             setSwapMode(false);
             setSwapIdx(null);
             if (result.valid) {
+                setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
+                setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
+                setHandLevels(prev => ({
+                    ...prev,
+                    [catId]: Math.min(HAND_MASTERY_TUNING.maxLevel, (prev[catId] || HAND_MASTERY_TUNING.baseLevel) + 1)
+                }));
                 const nextScore = score + result.total;
                 setScore(nextScore);
+                if (result.total >= 120) {
+                    const resolutionPayload = {
+                        id: Math.random(),
+                        chips: result.chips,
+                        mult: result.mult,
+                        flowMult: result.flowMult || 1,
+                        total: result.total
+                    };
+                    setScoreResolution(resolutionPayload);
+                    scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 650 : 950);
+                }
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
                 if (result.total >= 150 && !reducedMotion) {
@@ -1738,6 +2139,7 @@
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
                 const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
                 if (hustleCash > 0) setGold(g => g + hustleCash);
+                projectedCash = Math.max(0, gold + (result.gDelta || 0) + hustleCash);
                 if (result.total >= ECONOMY_TUNING.debtReliefThreshold) {
                     setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
                 }
@@ -1745,6 +2147,7 @@
                     let gain = Math.min(60, (result.total / currentTarget) * 100 * 2);
                     if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
                     if (persona.id === 'HUSTLER') gain *= 0.5;
+                    if (insaneContract) gain *= INSANE_CONTRACT_MODIFIERS.stashGainMultiplier;
                     setStash(s => Math.min(100, s + gain));
                 }
                 setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
@@ -1761,13 +2164,33 @@
                     scheduleTimeout(() => setPowBurst(false), 700);
                 }
             } else {
+                setFixerLine(pickLine(FIXER_LINES.bust));
+                setFlowStreak(0);
                 AudioSystem.playTone(80, 'sawtooth', 0.25);
+            }
+            if (wager) {
+                const wagerWon = result.valid && result.total >= wager.threshold;
+                if (wagerWon) {
+                    const wagerPayout = wager.stake * 2;
+                    wagerNet = wagerPayout;
+                    setGold(g => g + wagerPayout);
+                    projectedCash += wagerPayout;
+                    setFixerLine(`Side bet cashed: +$${wagerPayout}.`);
+                    spawnPaperStamp('BET HIT', '#0f766e');
+                } else {
+                    wagerNet = -wager.stake;
+                    setFixerLine('Side bet burned. Keep playing clean.');
+                    spawnPaperStamp('BET LOST');
+                }
+                setActiveWager(null);
             }
             const gained = result.valid ? result.total : 0;
             if (hands <= 1 && score + gained < currentTarget) {
                 const finalHeat = runStats.totalHeat + gained;
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
-                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) });
+                setGambleStake(0);
+                setFixerLine('Quota missed. Keep your chin down.');
+                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) + wagerNet });
                 setBustActive(true);
                 triggerCameraKick('hard');
                 if (!reducedMotion) setCinematic('bust');
@@ -1776,16 +2199,59 @@
                 if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
-                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
+                    setGambleStake(0);
+                    setFixerLine('You cleared the city. Time to disappear.');
+                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) + wagerNet });
                     AudioSystem.paper();
                     if (!reducedMotion) setCinematic('victory');
                     scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
                     if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
-                    generateShop();
-                    setPhase('SHOP');
+                    const stake = Math.min(40, Math.max(5, Math.floor(projectedCash * 0.3)));
+                    if (projectedCash >= 5) {
+                        setGambleStake(stake);
+                        setFixerLine(pickLine(FIXER_LINES.gamble));
+                        setPhase('GAMBLE');
+                    } else {
+                        generateShop();
+                        setPhase('SHOP');
+                    }
                 }
             }
+        };
+
+        const resolveGamble = (doubleDown) => {
+            if (phase !== 'GAMBLE') return;
+            const stake = gambleStake;
+            if (doubleDown && stake > 0) {
+                const won = Math.random() < 0.5;
+                if (won) {
+                    setGold(g => g + stake);
+                    setFixerLine('Lucky flip. Don\'t get greedy.');
+                    spawnPaperStamp('DOUBLE', '#0f766e');
+                    AudioSystem.playTone(980, 'square', 0.14);
+                } else {
+                    setGold(g => Math.max(0, g - stake));
+                    setFixerLine('Flip went south. Tighten up.');
+                    spawnPaperStamp('BUSTED BET');
+                    AudioSystem.playTone(120, 'sawtooth', 0.18);
+                }
+            } else {
+                setFixerLine('Safe cut taken. Cash survives.');
+            }
+            setGambleStake(0);
+            generateShop();
+            setPhase('SHOP');
+        };
+
+        const placeSideWager = (stake) => {
+            if (!canPlaceWager) return;
+            if (stake <= 0 || gold < stake) return;
+            setGold(g => g - stake);
+            setActiveWager({ stake, threshold: wagerThreshold });
+            setFixerLine(`Side bet locked: $${stake} on ${wagerThreshold}+ heat.`);
+            spawnPaperStamp('SIDE BET', '#0f766e');
+            AudioSystem.playTone(560, 'triangle', 0.11);
         };
 
         const handleProgram = (p) => {
@@ -1801,9 +2267,24 @@
             setShowMobileStash(false);
         };
 
-        const generateShop = () => {
+        const useConsumable = (idx) => {
+            if (phase !== 'PLAY' || rolling) return;
+            const item = consumables[idx];
+            if (!item) return;
+            setConsumables(prev => prev.filter((_, i) => i !== idx));
+            if (item.id === 'SECOND_WIND') setHands(h => h + 1);
+            if (item.id === 'SMELLING_SALTS') setDiscards(d => d + 2);
+            if (item.id === 'DIRTY_WAD') setGold(g => g + 15);
+            setFixerLine(`Used ${item.name}. Stay sharp.`);
+            spawnPaperStamp('USED', '#0f766e');
+            AudioSystem.playTone(700, 'triangle', 0.1);
+            setShowMobileStash(false);
+        };
+
+        const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
+            const consumablePoolSeed = Object.values(CONSUMABLES);
             const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
             const baseWeight = (item) => {
                 let weight = 0;
@@ -1813,6 +2294,7 @@
                 if (item.rarity === 'common') weight += round <= 3 ? 2 : 1;
                 if (item.rarity === 'rare') weight += round >= 3 ? 2 : 0;
                 if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
+                if (item.type === 'consumable') weight += round <= 4 ? 2 : 1;
                 if (!item.type) weight += 1;
                 return weight;
             };
@@ -1823,11 +2305,13 @@
 
             const facePool = weightedSort(faces);
             const hardwarePool = weightedSort(hardware);
+            const consumablePool = weightedSort(consumablePoolSeed);
             const picks = [];
             if (facePool.length) picks.push(facePool.shift());
             if (hardwarePool.length) picks.push(hardwarePool.shift());
+            if (consumablePool.length && picks.length < 4) picks.push(consumablePool.shift());
 
-            const remainder = weightedSort([...facePool, ...hardwarePool]);
+            const remainder = weightedSort([...facePool, ...hardwarePool, ...consumablePool]);
             while (picks.length < 4 && remainder.length) {
                 const next = remainder.shift();
                 if (picks.some(item => item.id === next.id)) continue;
@@ -1835,7 +2319,7 @@
             }
 
             if (!picks.some(item => item.cost <= gold)) {
-                const immediateFallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= gold && !picks.some(p => p.id === item.id)))[0];
+                const immediateFallback = weightedSort([...faces, ...hardware, ...consumablePoolSeed].filter(item => item.cost <= gold && !picks.some(p => p.id === item.id)))[0];
                 if (immediateFallback) {
                     const replaceIdx = Math.max(0, picks.length - 1);
                     picks[replaceIdx] = immediateFallback;
@@ -1843,7 +2327,7 @@
             }
 
             if (!picks.some(item => item.cost <= gold)) {
-                const fallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= affordabilityCeiling))[0];
+                const fallback = weightedSort([...faces, ...hardware, ...consumablePoolSeed].filter(item => item.cost <= affordabilityCeiling))[0];
                 if (fallback && !picks.some(item => item.id === fallback.id)) {
                     const replaceIdx = Math.max(0, picks.length - 1);
                     picks[replaceIdx] = fallback;
@@ -1851,7 +2335,7 @@
             }
 
             if (round <= PROGRESSION_GUARDRAILS.dangerCapRound) {
-                const safePool = weightedSort([...faces, ...hardware].filter(item => item.rarity !== 'danger' && !picks.some(p => p.id === item.id)));
+                const safePool = weightedSort([...faces, ...hardware, ...consumablePoolSeed].filter(item => item.rarity !== 'danger' && !picks.some(p => p.id === item.id)));
                 const dangerIndices = picks
                     .map((item, idx) => ({ item, idx }))
                     .filter(entry => entry.item.rarity === 'danger')
@@ -1865,21 +2349,55 @@
             }
 
             setShopItems(picks.slice(0, 4));
+            if (!preserveRefreshes) setShopRefreshes(0);
+            if (preservePaths) return;
             if (round === 9) {
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
                 const next = [...PATHS];
                 if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
                     const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
-                    next[2] = { ...next[2], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
+                    const bossIdx = Math.max(0, next.length - 1);
+                    next[bossIdx] = { ...next[bossIdx], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
                 setPaths(next);
             }
         };
 
+        const refreshShop = () => {
+            if (phase !== 'SHOP') return;
+            const cost = getShopRefreshCost(round, shopRefreshes);
+            if (gold < cost) return;
+            setGold(g => g - cost);
+            setShopRefreshes(count => count + 1);
+            generateShop({ preservePaths: true, preserveRefreshes: true });
+            spawnPaperStamp('REROLLED', '#0f766e');
+            AudioSystem.playTone(950, 'triangle', 0.1);
+        };
+
+        const sellInventoryItem = (item) => {
+            if (phase !== 'SHOP') return;
+            const saleValue = getHardwareSellValue(item);
+            setInventory(prev => prev.filter(entry => entry.id !== item.id));
+            setGold(g => g + saleValue);
+            spawnPaperStamp('FENCED', '#0f766e');
+            AudioSystem.playTone(520, 'square', 0.1);
+        };
+
+        const payDebtFromCash = (amount) => {
+            if (phase !== 'SHOP' || debt <= 0 || gold <= 0) return;
+            const payment = Math.min(amount, debt, gold);
+            if (payment <= 0) return;
+            setGold(g => g - payment);
+            setDebt(d => Math.max(0, d - payment));
+            spawnPaperStamp('PAID DOWN', '#0f766e');
+            AudioSystem.playTone(420, 'triangle', 0.1);
+        };
+
         const handlePurchase = (item) => {
             if (soldItems.includes(item.id)) return;
             setSoldItems(prev => [...prev, item.id]);
+            setFixerLine(gold >= item.cost ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
             spawnPaperStamp('SOLD');
             scheduleTimeout(() => {
@@ -1890,7 +2408,10 @@
                     setDebt(d => d + debtSpike);
                     return 0;
                 });
-                if (item.type) {
+                if (item.type === 'consumable') {
+                    setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
+                    setShopItems(prev => prev.filter(i => i.id !== item.id));
+                } else if (item.type) {
                     setSelectedItem(item);
                     setCarvingDie(null);
                     setPhase('CARVING');
@@ -1940,7 +2461,9 @@
             let nextTarget = Math.floor(target * scaledPathMod) + roundCurve.flatIncrease;
             if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
-                nextTarget += debtPenalty;
+                nextTarget += insaneContract
+                    ? Math.floor(debtPenalty * INSANE_CONTRACT_MODIFIERS.debtPenaltyMultiplier)
+                    : debtPenalty;
             }
             if (path.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
                 nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
@@ -1953,24 +2476,40 @@
             const minTarget = Math.floor(target * PROGRESSION_GUARDRAILS.minGrowthRate);
             const maxTarget = Math.floor(target * growthCap);
             nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
+            if (insaneContract) nextTarget = Math.floor(nextTarget * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
+            const baseHands = Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0) - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0));
+            const adjustedHands = Math.max(1, baseHands + (path.handDelta || 0));
+            const adjustedDiscards = Math.max(0, persona.pills + (path.discardDelta || 0));
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
-            setHands(Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0)));
-            setDiscards(persona.pills);
+            setHands(adjustedHands);
+            setDiscards(adjustedDiscards);
             setUsedCats([]);
+            setFlowStreak(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setActiveBoss(path.boss || null);
             if (path.boss) {
+                setFixerLine(pickLine(FIXER_LINES.boss));
                 setBossIntro(path.boss);
                 if (!reducedMotion) setBossKick(true);
                 triggerCameraKick('hard');
                 AudioSystem.bossSting();
                 if (!reducedMotion) scheduleTimeout(() => setBossKick(false), 280);
+            } else {
+                setFixerLine('Fresh block. Read the room and roll.');
             }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
+            if (path.grantRandomConsumable) {
+                const pool = Object.values(CONSUMABLES);
+                const drop = pool[Math.floor(Math.random() * pool.length)];
+                if (drop) {
+                    setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
+                    setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
+                }
+            }
             setRunClosed(false);
             setPhase('PLAY');
         };
@@ -1981,6 +2520,11 @@
                 <div className="ambient-grain"></div>
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
+                {inRunPhase && (
+                    <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#ff007f]">
+                        SYSTEM
+                    </button>
+                )}
                 <button onClick={() => setMuted(m => !m)} aria-pressed={muted} title={muted ? 'Unmute audio' : 'Mute audio'} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
                     {muted ? 'UNMUTE' : 'MUTE'}
                 </button>
@@ -1989,6 +2533,33 @@
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
+                {scoreResolution && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
+                {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
+                {showSystemMenu && inRunPhase && (
+                    <SystemMenu
+                        onResume={() => setShowSystemMenu(false)}
+                        onRestart={() => {
+                            setShowSystemMenu(false);
+                            setShowHelpOverlay(false);
+                            startRun();
+                        }}
+                        onOpenHelp={() => {
+                            setShowSystemMenu(false);
+                            setShowHelpOverlay(true);
+                        }}
+                        onExitToLineup={() => {
+                            persistRun(phase);
+                            setShowSystemMenu(false);
+                            setShowHelpOverlay(false);
+                            setPhase('LINEUP');
+                        }}
+                        muted={muted}
+                        onToggleMuted={() => setMuted(m => !m)}
+                        reducedMotion={reducedMotion}
+                        onToggleReducedMotion={() => setReducedMotion(v => !v)}
+                    />
+                )}
+                {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
                 {hitFlashActive && <div className="absolute inset-0 z-[340] bg-white/20 pointer-events-none" />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {hitCallouts.map(item => <div key={item.id} className="fly-score text-[#ff007f]" style={{ left: '50%', top: '34%', fontSize: '2.5rem', letterSpacing: '.08em' }}>{item.label}</div>)}
@@ -2024,9 +2595,26 @@
                                 );
                             })}
                         </div>
+                        <div className={`w-full max-w-4xl mb-6 border-2 rounded-lg p-4 ${insaneContract ? 'border-[#ff007f] bg-[#2a0017]/70' : 'border-gray-700 bg-black/40'}`}>
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div>
+                                    <div className="font-marker text-2xl italic text-[#ff007f]">INSANE CONTRACT</div>
+                                    <div className="font-mono text-xs text-gray-300">Hardcore street terms. Extra risk, no hidden rules.</div>
+                                </div>
+                                <button onClick={() => setInsaneContract(v => !v)} className={`px-5 py-2 border-2 font-mono tracking-wider ${insaneContract ? 'border-[#ff007f] bg-[#ff007f] text-black' : 'border-gray-600 bg-black/50 text-gray-200 hover:border-[#ff007f]'}`}>
+                                    {insaneContract ? 'ACTIVE' : 'OFF'}
+                                </button>
+                            </div>
+                            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px] font-mono text-gray-200">
+                                {INSANE_CONTRACT_RULES.map((rule) => (
+                                    <div key={rule} className="border border-gray-700 rounded px-2 py-1 bg-black/35">{rule}</div>
+                                ))}
+                            </div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             {hasSavedRun && <button onClick={resumeRun} className="px-8 py-4 bg-[#0df] border-4 border-[#064b52] text-black text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
                             <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-12 py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-8 py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
                             <button onClick={() => setPhase('SAFEHOUSE')} className="px-8 py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
                         </div>
                     </div>
@@ -2057,7 +2645,10 @@
                                 <div><b>Contraband Faces:</b> {meta.unlockedFaceIds.length}/{Object.keys(FACE_DATABASE).length}</div>
                                 <div><b>Hardware:</b> {meta.unlockedHardwareIds.length}/{Object.keys(DEVISES).length}</div>
                             </div>
-                            <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button onClick={() => { setLoreTab('bosses'); setShowLorePanel(true); }} className="px-8 py-3 bg-[#2a0017] text-[#ff9fcf] font-bold font-mono border-2 border-[#7a003d] hover:bg-[#3b0120] transition-colors">STREET INTEL</button>
+                                <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -2066,16 +2657,44 @@
                     <div className={`h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <ActiveModifiers inventory={inventory} boss={activeBoss} />
+                        <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} />
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
-                                <div className="hidden sm:block"><div className="text-xs uppercase opacity-50">The Fixer</div><div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div></div>
-                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div></div>
+                                <div className="hidden sm:block">
+                                    <div className="text-xs uppercase opacity-50">The Fixer</div>
+                                    <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
+                                    {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
+                                    <div className="mt-1 max-w-[15rem] text-[10px] font-mono text-gray-300 leading-tight">{fixerLine}</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-xs opacity-50">STREET HEAT</div>
+                                    <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
+                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
+                                </div>
                                 <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
                                     <div><div className="text-[10px] opacity-50">PILLS</div><div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div></div>
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
+                                </div>
+                            </div>
+                            <div className="px-3 md:px-4 pb-3 border-t border-gray-800 pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <div className="font-mono text-[10px] text-gray-400">
+                                    {activeWager
+                                        ? `SIDE BET LIVE: $${activeWager.stake} on ${activeWager.threshold}+ heat`
+                                        : `SIDE BET: choose stake before first roll (${wagerThreshold}+ heat target)`}
+                                </div>
+                                <div className="flex gap-2">
+                                    {[5, 10, 20].map((stake) => (
+                                        <button
+                                            key={stake}
+                                            onClick={() => placeSideWager(stake)}
+                                            disabled={!canPlaceWager || gold < stake}
+                                            className="px-2 py-1 border border-emerald-700/70 text-emerald-300 bg-emerald-950/20 font-mono text-[10px] hover:bg-emerald-900/30 disabled:opacity-35 disabled:cursor-not-allowed"
+                                        >
+                                            BET ${stake}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                             <button onClick={() => setShowMobileStash(true)} className="md:hidden w-full bg-gray-800 text-gray-300 py-2 border-t border-gray-700 text-[10px] font-mono font-bold tracking-widest">OPEN STASH / HARDWARE</button>
@@ -2088,7 +2707,7 @@
                                     const totalCats = Object.keys(CATEGORIES).length;
                                     const lockedCount = totalCats - available.length;
                                     const rows = Object.values(CATEGORIES).filter(cat => available.includes(cat.id)).map(cat => (
-                                        <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
+                                        <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
                                     ));
                                     if (lockedCount > 0) rows.push(
                                         <div key="locked-hint" className="text-center py-2 text-[10px] font-mono opacity-50 border-t border-dashed border-gray-400 mt-1">
@@ -2124,7 +2743,7 @@
                                 </div>
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
-                                    <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT')) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
+                                    <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
                                 </div>
                             </div>
                             <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} md:static md:col-span-3 md:flex flex-col gap-4`}>
@@ -2141,11 +2760,44 @@
                                         })}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onClick={() => handleProgram(p)} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
+                                    <div className="mt-4 border-t border-gray-800 pt-3">
+                                        <div className="font-mono text-[10px] text-emerald-300 tracking-wider mb-2">TACTICAL CONSUMABLES</div>
+                                        {consumables.length === 0 ? (
+                                            <div className="font-mono text-[10px] text-gray-600">No one-shots pocketed.</div>
+                                        ) : (
+                                            <div className="space-y-2 max-h-28 overflow-y-auto pr-1">
+                                                {consumables.map((item, idx) => (
+                                                    <button key={item.instanceId || `${item.id}-${idx}`} onClick={() => useConsumable(idx)} disabled={rolling || phase !== 'PLAY'} className="w-full flex items-center justify-between gap-2 border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-left hover:bg-emerald-900/30 disabled:opacity-40">
+                                                        <span className="font-mono text-[10px] text-emerald-200 truncate">{item.icon || '🧪'} {item.name}</span>
+                                                        <span className="font-mono text-[10px] text-emerald-400">USE</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
                                     <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} /></div>)}</div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'GAMBLE' && (
+                    <div className="h-full flex items-center justify-center p-4 bg-black/85 z-[320] relative">
+                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl">
+                            <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
+                            <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
+                            <p className="font-mono text-sm text-gray-300 text-center mb-5">
+                                Put <b className="text-yellow-300">${gambleStake}</b> on the line for a 50/50 flip before the next stop.
+                            </p>
+                            <div className="grid sm:grid-cols-2 gap-3">
+                                <button onClick={() => resolveGamble(false)} className="py-3 border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df]">TAKE SAFE CUT</button>
+                                <button onClick={() => resolveGamble(true)} className="py-3 border-2 border-[#ff007f] bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120]">
+                                    FLIP IT (+/- ${gambleStake})
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2157,18 +2809,56 @@
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
                                 <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
-                                    const isFace = !!item.type;
+                                    const isConsumable = item.type === 'consumable';
+                                    const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
                                     return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''}`}>
                                         <div className="price-tag">${item.cost}</div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} /></div></div>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-2xl">{item.icon || '🧪'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} /></div></div>
                                         <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
                                     </div>;
                                 })}</div>
                             </div>
                             <div className="w-full md:w-1/3 bg-[#1a1a1a] border-4 border-gray-900 p-5 rounded-xl shadow-2xl flex flex-col">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
+                                <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
+                                <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
+                                    <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
+                                    <button onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-2 px-3 border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                                        <span>REFRESH STOCK</span>
+                                        <span>${shopRefreshCost}</span>
+                                    </button>
+                                    <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
+                                    <div className="mt-3 border-t border-gray-800 pt-3">
+                                        <div className="font-mono text-[10px] text-gray-400 mb-2">FENCE HARDWARE</div>
+                                        {inventory.length === 0 ? (
+                                            <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
+                                        ) : (
+                                            <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                                                {inventory.map(item => (
+                                                    <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
+                                                        <span className="font-mono text-[10px] text-gray-200 truncate">{item.name}</span>
+                                                        <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-1 font-mono text-[10px] hover:bg-green-900/30">
+                                                            SELL ${getHardwareSellValue(item)}
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="mt-3 border-t border-gray-800 pt-3">
+                                        <div className="font-mono text-[10px] text-red-300 mb-2">DEBT CONTROL</div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-700 text-red-300 font-mono text-[10px] hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                PAY $10
+                                            </button>
+                                            <button onClick={() => payDebtFromCash(Math.max(debt, gold))} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-500 text-red-200 font-mono text-[10px] hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                CLEAR ${Math.min(debt, gold)}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
                                 <div className="flex flex-col gap-3 flex-1">{paths.map(p => <button key={p.id} onClick={() => handleAdvance(p)} className={`w-full p-4 border-2 rounded text-left hover:bg-white/5 transition-all ${p.color}`}><div className="font-bold text-xl uppercase tracking-wider">{p.name}</div><div className="text-xs opacity-70 mt-1 font-mono">{p.desc}</div>{p.boss && <div className="mt-2 pt-2 border-t border-current text-[10px] font-bold font-mono"><span className="text-white">BOSS:</span> {p.boss.name} - {p.boss.desc}</div>}</button>)}</div>
                             </div>
