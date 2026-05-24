@@ -868,6 +868,9 @@
         meta: 'gutterbones1977:meta:v1'
     };
 
+    const RUN_SAVE_VERSION = 2;
+    const RUN_PHASES = ['PLAY', 'SHOP', 'CARVING', 'GAMBLE'];
+
     const DEFAULT_META_STATE = {
         version: 1,
         launderedCash: 0,
@@ -917,8 +920,31 @@
 
     const loadMetaState = () => mergeMetaState(loadJson(STORAGE_KEYS.meta) || {});
     const saveMetaState = (meta) => saveJson(STORAGE_KEYS.meta, meta);
-    const loadSavedRun = () => loadJson(STORAGE_KEYS.run);
-    const saveSavedRun = (run) => saveJson(STORAGE_KEYS.run, run);
+
+    const normalizeSavedRun = (raw) => {
+        if (!raw || typeof raw !== 'object') return null;
+        const normalized = { ...raw };
+        normalized.version = RUN_SAVE_VERSION;
+        if (!RUN_PHASES.includes(normalized.phase)) normalized.phase = 'PLAY';
+        if (!Array.isArray(normalized.consumables)) normalized.consumables = [];
+        if (!normalized.handLevels || typeof normalized.handLevels !== 'object' || Array.isArray(normalized.handLevels)) normalized.handLevels = {};
+        if (typeof normalized.flowStreak !== 'number' || Number.isNaN(normalized.flowStreak)) normalized.flowStreak = 0;
+        if (typeof normalized.gambleStake !== 'number' || Number.isNaN(normalized.gambleStake)) normalized.gambleStake = 0;
+        if (!normalized.activeWager || typeof normalized.activeWager !== 'object') normalized.activeWager = null;
+        else {
+            normalized.activeWager = {
+                stake: Math.max(0, Math.floor(Number(normalized.activeWager.stake) || 0)),
+                threshold: Math.max(WAGER_TUNING.baseThreshold, Math.floor(Number(normalized.activeWager.threshold) || WAGER_TUNING.baseThreshold))
+            };
+            if (!normalized.activeWager.stake) normalized.activeWager = null;
+        }
+        if (!normalized.currentRouteEffect || typeof normalized.currentRouteEffect !== 'object') normalized.currentRouteEffect = null;
+        else if (!Array.isArray(normalized.currentRouteEffect.effects)) normalized.currentRouteEffect = { ...normalized.currentRouteEffect, effects: [] };
+        return normalized;
+    };
+
+    const loadSavedRun = () => normalizeSavedRun(loadJson(STORAGE_KEYS.run));
+    const saveSavedRun = (run) => saveJson(STORAGE_KEYS.run, { ...run, version: RUN_SAVE_VERSION });
     const clearSavedRun = () => {
         try { window.localStorage?.removeItem(STORAGE_KEYS.run); } catch (err) { console.warn('Unable to clear saved run', err); }
     };
@@ -1611,7 +1637,7 @@
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
-        const inRunPhase = ['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase);
+        const inRunPhase = RUN_PHASES.includes(phase);
         const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
         const flowMultiplier = getFlowMultiplier(flowStreak);
         const wagerThreshold = WAGER_TUNING.baseThreshold + Math.max(0, round - 1) * WAGER_TUNING.roundThresholdStep;
@@ -1702,7 +1728,7 @@
         }, [meta.totalRuns]);
 
         const serializeRun = (phaseOverride = phase) => ({
-            version: 1,
+            version: RUN_SAVE_VERSION,
             phase: phaseOverride,
             personaId: persona.id,
             personaIdx,
@@ -1739,7 +1765,7 @@
         });
 
         const persistRun = (phaseOverride = phase) => {
-            if (runClosed || !['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phaseOverride)) return;
+            if (runClosed || !RUN_PHASES.includes(phaseOverride)) return;
             const snapshot = serializeRun(phaseOverride);
             saveSavedRun(snapshot);
             setHasSavedRun(true);
@@ -1936,7 +1962,7 @@
         }, [phase, reducedMotion]);
 
         useEffect(() => {
-            if (!['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase)) return;
+            if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
         }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
