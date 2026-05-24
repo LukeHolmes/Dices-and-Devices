@@ -703,6 +703,13 @@
         ((level || HAND_MASTERY_TUNING.baseLevel) - HAND_MASTERY_TUNING.baseLevel) * HAND_MASTERY_TUNING.chipPerLevel
     );
 
+    const FLOW_TUNING = {
+        streakStep: 0.06,
+        maxStreak: 6
+    };
+
+    const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
+
     const INSANE_CONTRACT_MODIFIERS = {
         targetMultiplier: 1.28,
         debtPenaltyMultiplier: 1.35,
@@ -1320,6 +1327,7 @@
         const [hasRolled, setHasRolled] = useState(false);
         const [usedCats, setUsedCats] = useState([]);
         const [handLevels, setHandLevels] = useState({});
+        const [flowStreak, setFlowStreak] = useState(0);
         const [shopItems, setShopItems] = useState([]);
         const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
@@ -1425,6 +1433,7 @@
             : '';
         const inRunPhase = ['PLAY', 'SHOP', 'CARVING'].includes(phase);
         const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
+        const flowMultiplier = getFlowMultiplier(flowStreak);
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
         useEffect(() => {
@@ -1529,6 +1538,7 @@
             hasRolled,
             usedCats,
             handLevels,
+            flowStreak,
             shopItems,
             shopRefreshes,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
@@ -1569,6 +1579,7 @@
             setHasRolled(!!saved.hasRolled);
             setUsedCats(saved.usedCats || []);
             setHandLevels(saved.handLevels || {});
+            setFlowStreak(saved.flowStreak || 0);
             setShopItems((saved.shopItems || []).map(hydrateItem));
             setShopRefreshes(saved.shopRefreshes || 0);
             setPaths((saved.paths || []).map(hydratePath));
@@ -1732,7 +1743,7 @@
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, handLevels, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -1756,6 +1767,7 @@
             setStash(0);
             setUsedCats([]);
             setHandLevels({});
+            setFlowStreak(0);
             setShopRefreshes(0);
             setActiveBoss(null);
             setBossIntro(null);
@@ -1802,6 +1814,7 @@
             const cArr = Object.values(counts);
             const maxCount = cArr.length ? Math.max(...cArr) : 0;
             const handLevel = handLevels[catId] || HAND_MASTERY_TUNING.baseLevel;
+            const flowMult = getFlowMultiplier(flowStreak);
             let chips = 0, mult = 1, valid = false, gDelta = 0, triggers = [];
             switch(catId) {
                 case 'ONES': valid = true; chips = ((counts[1] || 0) + wilds) * 1; break;
@@ -1875,7 +1888,8 @@
                     }
                 });
             }
-            return { valid: true, chips, mult, total: Math.floor(chips * mult), gDelta, triggers };
+            if (flowMult > 1) triggers.push({ name: 'FLOW', value: `x${flowMult.toFixed(2)}` });
+            return { valid: true, chips, mult, total: Math.floor(chips * mult * flowMult), flowMult, gDelta, triggers };
         };
 
         const rollBones = () => {
@@ -1952,6 +1966,7 @@
             setSwapMode(false);
             setSwapIdx(null);
             if (result.valid) {
+                setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
                 setHandLevels(prev => ({
                     ...prev,
                     [catId]: Math.min(HAND_MASTERY_TUNING.maxLevel, (prev[catId] || HAND_MASTERY_TUNING.baseLevel) + 1)
@@ -1998,6 +2013,7 @@
                     scheduleTimeout(() => setPowBurst(false), 700);
                 }
             } else {
+                setFlowStreak(0);
                 AudioSystem.playTone(80, 'sawtooth', 0.25);
             }
             const gained = result.valid ? result.total : 0;
@@ -2221,6 +2237,7 @@
             setHands(Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0) - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
             setDiscards(persona.pills);
             setUsedCats([]);
+            setFlowStreak(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setActiveBoss(path.boss || null);
@@ -2388,7 +2405,11 @@
                                     <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
                                     {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
                                 </div>
-                                <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div></div>
+                                <div className="text-center">
+                                    <div className="text-xs opacity-50">STREET HEAT</div>
+                                    <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
+                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
+                                </div>
                                 <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
                                     <div><div className="text-[10px] opacity-50">PILLS</div><div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div></div>
