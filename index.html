@@ -791,10 +791,41 @@
         );
     };
 
+    const ScorePreview = ({ result }) => {
+        if (!result.valid) return null;
+        return (
+            <div className="absolute right-2 top-1 bg-black/90 border border-cyan-400 text-xs font-mono p-2 z-50 w-40 rounded shadow-xl pointer-events-none">
+                <div>CHIPS: {result.chips}</div>
+                <div>MULT: x{result.mult.toFixed(2)}</div>
+                {result.gDelta !== 0 && <div>CASH: {result.gDelta > 0 ? '+' : ''}{result.gDelta}</div>}
+                {result.triggers.length > 0 && (
+                    <div className="mt-1 border-t border-gray-600 pt-1">
+                        {result.triggers.map((t, i) => (
+                            <div key={i} className="text-[10px] text-cyan-300">
+                                {t.name} {t.value}
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className="mt-1 text-yellow-400 font-bold">TOTAL: {result.total}</div>
+            </div>
+        );
+    };
+
     const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
+        const [hover, setHover] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
         return (
-            <button onClick={() => onScore(id)} disabled={!canScore} className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
+            <button
+                onClick={() => onScore(id)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                onFocus={() => setHover(true)}
+                onBlur={() => setHover(false)}
+                disabled={!canScore}
+                className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}
+            >
+                {hover && canScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex flex-col items-start">
                     <span>{cat.name}</span>
                     {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}</span>}
