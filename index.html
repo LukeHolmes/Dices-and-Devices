@@ -583,6 +583,13 @@
         maxAffordableBuffer: 25
     };
 
+    const EARLY_GAME_TUNING = {
+        openingTarget: 130,
+        counterOpeningMultiplier: 1.15,
+        debtPenaltyStartsRound: 4,
+        bossPathStartsRound: 4
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1240,7 +1247,7 @@
             setPersonaIdx(Math.max(0, PERSONAS.findIndex(p => p.id === savedPersona.id)));
             setRound(saved.round || 1);
             setScore(saved.score || 0);
-            setTarget(saved.target || 150);
+            setTarget(saved.target || EARLY_GAME_TUNING.openingTarget);
             setHands(saved.hands || savedPersona.plays);
             setDiscards(saved.discards ?? savedPersona.pills);
             setGold(saved.gold ?? savedPersona.cash);
@@ -1426,7 +1433,11 @@
             setPersona(p);
             setRound(1);
             setScore(0);
-            setTarget(p.id === 'CARD_COUNTER' ? Math.floor(150 * 1.2) : 150);
+            setTarget(
+                p.id === 'CARD_COUNTER'
+                    ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
+                    : EARLY_GAME_TUNING.openingTarget
+            );
             setHands(p.plays);
             setDiscards(p.pills);
             setGold(p.cash);
@@ -1746,7 +1757,7 @@
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
                 const next = [...PATHS];
-                if (round % 2 === 0) {
+                if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
                     const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
                     next[2] = { ...next[2], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
@@ -1808,7 +1819,7 @@
         const handleAdvance = (path) => {
             const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
             let nextTarget = Math.floor(target * path.mod) + 50;
-            if (!hasLedger && debt > 0) {
+            if (!hasLedger && debt > 0 && round >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
                 nextTarget += debtPenalty;
             }
