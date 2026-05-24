@@ -676,6 +676,22 @@
         maxEarlyDangerOffers: 1
     };
 
+    const INSANE_CONTRACT_MODIFIERS = {
+        targetMultiplier: 1.28,
+        debtPenaltyMultiplier: 1.35,
+        stashGainMultiplier: 0.75,
+        extraRollToll: 1,
+        playPenalty: 1
+    };
+
+    const INSANE_CONTRACT_RULES = [
+        'Quota +28%',
+        'Debt pressure +35%',
+        'Stash gain -25%',
+        '+$1 toll on every roll',
+        '-1 Play each round'
+    ];
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1102,12 +1118,19 @@
         );
     };
 
-    const ActiveModifiers = ({ inventory, boss }) => {
+    const ActiveModifiers = ({ inventory, boss, insaneContract }) => {
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
+        const hasContract = !!insaneContract;
         return (
             <div className="absolute top-24 left-4 bg-black/75 border border-gray-700 px-2 py-2 text-[10px] font-mono z-50 rounded shadow-xl min-w-40 max-w-52">
                 <div className="text-gray-400 mb-1 tracking-wider">ACTIVE MODIFIERS</div>
+                {hasContract && (
+                    <div className="mb-2">
+                        <div className="text-[#ff007f]">CONTRACT: INSANE</div>
+                        <div className="text-[#ffb3d9]">Quota up, toll up, plays down.</div>
+                    </div>
+                )}
                 {hasBoss && (
                     <div className="mb-2">
                         <div className="text-red-400">BOSS: {boss.name}</div>
@@ -1121,7 +1144,7 @@
                         ))}
                     </div>
                 )}
-                {!hasBoss && !hasInventory && <div className="text-gray-500">No active modifiers</div>}
+                {!hasBoss && !hasInventory && !hasContract && <div className="text-gray-500">No active modifiers</div>}
             </div>
         );
     };
@@ -1244,6 +1267,7 @@
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
+        const [insaneContract, setInsaneContract] = useState(false);
         const [meta, setMeta] = useState(loadMetaState);
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
@@ -1396,6 +1420,7 @@
             gold,
             debt,
             stash,
+            insaneContract,
             inventory,
             dice,
             kept,
@@ -1433,6 +1458,7 @@
             setGold(saved.gold ?? savedPersona.cash);
             setDebt(saved.debt || 0);
             setStash(saved.stash || 0);
+            setInsaneContract(!!saved.insaneContract);
             setInventory((saved.inventory || []).map(hydrateItem));
             setDice(saved.dice || []);
             setKept(saved.kept || [false,false,false,false,false]);
@@ -1600,11 +1626,14 @@
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, inventory, dice, kept, hasRolled, usedCats, shopItems, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, shopItems, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
+            const openingTargetBase = p.id === 'CARD_COUNTER'
+                ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
+                : EARLY_GAME_TUNING.openingTarget;
             clearSavedRun();
             setHasSavedRun(false);
             setRunClosed(false);
@@ -1613,12 +1642,8 @@
             setPersona(p);
             setRound(1);
             setScore(0);
-            setTarget(
-                p.id === 'CARD_COUNTER'
-                    ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
-                    : EARLY_GAME_TUNING.openingTarget
-            );
-            setHands(p.plays);
+            setTarget(insaneContract ? Math.floor(openingTargetBase * INSANE_CONTRACT_MODIFIERS.targetMultiplier) : openingTargetBase);
+            setHands(Math.max(1, p.plays - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
             setDiscards(p.pills);
             setGold(p.cash);
             setDebt(0);
@@ -1640,6 +1665,8 @@
             if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
             setDice(bones);
             if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
+            setShowSystemMenu(false);
+            setShowHelpOverlay(false);
             setPhase('PLAY');
         };
 
@@ -1743,6 +1770,7 @@
             let toll = 0;
             if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
+            if (insaneContract) toll += INSANE_CONTRACT_MODIFIERS.extraRollToll;
             if (toll > 0) {
                 setGold(g => {
                     if (g >= toll) return g - toll;
@@ -1835,6 +1863,7 @@
                     let gain = Math.min(60, (result.total / currentTarget) * 100 * 2);
                     if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
                     if (persona.id === 'HUSTLER') gain *= 0.5;
+                    if (insaneContract) gain *= INSANE_CONTRACT_MODIFIERS.stashGainMultiplier;
                     setStash(s => Math.min(100, s + gain));
                 }
                 setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
@@ -2030,7 +2059,9 @@
             let nextTarget = Math.floor(target * scaledPathMod) + roundCurve.flatIncrease;
             if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
-                nextTarget += debtPenalty;
+                nextTarget += insaneContract
+                    ? Math.floor(debtPenalty * INSANE_CONTRACT_MODIFIERS.debtPenaltyMultiplier)
+                    : debtPenalty;
             }
             if (path.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
                 nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
@@ -2043,10 +2074,11 @@
             const minTarget = Math.floor(target * PROGRESSION_GUARDRAILS.minGrowthRate);
             const maxTarget = Math.floor(target * growthCap);
             nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
+            if (insaneContract) nextTarget = Math.floor(nextTarget * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
-            setHands(Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0)));
+            setHands(Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0) - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
             setDiscards(persona.pills);
             setUsedCats([]);
             setHasRolled(false);
@@ -2097,7 +2129,7 @@
                             setShowHelpOverlay(true);
                         }}
                         onExitToLineup={() => {
-                            persistRun('PLAY');
+                            persistRun(phase);
                             setShowSystemMenu(false);
                             setShowHelpOverlay(false);
                             setPhase('LINEUP');
@@ -2144,6 +2176,22 @@
                                 );
                             })}
                         </div>
+                        <div className={`w-full max-w-4xl mb-6 border-2 rounded-lg p-4 ${insaneContract ? 'border-[#ff007f] bg-[#2a0017]/70' : 'border-gray-700 bg-black/40'}`}>
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div>
+                                    <div className="font-marker text-2xl italic text-[#ff007f]">INSANE CONTRACT</div>
+                                    <div className="font-mono text-xs text-gray-300">Hardcore street terms. Extra risk, no hidden rules.</div>
+                                </div>
+                                <button onClick={() => setInsaneContract(v => !v)} className={`px-5 py-2 border-2 font-mono tracking-wider ${insaneContract ? 'border-[#ff007f] bg-[#ff007f] text-black' : 'border-gray-600 bg-black/50 text-gray-200 hover:border-[#ff007f]'}`}>
+                                    {insaneContract ? 'ACTIVE' : 'OFF'}
+                                </button>
+                            </div>
+                            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px] font-mono text-gray-200">
+                                {INSANE_CONTRACT_RULES.map((rule) => (
+                                    <div key={rule} className="border border-gray-700 rounded px-2 py-1 bg-black/35">{rule}</div>
+                                ))}
+                            </div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             {hasSavedRun && <button onClick={resumeRun} className="px-8 py-4 bg-[#0df] border-4 border-[#064b52] text-black text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
                             <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-12 py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
@@ -2186,11 +2234,15 @@
                     <div className={`h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <ActiveModifiers inventory={inventory} boss={activeBoss} />
+                        <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} />
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
-                                <div className="hidden sm:block"><div className="text-xs uppercase opacity-50">The Fixer</div><div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div></div>
+                                <div className="hidden sm:block">
+                                    <div className="text-xs uppercase opacity-50">The Fixer</div>
+                                    <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
+                                    {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
+                                </div>
                                 <div className="text-center"><div className="text-xs opacity-50">STREET HEAT</div><div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div></div>
                                 <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
@@ -2244,7 +2296,7 @@
                                 </div>
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
-                                    <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT')) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
+                                    <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
                                 </div>
                             </div>
                             <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} md:static md:col-span-3 md:flex flex-col gap-4`}>
