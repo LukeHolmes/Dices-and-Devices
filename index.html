@@ -598,6 +598,15 @@
         late: { pathModWeight: 1.1, flatIncrease: 58 }
     };
 
+    const PROGRESSION_GUARDRAILS = {
+        minGrowthRate: 1.08,
+        earlyMaxGrowthRate: 1.35,
+        midMaxGrowthRate: 1.42,
+        lateMaxGrowthRate: 1.5,
+        dangerCapRound: 6,
+        maxEarlyDangerOffers: 1
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1753,10 +1762,32 @@
             }
 
             if (!picks.some(item => item.cost <= gold)) {
+                const immediateFallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= gold && !picks.some(p => p.id === item.id)))[0];
+                if (immediateFallback) {
+                    const replaceIdx = Math.max(0, picks.length - 1);
+                    picks[replaceIdx] = immediateFallback;
+                }
+            }
+
+            if (!picks.some(item => item.cost <= gold)) {
                 const fallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= affordabilityCeiling))[0];
                 if (fallback && !picks.some(item => item.id === fallback.id)) {
                     const replaceIdx = Math.max(0, picks.length - 1);
                     picks[replaceIdx] = fallback;
+                }
+            }
+
+            if (round <= PROGRESSION_GUARDRAILS.dangerCapRound) {
+                const safePool = weightedSort([...faces, ...hardware].filter(item => item.rarity !== 'danger' && !picks.some(p => p.id === item.id)));
+                const dangerIndices = picks
+                    .map((item, idx) => ({ item, idx }))
+                    .filter(entry => entry.item.rarity === 'danger')
+                    .map(entry => entry.idx);
+                if (dangerIndices.length > PROGRESSION_GUARDRAILS.maxEarlyDangerOffers) {
+                    dangerIndices.slice(PROGRESSION_GUARDRAILS.maxEarlyDangerOffers).forEach((idx) => {
+                        const replacement = safePool.shift();
+                        if (replacement) picks[idx] = replacement;
+                    });
                 }
             }
 
@@ -1841,6 +1872,14 @@
             if (path.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
                 nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
             }
+            const growthCap = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
+                ? PROGRESSION_GUARDRAILS.earlyMaxGrowthRate
+                : nextRound <= ROUND_CURVE_TUNING.midMaxRound
+                    ? PROGRESSION_GUARDRAILS.midMaxGrowthRate
+                    : PROGRESSION_GUARDRAILS.lateMaxGrowthRate;
+            const minTarget = Math.floor(target * PROGRESSION_GUARDRAILS.minGrowthRate);
+            const maxTarget = Math.floor(target * growthCap);
+            nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
