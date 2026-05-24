@@ -944,6 +944,8 @@
         const [displayGold, setDisplayGold] = useState(20);
         const [cashDropFlash, setCashDropFlash] = useState(false);
         const [powBurst, setPowBurst] = useState(false);
+        const [hitFlashActive, setHitFlashActive] = useState(false);
+        const [hitCallouts, setHitCallouts] = useState([]);
         const [triggerCascade, setTriggerCascade] = useState([]);
         const [paperStamps, setPaperStamps] = useState([]);
         const [cinematic, setCinematic] = useState(null);
@@ -1161,6 +1163,12 @@
             const id = Math.random();
             setFlyingScores(prev => [...prev, { id, value, x: window.innerWidth / 2, y: window.innerHeight * .45 }]);
             scheduleTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
+        };
+
+        const spawnHitCallout = (label) => {
+            const id = Math.random();
+            setHitCallouts(prev => [...prev, { id, label }]);
+            scheduleTimeout(() => setHitCallouts(prev => prev.filter(item => item.id !== id)), 820);
         };
 
         const spawnPaperStamp = (text, color = '#d30000') => {
@@ -1456,9 +1464,15 @@
                 setScore(nextScore);
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
+                if (result.total >= 150 && !reducedMotion) {
+                    setHitFlashActive(true);
+                    scheduleTimeout(() => setHitFlashActive(false), 120);
+                }
                 setScorePulse(true);
                 scheduleTimeout(() => setScorePulse(false), 420);
                 spawnFlying(result.total);
+                if (result.total >= 400) spawnHitCallout('MONSTER HIT');
+                else if (result.total >= 250) spawnHitCallout('BIG HIT');
                 cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
@@ -1626,7 +1640,9 @@
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
+                {hitFlashActive && <div className="absolute inset-0 z-[340] bg-white/20 pointer-events-none" />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
+                {hitCallouts.map(item => <div key={item.id} className="fly-score text-[#ff007f]" style={{ left: '50%', top: '34%', fontSize: '2.5rem', letterSpacing: '.08em' }}>{item.label}</div>)}
                 {triggerCascade.length > 0 && <div className="trigger-cascade">{triggerCascade.map(row => <div key={row.id} className="trigger-cascade-row mb-1 text-xs font-mono bg-black/70 border border-cyan-500/40 px-2 py-1 rounded" style={{ animationDelay: `${row.delay}ms` }}>{row.label}</div>)}</div>}
                 {powBurst && <div className="pow-burst">POW!</div>}
                 {paperStamps.map(stamp => <div key={stamp.id} className="stamp-overlay" style={{ '--stamp-color': stamp.color }}>{stamp.text}</div>)}
