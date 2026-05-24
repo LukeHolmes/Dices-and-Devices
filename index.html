@@ -631,6 +631,8 @@
     const PATHS = [
         { id: 'LOCAL', name: 'BACK ALLEY', desc: 'Standard hustle.', mod: 1, color: 'border-gray-600 text-gray-400' },
         { id: 'PAWN', name: 'PAWN SHOP', desc: '+20% quota, +$15.', mod: 1.2, reward: 15, color: 'border-[#c78b16] text-[#c78b16]' },
+        { id: 'HIDEOUT', name: 'SAFEHOUSE CUT', desc: '+12% quota, +1 Play, -1 Pill.', mod: 1.12, handDelta: 1, discardDelta: -1, color: 'border-cyan-500 text-cyan-400' },
+        { id: 'SMUGGLE', name: 'SMUGGLE RUN', desc: '+30% quota, +$20, random one-shot.', mod: 1.3, reward: 20, grantRandomConsumable: true, color: 'border-emerald-500 text-emerald-400' },
         { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
     ];
 
@@ -2315,7 +2317,8 @@
                 const next = [...PATHS];
                 if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
                     const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
-                    next[2] = { ...next[2], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
+                    const bossIdx = Math.max(0, next.length - 1);
+                    next[bossIdx] = { ...next[bossIdx], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
                 setPaths(next);
             }
@@ -2434,11 +2437,14 @@
             const maxTarget = Math.floor(target * growthCap);
             nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
             if (insaneContract) nextTarget = Math.floor(nextTarget * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
+            const baseHands = Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0) - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0));
+            const adjustedHands = Math.max(1, baseHands + (path.handDelta || 0));
+            const adjustedDiscards = Math.max(0, persona.pills + (path.discardDelta || 0));
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
-            setHands(Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0) - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
-            setDiscards(persona.pills);
+            setHands(adjustedHands);
+            setDiscards(adjustedDiscards);
             setUsedCats([]);
             setFlowStreak(0);
             setHasRolled(false);
@@ -2456,6 +2462,14 @@
             }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
+            if (path.grantRandomConsumable) {
+                const pool = Object.values(CONSUMABLES);
+                const drop = pool[Math.floor(Math.random() * pool.length)];
+                if (drop) {
+                    setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
+                    setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
+                }
+            }
             setRunClosed(false);
             setPhase('PLAY');
         };
