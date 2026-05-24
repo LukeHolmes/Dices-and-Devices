@@ -814,10 +814,41 @@
         );
     };
 
+    const ScorePreview = ({ result }) => {
+        if (!result.valid) return null;
+        return (
+            <div className="absolute right-2 top-1 bg-black/90 border border-cyan-400 text-xs font-mono p-2 z-50 w-40 rounded shadow-xl pointer-events-none">
+                <div>CHIPS: {result.chips}</div>
+                <div>MULT: x{result.mult.toFixed(2)}</div>
+                {result.gDelta !== 0 && <div>CASH: {result.gDelta > 0 ? '+' : ''}{result.gDelta}</div>}
+                {result.triggers.length > 0 && (
+                    <div className="mt-1 border-t border-gray-600 pt-1">
+                        {result.triggers.map((t, i) => (
+                            <div key={i} className="text-[10px] text-cyan-300">
+                                {t.name} {t.value}
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className="mt-1 text-yellow-400 font-bold">TOTAL: {result.total}</div>
+            </div>
+        );
+    };
+
     const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
+        const [hover, setHover] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
         return (
-            <button onClick={() => onScore(id)} disabled={!canScore} className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}>
+            <button
+                onClick={() => onScore(id)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                onFocus={() => setHover(true)}
+                onBlur={() => setHover(false)}
+                disabled={!canScore}
+                className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400' : 'border-gray-400 opacity-70'}`}
+            >
+                {hover && canScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex flex-col items-start">
                     <span>{cat.name}</span>
                     {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}</span>}
@@ -954,6 +985,30 @@
         );
     };
 
+    const ActiveModifiers = ({ inventory, boss }) => {
+        const hasBoss = !!boss;
+        const hasInventory = inventory.length > 0;
+        return (
+            <div className="absolute top-24 left-4 bg-black/75 border border-gray-700 px-2 py-2 text-[10px] font-mono z-50 rounded shadow-xl min-w-40 max-w-52">
+                <div className="text-gray-400 mb-1 tracking-wider">ACTIVE MODIFIERS</div>
+                {hasBoss && (
+                    <div className="mb-2">
+                        <div className="text-red-400">BOSS: {boss.name}</div>
+                        <div className="text-red-200/80">{boss.desc}</div>
+                    </div>
+                )}
+                {hasInventory && (
+                    <div className="text-cyan-300 space-y-1">
+                        {inventory.map(item => (
+                            <div key={item.id}>{item.name}</div>
+                        ))}
+                    </div>
+                )}
+                {!hasBoss && !hasInventory && <div className="text-gray-500">No active modifiers</div>}
+            </div>
+        );
+    };
+
     function App() {
         const [phase, setPhase] = useState('LINEUP');
         const [personaIdx, setPersonaIdx] = useState(0);
@@ -990,6 +1045,8 @@
         const [displayGold, setDisplayGold] = useState(20);
         const [cashDropFlash, setCashDropFlash] = useState(false);
         const [powBurst, setPowBurst] = useState(false);
+        const [hitFlashActive, setHitFlashActive] = useState(false);
+        const [hitCallouts, setHitCallouts] = useState([]);
         const [triggerCascade, setTriggerCascade] = useState([]);
         const [paperStamps, setPaperStamps] = useState([]);
         const [cinematic, setCinematic] = useState(null);
@@ -1224,6 +1281,12 @@
             const id = Math.random();
             setFlyingScores(prev => [...prev, { id, value, x: window.innerWidth / 2, y: window.innerHeight * .45 }]);
             scheduleTimeout(() => setFlyingScores(prev => prev.filter(f => f.id !== id)), 1100);
+        };
+
+        const spawnHitCallout = (label) => {
+            const id = Math.random();
+            setHitCallouts(prev => [...prev, { id, label }]);
+            scheduleTimeout(() => setHitCallouts(prev => prev.filter(item => item.id !== id)), 820);
         };
 
         const spawnPaperStamp = (text, color = '#d30000') => {
@@ -1520,9 +1583,15 @@
                 setScore(nextScore);
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
+                if (result.total >= 150 && !reducedMotion) {
+                    setHitFlashActive(true);
+                    scheduleTimeout(() => setHitFlashActive(false), 120);
+                }
                 setScorePulse(true);
                 scheduleTimeout(() => setScorePulse(false), 420);
                 spawnFlying(result.total);
+                if (result.total >= 400) spawnHitCallout('MONSTER HIT');
+                else if (result.total >= 250) spawnHitCallout('BIG HIT');
                 cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
@@ -1692,7 +1761,9 @@
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
+                {hitFlashActive && <div className="absolute inset-0 z-[340] bg-white/20 pointer-events-none" />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
+                {hitCallouts.map(item => <div key={item.id} className="fly-score text-[#ff007f]" style={{ left: '50%', top: '34%', fontSize: '2.5rem', letterSpacing: '.08em' }}>{item.label}</div>)}
                 {triggerCascade.length > 0 && <div className="trigger-cascade">{triggerCascade.map(row => <div key={row.id} className="trigger-cascade-row mb-1 text-xs font-mono bg-black/70 border border-cyan-500/40 px-2 py-1 rounded" style={{ animationDelay: `${row.delay}ms` }}>{row.label}</div>)}</div>}
                 {powBurst && <div className="pow-burst">POW!</div>}
                 {paperStamps.map(stamp => <div key={stamp.id} className="stamp-overlay" style={{ '--stamp-color': stamp.color }}>{stamp.text}</div>)}
@@ -1766,6 +1837,7 @@
                 {phase === 'PLAY' && (
                     <div className={`h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
+                        <ActiveModifiers inventory={inventory} boss={activeBoss} />
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
