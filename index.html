@@ -692,6 +692,17 @@
 
     const getHardwareSellValue = (item) => Math.max(2, Math.floor((item?.cost || 10) * SHOP_AGENCY_TUNING.sellRate));
 
+    const HAND_MASTERY_TUNING = {
+        baseLevel: 1,
+        chipPerLevel: 5,
+        maxLevel: 8
+    };
+
+    const getHandMasteryBonus = (level) => Math.max(
+        0,
+        ((level || HAND_MASTERY_TUNING.baseLevel) - HAND_MASTERY_TUNING.baseLevel) * HAND_MASTERY_TUNING.chipPerLevel
+    );
+
     const INSANE_CONTRACT_MODIFIERS = {
         targetMultiplier: 1.28,
         debtPenaltyMultiplier: 1.35,
@@ -1001,9 +1012,10 @@
         );
     };
 
-    const ScoreRow = ({ id, cat, result, used, canScore, onScore }) => {
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel }) => {
         const [hover, setHover] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
+        const masteryBonus = getHandMasteryBonus(handLevel);
         return (
             <button
                 onClick={() => onScore(id)}
@@ -1016,7 +1028,11 @@
             >
                 {hover && canScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex flex-col items-start">
-                    <span>{cat.name}</span>
+                    <span className="flex items-center gap-1">
+                        <span>{cat.name}</span>
+                        <span className="text-[10px] px-1 rounded border border-gray-500 text-gray-600">LV{handLevel}</span>
+                    </span>
+                    {masteryBonus > 0 && <span className="text-[10px] text-green-700 font-mono">+{masteryBonus} mastery chips</span>}
                     {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}</span>}
                 </span>
                 <span>{used ? <span className="paid-stamp">PAID</span> : (canScore && result.valid ? result.total : (canScore ? 'BUST' : '-'))}</span>
@@ -1303,6 +1319,7 @@
         const [rolling, setRolling] = useState(false);
         const [hasRolled, setHasRolled] = useState(false);
         const [usedCats, setUsedCats] = useState([]);
+        const [handLevels, setHandLevels] = useState({});
         const [shopItems, setShopItems] = useState([]);
         const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
@@ -1511,6 +1528,7 @@
             kept,
             hasRolled,
             usedCats,
+            handLevels,
             shopItems,
             shopRefreshes,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
@@ -1550,6 +1568,7 @@
             setKept(saved.kept || [false,false,false,false,false]);
             setHasRolled(!!saved.hasRolled);
             setUsedCats(saved.usedCats || []);
+            setHandLevels(saved.handLevels || {});
             setShopItems((saved.shopItems || []).map(hydrateItem));
             setShopRefreshes(saved.shopRefreshes || 0);
             setPaths((saved.paths || []).map(hydratePath));
@@ -1713,7 +1732,7 @@
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, handLevels, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -1736,6 +1755,7 @@
             setDebt(0);
             setStash(0);
             setUsedCats([]);
+            setHandLevels({});
             setShopRefreshes(0);
             setActiveBoss(null);
             setBossIntro(null);
@@ -1781,6 +1801,7 @@
             standardVals.forEach(x => counts[x] = (counts[x] || 0) + 1);
             const cArr = Object.values(counts);
             const maxCount = cArr.length ? Math.max(...cArr) : 0;
+            const handLevel = handLevels[catId] || HAND_MASTERY_TUNING.baseLevel;
             let chips = 0, mult = 1, valid = false, gDelta = 0, triggers = [];
             switch(catId) {
                 case 'ONES': valid = true; chips = ((counts[1] || 0) + wilds) * 1; break;
@@ -1808,6 +1829,11 @@
                 case 'C': valid = true; chips = sum; break;
             }
             if (!valid) return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [] };
+            const masteryBonus = getHandMasteryBonus(handLevel);
+            if (masteryBonus > 0) {
+                chips += masteryBonus;
+                triggers.push({ name: 'MASTERY', value: `+${masteryBonus}` });
+            }
             resolved.forEach((d, i) => {
                 if (destroyed.has(i)) return;
                 const face = d.faceId;
@@ -1926,6 +1952,10 @@
             setSwapMode(false);
             setSwapIdx(null);
             if (result.valid) {
+                setHandLevels(prev => ({
+                    ...prev,
+                    [catId]: Math.min(HAND_MASTERY_TUNING.maxLevel, (prev[catId] || HAND_MASTERY_TUNING.baseLevel) + 1)
+                }));
                 const nextScore = score + result.total;
                 setScore(nextScore);
                 if (result.total >= 250) triggerCameraKick('hard');
@@ -2375,7 +2405,7 @@
                                     const totalCats = Object.keys(CATEGORIES).length;
                                     const lockedCount = totalCats - available.length;
                                     const rows = Object.values(CATEGORIES).filter(cat => available.includes(cat.id)).map(cat => (
-                                        <ScoreRow key={cat.id} id={cat.id} cat={cat} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
+                                        <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
                                     ));
                                     if (lockedCount > 0) rows.push(
                                         <div key="locked-hint" className="text-center py-2 text-[10px] font-mono opacity-50 border-t border-dashed border-gray-400 mt-1">
