@@ -613,6 +613,12 @@
         { id: 'LAUNDER', name: 'LAUNDER', desc: 'Clear debt.', cost: 100 }
     ];
 
+    const CONSUMABLES = {
+        SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 28, rarity: 'common', type: 'consumable', icon: '🫀' },
+        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 22, rarity: 'common', type: 'consumable', icon: '💨' },
+        DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$15 cash on use.', cost: 25, rarity: 'rare', type: 'consumable', icon: '💵' }
+    };
+
     const BOSSES = {
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5) },
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500' },
@@ -842,7 +848,7 @@
         try { window.localStorage?.removeItem(STORAGE_KEYS.run); } catch (err) { console.warn('Unable to clear saved run', err); }
     };
 
-    const itemById = (id) => FACE_DATABASE[id] || DEVISES[id] || null;
+    const itemById = (id) => FACE_DATABASE[id] || DEVISES[id] || CONSUMABLES[id] || null;
     const bossById = (id) => BOSSES[id] || null;
     const hydrateItem = (item) => item?.id && itemById(item.id) ? { ...itemById(item.id), ...item } : item;
     const hydratePath = (path) => path ? { ...path, boss: path.bossId ? bossById(path.bossId) : (path.boss?.id ? bossById(path.boss.id) : path.boss) } : path;
@@ -1337,6 +1343,7 @@
         const [stash, setStash] = useState(0);
         const [stashDirection, setStashDirection] = useState(1);
         const [inventory, setInventory] = useState([]);
+        const [consumables, setConsumables] = useState([]);
         const [dice, setDice] = useState([]);
         const [kept, setKept] = useState([false,false,false,false,false]);
         const [rolling, setRolling] = useState(false);
@@ -1550,6 +1557,7 @@
             stash,
             insaneContract,
             inventory,
+            consumables,
             dice,
             kept,
             hasRolled,
@@ -1591,6 +1599,7 @@
             setStash(saved.stash || 0);
             setInsaneContract(!!saved.insaneContract);
             setInventory((saved.inventory || []).map(hydrateItem));
+            setConsumables((saved.consumables || []).map(hydrateItem));
             setDice(saved.dice || []);
             setKept(saved.kept || [false,false,false,false,false]);
             setHasRolled(!!saved.hasRolled);
@@ -1761,7 +1770,7 @@
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -1800,6 +1809,7 @@
             setPillBursts([]);
             setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
             setInventory(p.id === 'CARD_COUNTER' ? [DEVISES.BLACK_BOOK] : []);
+            setConsumables([]);
             const bones = Array(5).fill(0).map(makeBone);
             if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
             setDice(bones);
@@ -2084,9 +2094,23 @@
             setShowMobileStash(false);
         };
 
+        const useConsumable = (idx) => {
+            if (phase !== 'PLAY' || rolling) return;
+            const item = consumables[idx];
+            if (!item) return;
+            setConsumables(prev => prev.filter((_, i) => i !== idx));
+            if (item.id === 'SECOND_WIND') setHands(h => h + 1);
+            if (item.id === 'SMELLING_SALTS') setDiscards(d => d + 2);
+            if (item.id === 'DIRTY_WAD') setGold(g => g + 15);
+            spawnPaperStamp('USED', '#0f766e');
+            AudioSystem.playTone(700, 'triangle', 0.1);
+            setShowMobileStash(false);
+        };
+
         const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
+            const consumablePoolSeed = Object.values(CONSUMABLES);
             const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
             const baseWeight = (item) => {
                 let weight = 0;
@@ -2096,6 +2120,7 @@
                 if (item.rarity === 'common') weight += round <= 3 ? 2 : 1;
                 if (item.rarity === 'rare') weight += round >= 3 ? 2 : 0;
                 if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
+                if (item.type === 'consumable') weight += round <= 4 ? 2 : 1;
                 if (!item.type) weight += 1;
                 return weight;
             };
@@ -2106,11 +2131,13 @@
 
             const facePool = weightedSort(faces);
             const hardwarePool = weightedSort(hardware);
+            const consumablePool = weightedSort(consumablePoolSeed);
             const picks = [];
             if (facePool.length) picks.push(facePool.shift());
             if (hardwarePool.length) picks.push(hardwarePool.shift());
+            if (consumablePool.length && picks.length < 4) picks.push(consumablePool.shift());
 
-            const remainder = weightedSort([...facePool, ...hardwarePool]);
+            const remainder = weightedSort([...facePool, ...hardwarePool, ...consumablePool]);
             while (picks.length < 4 && remainder.length) {
                 const next = remainder.shift();
                 if (picks.some(item => item.id === next.id)) continue;
@@ -2118,7 +2145,7 @@
             }
 
             if (!picks.some(item => item.cost <= gold)) {
-                const immediateFallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= gold && !picks.some(p => p.id === item.id)))[0];
+                const immediateFallback = weightedSort([...faces, ...hardware, ...consumablePoolSeed].filter(item => item.cost <= gold && !picks.some(p => p.id === item.id)))[0];
                 if (immediateFallback) {
                     const replaceIdx = Math.max(0, picks.length - 1);
                     picks[replaceIdx] = immediateFallback;
@@ -2126,7 +2153,7 @@
             }
 
             if (!picks.some(item => item.cost <= gold)) {
-                const fallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= affordabilityCeiling))[0];
+                const fallback = weightedSort([...faces, ...hardware, ...consumablePoolSeed].filter(item => item.cost <= affordabilityCeiling))[0];
                 if (fallback && !picks.some(item => item.id === fallback.id)) {
                     const replaceIdx = Math.max(0, picks.length - 1);
                     picks[replaceIdx] = fallback;
@@ -2134,7 +2161,7 @@
             }
 
             if (round <= PROGRESSION_GUARDRAILS.dangerCapRound) {
-                const safePool = weightedSort([...faces, ...hardware].filter(item => item.rarity !== 'danger' && !picks.some(p => p.id === item.id)));
+                const safePool = weightedSort([...faces, ...hardware, ...consumablePoolSeed].filter(item => item.rarity !== 'danger' && !picks.some(p => p.id === item.id)));
                 const dangerIndices = picks
                     .map((item, idx) => ({ item, idx }))
                     .filter(entry => entry.item.rarity === 'danger')
@@ -2195,7 +2222,10 @@
                     setDebt(d => d + debtSpike);
                     return 0;
                 });
-                if (item.type) {
+                if (item.type === 'consumable') {
+                    setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
+                    setShopItems(prev => prev.filter(i => i.id !== item.id));
+                } else if (item.type) {
                     setSelectedItem(item);
                     setCarvingDie(null);
                     setPhase('CARVING');
@@ -2510,6 +2540,21 @@
                                         })}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onClick={() => handleProgram(p)} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
+                                    <div className="mt-4 border-t border-gray-800 pt-3">
+                                        <div className="font-mono text-[10px] text-emerald-300 tracking-wider mb-2">TACTICAL CONSUMABLES</div>
+                                        {consumables.length === 0 ? (
+                                            <div className="font-mono text-[10px] text-gray-600">No one-shots pocketed.</div>
+                                        ) : (
+                                            <div className="space-y-2 max-h-28 overflow-y-auto pr-1">
+                                                {consumables.map((item, idx) => (
+                                                    <button key={item.instanceId || `${item.id}-${idx}`} onClick={() => useConsumable(idx)} disabled={rolling || phase !== 'PLAY'} className="w-full flex items-center justify-between gap-2 border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-left hover:bg-emerald-900/30 disabled:opacity-40">
+                                                        <span className="font-mono text-[10px] text-emerald-200 truncate">{item.icon || '🧪'} {item.name}</span>
+                                                        <span className="font-mono text-[10px] text-emerald-400">USE</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
@@ -2526,12 +2571,13 @@
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
                                 <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
-                                    const isFace = !!item.type;
+                                    const isConsumable = item.type === 'consumable';
+                                    const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
                                     return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''}`}>
                                         <div className="price-tag">${item.cost}</div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : item.desc}</div><RiskBadges item={item} /></div></div>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-2xl">{item.icon || '🧪'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} /></div></div>
                                         <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
                                     </div>;
                                 })}</div>
