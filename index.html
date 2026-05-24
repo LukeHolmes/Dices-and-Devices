@@ -1126,6 +1126,73 @@
         );
     };
 
+    const HelpOverlay = ({ onClose }) => (
+        <div className="absolute inset-0 z-[760] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
+            <div className="w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-5 md:p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4 border-b border-gray-700 pb-3">
+                    <h3 className="font-marker text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
+                    <button onClick={onClose} className="font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 text-sm font-mono">
+                    <div className="bg-black/50 border border-gray-700 rounded p-3">
+                        <div className="text-[#0df] mb-2 tracking-wider">CORE LOOP</div>
+                        <ul className="space-y-1 text-gray-200">
+                            <li>1. Roll bones.</li>
+                            <li>2. Keep what you want.</li>
+                            <li>3. Pick one payout row.</li>
+                            <li>4. Beat quota before plays run out.</li>
+                        </ul>
+                    </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3">
+                        <div className="text-[#0df] mb-2 tracking-wider">PILLS + STASH</div>
+                        <ul className="space-y-1 text-gray-200">
+                            <li>Pills reroll one slot immediately.</li>
+                            <li>Stash fills from strong hands.</li>
+                            <li>SNIFF rerolls one random free slot.</li>
+                            <li>BRIBE, FIX GAME, and LAUNDER spend stash.</li>
+                        </ul>
+                    </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
+                        <div className="text-[#0df] mb-2 tracking-wider">SURVIVAL NOTES</div>
+                        <p className="text-gray-200 leading-relaxed">
+                            Keep an eye on active boss rules, debt pressure, and hardware synergies.
+                            Cash keeps you flexible in the shop; stash keeps you alive mid-round.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const SystemMenu = ({
+        onResume,
+        onRestart,
+        onOpenHelp,
+        onExitToLineup,
+        muted,
+        onToggleMuted,
+        reducedMotion,
+        onToggleReducedMotion
+    }) => (
+        <div className="absolute inset-0 z-[750] bg-black/70 p-4 md:p-8 flex items-start justify-end" onClick={onResume}>
+            <div className="w-full max-w-sm bg-[#1a1a1a] border-4 border-[#0df] rounded-xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="font-mono text-xs tracking-[.3em] text-[#0df] mb-3">SYSTEM MENU</div>
+                <div className="space-y-2 font-mono text-sm">
+                    <button onClick={onResume} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">RESUME HUSTLE</button>
+                    <button onClick={onRestart} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">RESTART RUN</button>
+                    <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
+                    <button onClick={onToggleMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
+                        AUDIO: {muted ? 'MUTED' : 'LIVE'}
+                    </button>
+                    <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
+                        ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
+                    </button>
+                    <button onClick={onExitToLineup} className="w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">EXIT TO LINEUP</button>
+                </div>
+            </div>
+        </div>
+    );
+
     function App() {
         const [phase, setPhase] = useState('LINEUP');
         const [personaIdx, setPersonaIdx] = useState(0);
@@ -1187,6 +1254,8 @@
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
+        const [showSystemMenu, setShowSystemMenu] = useState(false);
+        const [showHelpOverlay, setShowHelpOverlay] = useState(false);
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
         const scoreAnimRef = useRef(0);
@@ -1242,6 +1311,7 @@
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
+        const inRunPhase = ['PLAY', 'SHOP', 'CARVING'].includes(phase);
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
         useEffect(() => {
@@ -1256,6 +1326,26 @@
                 else mediaQuery.removeListener(onChange);
             };
         }, []);
+
+        useEffect(() => {
+            if (inRunPhase) return;
+            setShowSystemMenu(false);
+            setShowHelpOverlay(false);
+        }, [inRunPhase]);
+
+        useEffect(() => {
+            const onKeyDown = (event) => {
+                if (event.key !== 'Escape' || !inRunPhase) return;
+                if (showFirstRunOverlay || bossIntro) return;
+                if (showHelpOverlay) {
+                    setShowHelpOverlay(false);
+                    return;
+                }
+                setShowSystemMenu(open => !open);
+            };
+            window.addEventListener('keydown', onKeyDown);
+            return () => window.removeEventListener('keydown', onKeyDown);
+        }, [inRunPhase, showFirstRunOverlay, showHelpOverlay, bossIntro]);
 
         useEffect(() => {
             AudioSystem.init();
@@ -1981,6 +2071,11 @@
                 <div className="ambient-grain"></div>
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
+                {inRunPhase && (
+                    <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#ff007f]">
+                        SYSTEM
+                    </button>
+                )}
                 <button onClick={() => setMuted(m => !m)} aria-pressed={muted} title={muted ? 'Unmute audio' : 'Mute audio'} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
                     {muted ? 'UNMUTE' : 'MUTE'}
                 </button>
@@ -1989,6 +2084,31 @@
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
+                {showSystemMenu && inRunPhase && (
+                    <SystemMenu
+                        onResume={() => setShowSystemMenu(false)}
+                        onRestart={() => {
+                            setShowSystemMenu(false);
+                            setShowHelpOverlay(false);
+                            startRun();
+                        }}
+                        onOpenHelp={() => {
+                            setShowSystemMenu(false);
+                            setShowHelpOverlay(true);
+                        }}
+                        onExitToLineup={() => {
+                            persistRun('PLAY');
+                            setShowSystemMenu(false);
+                            setShowHelpOverlay(false);
+                            setPhase('LINEUP');
+                        }}
+                        muted={muted}
+                        onToggleMuted={() => setMuted(m => !m)}
+                        reducedMotion={reducedMotion}
+                        onToggleReducedMotion={() => setReducedMotion(v => !v)}
+                    />
+                )}
+                {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
                 {hitFlashActive && <div className="absolute inset-0 z-[340] bg-white/20 pointer-events-none" />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {hitCallouts.map(item => <div key={item.id} className="fly-score text-[#ff007f]" style={{ left: '50%', top: '34%', fontSize: '2.5rem', letterSpacing: '.08em' }}>{item.label}</div>)}
