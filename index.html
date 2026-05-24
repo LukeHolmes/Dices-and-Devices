@@ -701,10 +701,10 @@
     const getAvailableCategories = (meta) => {
         const runs = meta?.totalRuns || 0;
         if (runs < ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','C'];
+            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FH','C'];
         }
         if (runs < ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
-            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FH','C'];
+            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FOK','FH','C'];
         }
         return Object.keys(CATEGORIES);
     };
@@ -1285,7 +1285,7 @@
             prevTotalRunsRef.current = curr;
             if (prev === curr) return;
             if (prev < ONBOARDING_THRESHOLDS.BASIC_COMBOS && curr >= ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-                setUnlockNotification('Triad & Full Ride payouts now available!');
+                setUnlockNotification('Quad payouts now available!');
             } else if (prev < ONBOARDING_THRESHOLDS.RARE_FACES && curr >= ONBOARDING_THRESHOLDS.RARE_FACES) {
                 setUnlockNotification('Rare contraband now appears in shops!');
             } else if (prev < ONBOARDING_THRESHOLDS.ALL_CATEGORIES && curr >= ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
