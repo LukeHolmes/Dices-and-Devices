@@ -2209,6 +2209,16 @@
             AudioSystem.playTone(520, 'square', 0.1);
         };
 
+        const payDebtFromCash = (amount) => {
+            if (phase !== 'SHOP' || debt <= 0 || gold <= 0) return;
+            const payment = Math.min(amount, debt, gold);
+            if (payment <= 0) return;
+            setGold(g => g - payment);
+            setDebt(d => Math.max(0, d - payment));
+            spawnPaperStamp('PAID DOWN', '#0f766e');
+            AudioSystem.playTone(420, 'triangle', 0.1);
+        };
+
         const handlePurchase = (item) => {
             if (soldItems.includes(item.id)) return;
             setSoldItems(prev => [...prev, item.id]);
@@ -2607,6 +2617,17 @@
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+                                    <div className="mt-3 border-t border-gray-800 pt-3">
+                                        <div className="font-mono text-[10px] text-red-300 mb-2">DEBT CONTROL</div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-700 text-red-300 font-mono text-[10px] hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                PAY $10
+                                            </button>
+                                            <button onClick={() => payDebtFromCash(Math.max(debt, gold))} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-500 text-red-200 font-mono text-[10px] hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                CLEAR ${Math.min(debt, gold)}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
