@@ -692,6 +692,23 @@
         '-1 Play each round'
     ];
 
+    const STREET_INTEL = {
+        personas: {
+            STREET_RAT: 'Runs light, moves fast, and survives on instinct. Nothing fancy, but every scrap can become leverage.',
+            HUSTLER: 'Knows every back-room table in the borough. Starts rich, burns bright, and pays for it with slower stash momentum.',
+            ENFORCER: 'An ex-collector with cracked knuckles and no patience. Starts rough, no pills, and swings heavy from hand one.',
+            CARD_COUNTER: 'Reads patterns, marks tells, and weaponizes math. Opens with The Black Book but draws bigger heat from the start.'
+        },
+        bosses: {
+            BOUNCER: 'Owns the club doors and skims every take. If you cannot clear his inflated quota, you are out on the curb.',
+            LOAN_SHARK: 'Fronts cash with a smile and collects with interest. Every roll costs tribute, especially when you already owe.',
+            JUNKIE: 'A chaos broker who salts the bones. Sixes twist into ones when he is around, shredding high-roll plans.',
+            CROOKED_COP: 'Badge on paper, extortionist in practice. Hardware goes dark while the cop watches your table.',
+            INFORMANT: 'Knows every stash route in the district. Locks your stash progress until you force your way through.',
+            THE_RAID: 'Not a person but a citywide crackdown. Triple pressure, expensive pills, and no room for sloppy hands.'
+        }
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1216,6 +1233,41 @@
         </div>
     );
 
+    const CaseFilesPanel = ({ tab, onChangeTab, onClose }) => (
+        <div className="absolute inset-0 z-[740] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
+            <div className="w-full max-w-4xl bg-[#101010] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-700 pb-3 mb-4">
+                    <div>
+                        <h3 className="font-marker text-3xl text-[#ff007f] italic">CASE FILES</h3>
+                        <div className="font-mono text-xs text-gray-400">Street Intel on operators and heat sources.</div>
+                    </div>
+                    <button onClick={onClose} className="self-start md:self-auto font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
+                </div>
+                <div className="flex gap-2 mb-4">
+                    <button onClick={() => onChangeTab('personas')} className={`px-3 py-2 font-mono text-xs border ${tab === 'personas' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>OPERATORS</button>
+                    <button onClick={() => onChangeTab('bosses')} className={`px-3 py-2 font-mono text-xs border ${tab === 'bosses' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>HEAT BOSSES</button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                    {tab === 'personas' && PERSONAS.map((p) => (
+                        <article key={p.id} className="border border-gray-700 bg-black/40 rounded p-3">
+                            <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
+                            <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
+                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
+                            <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                        </article>
+                    ))}
+                    {tab === 'bosses' && Object.values(BOSSES).map((boss) => (
+                        <article key={boss.id} className="border border-gray-700 bg-black/40 rounded p-3">
+                            <div className={`font-marker text-2xl ${boss.color}`}>{boss.name}</div>
+                            <div className="font-mono text-[11px] text-red-300 mb-2">{boss.desc}</div>
+                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.bosses[boss.id]}</p>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
     function App() {
         const [phase, setPhase] = useState('LINEUP');
         const [personaIdx, setPersonaIdx] = useState(0);
@@ -1280,6 +1332,8 @@
         const [unlockNotification, setUnlockNotification] = useState(null);
         const [showSystemMenu, setShowSystemMenu] = useState(false);
         const [showHelpOverlay, setShowHelpOverlay] = useState(false);
+        const [showLorePanel, setShowLorePanel] = useState(false);
+        const [loreTab, setLoreTab] = useState('personas');
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
         const scoreAnimRef = useRef(0);
@@ -1358,6 +1412,11 @@
         }, [inRunPhase]);
 
         useEffect(() => {
+            if (phase === 'LINEUP' || phase === 'SAFEHOUSE') return;
+            setShowLorePanel(false);
+        }, [phase]);
+
+        useEffect(() => {
             const onKeyDown = (event) => {
                 if (event.key !== 'Escape' || !inRunPhase) return;
                 if (showFirstRunOverlay || bossIntro) return;
@@ -1370,6 +1429,14 @@
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
         }, [inRunPhase, showFirstRunOverlay, showHelpOverlay, bossIntro]);
+
+        useEffect(() => {
+            const onKeyDown = (event) => {
+                if (event.key === 'Escape' && showLorePanel) setShowLorePanel(false);
+            };
+            window.addEventListener('keydown', onKeyDown);
+            return () => window.removeEventListener('keydown', onKeyDown);
+        }, [showLorePanel]);
 
         useEffect(() => {
             AudioSystem.init();
@@ -2116,6 +2183,7 @@
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
                 {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
+                {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
                         onResume={() => setShowSystemMenu(false)}
@@ -2195,6 +2263,7 @@
                         <div className="flex flex-col sm:flex-row gap-3">
                             {hasSavedRun && <button onClick={resumeRun} className="px-8 py-4 bg-[#0df] border-4 border-[#064b52] text-black text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
                             <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-12 py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-8 py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
                             <button onClick={() => setPhase('SAFEHOUSE')} className="px-8 py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
                         </div>
                     </div>
@@ -2225,7 +2294,10 @@
                                 <div><b>Contraband Faces:</b> {meta.unlockedFaceIds.length}/{Object.keys(FACE_DATABASE).length}</div>
                                 <div><b>Hardware:</b> {meta.unlockedHardwareIds.length}/{Object.keys(DEVISES).length}</div>
                             </div>
-                            <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button onClick={() => { setLoreTab('bosses'); setShowLorePanel(true); }} className="px-8 py-3 bg-[#2a0017] text-[#ff9fcf] font-bold font-mono border-2 border-[#7a003d] hover:bg-[#3b0120] transition-colors">STREET INTEL</button>
+                                <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                            </div>
                         </div>
                     </div>
                 )}
