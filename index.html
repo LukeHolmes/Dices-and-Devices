@@ -559,6 +559,30 @@
         { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
     ];
 
+    const ECONOMY_TUNING = {
+        shortageToDebtRatio: 0.75,
+        hustleCashDivisor: 140,
+        hustleCashCap: 4,
+        debtReliefThreshold: 180,
+        debtReliefPerBigHand: 1
+    };
+
+    const BOSS_TUNING = {
+        loanSharkToll: 2,
+        loanSharkDebtToll: 1,
+        debtQuotaPenaltyRatio: 1.5,
+        debtQuotaPenaltyCap: 120,
+        earlyBossRoundCap: 4,
+        earlyBouncerRelief: 0.9,
+        raidQuotaRelief: 0.92,
+        bossPathTargetRelief: 0.93
+    };
+
+    const SHOP_TUNING = {
+        earlyDangerRoundGate: 5,
+        maxAffordableBuffer: 25
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1107,7 +1131,19 @@
             scheduleTimeout(() => setCameraKick(''), kind === 'hard' ? 260 : 200);
         };
 
-        const currentTarget = activeBoss?.applyTarget ? activeBoss.applyTarget(target) : target;
+        const getBossAdjustedTarget = (baseTarget, boss, roundNum) => {
+            if (!boss?.applyTarget) return baseTarget;
+            let adjusted = boss.applyTarget(baseTarget);
+            if (boss.id === 'BOUNCER' && roundNum <= BOSS_TUNING.earlyBossRoundCap) {
+                adjusted = Math.floor(adjusted * BOSS_TUNING.earlyBouncerRelief);
+            }
+            if (boss.id === 'THE_RAID') {
+                adjusted = Math.floor(adjusted * BOSS_TUNING.raidQuotaRelief);
+            }
+            return adjusted;
+        };
+
+        const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
@@ -1514,12 +1550,14 @@
             if (rolling || discards <= 0 || hands <= 0) return;
             const settleMs = 1120;
             let toll = 0;
-            if (activeBoss?.id === 'LOAN_SHARK') toll += 2;
+            if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
             if (toll > 0) {
                 setGold(g => {
                     if (g >= toll) return g - toll;
-                    setDebt(d => d + (toll - g));
+                    const shortage = toll - g;
+                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+                    setDebt(d => d + debtSpike);
                     return 0;
                 });
             }
@@ -1550,7 +1588,9 @@
             if (activeBoss?.id === 'THE_RAID') {
                 setGold(g => {
                     if (g >= 2) return g - 2;
-                    setDebt(d => d + (2 - g));
+                    const shortage = 2 - g;
+                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+                    setDebt(d => d + debtSpike);
                     return 0;
                 });
             }
@@ -1595,6 +1635,11 @@
                 cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
+                const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
+                if (hustleCash > 0) setGold(g => g + hustleCash);
+                if (result.total >= ECONOMY_TUNING.debtReliefThreshold) {
+                    setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
+                }
                 if (activeBoss?.id !== 'INFORMANT') {
                     let gain = Math.min(60, (result.total / currentTarget) * 100 * 2);
                     if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
@@ -1658,8 +1703,45 @@
         const generateShop = () => {
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
-            const pool = [...faces, ...hardware].sort(() => Math.random() - .5);
-            setShopItems(pool.slice(0, 4));
+            const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
+            const baseWeight = (item) => {
+                let weight = 0;
+                if (item.cost <= gold) weight += 4;
+                else if (item.cost <= affordabilityCeiling) weight += 2;
+                else weight -= 1;
+                if (item.rarity === 'common') weight += round <= 3 ? 2 : 1;
+                if (item.rarity === 'rare') weight += round >= 3 ? 2 : 0;
+                if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
+                if (!item.type) weight += 1;
+                return weight;
+            };
+            const weightedSort = (items) => items
+                .map(item => ({ item, weight: baseWeight(item) + (Math.random() * 0.35) }))
+                .sort((a, b) => b.weight - a.weight)
+                .map(entry => entry.item);
+
+            const facePool = weightedSort(faces);
+            const hardwarePool = weightedSort(hardware);
+            const picks = [];
+            if (facePool.length) picks.push(facePool.shift());
+            if (hardwarePool.length) picks.push(hardwarePool.shift());
+
+            const remainder = weightedSort([...facePool, ...hardwarePool]);
+            while (picks.length < 4 && remainder.length) {
+                const next = remainder.shift();
+                if (picks.some(item => item.id === next.id)) continue;
+                picks.push(next);
+            }
+
+            if (!picks.some(item => item.cost <= gold)) {
+                const fallback = weightedSort([...faces, ...hardware].filter(item => item.cost <= affordabilityCeiling))[0];
+                if (fallback && !picks.some(item => item.id === fallback.id)) {
+                    const replaceIdx = Math.max(0, picks.length - 1);
+                    picks[replaceIdx] = fallback;
+                }
+            }
+
+            setShopItems(picks.slice(0, 4));
             if (round === 9) {
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
@@ -1680,7 +1762,9 @@
             scheduleTimeout(() => {
                 setGold(g => {
                     if (g >= item.cost) return g - item.cost;
-                    setDebt(d => d + (item.cost - g));
+                    const shortage = item.cost - g;
+                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+                    setDebt(d => d + debtSpike);
                     return 0;
                 });
                 if (item.type) {
@@ -1724,7 +1808,13 @@
         const handleAdvance = (path) => {
             const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
             let nextTarget = Math.floor(target * path.mod) + 50;
-            if (!hasLedger && debt > 0) nextTarget += debt * 2;
+            if (!hasLedger && debt > 0) {
+                const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
+                nextTarget += debtPenalty;
+            }
+            if (path.boss && round <= BOSS_TUNING.earlyBossRoundCap) {
+                nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
+            }
             setRound(r => r + 1);
             setScore(0);
             setTarget(nextTarget);
