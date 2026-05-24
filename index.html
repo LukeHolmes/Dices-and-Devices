@@ -749,6 +749,49 @@
         }
     };
 
+    const FIXER_LINES = {
+        start: [
+            'Keep it tidy. Quota is watching.',
+            'Play smart. The alley only forgives once.',
+            'No hero plays. Just clean payouts.'
+        ],
+        roll: [
+            'Bones are live. Make it count.',
+            'Read the table before you lock.',
+            'Don\'t chase ghosts unless you mean it.'
+        ],
+        pressure: [
+            'Toll is up. Keep cash in your coat.',
+            'Debt collectors smell weakness.',
+            'You\'re bleeding cash. Close this hand.'
+        ],
+        hit: [
+            'That hand sang. Keep the rhythm.',
+            'Good cut. File the next one clean.',
+            'Sharp work. Build on it.'
+        ],
+        bust: [
+            'Dead hand. Reset your head.',
+            'You forced it. Don\'t do that twice.',
+            'Cold bones. Next hand, cleaner.'
+        ],
+        boss: [
+            'Boss turf ahead. No sloppy lines.',
+            'You\'re on a watched table now.',
+            'Eyes up. This one bites back.'
+        ],
+        gamble: [
+            'Side action time. No tears either way.',
+            'Fifty-fifty. Your call.',
+            'Take the safe cut or flip the street coin.'
+        ]
+    };
+
+    const pickLine = (bucket) => {
+        if (!bucket || bucket.length === 0) return '';
+        return bucket[Math.floor(Math.random() * bucket.length)];
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -1187,8 +1230,8 @@
                 <div className={`bg-black/85 border-2 border-[#0df] rounded-lg px-6 py-4 shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
                     <div className="font-mono text-[10px] text-[#0df] tracking-[.35em] text-center mb-2">SCORE RESOLUTION</div>
                     <div className="font-mono text-sm text-center text-gray-200">
-                        <span className="text-yellow-300">{data.chips}</span> CHIPS × <span className="text-cyan-300">{data.mult.toFixed(2)}x</span>
-                        {data.flowMult > 1 && <> × <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
+                        <span className="text-yellow-300">{data.chips}</span> CHIPS x <span className="text-cyan-300">{data.mult.toFixed(2)}x</span>
+                        {data.flowMult > 1 && <> x <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
                     </div>
                     <div className="font-marker text-4xl text-[#ff007f] text-center mt-1">{data.total}</div>
                 </div>
@@ -1400,6 +1443,8 @@
         const [showHelpOverlay, setShowHelpOverlay] = useState(false);
         const [showLorePanel, setShowLorePanel] = useState(false);
         const [loreTab, setLoreTab] = useState('personas');
+        const [gambleStake, setGambleStake] = useState(0);
+        const [fixerLine, setFixerLine] = useState(pickLine(FIXER_LINES.start));
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
         const scoreAnimRef = useRef(0);
@@ -1455,7 +1500,7 @@
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
-        const inRunPhase = ['PLAY', 'SHOP', 'CARVING'].includes(phase);
+        const inRunPhase = ['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase);
         const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
         const flowMultiplier = getFlowMultiplier(flowStreak);
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
@@ -1566,6 +1611,7 @@
             flowStreak,
             shopItems,
             shopRefreshes,
+            gambleStake,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
             activeBossId: activeBoss?.id || null,
             selectedItem,
@@ -1577,7 +1623,7 @@
         });
 
         const persistRun = (phaseOverride = phase) => {
-            if (runClosed || !['PLAY', 'SHOP', 'CARVING'].includes(phaseOverride)) return;
+            if (runClosed || !['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phaseOverride)) return;
             const snapshot = serializeRun(phaseOverride);
             saveSavedRun(snapshot);
             setHasSavedRun(true);
@@ -1608,6 +1654,7 @@
             setFlowStreak(saved.flowStreak || 0);
             setShopItems((saved.shopItems || []).map(hydrateItem));
             setShopRefreshes(saved.shopRefreshes || 0);
+            setGambleStake(saved.gambleStake || 0);
             setPaths((saved.paths || []).map(hydratePath));
             setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
             setBossIntro(null);
@@ -1625,7 +1672,9 @@
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
+            setGambleStake(0);
             setRunClosed(false);
+            setFixerLine('Back in the game. Pick your spot.');
             setPhase(saved.phase || 'PLAY');
         };
 
@@ -1768,9 +1817,9 @@
         }, [phase, reducedMotion]);
 
         useEffect(() => {
-            if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
+            if (!['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -1801,9 +1850,11 @@
             setBossKick(false);
             setCinematic(null);
             setScoreResolution(null);
+            setGambleStake(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
             setHistory([]);
+            setFixerLine(pickLine(FIXER_LINES.start));
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
@@ -1928,6 +1979,7 @@
             if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
             if (insaneContract) toll += INSANE_CONTRACT_MODIFIERS.extraRollToll;
+            setFixerLine(toll > 0 ? pickLine(FIXER_LINES.pressure) : pickLine(FIXER_LINES.roll));
             if (toll > 0) {
                 setGold(g => {
                     if (g >= toll) return g - toll;
@@ -1987,6 +2039,7 @@
 
         const executePayout = (catId) => {
             const result = calculateScore(catId, dice);
+            let projectedCash = gold;
             setUsedCats(prev => [...prev, catId]);
             setHands(h => h - 1);
             setKept([false,false,false,false,false]);
@@ -1995,6 +2048,7 @@
             setSwapMode(false);
             setSwapIdx(null);
             if (result.valid) {
+                setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
                 setHandLevels(prev => ({
                     ...prev,
@@ -2029,6 +2083,7 @@
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
                 const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
                 if (hustleCash > 0) setGold(g => g + hustleCash);
+                projectedCash = Math.max(0, gold + (result.gDelta || 0) + hustleCash);
                 if (result.total >= ECONOMY_TUNING.debtReliefThreshold) {
                     setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
                 }
@@ -2053,6 +2108,7 @@
                     scheduleTimeout(() => setPowBurst(false), 700);
                 }
             } else {
+                setFixerLine(pickLine(FIXER_LINES.bust));
                 setFlowStreak(0);
                 AudioSystem.playTone(80, 'sawtooth', 0.25);
             }
@@ -2060,6 +2116,8 @@
             if (hands <= 1 && score + gained < currentTarget) {
                 const finalHeat = runStats.totalHeat + gained;
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
+                setGambleStake(0);
+                setFixerLine('Quota missed. Keep your chin down.');
                 awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) });
                 setBustActive(true);
                 triggerCameraKick('hard');
@@ -2069,16 +2127,49 @@
                 if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
+                    setGambleStake(0);
+                    setFixerLine('You cleared the city. Time to disappear.');
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) });
                     AudioSystem.paper();
                     if (!reducedMotion) setCinematic('victory');
                     scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
                     if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
-                    generateShop();
-                    setPhase('SHOP');
+                    const stake = Math.min(40, Math.max(5, Math.floor(projectedCash * 0.3)));
+                    if (projectedCash >= 5) {
+                        setGambleStake(stake);
+                        setFixerLine(pickLine(FIXER_LINES.gamble));
+                        setPhase('GAMBLE');
+                    } else {
+                        generateShop();
+                        setPhase('SHOP');
+                    }
                 }
             }
+        };
+
+        const resolveGamble = (doubleDown) => {
+            if (phase !== 'GAMBLE') return;
+            const stake = gambleStake;
+            if (doubleDown && stake > 0) {
+                const won = Math.random() < 0.5;
+                if (won) {
+                    setGold(g => g + stake);
+                    setFixerLine('Lucky flip. Don\'t get greedy.');
+                    spawnPaperStamp('DOUBLE', '#0f766e');
+                    AudioSystem.playTone(980, 'square', 0.14);
+                } else {
+                    setGold(g => Math.max(0, g - stake));
+                    setFixerLine('Flip went south. Tighten up.');
+                    spawnPaperStamp('BUSTED BET');
+                    AudioSystem.playTone(120, 'sawtooth', 0.18);
+                }
+            } else {
+                setFixerLine('Safe cut taken. Cash survives.');
+            }
+            setGambleStake(0);
+            generateShop();
+            setPhase('SHOP');
         };
 
         const handleProgram = (p) => {
@@ -2102,6 +2193,7 @@
             if (item.id === 'SECOND_WIND') setHands(h => h + 1);
             if (item.id === 'SMELLING_SALTS') setDiscards(d => d + 2);
             if (item.id === 'DIRTY_WAD') setGold(g => g + 15);
+            setFixerLine(`Used ${item.name}. Stay sharp.`);
             spawnPaperStamp('USED', '#0f766e');
             AudioSystem.playTone(700, 'triangle', 0.1);
             setShowMobileStash(false);
@@ -2222,6 +2314,7 @@
         const handlePurchase = (item) => {
             if (soldItems.includes(item.id)) return;
             setSoldItems(prev => [...prev, item.id]);
+            setFixerLine(gold >= item.cost ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
             spawnPaperStamp('SOLD');
             scheduleTimeout(() => {
@@ -2312,11 +2405,14 @@
             setKept([false,false,false,false,false]);
             setActiveBoss(path.boss || null);
             if (path.boss) {
+                setFixerLine(pickLine(FIXER_LINES.boss));
                 setBossIntro(path.boss);
                 if (!reducedMotion) setBossKick(true);
                 triggerCameraKick('hard');
                 AudioSystem.bossSting();
                 if (!reducedMotion) scheduleTimeout(() => setBossKick(false), 280);
+            } else {
+                setFixerLine('Fresh block. Read the room and roll.');
             }
             if (path.reward) setGold(g => g + path.reward);
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
@@ -2475,6 +2571,7 @@
                                     <div className="text-xs uppercase opacity-50">The Fixer</div>
                                     <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
                                     {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
+                                    <div className="mt-1 max-w-[15rem] text-[10px] font-mono text-gray-300 leading-tight">{fixerLine}</div>
                                 </div>
                                 <div className="text-center">
                                     <div className="text-xs opacity-50">STREET HEAT</div>
@@ -2575,6 +2672,24 @@
                     </div>
                 )}
 
+                {phase === 'GAMBLE' && (
+                    <div className="h-full flex items-center justify-center p-4 bg-black/85 z-[320] relative">
+                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl">
+                            <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
+                            <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
+                            <p className="font-mono text-sm text-gray-300 text-center mb-5">
+                                Put <b className="text-yellow-300">${gambleStake}</b> on the line for a 50/50 flip before the next stop.
+                            </p>
+                            <div className="grid sm:grid-cols-2 gap-3">
+                                <button onClick={() => resolveGamble(false)} className="py-3 border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df]">TAKE SAFE CUT</button>
+                                <button onClick={() => resolveGamble(true)} className="py-3 border-2 border-[#ff007f] bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120]">
+                                    FLIP IT (+/- ${gambleStake})
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {phase === 'SHOP' && (
                     <div className="h-full flex items-center justify-center p-3 md:p-12 bg-black/80 backdrop-blur-sm z-[300] relative overflow-y-auto">
                         <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0">
@@ -2594,6 +2709,7 @@
                             </div>
                             <div className="w-full md:w-1/3 bg-[#1a1a1a] border-4 border-gray-900 p-5 rounded-xl shadow-2xl flex flex-col">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
+                                <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
                                     <button onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-2 px-3 border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
