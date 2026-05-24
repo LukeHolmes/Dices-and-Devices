@@ -676,6 +676,22 @@
         maxEarlyDangerOffers: 1
     };
 
+    const SHOP_AGENCY_TUNING = {
+        refreshBaseCost: 10,
+        refreshRoundTax: 2,
+        refreshEscalation: 5,
+        sellRate: 0.6
+    };
+
+    const getShopRefreshCost = (roundNum, refreshCount) => Math.max(
+        6,
+        SHOP_AGENCY_TUNING.refreshBaseCost +
+            ((roundNum - 1) * SHOP_AGENCY_TUNING.refreshRoundTax) +
+            (refreshCount * SHOP_AGENCY_TUNING.refreshEscalation)
+    );
+
+    const getHardwareSellValue = (item) => Math.max(2, Math.floor((item?.cost || 10) * SHOP_AGENCY_TUNING.sellRate));
+
     const INSANE_CONTRACT_MODIFIERS = {
         targetMultiplier: 1.28,
         debtPenaltyMultiplier: 1.35,
@@ -1288,6 +1304,7 @@
         const [hasRolled, setHasRolled] = useState(false);
         const [usedCats, setUsedCats] = useState([]);
         const [shopItems, setShopItems] = useState([]);
+        const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
         const [activeBoss, setActiveBoss] = useState(null);
         const [bossIntro, setBossIntro] = useState(null);
@@ -1390,6 +1407,7 @@
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
         const inRunPhase = ['PLAY', 'SHOP', 'CARVING'].includes(phase);
+        const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
         useEffect(() => {
@@ -1494,6 +1512,7 @@
             hasRolled,
             usedCats,
             shopItems,
+            shopRefreshes,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
             activeBossId: activeBoss?.id || null,
             selectedItem,
@@ -1532,6 +1551,7 @@
             setHasRolled(!!saved.hasRolled);
             setUsedCats(saved.usedCats || []);
             setShopItems((saved.shopItems || []).map(hydrateItem));
+            setShopRefreshes(saved.shopRefreshes || 0);
             setPaths((saved.paths || []).map(hydratePath));
             setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
             setBossIntro(null);
@@ -1693,7 +1713,7 @@
         useEffect(() => {
             if (!['PLAY', 'SHOP', 'CARVING'].includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, shopItems, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, dice, kept, hasRolled, usedCats, shopItems, shopRefreshes, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -1716,6 +1736,7 @@
             setDebt(0);
             setStash(0);
             setUsedCats([]);
+            setShopRefreshes(0);
             setActiveBoss(null);
             setBossIntro(null);
             setBossKick(false);
@@ -1987,7 +2008,7 @@
             setShowMobileStash(false);
         };
 
-        const generateShop = () => {
+        const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
@@ -2051,6 +2072,8 @@
             }
 
             setShopItems(picks.slice(0, 4));
+            if (!preserveRefreshes) setShopRefreshes(0);
+            if (preservePaths) return;
             if (round === 9) {
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
@@ -2061,6 +2084,26 @@
                 }
                 setPaths(next);
             }
+        };
+
+        const refreshShop = () => {
+            if (phase !== 'SHOP') return;
+            const cost = getShopRefreshCost(round, shopRefreshes);
+            if (gold < cost) return;
+            setGold(g => g - cost);
+            setShopRefreshes(count => count + 1);
+            generateShop({ preservePaths: true, preserveRefreshes: true });
+            spawnPaperStamp('REROLLED', '#0f766e');
+            AudioSystem.playTone(950, 'triangle', 0.1);
+        };
+
+        const sellInventoryItem = (item) => {
+            if (phase !== 'SHOP') return;
+            const saleValue = getHardwareSellValue(item);
+            setInventory(prev => prev.filter(entry => entry.id !== item.id));
+            setGold(g => g + saleValue);
+            spawnPaperStamp('FENCED', '#0f766e');
+            AudioSystem.playTone(520, 'square', 0.1);
         };
 
         const handlePurchase = (item) => {
@@ -2413,6 +2456,31 @@
                             </div>
                             <div className="w-full md:w-1/3 bg-[#1a1a1a] border-4 border-gray-900 p-5 rounded-xl shadow-2xl flex flex-col">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
+                                <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
+                                    <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
+                                    <button onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-2 px-3 border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                                        <span>REFRESH STOCK</span>
+                                        <span>${shopRefreshCost}</span>
+                                    </button>
+                                    <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
+                                    <div className="mt-3 border-t border-gray-800 pt-3">
+                                        <div className="font-mono text-[10px] text-gray-400 mb-2">FENCE HARDWARE</div>
+                                        {inventory.length === 0 ? (
+                                            <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
+                                        ) : (
+                                            <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                                                {inventory.map(item => (
+                                                    <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
+                                                        <span className="font-mono text-[10px] text-gray-200 truncate">{item.name}</span>
+                                                        <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-1 font-mono text-[10px] hover:bg-green-900/30">
+                                                            SELL ${getHardwareSellValue(item)}
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                                 {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
                                 <div className="flex flex-col gap-3 flex-1">{paths.map(p => <button key={p.id} onClick={() => handleAdvance(p)} className={`w-full p-4 border-2 rounded text-left hover:bg-white/5 transition-all ${p.color}`}><div className="font-bold text-xl uppercase tracking-wider">{p.name}</div><div className="text-xs opacity-70 mt-1 font-mono">{p.desc}</div>{p.boss && <div className="mt-2 pt-2 border-t border-current text-[10px] font-bold font-mono"><span className="text-white">BOSS:</span> {p.boss.name} - {p.boss.desc}</div>}</button>)}</div>
                             </div>
