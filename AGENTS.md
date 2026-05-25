@@ -27,3 +27,4 @@ There are no linters, test suites, or build steps configured. All code lives in 
 - **Playfield scene:** The dice lane uses `assets/scenes/alley-playfield.png` as a layered background (see `#root-gutterbones .felt-surface` in `index.html`). Replace that file to reskin the alley.
 - **Meta descent scene:** Operator lineup and Safehouse use `assets/scenes/stairwell-descent.png` behind the global grain/vignette (`.meta-stairwell-backdrop`). Replace that file to reskin the descent framing.
 - **Victory escape scene:** The win screen uses `assets/scenes/the-escape.png` as `.victory-escape-backdrop` (full viewport under the ticket card and cash rain).
+- **Shop counting cash:** The Back Alley shop uses `assets/scenes/counting-cash.png` as `.shop-counting-cash-backdrop` behind the shop columns.
