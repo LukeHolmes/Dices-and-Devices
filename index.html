@@ -345,6 +345,8 @@
     #root-gutterbones .sunrise { animation: riseSun 1.2s cubic-bezier(.25,1,.5,1) forwards; }
     #root-gutterbones .signature-path { stroke-dasharray: 240; stroke-dashoffset: 240; animation: writeSig 1s ease-out .2s forwards; }
     #root-gutterbones .pill-burst { position: absolute; width: 16px; height: 16px; border-radius: 999px; border: 1px solid #0df; background: radial-gradient(circle, #fff 15%, #0df 70%); pointer-events: none; animation: pillEject .35s ease-out forwards; z-index: 90; }
+    #root-gutterbones .mechanic-popover { border: 1px solid rgba(0, 221, 255, 0.45); background: rgba(3, 10, 20, 0.94); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5); border-radius: 6px; padding: 9px; }
+    #root-gutterbones .mechanic-popover-list { max-height: 128px; overflow-y: auto; }
     #root-gutterbones .cash-bill.near { animation: cashNear 1.55s linear forwards; }
     #root-gutterbones .cash-bill.mid { animation: cashMid 2.5s linear forwards; }
     #root-gutterbones .cash-bill.far { animation: cashFar 3.9s linear forwards; filter: blur(.5px); }
@@ -1584,6 +1586,7 @@
         const [showDevPanel, setShowDevPanel] = useState(false);
         const [devSmokeResults, setDevSmokeResults] = useState([]);
         const [fixerLine, setFixerLine] = useState(pickLine(FIXER_LINES.start));
+        const [activeMechanicPopup, setActiveMechanicPopup] = useState(null);
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
         const scoreAnimRef = useRef(0);
@@ -1620,6 +1623,7 @@
             requestAnimationFrame(() => setCameraKick(kind));
             scheduleTimeout(() => setCameraKick(''), kind === 'hard' ? 260 : 200);
         };
+        const toggleMechanicPopup = (popupId) => setActiveMechanicPopup(current => (current === popupId ? null : popupId));
 
         const getBossAdjustedTarget = (baseTarget, boss, roundNum) => {
             if (!boss?.applyTarget) return baseTarget;
@@ -1670,6 +1674,9 @@
         useEffect(() => {
             if (phase === 'LINEUP' || phase === 'SAFEHOUSE') return;
             setShowLorePanel(false);
+        }, [phase]);
+        useEffect(() => {
+            if (phase !== 'PLAY') setActiveMechanicPopup(null);
         }, [phase]);
 
         useEffect(() => {
@@ -2184,6 +2191,7 @@
             }
             if (inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled) setGold(g => g + 1);
             setDiscards(d => d - 1);
+            setActiveMechanicPopup(null);
             setDice(prev => {
                 const next = [...prev];
                 next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard', id: Math.random() };
@@ -2371,6 +2379,7 @@
             if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
             if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
             if (p.id === 'LAUNDER') setDebt(0);
+            setActiveMechanicPopup(null);
             setShowMobileStash(false);
         };
 
@@ -2880,7 +2889,28 @@
                                 </div>
                                 <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
-                                    <div><div className="text-[10px] opacity-50">PILLS</div><div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div></div>
+                                    <div className="relative">
+                                        <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
+                                            <span>PILLS</span>
+                                            <button
+                                                onClick={() => toggleMechanicPopup('pills')}
+                                                className="w-4 h-4 rounded-full border border-cyan-500/60 text-cyan-300 text-[10px] leading-none hover:border-cyan-300 hover:text-cyan-100"
+                                                aria-label="Show pills mechanic details"
+                                            >
+                                                ?
+                                            </button>
+                                        </div>
+                                        <div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div>
+                                        {activeMechanicPopup === 'pills' && (
+                                            <div className="mechanic-popover absolute right-0 top-full mt-2 w-60 text-left z-[140]">
+                                                <div className="font-mono text-[10px] text-cyan-200">Tap the 💊 on a bone to reroll that slot instantly.</div>
+                                                <div className="font-mono text-[10px] text-gray-300 mt-2">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
+                                                {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
+                                                    <div className="font-mono text-[10px] text-emerald-300 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
                                 </div>
                             </div>
@@ -2955,7 +2985,31 @@
                             <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} md:static md:col-span-3 md:flex flex-col gap-4`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl">
-                                    <h3 className={`text-center border-b pb-2 font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500 border-yellow-500' : 'text-[#0df] border-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
+                                    <div className={`flex items-center justify-center gap-2 border-b pb-2 ${activeBoss?.id === 'INFORMANT' ? 'border-yellow-500' : 'border-[#0df]'}`}>
+                                        <h3 className={`text-center font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500' : 'text-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
+                                        <button
+                                            onClick={() => toggleMechanicPopup('stash')}
+                                            className="w-4 h-4 rounded-full border border-cyan-500/60 text-cyan-300 text-[10px] leading-none hover:border-cyan-300 hover:text-cyan-100"
+                                            aria-label="Show stash program details"
+                                        >
+                                            ?
+                                        </button>
+                                    </div>
+                                    {activeMechanicPopup === 'stash' && (
+                                        <div className="mechanic-popover mt-3 text-left">
+                                            <div className="font-mono text-[10px] text-cyan-200">Build stash with strong payouts, then spend it on programs.</div>
+                                            <div className="mechanic-popover-list mt-2 space-y-1">
+                                                {PROGRAMS.map(program => (
+                                                    <div key={program.id} className="font-mono text-[10px] text-gray-300">
+                                                        <span className="text-[#0df]">{program.name}</span> ({program.cost}%): {program.desc}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {activeBoss?.id === 'INFORMANT' && (
+                                                <div className="font-mono text-[10px] text-yellow-300 mt-2">INFORMANT active: stash growth and program use are blocked this round.</div>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className={`h-6 bg-black border border-gray-600 rounded overflow-hidden mt-4 p-1 grid grid-cols-10 gap-1 ${activeBoss?.id === 'INFORMANT' ? 'informant-shimmer' : ''}`}>
                                         {Array.from({ length: 10 }, (_, idx) => {
                                             const filled = stash >= (idx + 1) * 10;
