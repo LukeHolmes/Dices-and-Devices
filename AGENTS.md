@@ -22,3 +22,4 @@ There are no linters, test suites, or build steps configured. All code lives in 
 
 - The app requires internet access to load CDN resources (React, Babel, Tailwind, Google Fonts). Without connectivity the page will not render.
 - Opening `index.html` via `file://` may fail in some browsers due to CORS restrictions on CDN scripts; always use an HTTP server.
+- **Persona art:** The Street Rat loads `assets/personas/street-rat.png` from the project root (same as when using `python3 -m http.server`). Add that file locally; see `assets/personas/README.md`.

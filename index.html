@@ -578,7 +578,7 @@
     };
 
     const PERSONAS = [
-        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600' },
+        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
         { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700' },
         { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900' },
         { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 20% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900' }
@@ -1252,6 +1252,49 @@
         </div>
     );
 
+    const PersonaPortrait = ({ persona, variant = 'lineup' }) => {
+        const [failed, setFailed] = useState(false);
+        const src = persona.portraitSrc;
+        const alt = persona.portraitAlt || persona.name || '';
+        if (!src || failed) {
+            if (variant === 'lore') {
+                return <div className={`w-16 h-20 shrink-0 rounded border border-gray-600 ${persona.color}`} aria-hidden />;
+            }
+            if (variant === 'rap') {
+                return <div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`} aria-hidden />;
+            }
+            return <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${persona.color}`} aria-hidden />;
+        }
+        if (variant === 'lore') {
+            return (
+                <img
+                    src={src}
+                    alt={alt}
+                    className="w-16 h-20 shrink-0 rounded border border-gray-600 object-cover object-top bg-[#121113]"
+                    onError={() => setFailed(true)}
+                />
+            );
+        }
+        if (variant === 'rap') {
+            return (
+                <img
+                    src={src}
+                    alt={alt}
+                    className="max-h-[9.25rem] w-auto max-w-[min(100%,11rem)] object-contain object-bottom"
+                    onError={() => setFailed(true)}
+                />
+            );
+        }
+        return (
+            <img
+                src={src}
+                alt={alt}
+                className="max-h-[7.75rem] w-auto max-w-[92%] object-contain object-bottom drop-shadow-[0_5px_14px_rgba(0,0,0,0.9)]"
+                onError={() => setFailed(true)}
+            />
+        );
+    };
+
     const ONBOARDING_STEPS = [
         { title: 'ROLL YOUR BONES', desc: 'Hit ROLL to throw all 5 bones onto the felt.', icon: '🎲' },
         { title: 'KEEP THE GOOD ONES', desc: 'Click any bone to lock it. Unrolled bones stay safe.', icon: '🔒' },
@@ -1571,10 +1614,15 @@
                 <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
                     {tab === 'personas' && PERSONAS.map((p) => (
                         <article key={p.id} className="border border-gray-700 bg-black/40 rounded p-3">
-                            <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
-                            <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
-                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
-                            <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                            <div className={p.portraitSrc ? 'flex gap-3' : ''}>
+                                {p.portraitSrc ? <PersonaPortrait persona={p} variant="lore" /> : null}
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
+                                    <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
+                                    <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
+                                    <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                                </div>
+                            </div>
                         </article>
                     ))}
                     {tab === 'bosses' && Object.values(BOSSES).map((boss) => (
@@ -3085,7 +3133,7 @@
                                 return (
                                     <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); spawnPaperStamp('SELECTED', '#be185d'); }} className={`paper-card paper-lift relative bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`} style={{ '--paper-rot': personaIdx === i ? '0deg' : (i % 2 ? '2deg' : '-2deg') }}>
                                         <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
-                                            <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${p.color}`}></div>
+                                            <PersonaPortrait persona={p} variant="lineup" />
                                             <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
                                         </div>
                                         <div className="font-marker text-2xl">{p.name}</div>
@@ -3435,7 +3483,7 @@
                     <div className="h-full flex items-center justify-center z-[500] relative bg-black/80 overflow-y-auto p-4">
                         <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
-                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`}></div></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
+                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                             <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
                             {showIncarceratedStamp && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards]">INCARCERATED</div>}
                             <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
