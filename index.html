@@ -304,8 +304,17 @@
     #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
     #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
     #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
-    #root-gutterbones .felt-surface { background: radial-gradient(circle at 50% 48%, #7a2731 0%, #6e1d24 45%, #4a1016 100%); }
-    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.14) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .8; }
+    #root-gutterbones .felt-surface {
+      background-color: #120608;
+      background-image:
+        radial-gradient(circle at 50% 44%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.45) 48%, rgba(0, 0, 0, 0.72) 100%),
+        radial-gradient(circle at 50% 48%, rgba(122, 39, 49, 0.42) 0%, rgba(78, 22, 30, 0.55) 45%, rgba(35, 10, 16, 0.75) 100%),
+        url('assets/scenes/alley-playfield.png');
+      background-size: cover, cover, cover;
+      background-position: center, center, center 52%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .75; }
     #root-gutterbones .felt-surface::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
     #root-gutterbones .felt-roll-pulse::after { animation: feltRollPulse .65s ease-out forwards; }
     #root-gutterbones .felt-edge-ring { position: absolute; inset: 0; pointer-events: none; z-index: 12; border-radius: inherit; border: 1px solid rgba(255,184,125,.14); box-shadow: inset 0 0 22px rgba(255,63,111,.15), inset 0 -24px 40px rgba(0,0,0,.2); animation: feltEdgeBreath 5.8s ease-in-out infinite; }
