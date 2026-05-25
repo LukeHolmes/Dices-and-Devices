@@ -22,4 +22,5 @@ There are no linters, test suites, or build steps configured. All code lives in 
 
 - The app requires internet access to load CDN resources (React, Babel, Tailwind, Google Fonts). Without connectivity the page will not render.
 - Opening `index.html` via `file://` may fail in some browsers due to CORS restrictions on CDN scripts; always use an HTTP server.
-- **Persona art:** Operator portraits load from `assets/personas/` (`street-rat.png`, `hustler.png`, etc.) when you serve the project root. See `assets/personas/README.md`.
+- **Persona art:** Operator portraits load from `assets/personas/` (`street-rat.png`, `hustler.png`, etc.) when you serve the project root. See `assets/README.md`.
+- **Boss art:** Optional per-boss PNGs under `assets/bosses/` (e.g. `informant.png` for THE INFORMANT). Same serving rule as personas.

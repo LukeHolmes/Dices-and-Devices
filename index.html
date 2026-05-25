@@ -649,7 +649,7 @@
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500' },
         JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]' },
         CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware disabled', color: 'text-blue-400' },
-        INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400' },
+        INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
         THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota 300%. Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 3) }
     };
 
@@ -1224,6 +1224,7 @@
                 {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>}
                 {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>}
                 <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+                    <BossPortrait boss={boss} variant="intro" />
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
                     <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && <span className="opacity-60">_</span>}</h2>
                     <p className={`font-mono text-gray-300 transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
@@ -1292,6 +1293,41 @@
                 className="max-h-[7.75rem] w-auto max-w-[92%] object-contain object-bottom drop-shadow-[0_5px_14px_rgba(0,0,0,0.9)]"
                 onError={() => setFailed(true)}
             />
+        );
+    };
+
+    const BOSS_PORTRAIT_FALLBACK = {
+        BOUNCER: 'bg-gray-800 border border-gray-600',
+        LOAN_SHARK: 'bg-red-950 border border-red-700',
+        JUNKIE: 'bg-[#2a0017] border border-[#ff007f]/40',
+        CROOKED_COP: 'bg-slate-900 border border-blue-800',
+        INFORMANT: 'bg-[#2a2408] border border-yellow-700/50',
+        THE_RAID: 'bg-red-950 border border-red-600'
+    };
+
+    const BossPortrait = ({ boss, variant = 'intro' }) => {
+        const [failed, setFailed] = useState(false);
+        if (!boss) return null;
+        const src = boss.portraitSrc;
+        const alt = boss.portraitAlt || boss.name || '';
+        const fb = BOSS_PORTRAIT_FALLBACK[boss.id] || 'bg-gray-900 border border-gray-600';
+        if (!src || failed) {
+            if (variant === 'lore') return <div className={`w-16 h-20 shrink-0 rounded ${fb}`} aria-hidden />;
+            if (variant === 'banner') return <div className={`h-9 w-9 shrink-0 rounded ${fb}`} aria-hidden />;
+            if (variant === 'intel') return <div className={`w-11 h-11 shrink-0 rounded ${fb}`} aria-hidden />;
+            return <div className={`mx-auto mb-4 w-28 h-36 max-w-[42%] rounded border-2 border-red-800/60 ${fb}`} aria-hidden />;
+        }
+        if (variant === 'lore') {
+            return <img src={src} alt={alt} className="w-16 h-20 shrink-0 rounded border border-gray-600 object-cover object-top bg-[#121113]" onError={() => setFailed(true)} />;
+        }
+        if (variant === 'banner') {
+            return <img src={src} alt="" className="h-9 w-9 shrink-0 rounded object-cover object-top border border-red-800/50 bg-black" onError={() => setFailed(true)} />;
+        }
+        if (variant === 'intel') {
+            return <img src={src} alt="" className="w-11 h-11 shrink-0 rounded object-cover object-top border border-gray-600 bg-black" onError={() => setFailed(true)} />;
+        }
+        return (
+            <img src={src} alt={alt} className="mx-auto mb-4 max-h-44 w-auto max-w-[min(48vw,12rem)] object-contain object-top drop-shadow-[0_6px_16px_rgba(0,0,0,0.75)]" onError={() => setFailed(true)} />
         );
     };
 
@@ -1476,8 +1512,13 @@
                 )}
                 {hasBoss && (
                     <div className="mb-2">
-                        <div className="text-red-400">BOSS: {boss.name}</div>
-                        <div className="text-red-200/80">{boss.desc}</div>
+                        <div className="flex gap-2 items-start">
+                            <BossPortrait boss={boss} variant="intel" />
+                            <div className="min-w-0">
+                                <div className="text-red-400">BOSS: {boss.name}</div>
+                                <div className="text-red-200/80">{boss.desc}</div>
+                            </div>
+                        </div>
                     </div>
                 )}
                 {hasInventory && (
@@ -1516,7 +1557,17 @@
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
                 <div className="text-gray-400 mb-1">BOSS EFFECT</div>
-                {boss ? <div className="text-red-300">{boss.name}: {boss.desc}</div> : <div className="text-gray-500">None active.</div>}
+                {boss ? (
+                    <div className="flex gap-2 items-start">
+                        <BossPortrait boss={boss} variant="intel" />
+                        <div className="min-w-0">
+                            <div className={`font-bold leading-tight ${boss.color}`}>{boss.name}</div>
+                            <div className="text-gray-300 leading-snug">{boss.desc}</div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-gray-500">None active.</div>
+                )}
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
                 <div className="text-gray-400 mb-1">POCKETED ONE-SHOTS</div>
@@ -1627,9 +1678,14 @@
                     ))}
                     {tab === 'bosses' && Object.values(BOSSES).map((boss) => (
                         <article key={boss.id} className="border border-gray-700 bg-black/40 rounded p-3">
-                            <div className={`font-marker text-2xl ${boss.color}`}>{boss.name}</div>
-                            <div className="font-mono text-[11px] text-red-300 mb-2">{boss.desc}</div>
-                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.bosses[boss.id]}</p>
+                            <div className="flex gap-3">
+                                <BossPortrait boss={boss} variant="lore" />
+                                <div className="min-w-0 flex-1">
+                                    <div className={`font-marker text-2xl ${boss.color}`}>{boss.name}</div>
+                                    <div className="font-mono text-[11px] text-gray-300 mb-2">{boss.desc}</div>
+                                    <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.bosses[boss.id]}</p>
+                                </div>
+                            </div>
                         </article>
                     ))}
                     {tab === 'archive' && (
@@ -3208,7 +3264,7 @@
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
                         <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} />
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
-                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
+                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug">{activeBoss.desc}</span></div></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
                                 <div className="hidden sm:block">
                                     <div className="text-xs uppercase opacity-50">The Fixer</div>
