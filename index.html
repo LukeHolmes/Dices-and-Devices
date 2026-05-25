@@ -337,6 +337,18 @@
       background-position: center 42%;
       background-repeat: no-repeat;
     }
+    #root-gutterbones .rap-busted-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 4, 12, 0.82) 0%, rgba(10, 8, 18, 0.55) 42%, rgba(4, 3, 10, 0.85) 100%),
+        url('assets/scenes/busted.png');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
     #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
     #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
     #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
@@ -3583,8 +3595,9 @@
                 )}
 
                 {phase === 'RAP_SHEET' && (
-                    <div className="h-full flex items-center justify-center z-[500] relative bg-black/80 overflow-y-auto p-4">
-                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                    <div className="h-full flex items-center justify-center z-[500] relative overflow-y-auto overflow-x-hidden p-4">
+                        <div className="rap-busted-backdrop" aria-hidden></div>
+                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                             <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
