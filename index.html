@@ -614,9 +614,9 @@
     ];
 
     const CONSUMABLES = {
-        SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 28, rarity: 'common', type: 'consumable', icon: '🫀' },
-        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 22, rarity: 'common', type: 'consumable', icon: '💨' },
-        DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$15 cash on use.', cost: 25, rarity: 'rare', type: 'consumable', icon: '💵' }
+        SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 32, rarity: 'common', type: 'consumable', icon: '🫀' },
+        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 24, rarity: 'common', type: 'consumable', icon: '💨' },
+        DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$12 cash on use.', cost: 30, rarity: 'rare', type: 'consumable', icon: '💵' }
     };
 
     const BOSSES = {
@@ -631,8 +631,8 @@
     const PATHS = [
         { id: 'LOCAL', name: 'BACK ALLEY', desc: 'Standard hustle.', mod: 1, color: 'border-gray-600 text-gray-400' },
         { id: 'PAWN', name: 'PAWN SHOP', desc: '+20% quota, +$15.', mod: 1.2, reward: 15, color: 'border-[#c78b16] text-[#c78b16]' },
-        { id: 'HIDEOUT', name: 'SAFEHOUSE CUT', desc: '+12% quota, +1 Play, -1 Pill.', mod: 1.12, handDelta: 1, discardDelta: -1, color: 'border-cyan-500 text-cyan-400' },
-        { id: 'SMUGGLE', name: 'SMUGGLE RUN', desc: '+30% quota, +$20, random one-shot.', mod: 1.3, reward: 20, grantRandomConsumable: true, color: 'border-emerald-500 text-emerald-400' },
+        { id: 'HIDEOUT', name: 'SAFEHOUSE CUT', desc: '+9% quota, +1 Play, -1 Pill.', mod: 1.09, handDelta: 1, discardDelta: -1, color: 'border-cyan-500 text-cyan-400' },
+        { id: 'SMUGGLE', name: 'SMUGGLE RUN', desc: '+25% quota, +$15, random one-shot.', mod: 1.25, reward: 15, grantRandomConsumable: true, color: 'border-emerald-500 text-emerald-400' },
         { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
     ];
 
@@ -719,8 +719,21 @@
     const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
 
     const WAGER_TUNING = {
-        baseThreshold: 95,
-        roundThresholdStep: 5
+        baseThreshold: 110,
+        roundThresholdStep: 8,
+        payoutMultiplier: 1.75,
+        stakeOptions: [5, 10, 15]
+    };
+
+    const GAMBLE_TUNING = {
+        minRound: 3,
+        stakeRate: 0.22,
+        stakeCap: 30,
+        minStake: 5
+    };
+
+    const DEBT_PAYDOWN_TUNING = {
+        reliefMultiplier: 1.1
     };
 
     const INSANE_CONTRACT_MODIFIERS = {
@@ -799,6 +812,18 @@
         return bucket[Math.floor(Math.random() * bucket.length)];
     };
 
+    const describeRouteEffects = (path) => {
+        if (!path) return [];
+        const notes = [];
+        if (path.mod && path.mod !== 1) notes.push(`Quota x${path.mod.toFixed(2)}`);
+        if (path.reward) notes.push(`+$${path.reward} cash`);
+        if (path.fillStash) notes.push('Stash to 100');
+        if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play`);
+        if (path.discardDelta) notes.push(`${path.discardDelta > 0 ? '+' : ''}${path.discardDelta} pill`);
+        if (path.grantRandomConsumable) notes.push('Random one-shot');
+        return notes;
+    };
+
     const CATEGORIES = {
         ONES: { id: 'ONES', name: 'Aces' },
         TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -842,6 +867,9 @@
         run: 'gutterbones1977:run:v1',
         meta: 'gutterbones1977:meta:v1'
     };
+
+    const RUN_SAVE_VERSION = 2;
+    const RUN_PHASES = ['PLAY', 'SHOP', 'CARVING', 'GAMBLE'];
 
     const DEFAULT_META_STATE = {
         version: 1,
@@ -892,8 +920,31 @@
 
     const loadMetaState = () => mergeMetaState(loadJson(STORAGE_KEYS.meta) || {});
     const saveMetaState = (meta) => saveJson(STORAGE_KEYS.meta, meta);
-    const loadSavedRun = () => loadJson(STORAGE_KEYS.run);
-    const saveSavedRun = (run) => saveJson(STORAGE_KEYS.run, run);
+
+    const normalizeSavedRun = (raw) => {
+        if (!raw || typeof raw !== 'object') return null;
+        const normalized = { ...raw };
+        normalized.version = RUN_SAVE_VERSION;
+        if (!RUN_PHASES.includes(normalized.phase)) normalized.phase = 'PLAY';
+        if (!Array.isArray(normalized.consumables)) normalized.consumables = [];
+        if (!normalized.handLevels || typeof normalized.handLevels !== 'object' || Array.isArray(normalized.handLevels)) normalized.handLevels = {};
+        if (typeof normalized.flowStreak !== 'number' || Number.isNaN(normalized.flowStreak)) normalized.flowStreak = 0;
+        if (typeof normalized.gambleStake !== 'number' || Number.isNaN(normalized.gambleStake)) normalized.gambleStake = 0;
+        if (!normalized.activeWager || typeof normalized.activeWager !== 'object') normalized.activeWager = null;
+        else {
+            normalized.activeWager = {
+                stake: Math.max(0, Math.floor(Number(normalized.activeWager.stake) || 0)),
+                threshold: Math.max(WAGER_TUNING.baseThreshold, Math.floor(Number(normalized.activeWager.threshold) || WAGER_TUNING.baseThreshold))
+            };
+            if (!normalized.activeWager.stake) normalized.activeWager = null;
+        }
+        if (!normalized.currentRouteEffect || typeof normalized.currentRouteEffect !== 'object') normalized.currentRouteEffect = null;
+        else if (!Array.isArray(normalized.currentRouteEffect.effects)) normalized.currentRouteEffect = { ...normalized.currentRouteEffect, effects: [] };
+        return normalized;
+    };
+
+    const loadSavedRun = () => normalizeSavedRun(loadJson(STORAGE_KEYS.run));
+    const saveSavedRun = (run) => saveJson(STORAGE_KEYS.run, { ...run, version: RUN_SAVE_VERSION });
     const clearSavedRun = () => {
         try { window.localStorage?.removeItem(STORAGE_KEYS.run); } catch (err) { console.warn('Unable to clear saved run', err); }
     };
@@ -1277,6 +1328,43 @@
         );
     };
 
+    const RunIntelPanel = ({ flowMultiplier, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [] }) => (
+        <div className="absolute top-24 right-4 z-[80] w-72 bg-black/80 border border-gray-700 rounded p-3 shadow-2xl text-[10px] font-mono">
+            <div className="text-[#0df] tracking-[.25em] mb-2">RUN INTEL</div>
+            <div className="space-y-1 text-gray-300">
+                <div className="flex justify-between"><span>FLOW</span><span className={flowMultiplier > 1 ? 'text-[#0df]' : 'text-gray-500'}>x{flowMultiplier.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>WAGER</span><span className={activeWager ? 'text-emerald-300' : 'text-gray-500'}>{activeWager ? `$${activeWager.stake} @ ${activeWager.threshold}+` : 'NONE'}</span></div>
+                <div className="flex justify-between"><span>CONTRACT</span><span className={insaneContract ? 'text-[#ff9fcf]' : 'text-gray-500'}>{insaneContract ? 'INSANE' : 'STANDARD'}</span></div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-800">
+                <div className="text-gray-400 mb-1">ROUTE MODIFIERS</div>
+                {routeEffect ? (
+                    <div>
+                        <div className="text-[#d6b85c]">{routeEffect.name}</div>
+                        <div className="text-gray-300">{routeEffect.effects?.join(' • ') || 'No special modifiers'}</div>
+                    </div>
+                ) : (
+                    <div className="text-gray-500">No active route modifier.</div>
+                )}
+                {upcomingPaths.length > 0 && (
+                    <div className="mt-1 text-gray-500">Upcoming: {upcomingPaths.slice(0, 3).map(p => p.name).join(', ')}</div>
+                )}
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-800">
+                <div className="text-gray-400 mb-1">BOSS EFFECT</div>
+                {boss ? <div className="text-red-300">{boss.name}: {boss.desc}</div> : <div className="text-gray-500">None active.</div>}
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-800">
+                <div className="text-gray-400 mb-1">POCKETED ONE-SHOTS</div>
+                {consumables.length ? (
+                    <div className="text-emerald-300">{consumables.map(item => item.name).join(', ')}</div>
+                ) : (
+                    <div className="text-gray-500">None</div>
+                )}
+            </div>
+        </div>
+    );
+
     const HelpOverlay = ({ onClose }) => (
         <div className="absolute inset-0 z-[760] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
             <div className="w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-5 md:p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1444,6 +1532,7 @@
         const [shopItems, setShopItems] = useState([]);
         const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
+        const [currentRouteEffect, setCurrentRouteEffect] = useState(null);
         const [activeBoss, setActiveBoss] = useState(null);
         const [bossIntro, setBossIntro] = useState(null);
         const [selectedItem, setSelectedItem] = useState(null);
@@ -1492,6 +1581,8 @@
         const [loreTab, setLoreTab] = useState('personas');
         const [gambleStake, setGambleStake] = useState(0);
         const [activeWager, setActiveWager] = useState(null);
+        const [showDevPanel, setShowDevPanel] = useState(false);
+        const [devSmokeResults, setDevSmokeResults] = useState([]);
         const [fixerLine, setFixerLine] = useState(pickLine(FIXER_LINES.start));
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
@@ -1548,11 +1639,12 @@
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
-        const inRunPhase = ['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase);
+        const inRunPhase = RUN_PHASES.includes(phase);
         const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
         const flowMultiplier = getFlowMultiplier(flowStreak);
         const wagerThreshold = WAGER_TUNING.baseThreshold + Math.max(0, round - 1) * WAGER_TUNING.roundThresholdStep;
         const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
+        const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
         useEffect(() => {
@@ -1572,6 +1664,7 @@
             if (inRunPhase) return;
             setShowSystemMenu(false);
             setShowHelpOverlay(false);
+            setShowDevPanel(false);
         }, [inRunPhase]);
 
         useEffect(() => {
@@ -1600,6 +1693,16 @@
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
         }, [showLorePanel]);
+
+        useEffect(() => {
+            const onKeyDown = (event) => {
+                if (!event.ctrlKey || !event.shiftKey || event.key.toLowerCase() !== 'd') return;
+                event.preventDefault();
+                setShowDevPanel(open => !open);
+            };
+            window.addEventListener('keydown', onKeyDown);
+            return () => window.removeEventListener('keydown', onKeyDown);
+        }, []);
 
         useEffect(() => {
             AudioSystem.init();
@@ -1638,7 +1741,7 @@
         }, [meta.totalRuns]);
 
         const serializeRun = (phaseOverride = phase) => ({
-            version: 1,
+            version: RUN_SAVE_VERSION,
             phase: phaseOverride,
             personaId: persona.id,
             personaIdx,
@@ -1663,6 +1766,7 @@
             shopRefreshes,
             gambleStake,
             activeWager,
+            currentRouteEffect,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
             activeBossId: activeBoss?.id || null,
             selectedItem,
@@ -1674,7 +1778,7 @@
         });
 
         const persistRun = (phaseOverride = phase) => {
-            if (runClosed || !['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phaseOverride)) return;
+            if (runClosed || !RUN_PHASES.includes(phaseOverride)) return;
             const snapshot = serializeRun(phaseOverride);
             saveSavedRun(snapshot);
             setHasSavedRun(true);
@@ -1707,6 +1811,7 @@
             setShopRefreshes(saved.shopRefreshes || 0);
             setGambleStake(saved.gambleStake || 0);
             setActiveWager(saved.activeWager || null);
+            setCurrentRouteEffect(saved.currentRouteEffect || null);
             setPaths((saved.paths || []).map(hydratePath));
             setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
             setBossIntro(null);
@@ -1870,9 +1975,9 @@
         }, [phase, reducedMotion]);
 
         useEffect(() => {
-            if (!['PLAY', 'SHOP', 'CARVING', 'GAMBLE'].includes(phase)) return;
+            if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -1898,6 +2003,7 @@
             setHandLevels({});
             setFlowStreak(0);
             setShopRefreshes(0);
+            setCurrentRouteEffect(null);
             setActiveBoss(null);
             setBossIntro(null);
             setBossKick(false);
@@ -2171,7 +2277,7 @@
             if (wager) {
                 const wagerWon = result.valid && result.total >= wager.threshold;
                 if (wagerWon) {
-                    const wagerPayout = wager.stake * 2;
+                    const wagerPayout = Math.max(wager.stake + 1, Math.round(wager.stake * WAGER_TUNING.payoutMultiplier));
                     wagerNet = wagerPayout;
                     setGold(g => g + wagerPayout);
                     projectedCash += wagerPayout;
@@ -2207,8 +2313,9 @@
                     scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
                     if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1400);
                 } else {
-                    const stake = Math.min(40, Math.max(5, Math.floor(projectedCash * 0.3)));
-                    if (projectedCash >= 5) {
+                    const stake = Math.min(GAMBLE_TUNING.stakeCap, Math.max(GAMBLE_TUNING.minStake, Math.floor(projectedCash * GAMBLE_TUNING.stakeRate)));
+                    const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
+                    if (allowGamble) {
                         setGambleStake(stake);
                         setFixerLine(pickLine(FIXER_LINES.gamble));
                         setPhase('GAMBLE');
@@ -2274,7 +2381,7 @@
             setConsumables(prev => prev.filter((_, i) => i !== idx));
             if (item.id === 'SECOND_WIND') setHands(h => h + 1);
             if (item.id === 'SMELLING_SALTS') setDiscards(d => d + 2);
-            if (item.id === 'DIRTY_WAD') setGold(g => g + 15);
+            if (item.id === 'DIRTY_WAD') setGold(g => g + 12);
             setFixerLine(`Used ${item.name}. Stay sharp.`);
             spawnPaperStamp('USED', '#0f766e');
             AudioSystem.playTone(700, 'triangle', 0.1);
@@ -2285,6 +2392,7 @@
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES);
+            const consumableOfferChance = round <= 3 ? 0.65 : round <= 6 ? 0.45 : 0.3;
             const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
             const baseWeight = (item) => {
                 let weight = 0;
@@ -2294,7 +2402,7 @@
                 if (item.rarity === 'common') weight += round <= 3 ? 2 : 1;
                 if (item.rarity === 'rare') weight += round >= 3 ? 2 : 0;
                 if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
-                if (item.type === 'consumable') weight += round <= 4 ? 2 : 1;
+                if (item.type === 'consumable') weight += round <= 4 ? 1 : 0;
                 if (!item.type) weight += 1;
                 return weight;
             };
@@ -2309,7 +2417,7 @@
             const picks = [];
             if (facePool.length) picks.push(facePool.shift());
             if (hardwarePool.length) picks.push(hardwarePool.shift());
-            if (consumablePool.length && picks.length < 4) picks.push(consumablePool.shift());
+            if (consumablePool.length && picks.length < 4 && Math.random() < consumableOfferChance) picks.push(consumablePool.shift());
 
             const remainder = weightedSort([...facePool, ...hardwarePool, ...consumablePool]);
             while (picks.length < 4 && remainder.length) {
@@ -2386,10 +2494,11 @@
 
         const payDebtFromCash = (amount) => {
             if (phase !== 'SHOP' || debt <= 0 || gold <= 0) return;
-            const payment = Math.min(amount, debt, gold);
+            const payment = Math.min(amount, gold);
             if (payment <= 0) return;
+            const debtRelief = Math.min(debt, Math.max(1, Math.floor(payment * DEBT_PAYDOWN_TUNING.reliefMultiplier)));
             setGold(g => g - payment);
-            setDebt(d => Math.max(0, d - payment));
+            setDebt(d => Math.max(0, d - debtRelief));
             spawnPaperStamp('PAID DOWN', '#0f766e');
             AudioSystem.playTone(420, 'triangle', 0.1);
         };
@@ -2489,6 +2598,7 @@
             setFlowStreak(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
+            setCurrentRouteEffect({ name: path.name, effects: describeRouteEffects(path) });
             setActiveBoss(path.boss || null);
             if (path.boss) {
                 setFixerLine(pickLine(FIXER_LINES.boss));
@@ -2512,6 +2622,41 @@
             }
             setRunClosed(false);
             setPhase('PLAY');
+        };
+
+        const grantRandomConsumable = () => {
+            const pool = Object.values(CONSUMABLES);
+            const drop = pool[Math.floor(Math.random() * pool.length)];
+            if (!drop) return;
+            setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
+            setFixerLine(`DEV: granted ${drop.name}.`);
+        };
+
+        const forceBoss = (bossId) => {
+            const boss = bossById(bossId);
+            if (!boss) return;
+            setActiveBoss(boss);
+            setBossIntro(boss);
+            setFixerLine(`DEV: forced boss ${boss.name}.`);
+        };
+
+        const runDevSmokeChecks = () => {
+            const checks = [
+                { id: 'flow-baseline', label: 'Flow baseline is x1.00', pass: getFlowMultiplier(0) === 1 },
+                { id: 'wager-options', label: 'Wager options valid', pass: Array.isArray(WAGER_TUNING.stakeOptions) && WAGER_TUNING.stakeOptions.length >= 2 },
+                { id: 'consumables-catalog', label: 'Consumables have valid costs', pass: Object.values(CONSUMABLES).every(item => Number.isFinite(item.cost) && item.cost > 0) },
+                { id: 'routes-variants', label: 'Route variants available', pass: PATHS.some(path => path.id === 'HIDEOUT') && PATHS.some(path => path.id === 'SMUGGLE') },
+                {
+                    id: 'save-shape',
+                    label: 'Run snapshot includes critical fields',
+                    pass: (() => {
+                        const snap = serializeRun(phase);
+                        return ['activeWager', 'consumables', 'flowStreak', 'handLevels', 'gambleStake'].every(key => key in snap);
+                    })()
+                }
+            ];
+            setDevSmokeResults(checks);
+            setFixerLine(checks.every(check => check.pass) ? 'DEV smoke checks passed.' : 'DEV smoke checks found failures.');
         };
 
         return (
@@ -2560,6 +2705,67 @@
                     />
                 )}
                 {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
+                {inRunPhase && (
+                    <RunIntelPanel
+                        flowMultiplier={flowMultiplier}
+                        activeWager={activeWager}
+                        insaneContract={insaneContract}
+                        routeEffect={currentRouteEffect}
+                        boss={activeBoss}
+                        consumables={consumables}
+                        upcomingPaths={phase === 'SHOP' ? paths : []}
+                    />
+                )}
+                {showDevPanel && inRunPhase && (
+                    <div className="absolute bottom-4 right-4 z-[820] w-80 bg-black/95 border-2 border-fuchsia-500 rounded p-3 shadow-2xl text-[10px] font-mono">
+                        <div className="flex justify-between items-center mb-2">
+                            <div className="text-fuchsia-300 tracking-[.25em]">DEV QA PANEL</div>
+                            <button onClick={() => setShowDevPanel(false)} className="text-gray-400 hover:text-white">CLOSE</button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                            <button onClick={() => setGold(g => g + 10)} className="border border-gray-700 px-1 py-1 text-emerald-300 hover:bg-emerald-900/30">+$10 CASH</button>
+                            <button onClick={() => setDebt(d => d + 5)} className="border border-gray-700 px-1 py-1 text-red-300 hover:bg-red-900/30">+5 DEBT</button>
+                            <button onClick={() => setScore(s => s + 100)} className="border border-gray-700 px-1 py-1 text-cyan-300 hover:bg-cyan-900/30">+100 HEAT</button>
+                            <button onClick={() => setDebt(0)} className="border border-gray-700 px-1 py-1 text-red-200 hover:bg-red-900/30">CLEAR DEBT</button>
+                            <button onClick={grantRandomConsumable} className="border border-gray-700 px-1 py-1 text-emerald-200 hover:bg-emerald-900/30">GRANT ONE-SHOT</button>
+                            <button onClick={() => generateShop({ preservePaths: phase === 'SHOP', preserveRefreshes: true })} className="border border-gray-700 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">REROLL SHOP</button>
+                        </div>
+                        <div className="border-t border-gray-800 pt-2 mt-1">
+                            <div className="text-gray-400 mb-1">FORCE BOSS</div>
+                            <div className="flex flex-wrap gap-1">
+                                {Object.values(BOSSES).filter(boss => boss.id !== 'THE_RAID').map((boss) => (
+                                    <button key={boss.id} onClick={() => forceBoss(boss.id)} className="border border-gray-700 px-1 py-1 text-[9px] text-red-300 hover:bg-red-900/30">
+                                        {boss.name.replace('THE ', '')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {phase === 'SHOP' && (
+                            <div className="border-t border-gray-800 pt-2 mt-2">
+                                <div className="text-gray-400 mb-1">FORCE ROUTE ADVANCE</div>
+                                <div className="flex flex-wrap gap-1">
+                                    {paths.map((path) => (
+                                        <button key={path.id} onClick={() => handleAdvance(path)} className="border border-gray-700 px-1 py-1 text-[9px] text-yellow-300 hover:bg-yellow-900/30">
+                                            {path.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="border-t border-gray-800 pt-2 mt-2">
+                            <button onClick={runDevSmokeChecks} className="w-full border border-fuchsia-700 px-2 py-1 text-fuchsia-300 hover:bg-fuchsia-900/30">RUN DEV SMOKE CHECKS</button>
+                            {devSmokeResults.length > 0 && (
+                                <div className="mt-2 space-y-1 max-h-28 overflow-y-auto">
+                                    {devSmokeResults.map((check) => (
+                                        <div key={check.id} className={`border px-2 py-1 ${check.pass ? 'border-emerald-700 text-emerald-300' : 'border-red-700 text-red-300'}`}>
+                                            {check.pass ? 'PASS' : 'FAIL'} - {check.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
                 {hitFlashActive && <div className="absolute inset-0 z-[340] bg-white/20 pointer-events-none" />}
                 {flyingScores.map(item => <div key={item.id} className="fly-score" style={{ left: item.x, top: item.y }}>+{item.value}</div>)}
                 {hitCallouts.map(item => <div key={item.id} className="fly-score text-[#ff007f]" style={{ left: '50%', top: '34%', fontSize: '2.5rem', letterSpacing: '.08em' }}>{item.label}</div>)}
@@ -2685,7 +2891,7 @@
                                         : `SIDE BET: choose stake before first roll (${wagerThreshold}+ heat target)`}
                                 </div>
                                 <div className="flex gap-2">
-                                    {[5, 10, 20].map((stake) => (
+                                    {WAGER_TUNING.stakeOptions.map((stake) => (
                                         <button
                                             key={stake}
                                             onClick={() => placeSideWager(stake)}
@@ -2851,10 +3057,10 @@
                                         <div className="font-mono text-[10px] text-red-300 mb-2">DEBT CONTROL</div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-700 text-red-300 font-mono text-[10px] hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
-                                                PAY $10
+                                                PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
                                             </button>
-                                            <button onClick={() => payDebtFromCash(Math.max(debt, gold))} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-500 text-red-200 font-mono text-[10px] hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
-                                                CLEAR ${Math.min(debt, gold)}
+                                            <button onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-500 text-red-200 font-mono text-[10px] hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                CLEAR ${debtClearCashNeeded}
                                             </button>
                                         </div>
                                     </div>
