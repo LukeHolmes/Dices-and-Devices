@@ -1,9 +1,12 @@
 # Persona portraits
 
-Place **The Street Rat** portrait here as:
+PNG portraits (served from the project root, e.g. `python3 -m http.server`):
 
-- **`street-rat.png`** (preferred): head-and-shoulders, ~3:4 aspect, per `docs/art-direction.md` (grindhouse comic, `#121113` background or transparent).
+| File | Persona |
+|------|---------|
+| `street-rat.png` | The Street Rat |
+| `hustler.png` | The Hustler |
 
-The game loads it from the site root as `assets/personas/street-rat.png` (same folder as `index.html` when you serve the project root).
+Recommended: ~3:4 head-and-shoulders, grindhouse comic style per `docs/art-direction.md`. Widescreen duo art should be **split into two files** (one mug per operator).
 
-If the file is missing or fails to load, the UI falls back to the gray silhouette.
+If a file is missing or fails to load, the UI shows the colored silhouette fallback.
