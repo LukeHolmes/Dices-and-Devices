@@ -1322,6 +1322,86 @@
         );
     };
 
+    const ScoreBreakdownOverlay = ({ result, reducedMotion, onDismiss }) => {
+        if (!result) return null;
+        const stepTone = (type) => {
+            if (type === 'base') return 'border-[#d6b85c] text-[#f9e7b0]';
+            if (type === 'multiplier') return 'border-cyan-400/40 text-cyan-200';
+            if (type === 'modifier') return 'border-emerald-500/35 text-emerald-200';
+            if (type === 'penalty') return 'border-red-500/40 text-red-200';
+            return 'border-gray-600/40 text-gray-200';
+        };
+        const impactText = (impact) => {
+            if (typeof impact === 'number') {
+                if (impact > 0) return `+${impact}`;
+                return String(impact);
+            }
+            return impact;
+        };
+        return (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(92vw,32rem)]">
+                <button
+                    type="button"
+                    onClick={onDismiss}
+                    className={`pointer-events-auto w-full bg-black/93 border-2 border-[#ff007f] rounded-lg px-4 py-3 text-left shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div>
+                            <div className="font-mono text-[10px] tracking-[.32em] text-[#ff9fcf]">SCORE EXPLANATION</div>
+                            <div className="font-mono text-xs text-gray-300">{result.categoryName || 'HAND'} • tap to dismiss</div>
+                        </div>
+                        <div className="font-marker text-3xl text-[#ff007f] leading-none">{result.total}</div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1 mb-2 font-mono text-[10px]">
+                        <div className="border border-yellow-600/40 bg-yellow-900/20 rounded px-2 py-1 text-yellow-200">CHIPS <span className="block text-base leading-none">{result.chips}</span></div>
+                        <div className="border border-cyan-600/40 bg-cyan-900/20 rounded px-2 py-1 text-cyan-200">MULT <span className="block text-base leading-none">{result.mult.toFixed(2)}x</span></div>
+                        <div className="border border-fuchsia-600/40 bg-fuchsia-900/20 rounded px-2 py-1 text-fuchsia-200">FLOW <span className="block text-base leading-none">{result.flowMult.toFixed(2)}x</span></div>
+                        <div className="border border-[#ff007f]/45 bg-[#ff007f]/15 rounded px-2 py-1 text-[#ff9fcf]">TOTAL <span className="block text-base leading-none">{result.total}</span></div>
+                    </div>
+                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                        {(result.explanationSteps || []).map((step, idx) => (
+                            <div key={`${step.label}-${idx}`} className={`border rounded px-2 py-1 text-[11px] font-mono bg-black/65 ${stepTone(step.type)}`}>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="tracking-wide">{step.label}</span>
+                                    <span className="font-bold">{impactText(step.impact)}</span>
+                                </div>
+                                <div className="opacity-80">{step.value}</div>
+                            </div>
+                        ))}
+                    </div>
+                </button>
+            </div>
+        );
+    };
+
+    const LossExplanationOverlay = ({ data, reducedMotion }) => {
+        if (!data) return null;
+        return (
+            <div className="absolute left-1/2 bottom-5 -translate-x-1/2 z-[590] pointer-events-none w-[min(94vw,40rem)]">
+                <div className={`bg-black/92 border-2 border-red-600 rounded-xl p-4 shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+                    <div className="font-marker text-3xl md:text-4xl text-red-400 text-center mb-1">YOU LOST BECAUSE...</div>
+                    <div className="font-mono text-center text-red-200 text-sm mb-3">{data.primaryReason}</div>
+                    {data.contributors?.length > 0 && (
+                        <div className="mb-3">
+                            <div className="font-mono text-[10px] tracking-[.28em] text-red-300 mb-1">CONTRIBUTORS</div>
+                            <ul className="space-y-1 text-xs font-mono text-gray-200 list-disc pl-4">
+                                {data.contributors.slice(0, 3).map((item, idx) => <li key={`${item}-${idx}`}>{item}</li>)}
+                            </ul>
+                        </div>
+                    )}
+                    {data.tips?.length > 0 && (
+                        <div>
+                            <div className="font-mono text-[10px] tracking-[.28em] text-[#0df] mb-1">TIP</div>
+                            <ul className="space-y-1 text-xs font-mono text-cyan-200 list-disc pl-4">
+                                {data.tips.slice(0, 2).map((tip, idx) => <li key={`${tip}-${idx}`}>{tip}</li>)}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const MechanicPopup = ({ hint, onDone }) => {
         useEffect(() => {
             const id = setTimeout(onDone, 2800);
@@ -1617,6 +1697,8 @@
         const [unlockNotification, setUnlockNotification] = useState(null);
         const [mechanicPopup, setMechanicPopup] = useState(null);
         const [scoreResolution, setScoreResolution] = useState(null);
+        const [scoreBreakdown, setScoreBreakdown] = useState(null);
+        const [lossExplanation, setLossExplanation] = useState(null);
         const [showSystemMenu, setShowSystemMenu] = useState(false);
         const [showHelpOverlay, setShowHelpOverlay] = useState(false);
         const [showLorePanel, setShowLorePanel] = useState(false);
@@ -1887,6 +1969,8 @@
             setFlyingScores([]);
             setCinematic(null);
             setScoreResolution(null);
+            setScoreBreakdown(null);
+            setLossExplanation(null);
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
@@ -1960,6 +2044,15 @@
             const rows = triggers.slice(0, reducedMotion ? 1 : 4).map((t, i) => ({ id: `${t.name}-${i}-${Math.random()}`, label: `${t.name} ${t.value}`, delay: i * 80 }));
             setTriggerCascade(rows);
             scheduleTimeout(() => setTriggerCascade([]), 950);
+        };
+
+        const registerDebtSpike = (shortage, source = 'shortage') => {
+            const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
+            setDebt(d => d + debtSpike);
+            const sourceLabel = source.toUpperCase();
+            spawnHitCallout(`+DEBT (${sourceLabel})`);
+            cascadeTriggers([{ name: 'DEBT', value: `+${debtSpike} ${sourceLabel}` }]);
+            return debtSpike;
         };
 
         useEffect(() => {
@@ -2070,6 +2163,8 @@
             setBossKick(false);
             setCinematic(null);
             setScoreResolution(null);
+            setScoreBreakdown(null);
+            setLossExplanation(null);
             setGambleStake(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
@@ -2117,6 +2212,12 @@
             const handLevel = handLevels[catId] || HAND_MASTERY_TUNING.baseLevel;
             const flowMult = getFlowMultiplier(flowStreak);
             let chips = 0, mult = 1, valid = false, gDelta = 0, triggers = [];
+            const explanationSteps = [];
+            let hardwareTriggerCount = 0;
+            const categoryName = CATEGORIES[catId]?.name || catId;
+            const pushStep = (type, label, value, impact) => {
+                explanationSteps.push({ type, label, value, impact });
+            };
             switch(catId) {
                 case 'ONES': valid = true; chips = ((counts[1] || 0) + wilds) * 1; break;
                 case 'TWOS': valid = true; chips = ((counts[2] || 0) + wilds) * 2; break;
@@ -2142,55 +2243,152 @@
                 case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
                 case 'C': valid = true; chips = sum; break;
             }
-            if (!valid) return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [] };
+            if (!valid) {
+                pushStep('system', 'INVALID PAYOUT', `${categoryName} did not match this hand.`, 0);
+                return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName };
+            }
+            pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
+            pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
             const masteryBonus = getHandMasteryBonus(handLevel);
             if (masteryBonus > 0) {
                 chips += masteryBonus;
                 triggers.push({ name: 'MASTERY', value: `+${masteryBonus}` });
+                pushStep('modifier', 'HAND MASTERY', `+${masteryBonus} chips`, masteryBonus);
             }
             resolved.forEach((d, i) => {
                 if (destroyed.has(i)) return;
                 const face = d.faceId;
-                if (face === 'MULT_FACE') { mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); }
-                if (face === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); }
-                if (face === 'BLOOD_6') { chips += 20; gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); }
-                if (face === 'SHIV_FACE') { chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); }
-                if (face === 'WIREBAG_FACE') { mult -= 1; gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); }
-                if (face === 'GHOST_FACE') { mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); }
+                if (face === 'MULT_FACE') { mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); pushStep('multiplier', 'FACE: +MULT', '+1x multiplier', '+1x'); }
+                if (face === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); pushStep('modifier', 'FACE: GOLD', '+$2 cash', '+$2'); }
+                if (face === 'BLOOD_6') { chips += 20; gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); pushStep('modifier', 'FACE: BLOOD 6', '+20 chips, -$1', '+20 / -$1'); }
+                if (face === 'SHIV_FACE') { chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', 'FACE: SHIV', '+40 chips', 40); }
+                if (face === 'WIREBAG_FACE') { mult -= 1; gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); pushStep('penalty', 'FACE: WIREBAG', '-1x, +$4', '-1x / +$4'); }
+                if (face === 'GHOST_FACE') { mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); pushStep('multiplier', 'FACE: GHOST', '+2x multiplier', '+2x'); }
             });
+            const unclampedMult = mult;
             mult = Math.max(0.5, mult);
+            if (mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${mult.toFixed(2)}`);
             if (!hardwareDisabled) {
                 inventory.forEach(item => {
                     if (item.id === 'CENTERPIECE') {
                         const center = resolved[2];
                         if (center && !destroyed.has(2)) {
-                            if (typeof center.value === 'number') chips += center.value;
-                            if (center.faceId === 'MULT_FACE') mult += 1;
-                            if (center.faceId === 'GHOST_FACE') mult += 2;
+                            let centerChips = 0;
+                            let centerMult = 0;
+                            if (typeof center.value === 'number') {
+                                chips += center.value;
+                                centerChips += center.value;
+                            }
+                            if (center.faceId === 'MULT_FACE') { mult += 1; centerMult += 1; }
+                            if (center.faceId === 'GHOST_FACE') { mult += 2; centerMult += 2; }
                             triggers.push({ name: 'CENTER', value: 'slot 3' });
+                            hardwareTriggerCount += 1;
+                            pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
                         }
                     }
                     if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
-                        chips += 30; triggers.push({ name: 'BOOKENDS', value: '+30' });
+                        chips += 30;
+                        triggers.push({ name: 'BOOKENDS', value: '+30' });
+                        hardwareTriggerCount += 1;
+                        pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
                     }
                     if (item.id === 'ENGINE') {
                         const anchor = resolved[0].value;
                         if (typeof anchor === 'number' && !destroyed.has(0)) {
                             const bonus = Math.min(4, resolved.slice(1).filter((d, idx) => !destroyed.has(idx + 1) && typeof d.value === 'number' && d.value > anchor).length);
-                            if (bonus) { mult += bonus; triggers.push({ name: 'ENGINE', value: `+${bonus}x` }); }
+                            if (bonus) {
+                                mult += bonus;
+                                triggers.push({ name: 'ENGINE', value: `+${bonus}x` });
+                                hardwareTriggerCount += 1;
+                                pushStep('multiplier', 'HARDWARE: ENGINE', `+${bonus}x multiplier`, `+${bonus}x`);
+                            }
                         }
                     }
-                    if (item.id === 'LOADED_DIE' && catId === 'TOK') { chips += 10; triggers.push({ name: 'LOADED', value: '+10' }); }
-                    if (item.id === 'BLOOD_PACT') { mult *= 3; triggers.push({ name: 'PACT', value: 'x3' }); }
-                    if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) { mult += 3; triggers.push({ name: 'KNUCKLES', value: '+3x' }); }
+                    if (item.id === 'LOADED_DIE' && catId === 'TOK') {
+                        chips += 10;
+                        triggers.push({ name: 'LOADED', value: '+10' });
+                        hardwareTriggerCount += 1;
+                        pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
+                    }
+                    if (item.id === 'BLOOD_PACT') {
+                        mult *= 3;
+                        triggers.push({ name: 'PACT', value: 'x3' });
+                        hardwareTriggerCount += 1;
+                        pushStep('multiplier', 'HARDWARE: BLOOD PACT', 'Tripled multiplier', 'x3');
+                    }
+                    if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) {
+                        mult += 3;
+                        triggers.push({ name: 'KNUCKLES', value: '+3x' });
+                        hardwareTriggerCount += 1;
+                        pushStep('multiplier', 'HARDWARE: BRASS KNUCKLES', '+3x on low faces', '+3x');
+                    }
                     if (item.id === 'CROWBAR') {
                         const count = Math.min(5, resolved.filter((d,i) => !destroyed.has(i) && (d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE')).length);
-                        if (count) { mult += count; triggers.push({ name: 'CROWBAR', value: `+${count}x` }); }
+                        if (count) {
+                            mult += count;
+                            triggers.push({ name: 'CROWBAR', value: `+${count}x` });
+                            hardwareTriggerCount += 1;
+                            pushStep('multiplier', 'HARDWARE: CROWBAR', `+${count}x from blood/destructive faces`, `+${count}x`);
+                        }
                     }
                 });
+            } else if (inventory.length > 0) {
+                pushStep('penalty', `BOSS: ${activeBoss?.name || 'CROOKED COP'}`, 'Hardware triggers disabled this hand', 'NO HARDWARE');
             }
             if (flowMult > 1) triggers.push({ name: 'FLOW', value: `x${flowMult.toFixed(2)}` });
-            return { valid: true, chips, mult, total: Math.floor(chips * mult * flowMult), flowMult, gDelta, triggers };
+            pushStep('multiplier', 'FLOW STREAK', `x${flowMult.toFixed(2)} flow multiplier`, `x${flowMult.toFixed(2)}`);
+            const total = Math.floor(chips * mult * flowMult);
+            pushStep('system', 'FINAL FORMULA', `${chips} × ${mult.toFixed(2)} × ${flowMult.toFixed(2)}`, total);
+            return { valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName };
+        };
+
+        const analyzeRunFailure = ({ score, target, debt, hands, history, attempts = 0, roundNumber = round, boss = activeBoss, flowValue = flowStreak }) => {
+            const shortage = Math.max(0, target - score);
+            const contributors = [];
+            const tips = [];
+            let primaryReason = shortage > 0
+                ? `Missed quota by ${shortage} (${score}/${target}).`
+                : 'Plays ran out before the run stabilized.';
+
+            if (shortage > 0) contributors.push(`Final tally landed at ${score}/${target}.`);
+
+            const hasLedger = inventory.some(item => item.id === 'SHADY_LEDGER');
+            if (debt > 0) {
+                const debtPenalty = !hasLedger && roundNumber >= EARLY_GAME_TUNING.debtPenaltyStartsRound
+                    ? Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio))
+                    : 0;
+                if (debtPenalty > 0) contributors.push(`Debt pressure raised quota pacing by about +${debtPenalty}.`);
+                else contributors.push(`Debt remained active at $${debt}.`);
+                tips.push('Pay down debt in shop before chasing high-risk lines.');
+            }
+
+            if (boss) {
+                contributors.push(`${boss.name} effect: ${boss.desc}.`);
+                tips.push(`Play around ${boss.name.toUpperCase()} before committing your final hand.`);
+            }
+
+            const roundHistory = history.filter(entry => entry.round === roundNumber);
+            const validHands = roundHistory.length;
+            const invalidHands = Math.max(0, attempts - validHands);
+            if (invalidHands >= 2) {
+                contributors.push(`${invalidHands} low-value/invalid payouts consumed your plays.`);
+                tips.push('Open with reliable categories to avoid dead hands.');
+            }
+
+            const bestRoundHit = roundHistory.reduce((best, entry) => Math.max(best, entry.total || 0), 0);
+            if (bestRoundHit < Math.max(40, Math.floor(target * 0.32))) contributors.push('No high-value hand landed this round.');
+            if (flowValue <= 1) contributors.push('Flow multiplier never climbed above x1.00.');
+            if (hardwareDisabled && inventory.length > 0) contributors.push('Hardware was suppressed by CROOKED COP.');
+
+            if (tips.length === 0) tips.push('Build around Triad/Quad early, then spike with multipliers.');
+            if (shortage >= Math.max(30, Math.floor(target * 0.2))) tips.unshift('Prioritize one 120+ payout line before your last play.');
+            if (hands <= 1 && score < target) primaryReason = `Out of plays with ${target - score} heat still needed.`;
+
+            return {
+                primaryReason,
+                contributors: contributors.slice(0, 3),
+                tips: tips.slice(0, 2)
+            };
         };
 
         const rollBones = () => {
@@ -2200,13 +2398,13 @@
             if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
             if (insaneContract) toll += INSANE_CONTRACT_MODIFIERS.extraRollToll;
+            if (activeBoss?.id === 'LOAN_SHARK') spawnHitCallout('BOSS: LOAN SHARK TOLL');
             setFixerLine(toll > 0 ? pickLine(FIXER_LINES.pressure) : pickLine(FIXER_LINES.roll));
             if (toll > 0) {
                 setGold(g => {
                     if (g >= toll) return g - toll;
                     const shortage = toll - g;
-                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
-                    setDebt(d => d + debtSpike);
+                    registerDebtSpike(shortage, 'shortage');
                     return 0;
                 });
             }
@@ -2236,11 +2434,11 @@
             showMechanicPopup('PILL');
             if (discards <= 0 || rolling) return;
             if (activeBoss?.id === 'THE_RAID') {
+                spawnHitCallout('BOSS: RAID PILL TOLL');
                 setGold(g => {
                     if (g >= 2) return g - 2;
                     const shortage = 2 - g;
-                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
-                    setDebt(d => d + debtSpike);
+                    registerDebtSpike(shortage, 'pill toll');
                     return 0;
                 });
             }
@@ -2272,6 +2470,17 @@
             setHasRolled(false);
             setSwapMode(false);
             setSwapIdx(null);
+            const breakdownPayload = {
+                id: Math.random(),
+                categoryName: result.categoryName || CATEGORIES[catId]?.name || catId,
+                chips: result.chips || 0,
+                mult: result.mult || 0,
+                flowMult: result.flowMult || 1,
+                total: result.total || 0,
+                explanationSteps: result.explanationSteps || []
+            };
+            setScoreBreakdown(breakdownPayload);
+            scheduleTimeout(() => setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current)), reducedMotion ? 1400 : 2200);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
@@ -2303,6 +2512,7 @@
                 spawnFlying(result.total);
                 if (result.total >= 400) spawnHitCallout('MONSTER HIT');
                 else if (result.total >= 250) spawnHitCallout('BIG HIT');
+                if (result.hardwareTriggerCount > 0) spawnHitCallout(`HARDWARE x${result.hardwareTriggerCount}`);
                 cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
@@ -2318,6 +2528,8 @@
                     if (persona.id === 'HUSTLER') gain *= 0.5;
                     if (insaneContract) gain *= INSANE_CONTRACT_MODIFIERS.stashGainMultiplier;
                     setStash(s => Math.min(100, s + gain));
+                } else {
+                    spawnHitCallout('BOSS: STASH FROZEN');
                 }
                 setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
                 spawnPaperStamp('FILED');
@@ -2356,6 +2568,21 @@
             const gained = result.valid ? result.total : 0;
             if (hands <= 1 && score + gained < currentTarget) {
                 const finalHeat = runStats.totalHeat + gained;
+                const projectedFlow = result.valid ? Math.min(FLOW_TUNING.maxStreak, flowStreak + 1) : 0;
+                const analysis = analyzeRunFailure({
+                    score: score + gained,
+                    target: currentTarget,
+                    debt,
+                    hands: hands - 1,
+                    history: result.valid ? [...history, { round, total: result.total }] : history,
+                    attempts: usedCats.length + 1,
+                    roundNumber: round,
+                    boss: activeBoss,
+                    flowValue: projectedFlow
+                });
+                const lossPayload = { id: Math.random(), ...analysis };
+                setLossExplanation(lossPayload);
+                scheduleTimeout(() => setLossExplanation(current => (current?.id === lossPayload.id ? null : current)), reducedMotion ? 2600 : 4200);
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 setGambleStake(0);
                 setFixerLine('Quota missed. Keep your chin down.');
@@ -2368,6 +2595,7 @@
                 if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1850);
             } else if (hands <= 1) {
                 if (round >= 10) {
+                    setLossExplanation(null);
                     setGambleStake(0);
                     setFixerLine('You cleared the city. Time to disappear.');
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) + wagerNet });
@@ -2578,8 +2806,7 @@
                 setGold(g => {
                     if (g >= item.cost) return g - item.cost;
                     const shortage = item.cost - g;
-                    const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
-                    setDebt(d => d + debtSpike);
+                    registerDebtSpike(shortage, 'shop loan');
                     return 0;
                 });
                 if (item.type === 'consumable') {
@@ -2745,6 +2972,8 @@
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
                 {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
                 {scoreResolution && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
+                {scoreBreakdown && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={() => setScoreBreakdown(null)} />}
+                {lossExplanation && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
