@@ -26,3 +26,4 @@ There are no linters, test suites, or build steps configured. All code lives in 
 - **Boss art:** Optional per-boss PNGs under `assets/bosses/` (e.g. `informant.png`, `loan-shark.png`, `junkie.png`, `the-raid.png`). Same serving rule as personas.
 - **Playfield scene:** The dice lane uses `assets/scenes/alley-playfield.png` as a layered background (see `#root-gutterbones .felt-surface` in `index.html`). Replace that file to reskin the alley.
 - **Meta descent scene:** Operator lineup and Safehouse use `assets/scenes/stairwell-descent.png` behind the global grain/vignette (`.meta-stairwell-backdrop`). Replace that file to reskin the descent framing.
+- **Victory escape scene:** The win screen uses `assets/scenes/the-escape.png` as `.victory-escape-backdrop` (full viewport under the ticket card and cash rain).
