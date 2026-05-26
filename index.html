@@ -349,6 +349,42 @@
       background-position: center 36%;
       background-repeat: no-repeat;
     }
+    #root-gutterbones .gamble-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(8, 2, 6, 0.88) 0%, rgba(18, 4, 12, 0.55) 45%, rgba(6, 1, 4, 0.9) 100%),
+        url('assets/scenes/gamble-double-or-nothing.png');
+      background-size: cover;
+      background-position: center 40%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .carving-mod-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 2, 2, 0.88) 0%, rgba(14, 6, 4, 0.55) 42%, rgba(4, 1, 1, 0.9) 100%),
+        url('assets/scenes/the-mod-bench.png');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .boss-intro-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(4, 2, 8, 0.82) 0%, rgba(12, 4, 8, 0.65) 50%, rgba(2, 1, 6, 0.88) 100%),
+        url('assets/scenes/boss-turf-pressure.png');
+      background-size: cover;
+      background-position: center 42%;
+      background-repeat: no-repeat;
+    }
     #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
     #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
     #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
@@ -1277,10 +1313,12 @@
             THE_RAID: 'Sirens drown out the alley.'
         };
         return (
-            <div className="absolute inset-0 z-[250] bg-black/80 flex items-center justify-center">
-                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>}
-                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>}
-                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+            <div className="absolute inset-0 z-[250] flex items-center justify-center overflow-hidden">
+                <div className="boss-intro-backdrop" aria-hidden></div>
+                <div className="absolute inset-0 bg-black/55 pointer-events-none z-[1]"></div>
+                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top z-[2]"></div>}
+                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom z-[2]"></div>}
+                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden z-[3]" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
                     <BossPortrait boss={boss} variant="intro" />
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
                     <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && <span className="opacity-60">_</span>}</h2>
@@ -3494,8 +3532,9 @@
                 )}
 
                 {phase === 'GAMBLE' && (
-                    <div className="h-full flex items-center justify-center p-4 bg-black/85 z-[320] relative">
-                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl">
+                    <div className="h-full flex items-center justify-center p-4 z-[320] relative overflow-hidden">
+                        <div className="gamble-backdrop" aria-hidden></div>
+                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl relative z-10">
                             <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
                             <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
                             <p className="font-mono text-sm text-gray-300 text-center mb-5">
@@ -3576,8 +3615,9 @@
                 )}
 
                 {phase === 'CARVING' && (
-                    <div className="h-full flex items-center justify-center z-[400] relative bg-black/90 backdrop-blur-md p-4 md:p-8 overflow-y-auto">
-                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl">
+                    <div className="h-full flex items-center justify-center z-[400] relative overflow-y-auto overflow-x-hidden p-4 md:p-8">
+                        <div className="carving-mod-backdrop" aria-hidden></div>
+                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl relative z-10">
                             <div className="w-full md:w-1/3 bg-[#e8e6e1] text-gray-900 p-6 border-4 border-black shadow-2xl">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>

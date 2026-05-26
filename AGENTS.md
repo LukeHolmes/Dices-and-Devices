@@ -29,3 +29,6 @@ There are no linters, test suites, or build steps configured. All code lives in 
 - **Victory escape scene:** The win screen uses `assets/scenes/the-escape.png` as `.victory-escape-backdrop` (full viewport under the ticket card and cash rain).
 - **Shop counting cash:** The Back Alley shop uses `assets/scenes/counting-cash.png` as `.shop-counting-cash-backdrop` behind the shop columns.
 - **Busted / rap sheet:** The loss flow’s arrest record (`RAP_SHEET`) uses `assets/scenes/busted.png` as `.rap-busted-backdrop` behind the manila card.
+- **Gamble:** `assets/scenes/gamble-double-or-nothing.png` as `.gamble-backdrop` during `GAMBLE`.
+- **Carving / The Mod:** `assets/scenes/the-mod-bench.png` as `.carving-mod-backdrop` during `CARVING`.
+- **Boss intro:** Shared `assets/scenes/boss-turf-pressure.png` as `.boss-intro-backdrop` under the turf-war card (plus dim layer and blinds).

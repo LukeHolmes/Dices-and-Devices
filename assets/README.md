@@ -9,5 +9,8 @@
 | `assets/scenes/the-escape.png` | VICTORY screen (full-viewport backdrop behind ticket card) |
 | `assets/scenes/counting-cash.png` | SHOP / Back Alley (full-viewport backdrop behind stock panels) |
 | `assets/scenes/busted.png` | RAP_SHEET loss screen (arrest record backdrop) |
+| `assets/scenes/gamble-double-or-nothing.png` | GAMBLE side action (backdrop behind flip panel) |
+| `assets/scenes/the-mod-bench.png` | CARVING / The Mod (backdrop behind workbench UI) |
+| `assets/scenes/boss-turf-pressure.png` | Boss intro overlay (shared alley / heat backdrop) |
 
 Replace any generated placeholder with your own exports using the **same filename**.
