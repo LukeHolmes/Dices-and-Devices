@@ -1843,13 +1843,14 @@
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
         const hasContract = !!insaneContract;
+        if (!hasBoss && !hasInventory && !hasContract) return null;
         return (
-            <div className="absolute top-24 left-4 bg-black/75 border border-gray-700 px-2 py-2 text-[10px] font-mono z-50 rounded shadow-xl min-w-40 max-w-52">
-                <div className="text-gray-400 mb-1 tracking-wider">ACTIVE MODIFIERS</div>
+            <div className="absolute bottom-4 left-4 readable-panel px-3 py-3 text-xs font-mono z-50 rounded-xl min-w-48 max-w-64 hidden lg:block">
+                <div className="text-[#0df] mb-2 tracking-[.18em] font-bold">ACTIVE MODIFIERS</div>
                 {hasContract && (
                     <div className="mb-2">
                         <div className="text-[#ff007f]">CONTRACT: INSANE</div>
-                        <div className="text-[#ffb3d9]">Quota up, toll up, plays down.</div>
+                        <div className="text-[#ffb3d9] leading-relaxed">Quota up, toll up, plays down.</div>
                     </div>
                 )}
                 {hasBoss && (
@@ -1858,25 +1859,24 @@
                             <BossPortrait boss={boss} variant="intel" />
                             <div className="min-w-0">
                                 <div className="text-red-400">BOSS: {boss.name}</div>
-                                <div className="text-red-200/80">{boss.desc}</div>
+                                <div className="text-red-100 leading-relaxed">{boss.desc}</div>
                             </div>
                         </div>
                     </div>
                 )}
                 {hasInventory && (
-                    <div className="text-cyan-300 space-y-1">
+                    <div className="text-cyan-200 space-y-1">
                         {inventory.map(item => (
                             <div key={item.id}>{item.name}</div>
                         ))}
                     </div>
                 )}
-                {!hasBoss && !hasInventory && !hasContract && <div className="text-gray-500">No active modifiers</div>}
             </div>
         );
     };
 
-    const RunIntelPanel = ({ flowMultiplier, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [] }) => (
-        <div className="absolute top-24 right-4 z-[80] w-[min(88vw,21rem)] readable-panel rounded-xl p-4 text-xs font-mono">
+    const RunIntelPanel = ({ flowMultiplier, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [], inline = false }) => (
+        <div className={`${inline ? 'relative w-full' : 'absolute top-16 right-4 z-[80] w-[min(88vw,21rem)]'} readable-panel rounded-xl p-4 text-xs font-mono`}>
             <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
             <div className="space-y-2 text-gray-100">
                 <div className="flex justify-between gap-3"><span className="text-gray-400">FLOW</span><span className={flowMultiplier > 1 ? 'text-[#0df] font-bold' : 'text-gray-300'}>x{flowMultiplier.toFixed(2)}</span></div>
@@ -1922,11 +1922,11 @@
         </div>
     );
 
-    const BuildIndicator = ({ analysis }) => {
+    const BuildIndicator = ({ analysis, inline = false }) => {
         const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
         const tier = analysis.confidence >= 0.72 ? 'HIGH' : analysis.confidence >= 0.42 ? 'MED' : 'LOW';
         return (
-            <div className={`absolute top-4 right-4 z-[82] w-[min(88vw,15rem)] rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
+            <div className={`${inline ? 'relative w-full' : 'absolute top-16 left-4 z-[82] w-[min(88vw,15rem)]'} rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
                 <div className="tracking-[.22em] text-gray-400 mb-1 font-bold">BUILD INTEL</div>
                 <div className={`${ui.accent} font-bold leading-tight tracking-wide text-sm`}>BUILD: {ui.label}</div>
                 {analysis.secondaryTag && <div className="text-gray-300 mt-1 truncate">TAG: {analysis.secondaryTag}</div>}
@@ -3537,7 +3537,7 @@
                     />
                 )}
                 {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
-                {inRunPhase && (
+                {inRunPhase && phase !== 'PLAY' && (
                     <>
                         <BuildIndicator analysis={buildAnalysis} />
                         <RunIntelPanel
@@ -3808,8 +3808,20 @@
                                     <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
                                 </div>
                             </div>
-                            <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} md:static md:col-span-3 md:flex flex-col gap-4`}>
+                            <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-4`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
+                                <div className="hidden md:flex flex-col gap-3">
+                                    <BuildIndicator analysis={buildAnalysis} inline />
+                                    <RunIntelPanel
+                                        flowMultiplier={flowMultiplier}
+                                        activeWager={activeWager}
+                                        insaneContract={insaneContract}
+                                        routeEffect={currentRouteEffect}
+                                        boss={activeBoss}
+                                        consumables={consumables}
+                                        inline
+                                    />
+                                </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl">
                                     <div className={`flex items-center justify-center gap-2 border-b pb-2 ${activeBoss?.id === 'INFORMANT' ? 'border-yellow-500' : 'border-[#0df]'}`}>
                                         <h3 className={`text-center font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500' : 'text-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
