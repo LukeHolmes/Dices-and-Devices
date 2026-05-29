@@ -301,11 +301,104 @@
     #root-gutterbones .risk-badge { display:inline-flex; border:1px solid rgba(255,0,127,.5); background:rgba(127,0,60,.45); color:#fbcfe8; border-radius:999px; padding:1px 6px; font-size:9px; font-weight:bold; font-family:"Courier New", monospace; }
     #root-gutterbones .glow-rare { box-shadow: 0 0 18px rgba(0,221,255,.45); border-color: rgba(0,221,255,.75) !important; }
     #root-gutterbones .glow-danger { box-shadow: 0 0 18px rgba(255,0,127,.45); border-color: rgba(255,0,127,.85) !important; }
+    #root-gutterbones .meta-stairwell-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(8, 7, 6, 0.72) 0%, rgba(14, 11, 9, 0.45) 42%, rgba(5, 4, 4, 0.88) 100%),
+        url('assets/scenes/stairwell-descent.png');
+      background-size: cover;
+      background-position: center 28%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .victory-escape-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 5, 5, 0.65) 0%, rgba(10, 8, 7, 0.35) 40%, rgba(14, 10, 9, 0.55) 100%),
+        url('assets/scenes/the-escape.png');
+      background-size: cover;
+      background-position: center 38%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .shop-counting-cash-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(4, 3, 2, 0.78) 0%, rgba(8, 6, 5, 0.5) 38%, rgba(6, 5, 4, 0.72) 100%),
+        url('assets/scenes/counting-cash.png');
+      background-size: cover;
+      background-position: center 42%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .rap-busted-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 4, 12, 0.82) 0%, rgba(10, 8, 18, 0.55) 42%, rgba(4, 3, 10, 0.85) 100%),
+        url('assets/scenes/busted.png');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .gamble-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(8, 2, 6, 0.88) 0%, rgba(18, 4, 12, 0.55) 45%, rgba(6, 1, 4, 0.9) 100%),
+        url('assets/scenes/gamble-double-or-nothing.png');
+      background-size: cover;
+      background-position: center 40%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .carving-mod-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 2, 2, 0.88) 0%, rgba(14, 6, 4, 0.55) 42%, rgba(4, 1, 1, 0.9) 100%),
+        url('assets/scenes/the-mod-bench.png');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .boss-intro-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(4, 2, 8, 0.82) 0%, rgba(12, 4, 8, 0.65) 50%, rgba(2, 1, 6, 0.88) 100%),
+        url('assets/scenes/boss-turf-pressure.png');
+      background-size: cover;
+      background-position: center 42%;
+      background-repeat: no-repeat;
+    }
     #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
     #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
     #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
-    #root-gutterbones .felt-surface { background: radial-gradient(circle at 50% 48%, #7a2731 0%, #6e1d24 45%, #4a1016 100%); }
-    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.14) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .8; }
+    #root-gutterbones .felt-surface {
+      background-color: #120608;
+      background-image:
+        radial-gradient(circle at 50% 44%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.45) 48%, rgba(0, 0, 0, 0.72) 100%),
+        radial-gradient(circle at 50% 48%, rgba(122, 39, 49, 0.42) 0%, rgba(78, 22, 30, 0.55) 45%, rgba(35, 10, 16, 0.75) 100%),
+        url('assets/scenes/alley-playfield.png');
+      background-size: cover, cover, cover;
+      background-position: center, center, center 52%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .75; }
     #root-gutterbones .felt-surface::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
     #root-gutterbones .felt-roll-pulse::after { animation: feltRollPulse .65s ease-out forwards; }
     #root-gutterbones .felt-edge-ring { position: absolute; inset: 0; pointer-events: none; z-index: 12; border-radius: inherit; border: 1px solid rgba(255,184,125,.14); box-shadow: inset 0 0 22px rgba(255,63,111,.15), inset 0 -24px 40px rgba(0,0,0,.2); animation: feltEdgeBreath 5.8s ease-in-out infinite; }
@@ -578,9 +671,9 @@
     };
 
     const PERSONAS = [
-        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600' },
-        { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700' },
-        { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900' },
+        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
+        { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700', portraitSrc: 'assets/personas/hustler.png', portraitAlt: 'The Hustler' },
+        { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900', portraitSrc: 'assets/personas/enforcer.png', portraitAlt: 'The Enforcer' },
         { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 20% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900' }
     ];
 
@@ -646,11 +739,11 @@
 
     const BOSSES = {
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5) },
-        LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500' },
-        JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]' },
+        LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500', portraitSrc: 'assets/bosses/loan-shark.png', portraitAlt: 'The Loan Shark' },
+        JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]', portraitSrc: 'assets/bosses/junkie.png', portraitAlt: 'The Junkie' },
         CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware disabled', color: 'text-blue-400' },
-        INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400' },
-        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota 300%. Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 3) }
+        INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
+        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota 300%. Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 3), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
     };
 
     const PATHS = [
@@ -1220,10 +1313,13 @@
             THE_RAID: 'Sirens drown out the alley.'
         };
         return (
-            <div className="absolute inset-0 z-[250] bg-black/80 flex items-center justify-center">
-                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top"></div>}
-                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom"></div>}
-                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+            <div className="absolute inset-0 z-[250] flex items-center justify-center overflow-hidden">
+                <div className="boss-intro-backdrop" aria-hidden></div>
+                <div className="absolute inset-0 bg-black/55 pointer-events-none z-[1]"></div>
+                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top z-[2]"></div>}
+                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom z-[2]"></div>}
+                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden z-[3]" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+                    <BossPortrait boss={boss} variant="intro" />
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
                     <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && <span className="opacity-60">_</span>}</h2>
                     <p className={`font-mono text-gray-300 transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
@@ -1251,6 +1347,84 @@
             ))}
         </div>
     );
+
+    const PersonaPortrait = ({ persona, variant = 'lineup' }) => {
+        const [failed, setFailed] = useState(false);
+        const src = persona.portraitSrc;
+        const alt = persona.portraitAlt || persona.name || '';
+        if (!src || failed) {
+            if (variant === 'lore') {
+                return <div className={`w-16 h-20 shrink-0 rounded border border-gray-600 ${persona.color}`} aria-hidden />;
+            }
+            if (variant === 'rap') {
+                return <div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`} aria-hidden />;
+            }
+            return <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${persona.color}`} aria-hidden />;
+        }
+        if (variant === 'lore') {
+            return (
+                <img
+                    src={src}
+                    alt={alt}
+                    className="w-16 h-20 shrink-0 rounded border border-gray-600 object-cover object-top bg-[#121113]"
+                    onError={() => setFailed(true)}
+                />
+            );
+        }
+        if (variant === 'rap') {
+            return (
+                <img
+                    src={src}
+                    alt={alt}
+                    className="max-h-[9.25rem] w-auto max-w-[min(100%,11rem)] object-contain object-bottom"
+                    onError={() => setFailed(true)}
+                />
+            );
+        }
+        return (
+            <img
+                src={src}
+                alt={alt}
+                className="max-h-[7.75rem] w-auto max-w-[92%] object-contain object-bottom drop-shadow-[0_5px_14px_rgba(0,0,0,0.9)]"
+                onError={() => setFailed(true)}
+            />
+        );
+    };
+
+    const BOSS_PORTRAIT_FALLBACK = {
+        BOUNCER: 'bg-gray-800 border border-gray-600',
+        LOAN_SHARK: 'bg-red-950 border border-red-700',
+        JUNKIE: 'bg-[#2a0017] border border-[#ff007f]/40',
+        CROOKED_COP: 'bg-slate-900 border border-blue-800',
+        INFORMANT: 'bg-[#2a2408] border border-yellow-700/50',
+        THE_RAID: 'bg-red-950 border border-red-600'
+    };
+
+    const BossPortrait = ({ boss, variant = 'intro' }) => {
+        const [failed, setFailed] = useState(false);
+        if (!boss) return null;
+        const src = boss.portraitSrc;
+        const alt = boss.portraitAlt || boss.name || '';
+        const fb = BOSS_PORTRAIT_FALLBACK[boss.id] || 'bg-gray-900 border border-gray-600';
+        if (!src || failed) {
+            if (variant === 'lore') return <div className={`w-16 h-20 shrink-0 rounded ${fb}`} aria-hidden />;
+            if (variant === 'banner') return <div className={`h-9 w-9 shrink-0 rounded ${fb}`} aria-hidden />;
+            if (variant === 'intel') return <div className={`w-11 h-11 shrink-0 rounded ${fb}`} aria-hidden />;
+            return <div className={`mx-auto mb-4 w-28 h-36 max-w-[42%] rounded border-2 border-red-800/60 ${fb}`} aria-hidden />;
+        }
+        if (variant === 'lore') {
+            return <img src={src} alt={alt} className="w-16 h-20 shrink-0 rounded border border-gray-600 object-cover object-top bg-[#121113]" onError={() => setFailed(true)} />;
+        }
+        if (variant === 'banner') {
+            return <img src={src} alt="" className="h-9 w-9 shrink-0 rounded object-cover object-top border border-red-800/50 bg-black" onError={() => setFailed(true)} />;
+        }
+        if (variant === 'intel') {
+            return <img src={src} alt="" className="w-11 h-11 shrink-0 rounded object-cover object-top border border-gray-600 bg-black" onError={() => setFailed(true)} />;
+        }
+        return (
+            <img src={src} alt={alt} className="mx-auto mb-4 max-h-44 w-auto max-w-[min(48vw,12rem)] object-contain object-top drop-shadow-[0_6px_16px_rgba(0,0,0,0.75)]" onError={() => setFailed(true)} />
+        );
+    };
 
     const ONBOARDING_STEPS = [
         { title: 'ROLL YOUR BONES', desc: 'Hit ROLL to throw all 5 bones onto the felt.', icon: '🎲' },
@@ -1433,8 +1607,13 @@
                 )}
                 {hasBoss && (
                     <div className="mb-2">
-                        <div className="text-red-400">BOSS: {boss.name}</div>
-                        <div className="text-red-200/80">{boss.desc}</div>
+                        <div className="flex gap-2 items-start">
+                            <BossPortrait boss={boss} variant="intel" />
+                            <div className="min-w-0">
+                                <div className="text-red-400">BOSS: {boss.name}</div>
+                                <div className="text-red-200/80">{boss.desc}</div>
+                            </div>
+                        </div>
                     </div>
                 )}
                 {hasInventory && (
@@ -1473,7 +1652,17 @@
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
                 <div className="text-gray-400 mb-1">BOSS EFFECT</div>
-                {boss ? <div className="text-red-300">{boss.name}: {boss.desc}</div> : <div className="text-gray-500">None active.</div>}
+                {boss ? (
+                    <div className="flex gap-2 items-start">
+                        <BossPortrait boss={boss} variant="intel" />
+                        <div className="min-w-0">
+                            <div className={`font-bold leading-tight ${boss.color}`}>{boss.name}</div>
+                            <div className="text-gray-300 leading-snug">{boss.desc}</div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-gray-500">None active.</div>
+                )}
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
                 <div className="text-gray-400 mb-1">POCKETED ONE-SHOTS</div>
@@ -1571,17 +1760,27 @@
                 <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
                     {tab === 'personas' && PERSONAS.map((p) => (
                         <article key={p.id} className="border border-gray-700 bg-black/40 rounded p-3">
-                            <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
-                            <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
-                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
-                            <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                            <div className="flex gap-3">
+                                <PersonaPortrait persona={p} variant="lore" />
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
+                                    <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
+                                    <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
+                                    <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                                </div>
+                            </div>
                         </article>
                     ))}
                     {tab === 'bosses' && Object.values(BOSSES).map((boss) => (
                         <article key={boss.id} className="border border-gray-700 bg-black/40 rounded p-3">
-                            <div className={`font-marker text-2xl ${boss.color}`}>{boss.name}</div>
-                            <div className="font-mono text-[11px] text-red-300 mb-2">{boss.desc}</div>
-                            <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.bosses[boss.id]}</p>
+                            <div className="flex gap-3">
+                                <BossPortrait boss={boss} variant="lore" />
+                                <div className="min-w-0 flex-1">
+                                    <div className={`font-marker text-2xl ${boss.color}`}>{boss.name}</div>
+                                    <div className="font-mono text-[11px] text-gray-300 mb-2">{boss.desc}</div>
+                                    <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.bosses[boss.id]}</p>
+                                </div>
+                            </div>
                         </article>
                     ))}
                     {tab === 'archive' && (
@@ -2954,6 +3153,7 @@
         return (
             <div className={`w-full h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#262422_1px,transparent_1px),linear-gradient(180deg,rgba(255,0,127,0.05)_0%,rgba(0,221,255,0.05)_100%)] bg-[length:4px_4px,100%_100%] pointer-events-none z-0"></div>
+                {(phase === 'LINEUP' || phase === 'SAFEHOUSE') && <div className="meta-stairwell-backdrop" aria-hidden />}
                 <div className="ambient-grain"></div>
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
@@ -3085,7 +3285,7 @@
                                 return (
                                     <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); spawnPaperStamp('SELECTED', '#be185d'); }} className={`paper-card paper-lift relative bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`} style={{ '--paper-rot': personaIdx === i ? '0deg' : (i % 2 ? '2deg' : '-2deg') }}>
                                         <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
-                                            <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${p.color}`}></div>
+                                            <PersonaPortrait persona={p} variant="lineup" />
                                             <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
                                         </div>
                                         <div className="font-marker text-2xl">{p.name}</div>
@@ -3160,7 +3360,7 @@
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
                         <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} />
                         <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
-                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex justify-between"><span className={`${activeBoss.color} font-bold`}>{activeBoss.name}</span><span>{activeBoss.desc}</span></div>}
+                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug">{activeBoss.desc}</span></div></div>}
                             <div className="flex justify-between items-center p-3 md:p-4">
                                 <div className="hidden sm:block">
                                     <div className="text-xs uppercase opacity-50">The Fixer</div>
@@ -3332,8 +3532,9 @@
                 )}
 
                 {phase === 'GAMBLE' && (
-                    <div className="h-full flex items-center justify-center p-4 bg-black/85 z-[320] relative">
-                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl">
+                    <div className="h-full flex items-center justify-center p-4 z-[320] relative overflow-hidden">
+                        <div className="gamble-backdrop" aria-hidden></div>
+                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl relative z-10">
                             <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
                             <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
                             <p className="font-mono text-sm text-gray-300 text-center mb-5">
@@ -3350,8 +3551,9 @@
                 )}
 
                 {phase === 'SHOP' && (
-                    <div className="h-full flex items-center justify-center p-3 md:p-12 bg-black/80 backdrop-blur-sm z-[300] relative overflow-y-auto">
-                        <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0">
+                    <div className="h-full flex items-center justify-center p-3 md:p-12 z-[300] relative overflow-y-auto overflow-x-hidden">
+                        <div className="shop-counting-cash-backdrop" aria-hidden></div>
+                        <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0 relative z-10">
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
                                 <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
@@ -3413,8 +3615,9 @@
                 )}
 
                 {phase === 'CARVING' && (
-                    <div className="h-full flex items-center justify-center z-[400] relative bg-black/90 backdrop-blur-md p-4 md:p-8 overflow-y-auto">
-                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl">
+                    <div className="h-full flex items-center justify-center z-[400] relative overflow-y-auto overflow-x-hidden p-4 md:p-8">
+                        <div className="carving-mod-backdrop" aria-hidden></div>
+                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl relative z-10">
                             <div className="w-full md:w-1/3 bg-[#e8e6e1] text-gray-900 p-6 border-4 border-black shadow-2xl">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
@@ -3432,10 +3635,11 @@
                 )}
 
                 {phase === 'RAP_SHEET' && (
-                    <div className="h-full flex items-center justify-center z-[500] relative bg-black/80 overflow-y-auto p-4">
-                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                    <div className="h-full flex items-center justify-center z-[500] relative overflow-y-auto overflow-x-hidden p-4">
+                        <div className="rap-busted-backdrop" aria-hidden></div>
+                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
-                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`}></div></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
+                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                             <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
                             {showIncarceratedStamp && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards]">INCARCERATED</div>}
                             <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
@@ -3444,7 +3648,8 @@
                 )}
 
                 {phase === 'VICTORY' && (
-                    <div className="h-full flex items-center justify-center z-[500] relative bg-black/90 p-4">
+                    <div className="h-full flex items-center justify-center z-[500] relative overflow-hidden p-4">
+                        <div className="victory-escape-backdrop" aria-hidden></div>
                         <CashRain count={30} reducedMotion={reducedMotion} />
                         <div className="paper-card bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3" style={{ '--paper-rot': '3deg' }}>
                             <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
