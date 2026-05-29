@@ -439,8 +439,14 @@
     #root-gutterbones .sunrise { animation: riseSun 1.2s cubic-bezier(.25,1,.5,1) forwards; }
     #root-gutterbones .signature-path { stroke-dasharray: 240; stroke-dashoffset: 240; animation: writeSig 1s ease-out .2s forwards; }
     #root-gutterbones .pill-burst { position: absolute; width: 16px; height: 16px; border-radius: 999px; border: 1px solid #0df; background: radial-gradient(circle, #fff 15%, #0df 70%); pointer-events: none; animation: pillEject .35s ease-out forwards; z-index: 90; }
-    #root-gutterbones .mechanic-popover { border: 1px solid rgba(0, 221, 255, 0.45); background: rgba(3, 10, 20, 0.94); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5); border-radius: 6px; padding: 9px; }
-    #root-gutterbones .mechanic-popover-list { max-height: 128px; overflow-y: auto; }
+    #root-gutterbones .readable-panel {
+      background: linear-gradient(180deg, rgba(12, 12, 13, 0.98), rgba(4, 5, 8, 0.98));
+      border: 2px solid rgba(0, 221, 255, 0.5);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      backdrop-filter: blur(8px);
+    }
+    #root-gutterbones .mechanic-popover { border: 2px solid rgba(0, 221, 255, 0.65); background: rgba(4, 12, 22, 0.98); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.72); border-radius: 10px; padding: 12px; }
+    #root-gutterbones .mechanic-popover-list { max-height: 168px; overflow-y: auto; }
     #root-gutterbones .cash-bill.near { animation: cashNear 1.55s linear forwards; }
     #root-gutterbones .cash-bill.mid { animation: cashMid 2.5s linear forwards; }
     #root-gutterbones .cash-bill.far { animation: cashFar 3.9s linear forwards; filter: blur(.5px); }
@@ -728,13 +734,13 @@
         [BUILD_IDS.BLOOD_RISK]: ['Manage risk vs reward on toll faces.', 'Pair burst chips with mult when you can clear quota.'],
         [BUILD_IDS.CASH_CONTROL]: ['Convert heat into cash upgrades.', 'Black Book rewards disciplined pill timing.'],
         [BUILD_IDS.SET_CONSISTENCY]: ['Lean on reliable categories while variance stays low.', 'Avoid overloading exotic faces if you want clean lines.'],
-        [BUILD_IDS.CHAOS]: ['Expect swingy hands—plan spare plays.', 'Destructive faces trade stability for spikes.']
+        [BUILD_IDS.CHAOS]: ['Expect swingy hands - plan spare plays.', 'Destructive faces trade stability for spikes.']
     };
 
     const BUILD_STYLE_BLURBS = {
         [BUILD_IDS.UNKNOWN]: { scale: 'Unknown scaling curve', consistency: 'Still reading the table' },
         [BUILD_IDS.MULT_ENGINE]: { scale: 'High scaling build', consistency: 'Variance rises with mult chains' },
-        [BUILD_IDS.BLOOD_RISK]: { scale: 'Burst-heavy pressure', consistency: 'Swingy—tolls and spikes' },
+        [BUILD_IDS.BLOOD_RISK]: { scale: 'Burst-heavy pressure', consistency: 'Swingy - tolls and spikes' },
         [BUILD_IDS.CASH_CONTROL]: { scale: 'Moderate heat scaling', consistency: 'Steadier economy pacing' },
         [BUILD_IDS.SET_CONSISTENCY]: { scale: 'Linear chip gains', consistency: 'High table consistency' },
         [BUILD_IDS.CHAOS]: { scale: 'Volatile spikes', consistency: 'Low predictability' }
@@ -943,17 +949,17 @@
     };
 
     const BUILD_SYNERGY_CALLOUT = {
-        [BUILD_IDS.MULT_ENGINE]: 'MULT CHAIN ↑',
-        [BUILD_IDS.BLOOD_RISK]: 'BLOOD SYNERGY ↑',
-        [BUILD_IDS.CASH_CONTROL]: 'ECONOMY BUILD ↑',
-        [BUILD_IDS.SET_CONSISTENCY]: 'LINE LOCK ↑',
-        [BUILD_IDS.CHAOS]: 'CHAOS SPIKE ↑'
+        [BUILD_IDS.MULT_ENGINE]: 'MULT CHAIN UP',
+        [BUILD_IDS.BLOOD_RISK]: 'BLOOD SYNERGY UP',
+        [BUILD_IDS.CASH_CONTROL]: 'ECONOMY BUILD UP',
+        [BUILD_IDS.SET_CONSISTENCY]: 'LINE LOCK UP',
+        [BUILD_IDS.CHAOS]: 'CHAOS SPIKE UP'
     };
 
     const CONSUMABLES = {
-        SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 32, rarity: 'common', type: 'consumable', icon: '🫀' },
-        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 24, rarity: 'common', type: 'consumable', icon: '💨' },
-        DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$12 cash on use.', cost: 30, rarity: 'rare', type: 'consumable', icon: '💵' }
+        SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 32, rarity: 'common', type: 'consumable', icon: '+1' },
+        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 24, rarity: 'common', type: 'consumable', icon: '+P' },
+        DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$12 cash on use.', cost: 30, rarity: 'rare', type: 'consumable', icon: '+$' }
     };
 
     const BOSSES = {
@@ -1453,7 +1459,7 @@
                         </div>
                     ) : <span className="font-serif text-5xl text-gray-900 opacity-80">{data.value}</span>}
                 </button>
-                {!rolling && <button onClick={(e) => { e.stopPropagation(); onPill(); }} onMouseEnter={onExplainPill} onFocus={onExplainPill} title="Pill reroll this bone" className="absolute -top-2 -right-2 w-6 h-6 bg-black border border-gray-600 rounded-full flex items-center justify-center text-xs opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-50">💊{raidPill && <span className="absolute -bottom-4 text-[8px] text-red-500 font-bold font-mono">-$2</span>}</button>}
+                {!rolling && <button onClick={(e) => { e.stopPropagation(); onPill(); }} onMouseEnter={onExplainPill} onFocus={onExplainPill} title="Pill reroll this bone" className="absolute -top-2 -right-2 min-w-8 h-6 px-1 bg-black border border-[#0df]/60 rounded-full flex items-center justify-center text-[8px] text-[#0df] font-mono font-bold opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-50">PILL{raidPill && <span className="absolute -bottom-4 text-[8px] text-red-500 font-bold font-mono">-$2</span>}</button>}
             </div>
         );
     };
@@ -1662,9 +1668,9 @@
     };
 
     const ONBOARDING_STEPS = [
-        { title: 'ROLL YOUR BONES', desc: 'Hit ROLL to throw all 5 bones onto the felt.', icon: '🎲' },
-        { title: 'KEEP THE GOOD ONES', desc: 'Click any bone to lock it. Unrolled bones stay safe.', icon: '🔒' },
-        { title: 'PICK A PAYOUT', desc: 'Choose a scoring category on the left. That\'s your hand.', icon: '💰' }
+        { title: 'ROLL YOUR BONES', desc: 'Hit ROLL to throw all 5 bones onto the felt.' },
+        { title: 'KEEP THE GOOD ONES', desc: 'Click any bone to lock it. Unrolled bones stay safe.' },
+        { title: 'PICK A PAYOUT', desc: 'Choose a scoring category on the left. That\'s your hand.' }
     ];
 
     const ONBOARDING_BADGES = ['STEP 01', 'STEP 02', 'STEP 03'];
@@ -1711,7 +1717,7 @@
         return (
             <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[550] pointer-events-none" style={{ animation: 'badgePop .3s ease-out forwards' }}>
                 <div className="bg-black/90 border-2 border-[#0df] rounded-lg px-5 py-3 shadow-2xl flex items-center gap-3" style={{ boxShadow: '0 0 20px rgba(0,221,255,.3)' }}>
-                    <span className="text-[#0df] text-xl">★</span>
+                    <span className="text-[#0df] text-sm font-mono font-bold">NEW</span>
                     <div>
                         <div className="font-mono text-[10px] text-[#0df] tracking-[.3em]">UNLOCKED</div>
                         <div className="font-mono text-sm text-white">{message}</div>
@@ -1724,14 +1730,14 @@
     const ScoreResolutionOverlay = ({ data, reducedMotion }) => {
         if (!data) return null;
         return (
-            <div className="absolute inset-0 z-[560] pointer-events-none flex items-center justify-center">
-                <div className={`bg-black/85 border-2 border-[#0df] rounded-lg px-6 py-4 shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
-                    <div className="font-mono text-[10px] text-[#0df] tracking-[.35em] text-center mb-2">SCORE RESOLUTION</div>
-                    <div className="font-mono text-sm text-center text-gray-200">
+            <div className="absolute inset-0 z-[560] pointer-events-none flex items-center justify-center p-4">
+                <div className={`readable-panel rounded-xl px-7 py-5 ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+                    <div className="font-mono text-xs text-[#0df] tracking-[.35em] text-center mb-3">SCORE RESOLUTION</div>
+                    <div className="font-mono text-base text-center text-gray-100">
                         <span className="text-yellow-300">{data.chips}</span> CHIPS x <span className="text-cyan-300">{data.mult.toFixed(2)}x</span>
                         {data.flowMult > 1 && <> x <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
                     </div>
-                    <div className="font-marker text-4xl text-[#ff007f] text-center mt-1">{data.total}</div>
+                    <div className="font-marker text-5xl text-[#ff007f] text-center mt-2">{data.total}</div>
                 </div>
             </div>
         );
@@ -1754,33 +1760,33 @@
             return impact;
         };
         return (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(92vw,32rem)]">
+            <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(94vw,42rem)]">
                 <button
                     type="button"
                     onClick={onDismiss}
-                    className={`pointer-events-auto w-full bg-black/93 border-2 border-[#ff007f] rounded-lg px-4 py-3 text-left shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
+                    className={`pointer-events-auto w-full readable-panel border-[#ff007f]/80 rounded-xl px-5 py-4 text-left ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
                 >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                         <div>
-                            <div className="font-mono text-[10px] tracking-[.32em] text-[#ff9fcf]">SCORE EXPLANATION</div>
-                            <div className="font-mono text-xs text-gray-300">{result.categoryName || 'HAND'} • tap to dismiss</div>
+                            <div className="font-mono text-xs tracking-[.32em] text-[#ff9fcf]">SCORE EXPLANATION</div>
+                            <div className="font-mono text-sm text-gray-200 mt-1">{result.categoryName || 'HAND'} - tap to dismiss</div>
                         </div>
-                        <div className="font-marker text-3xl text-[#ff007f] leading-none">{result.total}</div>
+                        <div className="font-marker text-5xl text-[#ff007f] leading-none">{result.total}</div>
                     </div>
-                    <div className="grid grid-cols-4 gap-1 mb-2 font-mono text-[10px]">
-                        <div className="border border-yellow-600/40 bg-yellow-900/20 rounded px-2 py-1 text-yellow-200">CHIPS <span className="block text-base leading-none">{result.chips}</span></div>
-                        <div className="border border-cyan-600/40 bg-cyan-900/20 rounded px-2 py-1 text-cyan-200">MULT <span className="block text-base leading-none">{result.mult.toFixed(2)}x</span></div>
-                        <div className="border border-fuchsia-600/40 bg-fuchsia-900/20 rounded px-2 py-1 text-fuchsia-200">FLOW <span className="block text-base leading-none">{result.flowMult.toFixed(2)}x</span></div>
-                        <div className="border border-[#ff007f]/45 bg-[#ff007f]/15 rounded px-2 py-1 text-[#ff9fcf]">TOTAL <span className="block text-base leading-none">{result.total}</span></div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 font-mono text-xs">
+                        <div className="border border-yellow-500/60 bg-yellow-900/30 rounded px-3 py-2 text-yellow-100">CHIPS <span className="block text-xl leading-none mt-1">{result.chips}</span></div>
+                        <div className="border border-cyan-500/60 bg-cyan-900/30 rounded px-3 py-2 text-cyan-100">MULT <span className="block text-xl leading-none mt-1">{result.mult.toFixed(2)}x</span></div>
+                        <div className="border border-fuchsia-500/60 bg-fuchsia-900/30 rounded px-3 py-2 text-fuchsia-100">FLOW <span className="block text-xl leading-none mt-1">{result.flowMult.toFixed(2)}x</span></div>
+                        <div className="border border-[#ff007f]/70 bg-[#ff007f]/25 rounded px-3 py-2 text-[#ffd1e8]">TOTAL <span className="block text-xl leading-none mt-1">{result.total}</span></div>
                     </div>
-                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                         {(result.explanationSteps || []).map((step, idx) => (
-                            <div key={`${step.label}-${idx}`} className={`border rounded px-2 py-1 text-[11px] font-mono bg-black/65 ${stepTone(step.type)}`}>
+                            <div key={`${step.label}-${idx}`} className={`border rounded-lg px-3 py-2 text-sm font-mono bg-black/80 ${stepTone(step.type)}`}>
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="tracking-wide">{step.label}</span>
                                     <span className="font-bold">{impactText(step.impact)}</span>
                                 </div>
-                                <div className="opacity-80">{step.value}</div>
+                                <div className="opacity-90 text-xs mt-1">{step.value}</div>
                             </div>
                         ))}
                     </div>
@@ -1792,24 +1798,24 @@
     const LossExplanationOverlay = ({ data, reducedMotion }) => {
         if (!data) return null;
         return (
-            <div className="absolute left-1/2 bottom-5 -translate-x-1/2 z-[590] pointer-events-none w-[min(94vw,40rem)]">
-                <div className={`bg-black/92 border-2 border-red-600 rounded-xl p-4 shadow-2xl ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
-                    <div className="font-marker text-3xl md:text-4xl text-red-400 text-center mb-1">YOU LOST BECAUSE...</div>
-                    <div className="font-mono text-center text-red-200 text-sm mb-3">{data.primaryReason}</div>
+            <div className="absolute inset-x-0 bottom-5 z-[590] pointer-events-none px-4 flex justify-center">
+                <div className={`readable-panel border-red-600/80 rounded-xl p-5 w-[min(96vw,48rem)] ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+                    <div className="font-marker text-4xl md:text-5xl text-red-300 text-center mb-2">YOU LOST BECAUSE...</div>
+                    <div className="font-mono text-center text-red-100 text-base md:text-lg mb-4 leading-relaxed">{data.primaryReason}</div>
                     {data.contributors?.length > 0 && (
-                        <div className="mb-3">
-                            <div className="font-mono text-[10px] tracking-[.28em] text-red-300 mb-1">CONTRIBUTORS</div>
-                            <ul className="space-y-1 text-xs font-mono text-gray-200 list-disc pl-4">
-                                {data.contributors.slice(0, 3).map((item, idx) => <li key={`${item}-${idx}`}>{item}</li>)}
-                            </ul>
+                        <div className="mb-4 bg-red-950/35 border border-red-500/35 rounded-lg p-3">
+                            <div className="font-mono text-xs tracking-[.28em] text-red-200 mb-2">WHAT HURT</div>
+                            <div className="space-y-2 text-sm font-mono text-gray-100">
+                                {data.contributors.slice(0, 3).map((item, idx) => <div key={`${item}-${idx}`}>- {item}</div>)}
+                            </div>
                         </div>
                     )}
                     {data.tips?.length > 0 && (
-                        <div>
-                            <div className="font-mono text-[10px] tracking-[.28em] text-[#0df] mb-1">TIP</div>
-                            <ul className="space-y-1 text-xs font-mono text-cyan-200 list-disc pl-4">
-                                {data.tips.slice(0, 2).map((tip, idx) => <li key={`${tip}-${idx}`}>{tip}</li>)}
-                            </ul>
+                        <div className="bg-cyan-950/35 border border-cyan-500/35 rounded-lg p-3">
+                            <div className="font-mono text-xs tracking-[.28em] text-[#0df] mb-2">NEXT RUN TIP</div>
+                            <div className="space-y-2 text-sm font-mono text-cyan-100">
+                                {data.tips.slice(0, 2).map((tip, idx) => <div key={`${tip}-${idx}`}>- {tip}</div>)}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -1824,10 +1830,10 @@
         }, [hint, onDone]);
         if (!hint) return null;
         return (
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[620] pointer-events-none max-w-[90vw]">
-                <div className="bg-black/92 border border-[#c78b16] rounded-lg px-4 py-3 shadow-2xl">
-                    <div className="font-mono text-[10px] text-[#c78b16] tracking-[.25em] mb-1">{hint.title}</div>
-                    <div className="font-mono text-xs text-gray-200 leading-relaxed">{hint.body}</div>
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[620] pointer-events-none w-[min(94vw,34rem)]">
+                <div className="readable-panel border-[#c78b16]/80 rounded-xl px-5 py-4">
+                    <div className="font-mono text-xs text-[#ffd37a] tracking-[.25em] mb-2">{hint.title}</div>
+                    <div className="font-mono text-sm text-gray-100 leading-relaxed">{hint.body}</div>
                 </div>
             </div>
         );
@@ -1870,47 +1876,47 @@
     };
 
     const RunIntelPanel = ({ flowMultiplier, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [] }) => (
-        <div className="absolute top-24 right-4 z-[80] w-72 bg-black/80 border border-gray-700 rounded p-3 shadow-2xl text-[10px] font-mono">
-            <div className="text-[#0df] tracking-[.25em] mb-2">RUN INTEL</div>
-            <div className="space-y-1 text-gray-300">
-                <div className="flex justify-between"><span>FLOW</span><span className={flowMultiplier > 1 ? 'text-[#0df]' : 'text-gray-500'}>x{flowMultiplier.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>WAGER</span><span className={activeWager ? 'text-emerald-300' : 'text-gray-500'}>{activeWager ? `$${activeWager.stake} @ ${activeWager.threshold}+` : 'NONE'}</span></div>
-                <div className="flex justify-between"><span>CONTRACT</span><span className={insaneContract ? 'text-[#ff9fcf]' : 'text-gray-500'}>{insaneContract ? 'INSANE' : 'STANDARD'}</span></div>
+        <div className="absolute top-24 right-4 z-[80] w-[min(88vw,21rem)] readable-panel rounded-xl p-4 text-xs font-mono">
+            <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
+            <div className="space-y-2 text-gray-100">
+                <div className="flex justify-between gap-3"><span className="text-gray-400">FLOW</span><span className={flowMultiplier > 1 ? 'text-[#0df] font-bold' : 'text-gray-300'}>x{flowMultiplier.toFixed(2)}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-gray-400">WAGER</span><span className={activeWager ? 'text-emerald-300 font-bold' : 'text-gray-300'}>{activeWager ? `$${activeWager.stake} @ ${activeWager.threshold}+` : 'NONE'}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-gray-400">CONTRACT</span><span className={insaneContract ? 'text-[#ff9fcf] font-bold' : 'text-gray-300'}>{insaneContract ? 'INSANE' : 'STANDARD'}</span></div>
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
-                <div className="text-gray-400 mb-1">ROUTE MODIFIERS</div>
+                <div className="text-gray-400 mb-1 tracking-[.12em]">ROUTE MODIFIERS</div>
                 {routeEffect ? (
                     <div>
-                        <div className="text-[#d6b85c]">{routeEffect.name}</div>
-                        <div className="text-gray-300">{routeEffect.effects?.join(' • ') || 'No special modifiers'}</div>
+                        <div className="text-[#f4d67b] font-bold">{routeEffect.name}</div>
+                        <div className="text-gray-100 leading-relaxed">{routeEffect.effects?.join(' / ') || 'No special modifiers'}</div>
                     </div>
                 ) : (
-                    <div className="text-gray-500">No active route modifier.</div>
+                    <div className="text-gray-300">No active route modifier.</div>
                 )}
                 {upcomingPaths.length > 0 && (
-                    <div className="mt-1 text-gray-500">Upcoming: {upcomingPaths.slice(0, 3).map(p => p.name).join(', ')}</div>
+                    <div className="mt-1 text-gray-300">Upcoming: {upcomingPaths.slice(0, 3).map(p => p.name).join(', ')}</div>
                 )}
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
-                <div className="text-gray-400 mb-1">BOSS EFFECT</div>
+                <div className="text-gray-400 mb-1 tracking-[.12em]">BOSS EFFECT</div>
                 {boss ? (
                     <div className="flex gap-2 items-start">
                         <BossPortrait boss={boss} variant="intel" />
                         <div className="min-w-0">
                             <div className={`font-bold leading-tight ${boss.color}`}>{boss.name}</div>
-                            <div className="text-gray-300 leading-snug">{boss.desc}</div>
+                            <div className="text-gray-100 leading-snug">{boss.desc}</div>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-gray-500">None active.</div>
+                    <div className="text-gray-300">None active.</div>
                 )}
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
-                <div className="text-gray-400 mb-1">POCKETED ONE-SHOTS</div>
+                <div className="text-gray-400 mb-1 tracking-[.12em]">POCKETED ONE-SHOTS</div>
                 {consumables.length ? (
                     <div className="text-emerald-300">{consumables.map(item => item.name).join(', ')}</div>
                 ) : (
-                    <div className="text-gray-500">None</div>
+                    <div className="text-gray-300">None</div>
                 )}
             </div>
         </div>
@@ -1920,11 +1926,11 @@
         const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
         const tier = analysis.confidence >= 0.72 ? 'HIGH' : analysis.confidence >= 0.42 ? 'MED' : 'LOW';
         return (
-            <div className={`absolute top-4 right-4 z-[82] w-[12rem] rounded border ${ui.border} bg-black/88 px-2.5 py-2 font-mono text-[10px] shadow-xl pointer-events-none`}>
-                <div className="tracking-[.22em] text-gray-500 mb-1">BUILD INTEL</div>
-                <div className={`${ui.accent} font-bold leading-tight tracking-wide`}>BUILD: {ui.label}</div>
-                {analysis.secondaryTag && <div className="text-gray-500 mt-0.5 truncate">TAG: {analysis.secondaryTag}</div>}
-                <div className="text-gray-400 mt-1">CONF: <span className={tier === 'HIGH' ? 'text-[#0df]' : 'text-gray-200'}>{tier}</span></div>
+            <div className={`absolute top-4 right-4 z-[82] w-[min(88vw,15rem)] rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
+                <div className="tracking-[.22em] text-gray-400 mb-1 font-bold">BUILD INTEL</div>
+                <div className={`${ui.accent} font-bold leading-tight tracking-wide text-sm`}>BUILD: {ui.label}</div>
+                {analysis.secondaryTag && <div className="text-gray-300 mt-1 truncate">TAG: {analysis.secondaryTag}</div>}
+                <div className="text-gray-300 mt-1">CONF: <span className={tier === 'HIGH' ? 'text-[#0df] font-bold' : 'text-gray-100'}>{tier}</span></div>
             </div>
         );
     };
@@ -1945,17 +1951,17 @@
                 <div className="text-[10px] tracking-[.3em] text-gray-600 mb-2">RUN ARCHETYPE</div>
                 <div className={`text-base font-bold ${ui.accent}`}>RUN TYPE: {ui.label}</div>
                 <div className="text-[11px] text-gray-700 mt-2 leading-relaxed">
-                    <div><span className="opacity-60">STYLE · </span>{blurbs.scale}</div>
-                    <div><span className="opacity-60">CONSISTENCY · </span>{blurbs.consistency}</div>
+                    <div><span className="opacity-60">STYLE - </span>{blurbs.scale}</div>
+                    <div><span className="opacity-60">CONSISTENCY - </span>{blurbs.consistency}</div>
                 </div>
                 {keys.length > 0 && (
                     <div className="mt-2 text-[11px]">
-                        <span className="opacity-60">KEY COMPONENTS · </span>
-                        <span className="text-gray-900">{keys.map(formatKey).join(' · ')}</span>
+                        <span className="opacity-60">KEY COMPONENTS - </span>
+                        <span className="text-gray-900">{keys.map(formatKey).join(' / ')}</span>
                     </div>
                 )}
                 <div className="mt-3 border-t border-black/20 pt-2 text-[10px] text-gray-700 space-y-1">
-                    {tips.slice(0, 3).map((t, i) => <div key={i}>• {t}</div>)}
+                    {tips.slice(0, 3).map((t, i) => <div key={i}>- {t}</div>)}
                 </div>
             </div>
         );
@@ -2868,7 +2874,7 @@
             if (flowMult > 1) triggers.push({ name: 'FLOW', value: `x${flowMult.toFixed(2)}` });
             pushStep('multiplier', 'FLOW STREAK', `x${flowMult.toFixed(2)} flow multiplier`, `x${flowMult.toFixed(2)}`);
             const total = Math.floor(chips * mult * flowMult);
-            pushStep('system', 'FINAL FORMULA', `${chips} × ${mult.toFixed(2)} × ${flowMult.toFixed(2)}`, total);
+            pushStep('system', 'FINAL FORMULA', `${chips} x ${mult.toFixed(2)} x ${flowMult.toFixed(2)}`, total);
             return { valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName };
         };
 
@@ -3010,7 +3016,7 @@
                 explanationSteps: result.explanationSteps || []
             };
             setScoreBreakdown(breakdownPayload);
-            scheduleTimeout(() => setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current)), reducedMotion ? 1400 : 2200);
+            scheduleTimeout(() => setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current)), reducedMotion ? 4200 : 5600);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
@@ -3029,7 +3035,7 @@
                         total: result.total
                     };
                     setScoreResolution(resolutionPayload);
-                    scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 650 : 950);
+                    scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 1200 : 1600);
                 }
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
@@ -3112,7 +3118,7 @@
                 });
                 const lossPayload = { id: Math.random(), ...analysis };
                 setLossExplanation(lossPayload);
-                scheduleTimeout(() => setLossExplanation(current => (current?.id === lossPayload.id ? null : current)), reducedMotion ? 2600 : 4200);
+                scheduleTimeout(() => setLossExplanation(current => (current?.id === lossPayload.id ? null : current)), reducedMotion ? 6500 : 8500);
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 setGambleStake(0);
                 setFixerLine('Quota missed. Keep your chin down.');
@@ -3722,11 +3728,11 @@
                                         </div>
                                         <div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div>
                                         {activeMechanicPopup === 'pills' && (
-                                            <div className="mechanic-popover absolute right-0 top-full mt-2 w-60 text-left z-[140]">
-                                                <div className="font-mono text-[10px] text-cyan-200">Tap the 💊 on a bone to reroll that slot instantly.</div>
-                                                <div className="font-mono text-[10px] text-gray-300 mt-2">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
+                                            <div className="mechanic-popover absolute right-0 top-full mt-2 w-72 text-left z-[140]">
+                                                <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
+                                                <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
                                                 {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
-                                                    <div className="font-mono text-[10px] text-emerald-300 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
+                                                    <div className="font-mono text-xs text-emerald-200 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
                                                 )}
                                             </div>
                                         )}
@@ -3817,16 +3823,16 @@
                                     </div>
                                     {activeMechanicPopup === 'stash' && (
                                         <div className="mechanic-popover mt-3 text-left">
-                                            <div className="font-mono text-[10px] text-cyan-200">Build stash with strong payouts, then spend it on programs.</div>
+                                            <div className="font-mono text-sm text-cyan-100 leading-relaxed">Build stash with strong payouts, then spend it on programs.</div>
                                             <div className="mechanic-popover-list mt-2 space-y-1">
                                                 {PROGRAMS.map(program => (
-                                                    <div key={program.id} className="font-mono text-[10px] text-gray-300">
+                                                    <div key={program.id} className="font-mono text-xs text-gray-100 leading-relaxed">
                                                         <span className="text-[#0df]">{program.name}</span> ({program.cost}%): {program.desc}
                                                     </div>
                                                 ))}
                                             </div>
                                             {activeBoss?.id === 'INFORMANT' && (
-                                                <div className="font-mono text-[10px] text-yellow-300 mt-2">INFORMANT active: stash growth and program use are blocked this round.</div>
+                                                <div className="font-mono text-xs text-yellow-200 mt-2">INFORMANT active: stash growth and program use are blocked this round.</div>
                                             )}
                                         </div>
                                     )}
@@ -3848,7 +3854,7 @@
                                             <div className="space-y-2 max-h-28 overflow-y-auto pr-1">
                                                 {consumables.map((item, idx) => (
                                                     <button key={item.instanceId || `${item.id}-${idx}`} onClick={() => useConsumable(idx)} disabled={rolling || phase !== 'PLAY'} className="w-full flex items-center justify-between gap-2 border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-left hover:bg-emerald-900/30 disabled:opacity-40">
-                                                        <span className="font-mono text-[10px] text-emerald-200 truncate">{item.icon || '🧪'} {item.name}</span>
+                                                        <span className="font-mono text-[10px] text-emerald-200 truncate">{item.icon || 'USE'} {item.name}</span>
                                                         <span className="font-mono text-[10px] text-emerald-400">USE</span>
                                                     </button>
                                                 ))}
@@ -3911,7 +3917,7 @@
                                         <div className="price-tag">${item.cost}</div>
                                         {fits && !sold && <span className="absolute top-2 right-12 z-10 text-[8px] font-mono tracking-[0.2em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60">GOOD FIT</span>}
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-2xl">{item.icon || '🧪'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{syn && <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-sm font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-sm font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{syn && <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
                                         <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
                                     </div>;
                                 })}</div>
