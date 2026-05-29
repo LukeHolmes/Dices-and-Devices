@@ -2,6 +2,7 @@
     <div style="font-family:monospace;text-align:center;padding-top:100px;">LOADING GUTTERBONES 1977...</div>
 </div>
 
+<meta charset="UTF-8">
 <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -568,37 +569,7 @@
             source.stop(startAt + duration + 0.03);
         },
         startAmbient() {
-            if (!this.ctx || this.ambientNodes || this.volume <= 0) return;
-            const hum = this.ctx.createOscillator();
-            hum.type = 'sawtooth';
-            hum.frequency.value = 42;
-            const humGain = this.ctx.createGain();
-            humGain.gain.value = 0.0001;
-            hum.connect(humGain);
-            humGain.connect(this.ctx.destination);
-
-            const roomNoise = this.ctx.createBufferSource();
-            roomNoise.buffer = this.ensureNoiseBuffer();
-            roomNoise.loop = true;
-            const noiseHigh = this.ctx.createBiquadFilter();
-            noiseHigh.type = 'highpass';
-            noiseHigh.frequency.value = 35;
-            const noiseLow = this.ctx.createBiquadFilter();
-            noiseLow.type = 'lowpass';
-            noiseLow.frequency.value = 220;
-            const noiseGain = this.ctx.createGain();
-            noiseGain.gain.value = 0.0001;
-            roomNoise.connect(noiseHigh);
-            noiseHigh.connect(noiseLow);
-            noiseLow.connect(noiseGain);
-            noiseGain.connect(this.ctx.destination);
-
-            hum.start();
-            roomNoise.start();
-            const now = this.ctx.currentTime;
-            humGain.gain.linearRampToValueAtTime(0.02 * this.volume, now + 0.4);
-            noiseGain.gain.linearRampToValueAtTime(0.012 * this.volume, now + 0.45);
-            this.ambientNodes = { hum, humGain, roomNoise, noiseGain };
+            // Ambient hum removed: the constant low buzz was more irritating than atmospheric.
         },
         stopAmbient() {
             if (!this.ambientNodes || !this.ctx) return;
@@ -1696,6 +1667,9 @@
         { title: 'PICK A PAYOUT', desc: 'Choose a scoring category on the left. That\'s your hand.', icon: '💰' }
     ];
 
+    const ONBOARDING_BADGES = ['STEP 01', 'STEP 02', 'STEP 03'];
+    const ONBOARDING_KICKERS = ['THROW', 'LOCK', 'SCORE'];
+
     const FirstRunOverlay = ({ onDismiss }) => {
         const [step, setStep] = useState(0);
         return (
@@ -1707,8 +1681,11 @@
                             <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === step ? 'bg-[#ff007f] scale-125' : i < step ? 'bg-[#0df]' : 'bg-gray-700'}`} />
                         ))}
                     </div>
-                    <div className="text-center mb-6">
-                        <div className="text-5xl mb-4">{ONBOARDING_STEPS[step].icon}</div>
+                    <div key={step} className="text-center mb-6">
+                        <div className="inline-flex flex-col items-center justify-center mb-5 px-6 py-3 border border-[#0df]/50 bg-black/50 rounded-lg shadow-[0_0_18px_rgba(0,221,255,.12)]">
+                            <div className="font-mono text-[10px] tracking-[.35em] text-[#0df]">{ONBOARDING_BADGES[step]}</div>
+                            <div className="font-marker text-3xl text-[#d6b85c] mt-1">{ONBOARDING_KICKERS[step]}</div>
+                        </div>
                         <h3 className="font-marker text-3xl text-[#ff007f] mb-3">{ONBOARDING_STEPS[step].title}</h3>
                         <p className="font-mono text-sm text-gray-300 leading-relaxed">{ONBOARDING_STEPS[step].desc}</p>
                     </div>
@@ -2198,7 +2175,7 @@
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
         const [muted, setMuted] = useState(() => {
-            try { return window.localStorage?.getItem('gutterbones1977:audio-muted:v1') === '1'; } catch { return false; }
+            try { return window.localStorage?.getItem('gutterbones1977:audio-muted:v2') !== '0'; } catch { return true; }
         });
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
@@ -2358,17 +2335,18 @@
         }, []);
 
         useEffect(() => {
-            AudioSystem.init();
-            AudioSystem.setVolume(muted ? 0 : 1);
-            if (muted || ['LINEUP', 'SAFEHOUSE'].includes(phase)) {
+            if (muted) {
+                AudioSystem.setVolume(0);
                 AudioSystem.stopAmbient();
                 return;
             }
-            AudioSystem.startAmbient();
+            AudioSystem.init();
+            AudioSystem.setVolume(1);
+            AudioSystem.stopAmbient();
         }, [phase, muted]);
 
         useEffect(() => {
-            try { window.localStorage?.setItem('gutterbones1977:audio-muted:v1', muted ? '1' : '0'); } catch {}
+            try { window.localStorage?.setItem('gutterbones1977:audio-muted:v2', muted ? '1' : '0'); } catch {}
         }, [muted]);
 
         useEffect(() => () => {
