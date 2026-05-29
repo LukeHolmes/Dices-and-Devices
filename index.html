@@ -731,6 +731,254 @@
         }
     };
 
+    const BUILD_IDS = {
+        UNKNOWN: 'UNKNOWN',
+        MULT_ENGINE: 'MULT_ENGINE',
+        BLOOD_RISK: 'BLOOD_RISK',
+        CASH_CONTROL: 'CASH_CONTROL',
+        SET_CONSISTENCY: 'SET_CONSISTENCY',
+        CHAOS: 'CHAOS_DESTRUCTIVE'
+    };
+
+    const DEFAULT_RUN_BUILD = { primary: BUILD_IDS.UNKNOWN, peakConfidence: 0, keyItems: [] };
+
+    const BUILD_UI = {
+        [BUILD_IDS.UNKNOWN]: { label: 'FORMING', accent: 'text-gray-400', border: 'border-gray-600' },
+        [BUILD_IDS.MULT_ENGINE]: { label: 'MULT ENGINE', accent: 'text-[#0df]', border: 'border-cyan-700/50' },
+        [BUILD_IDS.BLOOD_RISK]: { label: 'BLOOD RISK', accent: 'text-red-400', border: 'border-red-800/50' },
+        [BUILD_IDS.CASH_CONTROL]: { label: 'CASH CONTROL', accent: 'text-[#d6b85c]', border: 'border-[#c78b16]/40' },
+        [BUILD_IDS.SET_CONSISTENCY]: { label: 'SET CONSISTENCY', accent: 'text-emerald-300', border: 'border-emerald-800/40' },
+        [BUILD_IDS.CHAOS]: { label: 'CHAOS', accent: 'text-fuchsia-300', border: 'border-fuchsia-700/40' }
+    };
+
+    const BUILD_TIPS = {
+        [BUILD_IDS.UNKNOWN]: ['Keep rolling to reveal your angle.', 'Contraband faces and hardware define the story.'],
+        [BUILD_IDS.MULT_ENGINE]: ['Stack multipliers early.', 'Prioritize scaling over raw chip totals when flow is warm.'],
+        [BUILD_IDS.BLOOD_RISK]: ['Manage risk vs reward on toll faces.', 'Pair burst chips with mult when you can clear quota.'],
+        [BUILD_IDS.CASH_CONTROL]: ['Convert heat into cash upgrades.', 'Black Book rewards disciplined pill timing.'],
+        [BUILD_IDS.SET_CONSISTENCY]: ['Lean on reliable categories while variance stays low.', 'Avoid overloading exotic faces if you want clean lines.'],
+        [BUILD_IDS.CHAOS]: ['Expect swingy hands—plan spare plays.', 'Destructive faces trade stability for spikes.']
+    };
+
+    const BUILD_STYLE_BLURBS = {
+        [BUILD_IDS.UNKNOWN]: { scale: 'Unknown scaling curve', consistency: 'Still reading the table' },
+        [BUILD_IDS.MULT_ENGINE]: { scale: 'High scaling build', consistency: 'Variance rises with mult chains' },
+        [BUILD_IDS.BLOOD_RISK]: { scale: 'Burst-heavy pressure', consistency: 'Swingy—tolls and spikes' },
+        [BUILD_IDS.CASH_CONTROL]: { scale: 'Moderate heat scaling', consistency: 'Steadier economy pacing' },
+        [BUILD_IDS.SET_CONSISTENCY]: { scale: 'Linear chip gains', consistency: 'High table consistency' },
+        [BUILD_IDS.CHAOS]: { scale: 'Volatile spikes', consistency: 'Low predictability' }
+    };
+
+    const ITEM_ARCHETYPE_TAGS = {
+        MULT_FACE: [BUILD_IDS.MULT_ENGINE],
+        ECHO_FACE: [BUILD_IDS.MULT_ENGINE],
+        ENGINE: [BUILD_IDS.MULT_ENGINE],
+        CROWBAR: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.BLOOD_RISK],
+        CENTERPIECE: [BUILD_IDS.MULT_ENGINE],
+        BLOOD_6: [BUILD_IDS.BLOOD_RISK],
+        BLOOD_PACT: [BUILD_IDS.BLOOD_RISK],
+        SHIV_FACE: [BUILD_IDS.BLOOD_RISK, BUILD_IDS.CHAOS],
+        GOLD_FACE: [BUILD_IDS.CASH_CONTROL],
+        BLACK_BOOK: [BUILD_IDS.CASH_CONTROL],
+        WIREBAG_FACE: [BUILD_IDS.CASH_CONTROL, BUILD_IDS.CHAOS],
+        GHOST_FACE: [BUILD_IDS.CHAOS, BUILD_IDS.MULT_ENGINE],
+        WILD_FACE: [BUILD_IDS.CHAOS, BUILD_IDS.SET_CONSISTENCY],
+        BOOKENDS: [BUILD_IDS.SET_CONSISTENCY],
+        BRASS_KNUCKLES: [BUILD_IDS.SET_CONSISTENCY],
+        LOADED_DIE: [BUILD_IDS.SET_CONSISTENCY],
+        DIRTY_WAD: [BUILD_IDS.CASH_CONTROL]
+    };
+
+    const getArchetypeTagsForItemId = (itemId) => {
+        if (!itemId) return [];
+        return ITEM_ARCHETYPE_TAGS[itemId] ? [...ITEM_ARCHETYPE_TAGS[itemId]] : [];
+    };
+
+    const synergyLabelForItem = (itemId, primaryBuild) => {
+        const tags = getArchetypeTagsForItemId(itemId);
+        if (!tags.length || primaryBuild === BUILD_IDS.UNKNOWN) return null;
+        if (tags.includes(primaryBuild)) {
+            const ui = BUILD_UI[primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
+            return `Synergy: ${ui.label}`;
+        }
+        const hit = tags.find((t) => t !== BUILD_IDS.UNKNOWN);
+        if (!hit) return null;
+        const ui = BUILD_UI[hit];
+        return ui ? `Synergy: ${ui.label}` : null;
+    };
+
+    const itemFitsCurrentBuild = (itemId, primaryBuild) => {
+        if (!itemId || primaryBuild === BUILD_IDS.UNKNOWN) return false;
+        return getArchetypeTagsForItemId(itemId).includes(primaryBuild);
+    };
+
+    const countCarvedFace = (dice, faceId) => {
+        let n = 0;
+        (dice || []).forEach((die) => {
+            (die.faces || []).forEach((f) => {
+                if (f && f.id === faceId) n += 1;
+            });
+        });
+        return n;
+    };
+
+    const diceShowsFace = (dice, faceId) => {
+        if (countCarvedFace(dice, faceId) > 0) return true;
+        return (dice || []).some((d) => d.faceId === faceId);
+    };
+
+    const countSpecialFaceSlots = (dice) => {
+        let n = 0;
+        (dice || []).forEach((die) => {
+            (die.faces || []).forEach((f) => {
+                if (f && f.id && f.id !== 'standard') n += 1;
+            });
+        });
+        return n;
+    };
+
+    const aggregateHistoryTriggers = (history, maxHands = 10) => {
+        const slice = (history || []).slice(-maxHands);
+        const parts = [];
+        slice.forEach((h) => {
+            (h.triggers || []).forEach((t) => {
+                parts.push(`${t.name || ''} ${t.value || ''}`);
+            });
+        });
+        return parts.join(' | ');
+    };
+
+    const deriveKeyItems = (primaryBuild, inventory, dice, flowStreak = 0) => {
+        const out = [];
+        const push = (id) => {
+            if (!id || out.includes(id) || out.length >= 6) return;
+            const tags = getArchetypeTagsForItemId(id);
+            if (tags.includes(primaryBuild)) out.push(id);
+        };
+        (inventory || []).forEach((i) => push(i.id));
+        (dice || []).forEach((die) => {
+            (die.faces || []).forEach((f) => {
+                if (f && f.id && f.id !== 'standard') push(f.id);
+            });
+        });
+        if (flowStreak >= 3 && (primaryBuild === BUILD_IDS.MULT_ENGINE || primaryBuild === BUILD_IDS.SET_CONSISTENCY) && out.length < 6) {
+            out.push('FLOW_STREAK');
+        }
+        return out;
+    };
+
+    const analyzeBuild = ({ inventory, dice, history, flowStreak }) => {
+        const inv = new Set((inventory || []).map((i) => i.id));
+        const multCount = countCarvedFace(dice, 'MULT_FACE');
+        const goldCount = countCarvedFace(dice, 'GOLD_FACE');
+        const hasBlood6 = diceShowsFace(dice, 'BLOOD_6');
+        const chaosCount = ['SHIV_FACE', 'WIREBAG_FACE', 'GHOST_FACE'].filter((fid) => diceShowsFace(dice, fid)).length;
+        const histText = aggregateHistoryTriggers(history, 12);
+        const multHits = (histText.match(/\+MULT|ENGINE|CROWBAR|GHOST/g) || []).length;
+        const bloodHits = (histText.match(/BLOOD|PACT|SHIV/g) || []).length;
+        const cashHits = (histText.match(/CASH|WIRE/g) || []).length;
+        const totals = (history || []).map((h) => h.total).filter((t) => typeof t === 'number' && !Number.isNaN(t));
+        const weights = {
+            [BUILD_IDS.MULT_ENGINE]: 0,
+            [BUILD_IDS.BLOOD_RISK]: 0,
+            [BUILD_IDS.CASH_CONTROL]: 0,
+            [BUILD_IDS.SET_CONSISTENCY]: 0,
+            [BUILD_IDS.CHAOS]: 0
+        };
+        const sig = {
+            [BUILD_IDS.MULT_ENGINE]: [],
+            [BUILD_IDS.BLOOD_RISK]: [],
+            [BUILD_IDS.CASH_CONTROL]: [],
+            [BUILD_IDS.SET_CONSISTENCY]: [],
+            [BUILD_IDS.CHAOS]: []
+        };
+
+        let w = 0;
+        if (multCount >= 2) { w += 3.2; sig[BUILD_IDS.MULT_ENGINE].push('board:2+MULT'); }
+        else if (multCount === 1) { w += 1.2; sig[BUILD_IDS.MULT_ENGINE].push('board:MULT'); }
+        if (inv.has('ENGINE')) { w += 2.6; sig[BUILD_IDS.MULT_ENGINE].push('inv:ENGINE'); }
+        if (inv.has('CROWBAR')) { w += 1.4; sig[BUILD_IDS.MULT_ENGINE].push('inv:CROWBAR'); }
+        if (multHits >= 4) { w += 2.4; sig[BUILD_IDS.MULT_ENGINE].push('hist:mult_heavy'); }
+        else if (multHits >= 1) { w += 0.9; sig[BUILD_IDS.MULT_ENGINE].push('hist:mult_light'); }
+        if (flowStreak >= 2 && (multCount >= 1 || inv.has('ENGINE'))) { w += 0.6; sig[BUILD_IDS.MULT_ENGINE].push('flow:mult'); }
+        weights[BUILD_IDS.MULT_ENGINE] = w;
+
+        w = 0;
+        if (hasBlood6) { w += 3; sig[BUILD_IDS.BLOOD_RISK].push('board:BLOOD_6'); }
+        if (inv.has('BLOOD_PACT')) { w += 2.5; sig[BUILD_IDS.BLOOD_RISK].push('inv:PACT'); }
+        if (inv.has('CROWBAR')) { w += 1.1; sig[BUILD_IDS.BLOOD_RISK].push('inv:CROWBAR'); }
+        if (bloodHits >= 4) { w += 2.2; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_pressure'); }
+        else if (bloodHits >= 1) { w += 0.8; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_trace'); }
+        if (diceShowsFace(dice, 'SHIV_FACE')) { w += 0.9; sig[BUILD_IDS.BLOOD_RISK].push('board:SHIV'); }
+        weights[BUILD_IDS.BLOOD_RISK] = w;
+
+        w = 0;
+        if (goldCount >= 2) { w += 3; sig[BUILD_IDS.CASH_CONTROL].push('board:2+GOLD'); }
+        else if (goldCount === 1) { w += 1.1; sig[BUILD_IDS.CASH_CONTROL].push('board:GOLD'); }
+        if (inv.has('BLACK_BOOK')) { w += 2.2; sig[BUILD_IDS.CASH_CONTROL].push('inv:BLACK_BOOK'); }
+        if (cashHits >= 3) { w += 2; sig[BUILD_IDS.CASH_CONTROL].push('hist:cash_triggers'); }
+        else if (cashHits >= 1) { w += 0.7; sig[BUILD_IDS.CASH_CONTROL].push('hist:cash_light'); }
+        weights[BUILD_IDS.CASH_CONTROL] = w;
+
+        w = 0;
+        if (totals.length >= 4) {
+            const mean = totals.reduce((a, b) => a + b, 0) / totals.length;
+            const variance = totals.reduce((a, t) => a + (t - mean) ** 2, 0) / Math.max(1, totals.length);
+            const stdev = Math.sqrt(variance);
+            const cv = mean > 8 ? stdev / mean : 1;
+            if (cv < 0.38 && mean > 22) { w += 3; sig[BUILD_IDS.SET_CONSISTENCY].push('hist:low_variance'); }
+            if (totals.length >= 6) { w += 0.8; sig[BUILD_IDS.SET_CONSISTENCY].push('hist:volume'); }
+        }
+        const specials = countSpecialFaceSlots(dice);
+        if (specials <= 4 && totals.length >= 3) { w += 1.2; sig[BUILD_IDS.SET_CONSISTENCY].push('board:clean_loadout'); }
+        weights[BUILD_IDS.SET_CONSISTENCY] = w;
+
+        w = chaosCount * 1.4;
+        if (diceShowsFace(dice, 'WIREBAG_FACE')) { w += 0.8; sig[BUILD_IDS.CHAOS].push('board:WIREBAG'); }
+        if (diceShowsFace(dice, 'GHOST_FACE')) { w += 0.7; sig[BUILD_IDS.CHAOS].push('board:GHOST'); }
+        if (diceShowsFace(dice, 'WILD_FACE')) { w += 0.5; sig[BUILD_IDS.CHAOS].push('board:WILD'); }
+        if ((histText.match(/WIRE|SHIV|GHOST|PACT/g) || []).length >= 5) { w += 1.2; sig[BUILD_IDS.CHAOS].push('hist:volatile'); }
+        weights[BUILD_IDS.CHAOS] = w;
+
+        let primaryBuild = BUILD_IDS.UNKNOWN;
+        let best = 1.35;
+        Object.keys(weights).forEach((k) => {
+            if (weights[k] > best) {
+                best = weights[k];
+                primaryBuild = k;
+            }
+        });
+
+        const sorted = Object.entries(weights).sort((a, b) => b[1] - a[1]);
+        let secondaryTag = null;
+        if (primaryBuild !== BUILD_IDS.UNKNOWN && sorted.length > 1) {
+            const topW = sorted[0][1];
+            const runner = sorted.find(([id]) => id !== primaryBuild);
+            if (runner && runner[1] >= topW * 0.38 && runner[1] >= 1.05) {
+                const ui = BUILD_UI[runner[0]];
+                if (ui) secondaryTag = ui.label;
+            }
+        }
+
+        const denom = Object.values(weights).reduce((a, v) => a + v, 0) + 0.01;
+        let confidence = primaryBuild === BUILD_IDS.UNKNOWN ? 0 : Math.min(1, best / (denom * 0.72 + 0.35));
+        if (totals.length < 2 && primaryBuild !== BUILD_IDS.UNKNOWN) confidence *= 0.82;
+
+        const signals = primaryBuild === BUILD_IDS.UNKNOWN
+            ? ['run:still_open']
+            : (sig[primaryBuild] || []).slice(0, 8);
+
+        return { primaryBuild, secondaryTag, confidence, signals };
+    };
+
+    const BUILD_SYNERGY_CALLOUT = {
+        [BUILD_IDS.MULT_ENGINE]: 'MULT CHAIN ↑',
+        [BUILD_IDS.BLOOD_RISK]: 'BLOOD SYNERGY ↑',
+        [BUILD_IDS.CASH_CONTROL]: 'ECONOMY BUILD ↑',
+        [BUILD_IDS.SET_CONSISTENCY]: 'LINE LOCK ↑',
+        [BUILD_IDS.CHAOS]: 'CHAOS SPIKE ↑'
+    };
+
     const CONSUMABLES = {
         SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 32, rarity: 'common', type: 'consumable', icon: '🫀' },
         SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 24, rarity: 'common', type: 'consumable', icon: '💨' },
@@ -1058,6 +1306,22 @@
         }
         if (!normalized.currentRouteEffect || typeof normalized.currentRouteEffect !== 'object') normalized.currentRouteEffect = null;
         else if (!Array.isArray(normalized.currentRouteEffect.effects)) normalized.currentRouteEffect = { ...normalized.currentRouteEffect, effects: [] };
+        if (!normalized.runStats || typeof normalized.runStats !== 'object') {
+            normalized.runStats = { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } };
+        } else {
+            const rs = normalized.runStats;
+            const b = rs.build && typeof rs.build === 'object' ? rs.build : {};
+            normalized.runStats = {
+                totalHeat: typeof rs.totalHeat === 'number' && !Number.isNaN(rs.totalHeat) ? rs.totalHeat : 0,
+                biggestHustle: typeof rs.biggestHustle === 'number' && !Number.isNaN(rs.biggestHustle) ? rs.biggestHustle : 0,
+                finalBoss: typeof rs.finalBoss === 'string' ? rs.finalBoss : '',
+                build: {
+                    primary: typeof b.primary === 'string' ? b.primary : BUILD_IDS.UNKNOWN,
+                    peakConfidence: typeof b.peakConfidence === 'number' && !Number.isNaN(b.peakConfidence) ? b.peakConfidence : 0,
+                    keyItems: Array.isArray(b.keyItems) ? b.keyItems.filter((x) => typeof x === 'string') : []
+                }
+            };
+        }
         return normalized;
     };
 
@@ -1675,6 +1939,51 @@
         </div>
     );
 
+    const BuildIndicator = ({ analysis }) => {
+        const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
+        const tier = analysis.confidence >= 0.72 ? 'HIGH' : analysis.confidence >= 0.42 ? 'MED' : 'LOW';
+        return (
+            <div className={`absolute top-4 right-4 z-[82] w-[12rem] rounded border ${ui.border} bg-black/88 px-2.5 py-2 font-mono text-[10px] shadow-xl pointer-events-none`}>
+                <div className="tracking-[.22em] text-gray-500 mb-1">BUILD INTEL</div>
+                <div className={`${ui.accent} font-bold leading-tight tracking-wide`}>BUILD: {ui.label}</div>
+                {analysis.secondaryTag && <div className="text-gray-500 mt-0.5 truncate">TAG: {analysis.secondaryTag}</div>}
+                <div className="text-gray-400 mt-1">CONF: <span className={tier === 'HIGH' ? 'text-[#0df]' : 'text-gray-200'}>{tier}</span></div>
+            </div>
+        );
+    };
+
+    const RunBuildFootprint = ({ runBuild }) => {
+        const primary = runBuild?.primary || BUILD_IDS.UNKNOWN;
+        const ui = BUILD_UI[primary] || BUILD_UI[BUILD_IDS.UNKNOWN];
+        const tips = BUILD_TIPS[primary] || BUILD_TIPS[BUILD_IDS.UNKNOWN];
+        const blurbs = BUILD_STYLE_BLURBS[primary] || BUILD_STYLE_BLURBS[BUILD_IDS.UNKNOWN];
+        const keys = (runBuild?.keyItems || []).filter(Boolean);
+        const formatKey = (k) => {
+            if (k === 'FLOW_STREAK') return 'FLOW STREAK';
+            const meta = itemById(k);
+            return meta?.name || meta?.label || k;
+        };
+        return (
+            <div className="mt-4 border-2 border-black/70 bg-white/40 p-3 rounded font-mono text-xs text-left">
+                <div className="text-[10px] tracking-[.3em] text-gray-600 mb-2">RUN ARCHETYPE</div>
+                <div className={`text-base font-bold ${ui.accent}`}>RUN TYPE: {ui.label}</div>
+                <div className="text-[11px] text-gray-700 mt-2 leading-relaxed">
+                    <div><span className="opacity-60">STYLE · </span>{blurbs.scale}</div>
+                    <div><span className="opacity-60">CONSISTENCY · </span>{blurbs.consistency}</div>
+                </div>
+                {keys.length > 0 && (
+                    <div className="mt-2 text-[11px]">
+                        <span className="opacity-60">KEY COMPONENTS · </span>
+                        <span className="text-gray-900">{keys.map(formatKey).join(' · ')}</span>
+                    </div>
+                )}
+                <div className="mt-3 border-t border-black/20 pt-2 text-[10px] text-gray-700 space-y-1">
+                    {tips.slice(0, 3).map((t, i) => <div key={i}>• {t}</div>)}
+                </div>
+            </div>
+        );
+    };
+
     const HelpOverlay = ({ onClose }) => (
         <div className="absolute inset-0 z-[760] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
             <div className="w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-5 md:p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1880,7 +2189,7 @@
         const [typedCase, setTypedCase] = useState('CASE #');
         const [showIncarceratedStamp, setShowIncarceratedStamp] = useState(false);
         const [history, setHistory] = useState([]);
-        const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
+        const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
         const [insaneContract, setInsaneContract] = useState(false);
@@ -1917,6 +2226,8 @@
         const prevStashRef = useRef(0);
         const timeoutIdsRef = useRef(new Set());
         const intervalIdsRef = useRef(new Set());
+        const buildCalloutPrevRef = useRef(null);
+        const synergyCalloutAtRef = useRef(0);
 
         const scheduleTimeout = (fn, ms) => {
             const id = window.setTimeout(() => {
@@ -2162,7 +2473,7 @@
             setSwapMode(!!saved.swapMode);
             setSwapIdx(saved.swapIdx ?? null);
             setHistory(saved.history || []);
-            setRunStats(saved.runStats || { totalHeat: 0, biggestHustle: 0, finalBoss: '' });
+            setRunStats(saved.runStats || { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
             setBustActive(false);
             setPayoutActive(false);
             setFlyingScores([]);
@@ -2244,6 +2555,46 @@
             setTriggerCascade(rows);
             scheduleTimeout(() => setTriggerCascade([]), 950);
         };
+
+        const buildAnalysis = useMemo(
+            () => analyzeBuild({ inventory, dice, history, flowStreak }),
+            [inventory, dice, history, flowStreak]
+        );
+
+        useEffect(() => {
+            if (!inRunPhase) return;
+            setRunStats((s) => {
+                const prevB = { ...DEFAULT_RUN_BUILD, ...(s.build || {}) };
+                if (buildAnalysis.confidence > prevB.peakConfidence) {
+                    return {
+                        ...s,
+                        build: {
+                            primary: buildAnalysis.primaryBuild,
+                            peakConfidence: buildAnalysis.confidence,
+                            keyItems: deriveKeyItems(buildAnalysis.primaryBuild, inventory, dice, flowStreak)
+                        }
+                    };
+                }
+                return s;
+            });
+        }, [inRunPhase, buildAnalysis, inventory, dice, flowStreak]);
+
+        useEffect(() => {
+            if (!inRunPhase) return;
+            const prev = buildCalloutPrevRef.current;
+            buildCalloutPrevRef.current = { p: buildAnalysis.primaryBuild, c: buildAnalysis.confidence };
+            if (!prev) return;
+            if (buildAnalysis.primaryBuild === BUILD_IDS.UNKNOWN) return;
+            if (buildAnalysis.primaryBuild === prev.p && buildAnalysis.confidence > prev.c + 0.075) {
+                const now = Date.now();
+                if (now - synergyCalloutAtRef.current < 1400) return;
+                const line = BUILD_SYNERGY_CALLOUT[buildAnalysis.primaryBuild];
+                if (line) {
+                    spawnHitCallout(line);
+                    synergyCalloutAtRef.current = now;
+                }
+            }
+        }, [inRunPhase, buildAnalysis.primaryBuild, buildAnalysis.confidence]);
 
         const registerDebtSpike = (shortage, source = 'shortage') => {
             const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
@@ -2373,7 +2724,9 @@
             setCarveSparks([]);
             setPillBursts([]);
             setActiveWager(null);
-            setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '' });
+            setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
+            buildCalloutPrevRef.current = null;
+            synergyCalloutAtRef.current = 0;
             setInventory(p.id === 'CARD_COUNTER' ? [DEVISES.BLACK_BOOK] : []);
             setConsumables([]);
             const bones = Array(5).fill(0).map(makeBone);
@@ -3201,15 +3554,18 @@
                 )}
                 {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
                 {inRunPhase && (
-                    <RunIntelPanel
-                        flowMultiplier={flowMultiplier}
-                        activeWager={activeWager}
-                        insaneContract={insaneContract}
-                        routeEffect={currentRouteEffect}
-                        boss={activeBoss}
-                        consumables={consumables}
-                        upcomingPaths={phase === 'SHOP' ? paths : []}
-                    />
+                    <>
+                        <BuildIndicator analysis={buildAnalysis} />
+                        <RunIntelPanel
+                            flowMultiplier={flowMultiplier}
+                            activeWager={activeWager}
+                            insaneContract={insaneContract}
+                            routeEffect={currentRouteEffect}
+                            boss={activeBoss}
+                            consumables={consumables}
+                            upcomingPaths={phase === 'SHOP' ? paths : []}
+                        />
+                    </>
                 )}
                 {showDevPanel && inRunPhase && (
                     <div className="absolute bottom-4 right-4 z-[820] w-80 bg-black/95 border-2 border-fuchsia-500 rounded p-3 shadow-2xl text-[10px] font-mono">
@@ -3524,7 +3880,17 @@
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
-                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => <div key={item.id} className={`p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}><div className="text-sm font-bold text-white leading-none">{item.name}</div><div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div><RiskBadges item={item} /></div>)}</div>
+                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => {
+                                        const syn = synergyLabelForItem(item.id, buildAnalysis.primaryBuild);
+                                        return (
+                                            <div key={item.id} className={`group p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}>
+                                                <div className="text-sm font-bold text-white leading-none">{item.name}</div>
+                                                <div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div>
+                                                <RiskBadges item={item} />
+                                                {syn && <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-20 group-hover:opacity-100 group-hover:mt-1 transition-all text-[9px] font-mono text-cyan-300/90 leading-snug">{syn}</div>}
+                                            </div>
+                                        );
+                                    })}</div>
                                 </div>
                             </div>
                         </div>
@@ -3560,10 +3926,14 @@
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
-                                    return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''}`}>
+                                    const primaryBuild = buildAnalysis.primaryBuild;
+                                    const fits = itemFitsCurrentBuild(item.id, primaryBuild);
+                                    const syn = synergyLabelForItem(item.id, primaryBuild);
+                                    return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
                                         <div className="price-tag">${item.cost}</div>
+                                        {fits && !sold && <span className="absolute top-2 right-12 z-10 text-[8px] font-mono tracking-[0.2em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60">GOOD FIT</span>}
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-2xl">{item.icon || '🧪'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} /></div></div>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-2xl">{item.icon || '🧪'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-2xl font-mono">⚙</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{syn && <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
                                         <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
                                     </div>;
                                 })}</div>
@@ -3640,7 +4010,8 @@
                         <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
-                            <div className="border border-black p-4 bg-white/50 mb-8"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
+                            <div className="border border-black p-4 bg-white/50 mb-4"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
+                            <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
                             {showIncarceratedStamp && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards]">INCARCERATED</div>}
                             <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                         </div>
@@ -3651,9 +4022,10 @@
                     <div className="h-full flex items-center justify-center z-[500] relative overflow-hidden p-4">
                         <div className="victory-escape-backdrop" aria-hidden></div>
                         <CashRain count={30} reducedMotion={reducedMotion} />
-                        <div className="paper-card bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-sm rotate-3" style={{ '--paper-rot': '3deg' }}>
+                        <div className="paper-card bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-md rotate-3" style={{ '--paper-rot': '3deg' }}>
                             <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
                             <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><svg viewBox="0 0 220 70" className="mx-auto mt-1 w-44"><path className="signature-path" d="M10 44 C40 8, 55 64, 88 32 C115 8, 120 58, 155 30 C170 18, 186 26, 208 18" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/></svg><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
+                            <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
                             <button onClick={() => setPhase('LINEUP')} className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
                         </div>
                     </div>
