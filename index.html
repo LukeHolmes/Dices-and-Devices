@@ -521,130 +521,18 @@
     const { useEffect, useMemo, useRef, useState } = React;
 
     const AudioSystem = {
-        ctx: null,
-        volume: 1,
-        noiseBuffer: null,
-        ambientNodes: null,
-        init() {
-            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (this.ctx?.state === 'suspended') this.ctx.resume();
-        },
-        setVolume(nextVolume) {
-            this.volume = nextVolume;
-            if (!this.ambientNodes || !this.ctx) return;
-            const now = this.ctx.currentTime;
-            this.ambientNodes.humGain.gain.setTargetAtTime(0.02 * this.volume, now, 0.18);
-            this.ambientNodes.noiseGain.gain.setTargetAtTime(0.012 * this.volume, now, 0.18);
-        },
-        ensureNoiseBuffer() {
-            if (!this.ctx) return null;
-            if (this.noiseBuffer) return this.noiseBuffer;
-            const noise = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
-            const data = noise.getChannelData(0);
-            for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2) - 1;
-            this.noiseBuffer = noise;
-            return noise;
-        },
-        playNoiseBurst({ duration = 0.08, volume = 0.06, filterFreq = 900, when = 0, pan = 0 } = {}) {
-            if (!this.ctx || this.volume <= 0) return;
-            const buffer = this.ensureNoiseBuffer();
-            if (!buffer) return;
-            const source = this.ctx.createBufferSource();
-            source.buffer = buffer;
-            const lowpass = this.ctx.createBiquadFilter();
-            lowpass.type = 'lowpass';
-            lowpass.frequency.value = filterFreq;
-            const gain = this.ctx.createGain();
-            const startAt = this.ctx.currentTime + when;
-            gain.gain.setValueAtTime(0.0001, startAt);
-            gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * this.volume), startAt + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-            if (this.ctx.createStereoPanner) {
-                const panner = this.ctx.createStereoPanner();
-                panner.pan.value = pan;
-                source.connect(lowpass);
-                lowpass.connect(gain);
-                gain.connect(panner);
-                panner.connect(this.ctx.destination);
-            } else {
-                source.connect(lowpass);
-                lowpass.connect(gain);
-                gain.connect(this.ctx.destination);
-            }
-            source.start(startAt);
-            source.stop(startAt + duration + 0.03);
-        },
-        startAmbient() {
-            // Ambient hum removed: the constant low buzz was more irritating than atmospheric.
-        },
-        stopAmbient() {
-            if (!this.ambientNodes || !this.ctx) return;
-            const now = this.ctx.currentTime;
-            const { hum, humGain, roomNoise, noiseGain } = this.ambientNodes;
-            humGain.gain.cancelScheduledValues(now);
-            noiseGain.gain.cancelScheduledValues(now);
-            humGain.gain.setTargetAtTime(0.0001, now, 0.08);
-            noiseGain.gain.setTargetAtTime(0.0001, now, 0.08);
-            setTimeout(() => {
-                try { hum.stop(); } catch (e) {}
-                try { roomNoise.stop(); } catch (e) {}
-                hum.disconnect();
-                roomNoise.disconnect();
-                humGain.disconnect();
-                noiseGain.disconnect();
-            }, 220);
-            this.ambientNodes = null;
-        },
-        playTone(f, t, d, v = 0.1) {
-            if (!this.ctx || this.volume <= 0) return;
-            const o = this.ctx.createOscillator();
-            const g = this.ctx.createGain();
-            o.type = t;
-            o.frequency.value = f;
-            g.gain.value = v * this.volume;
-            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + d);
-            o.connect(g);
-            g.connect(this.ctx.destination);
-            o.start();
-            o.stop(this.ctx.currentTime + d);
-        },
-        clatter() {
-            this.playTone(150, 'triangle', 0.1, 0.06);
-            this.playNoiseBurst({ duration: 0.09, volume: 0.05, filterFreq: 680, pan: -0.2 });
-            setTimeout(() => this.playNoiseBurst({ duration: 0.11, volume: 0.075, filterFreq: 520, pan: 0.25 }), 540);
-            setTimeout(() => this.playTone(60, 'sawtooth', 0.22, 0.3), 520);
-            setTimeout(() => this.playTone(40, 'sawtooth', 0.38, 0.35), 980);
-            setTimeout(() => this.playNoiseBurst({ duration: 0.14, volume: 0.08, filterFreq: 460, pan: 0.1 }), 980);
-        },
-        payout() {
-            [400, 500, 600, 800].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.1), i * 95));
-        },
-        stinger(tier) {
-            if (tier === 'small') {
-                this.playTone(520, 'sine', 0.08, 0.06);
-                return;
-            }
-            if (tier === 'mid') {
-                [480, 620].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.1, 0.08), i * 80));
-                return;
-            }
-            if (tier === 'big') {
-                [420, 560, 760].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.13, 0.1), i * 75));
-                return;
-            }
-            [180, 220, 280, 420].forEach((f, i) => setTimeout(() => this.playTone(f, 'sawtooth', 0.2, 0.12), i * 90));
-        },
-        bossSting() {
-            [260, 190, 140].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.16, 0.12), i * 90));
-        },
-        bust() {
-            this.playTone(45, 'sawtooth', 0.5, 0.5);
-        },
-        paper() {
-            this.playTone(600, 'square', 0.05, 0.05);
-            setTimeout(() => this.playTone(400, 'sawtooth', 0.1, 0.08), 50);
-            this.playNoiseBurst({ duration: 0.08, volume: 0.06, filterFreq: 760 });
-        }
+        init() {},
+        setVolume() {},
+        startAmbient() {},
+        stopAmbient() {},
+        playNoiseBurst() {},
+        playTone() {},
+        clatter() {},
+        payout() {},
+        stinger() {},
+        bossSting() {},
+        bust() {},
+        paper() {}
     };
 
     const PERSONAS = [
@@ -2010,8 +1898,6 @@
         onRestart,
         onOpenHelp,
         onExitToLineup,
-        muted,
-        onToggleMuted,
         reducedMotion,
         onToggleReducedMotion
     }) => (
@@ -2022,9 +1908,6 @@
                     <button onClick={onResume} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">RESUME HUSTLE</button>
                     <button onClick={onRestart} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">RESTART RUN</button>
                     <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
-                    <button onClick={onToggleMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
-                        AUDIO: {muted ? 'MUTED' : 'LIVE'}
-                    </button>
                     <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                         ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
                     </button>
@@ -2180,9 +2063,6 @@
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
-        const [muted, setMuted] = useState(() => {
-            try { return window.localStorage?.getItem('gutterbones1977:audio-muted:v2') !== '0'; } catch { return true; }
-        });
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
@@ -2339,21 +2219,6 @@
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
         }, []);
-
-        useEffect(() => {
-            if (muted) {
-                AudioSystem.setVolume(0);
-                AudioSystem.stopAmbient();
-                return;
-            }
-            AudioSystem.init();
-            AudioSystem.setVolume(1);
-            AudioSystem.stopAmbient();
-        }, [phase, muted]);
-
-        useEffect(() => {
-            try { window.localStorage?.setItem('gutterbones1977:audio-muted:v2', muted ? '1' : '0'); } catch {}
-        }, [muted]);
 
         useEffect(() => () => {
             timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
@@ -3499,9 +3364,6 @@
                         SYSTEM
                     </button>
                 )}
-                <button onClick={() => setMuted(m => !m)} aria-pressed={muted} title={muted ? 'Unmute audio' : 'Mute audio'} className="absolute top-3 right-3 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#0df]">
-                    {muted ? 'UNMUTE' : 'MUTE'}
-                </button>
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
@@ -3530,8 +3392,6 @@
                             setShowHelpOverlay(false);
                             setPhase('LINEUP');
                         }}
-                        muted={muted}
-                        onToggleMuted={() => setMuted(m => !m)}
                         reducedMotion={reducedMotion}
                         onToggleReducedMotion={() => setReducedMotion(v => !v)}
                     />

@@ -103,34 +103,10 @@
 <script type="text/babel">
     const { useState, useCallback, useEffect, useMemo, useRef } = React;
 
-    // --- AUDIO SYSTEM ---
     const AudioSystem = {
-        ctx: null, volume: 1.0,
-        init: function() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-        playTone: function(f, t, d, v=0.1) { if(!this.ctx)return; const o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type=t; o.frequency.value=f; g.gain.value=v*this.volume; g.gain.exponentialRampToValueAtTime(0.01,this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); },
-        playSfx: function(n) {
-            if(!this.ctx)return;
-            if(n==='roll') [150,120,100,80].forEach((f,i)=>setTimeout(()=>this.playTone(f,'triangle',0.1,0.1),i*60));
-            if(n==='slam') { this.playTone(50,'sawtooth',0.5,0.5); this.playTone(40,'square',0.4,0.3); }
-            if(n==='score') { this.playTone(600,'sine',0.1); setTimeout(()=>this.playTone(900,'sine',0.3),100); }
-            if(n==='score_trigger') this.playTone(800,'sine',0.05);
-            if(n==='score_calc') this.playTone(400,'square',0.1);
-            if(n==='score_boom') this.playTone(100,'sawtooth',0.3);
-            if(n==='buy') this.playTone(1200,'square',0.15,0.05);
-            if(n==='sell') this.playTone(400,'sawtooth',0.1,0.1);
-            if(n==='error') this.playTone(100,'sawtooth',0.2);
-            if(n==='equip') this.playTone(800,'sine',0.1);
-            if(n==='levelup') [300,400,500,600].forEach((f,i)=>setTimeout(()=>this.playTone(f,'sine',0.2,0.1),i*50));
-            if(n==='program') { this.playTone(800,'square',0.1); setTimeout(()=>this.playTone(1200,'square',0.1),50); }
-            if(n==='win') [300,500,800].forEach((f,i)=>setTimeout(()=>this.playTone(f,'square',0.2,0.2),i*150));
-            if(n==='death') [100,80,60,40,20].forEach((f, i) => setTimeout(() => this.playTone(f, 'sawtooth', 0.5, 0.5), i * 100));
-            if(n==='hit') { this.playTone(100,'sawtooth',0.1,0.3); this.playTone(50,'square',0.2,0.3); }
-            if(n==='alarm') { this.playTone(600,'sawtooth',0.2,0.3); setTimeout(()=>this.playTone(400,'sawtooth',0.2,0.3),200); }
-            if(n==='tilt') { this.playTone(80,'sawtooth',0.5,0.4); this.playTone(60,'square',0.6,0.4); }
-            if(n==='ascend') { [200,400,800,1600,3200].forEach((f,i)=>setTimeout(()=>this.playTone(f,'square',0.3,0.2),i*100)); }
-            if(n==='swap') this.playTone(600,'triangle',0.1);
-            if(n==='coin') this.playTone(1500,'sine',0.2);
-        }
+        init: function() {},
+        playTone: function() {},
+        playSfx: function() {}
     };
 
     // --- CONSTANTS ---
@@ -419,7 +395,6 @@
                         <div className="flex justify-between items-center"><span className="text-gray-300">CRT FX</span><div className={`toggle-switch ${settings.crt ? 'on' : ''}`} onClick={() => toggle('crt')}><div className="toggle-knob"></div></div></div>
                         <div className="flex justify-between items-center"><span className="text-gray-300">Screen Shake</span><div className={`toggle-switch ${settings.shake ? 'on' : ''}`} onClick={() => toggle('shake')}><div className="toggle-knob"></div></div></div>
                         <div className="flex justify-between items-center"><span className="text-gray-300">Fast Mode (Skip Anim)</span><div className={`toggle-switch ${settings.fast ? 'on' : ''}`} onClick={() => toggle('fast')}><div className="toggle-knob"></div></div></div>
-                        <div className="flex justify-between items-center"><span className="text-gray-300">Master Audio</span><div className={`toggle-switch ${settings.audio ? 'on' : ''}`} onClick={() => { toggle('audio'); AudioSystem.volume = settings.audio ? 0 : 1; }}><div className="toggle-knob"></div></div></div>
                     </div>
                 </div>
             </div>
@@ -501,7 +476,7 @@
         const [inflation, setInflation] = useState(0);
         const [dealerText, setDealerText] = useState(DEALER_QUOTES.START[0]);
         const [handLevels, setHandLevels] = useState({});
-        const [settings, setSettings] = useState({ crt: true, shake: true, audio: true, fast: false });
+        const [settings, setSettings] = useState({ crt: true, shake: true, fast: false });
         const [showSettings, setShowSettings] = useState(false);
         const [showArchive, setShowArchive] = useState(false);
         const [showHelp, setShowHelp] = useState(false);

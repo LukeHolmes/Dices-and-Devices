@@ -91,8 +91,7 @@ Bosses change the rules instead of acting as simple flavor text:
 
 - Noir paper/felt visual language with flicker, grain, vignette, light leak, smoke, rarity glow, and boss banners.
 - Three-act bone roll feel with per-bone variation, verdict glow, kept-bone motion, cash rain, POW bursts, and cinematic bust/victory screens.
-- Procedural Web Audio for rolls, payouts, boss stings, stamps, busts, and ambient room tone.
-- Mute control and reduced-motion support.
+- Silent-by-design presentation with reduced-motion support.
 
 ## Important Files
 
@@ -111,7 +110,6 @@ README.md                      Project overview
 - ReactDOM UMD
 - Tailwind CSS CDN
 - Babel Standalone for in-browser JSX
-- Web Audio API
 - Plain HTML/CSS/JSX
 - No build step required
 
@@ -148,7 +146,6 @@ Gutterbones uses browser `localStorage` for local save records:
 ```text
 gutterbones1977:run:v1           Active run state for Resume Hustle
 gutterbones1977:meta:v1          Safehouse cash, unlocks, and best-run stats
-gutterbones1977:audio-muted:v1   Audio mute preference
 ```
 
 Runs autosave during play, shop, carving, and gambling phases. Completed or busted runs clear the active run save after awarding Safehouse cash.
@@ -167,7 +164,7 @@ Runs autosave during play, shop, carving, and gambling phases. Completed or bust
 
 Design & Development: Luke Holmes
 
-Technologies: React, Tailwind, Babel, Web Audio API
+Technologies: React, Tailwind, Babel
 
 ## License
 

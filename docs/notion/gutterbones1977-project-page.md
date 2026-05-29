@@ -15,7 +15,7 @@
 
 ### What it is
 
-Gutterbones 1977 is a single-file browser game written in React (UMD) + Tailwind + Babel Standalone, with a Web Audio soundtrack. There is no build step — `index.html` is the whole game.
+Gutterbones 1977 is a single-file browser game written in React (UMD) + Tailwind + Babel Standalone. There is no build step — `index.html` is the whole game.
 
 It is a Yahtzee-inspired dice roguelike reskinned and rebuilt around a 1970s crime/noir identity. Players run "hustles" (runs) made of jobs, roll bones (dice), score into payout categories, manage dirty cash, debt, pills, hardware and a stash meter, fight bosses with literal rule changes, and try to survive The Raid.
 
@@ -42,7 +42,7 @@ It is a Yahtzee-inspired dice roguelike reskinned and rebuilt around a 1970s cri
 - **Back-alley shop** — buy carved faces and hardware between jobs.
 - **Route choice between jobs.**
 - **Feedback layer** — score preview badges, trigger notes, risk badges, boss intro messaging, rarity glow, flying score feedback, hand history.
-- **Procedural Web Audio SFX.**
+- **Silent-by-design presentation.**
 
 ### Persistence keys (localStorage)
 
@@ -59,7 +59,6 @@ Runs autosave during play, shop, and carving. Completed or busted runs clear the
 - ReactDOM (UMD)
 - Tailwind CSS (CDN)
 - Babel Standalone (in-browser JSX)
-- Web Audio API
 - Plain HTML/CSS/JSX
 - No build step
 
