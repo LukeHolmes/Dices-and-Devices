@@ -2,7 +2,7 @@
 
 ## Cursor Cloud specific instructions
 
-This is a single-file browser game (`index.html`) with zero build tools, no `package.json`, and no installable dependencies. React 18, Babel, and Tailwind CSS are loaded from CDNs at runtime.
+This is a single-file browser game (`index.html`) with no build step or runtime package dependencies. `package.json` provides dependency-free Node test commands. React 18, Babel, and Tailwind CSS are loaded from CDNs at runtime.
 
 ### Running the app
 
@@ -16,7 +16,7 @@ Then open `http://localhost:8080/index.html` in Chrome.
 
 ### Lint / Test / Build
 
-There are no linters, test suites, or build steps configured. All code lives in a single `<script type="text/babel">` block inside `index.html`. Manual browser testing is the only verification method.
+Run `npm run check` using Node 22+; no install is needed. Pure rules live in the inline `gutterbones-rules` script and JSX remains in the Babel block. Tests execute production helpers and selected action bodies. Known-issue audit success means existing failures were reproduced, not fixed. See `docs/testing.md` for strict checks, limitations, and the browser checklist. There is no build or linter step.
 
 ### Key gotchas
 

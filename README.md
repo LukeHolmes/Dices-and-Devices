@@ -152,10 +152,10 @@ Runs autosave during play, shop, carving, and gambling phases. Completed or bust
 
 ## Future Improvements
 
-- Decide whether `gutterbones1977.html` should be resynced, removed, or clearly kept as a legacy snapshot.
+- Keep historical HTML snapshots archived; implement new work only in `index.html`.
 - Move to Vite + React + TypeScript if the project outgrows the single-file format.
 - Extract scoring, faces, hardware, bosses, personas, and tuning into data modules.
-- Add automated tests for score calculation, boss effects, persistence, and economy edge cases.
+- Extend the baseline regression tests as rule and persistence defects are fixed.
 - Add balance/debug tooling for quotas, shop offers, debt pressure, and run outcomes.
 - Expand Safehouse upgrades, face pool, boss pool, route variety, and consumables.
 - Continue improving mobile/touch ergonomics.
@@ -169,3 +169,9 @@ Technologies: React, Tailwind, Babel
 ## License
 
 MIT License
+
+## Baseline checks
+
+With Node 22 or newer, run `npm run check` (no install required).
+See [testing instructions](docs/testing.md) and [Stage 1 baseline](docs/stage-1-baseline.md).
+The game still runs without Node or a build step.
