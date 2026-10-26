@@ -8,6 +8,8 @@ for (const [name, fixture] of Object.entries({
   wager: f.wager,
   gamble: f.gamble,
   carving: f.carving,
+  bust: f.bustLastHand,
+  victory: f.victoryLastHand,
 }))
   test(`${name}: normalization and storage roundtrip`, () => {
     const g = createGame(f.snapshot());

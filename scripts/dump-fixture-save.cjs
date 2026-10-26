@@ -1,6 +1,6 @@
 "use strict";
 // Print normalized run JSON for manual browser injection (Phase B checklist).
-// Usage: node scripts/dump-fixture-save.cjs [normal|wager|gamble|carving]
+// Usage: node scripts/dump-fixture-save.cjs [normal|wager|gamble|carving|bust|victory]
 const { createGame, plain } = require("../tests/helpers/game.cjs");
 const fixtures = require("../tests/fixtures/runs.cjs");
 
@@ -10,6 +10,8 @@ const builders = {
   wager: fixtures.wager,
   gamble: fixtures.gamble,
   carving: fixtures.carving,
+  bust: fixtures.bustLastHand,
+  victory: fixtures.victoryLastHand,
 };
 const builder = builders[name];
 if (!builder) {
