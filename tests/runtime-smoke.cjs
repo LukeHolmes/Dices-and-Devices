@@ -58,7 +58,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     assert.equal(saved.phase, "PLAY");
     assert.equal(saved.hasRolled, true);
     assert.equal(saved.dice.length, 5);
-    assert.equal(saved.discards, 2);
+    assert.equal(saved.discards, 3);
     console.log(
       "Contract, tutorial skip, roll settlement and autosave passed.",
     );
