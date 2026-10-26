@@ -10,6 +10,9 @@
     "test": "node --test tests/rules.test.cjs tests/saves.test.cjs tests/source.test.cjs",
     "audit:known-issues": "node tests/known-issues.cjs",
     "test:known-issues": "node tests/known-issues.cjs --strict",
-    "check": "npm test && npm run audit:known-issues"
+    "check": "npm test && npm run audit:known-issues",
+    "check:parity": "node tests/parity.cjs",
+    "check:release": "npm run check && npm run check:parity",
+    "dump:save": "node scripts/dump-fixture-save.cjs"
   }
 }

@@ -66,4 +66,4 @@ Other review findings remain outside this focused harness: autosave during anima
 - 114,608 complete scoring outputs (including explanations/triggers) and 7 save normalization cases matched the pinned original. Coverage includes every ordered standard five-die hand across all 13 categories and additional face, hardware, flow/mastery and hardware-suppression combinations.
 - Full Babel compilation and React 18/jsdom contract → roll → autosave smoke passed.
 - No visual, mobile, CDN-loading, or real-browser verification of the changed build has been completed. Use the checklist before deployment.
-- GitHub connection is read-only (`push: false`); branch creation returned HTTP 403, “Resource not accessible by integration.” The local branch is prepared; remote branch, PR, hosted preview, and remote CI remain pending write access. Existing production remains untouched.
+- Phase B merge gate and checklist: see `docs/phase-b-signoff.md`. PR #27 carries CI, Vercel preview, and manual browser sign-off (26 Oct 2026). Production at `auditrelease.vercel.app` remains pinned to rollback commit `8794488` until an explicit promote after merge.

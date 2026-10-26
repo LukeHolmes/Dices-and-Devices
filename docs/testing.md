@@ -48,9 +48,9 @@ Open http://localhost:8080/index.html . CDN access is required. Use a disposable
 Before publishing, check:
 
 - Lineup and Safehouse render, artwork loads, console has no exceptions.
-- Start Street Rat; dismiss onboarding; roll, keep a bone, pop a pill and score.
+- Start Street Rat; dismiss onboarding; roll, keep a bone, pop a pill and score. On desktop, hover a die to reveal the per-bone **PILL** button (top-right of the bone).
 - Compare displayed preview and awarded heat; review the payout explanation.
-- Exit/reload and resume a normal save. Exercise CARVING and GAMBLE synthetic fixtures separately; wager/gamble resume defects are currently expected.
+- Exit/reload and resume a normal save. Exercise CARVING and GAMBLE synthetic fixtures separately; wager/gamble resume defects are currently expected. Generate injectable saves with `node scripts/dump-fixture-save.cjs [normal|wager|gamble|carving]` (see `docs/phase-b-signoff.md`).
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 
