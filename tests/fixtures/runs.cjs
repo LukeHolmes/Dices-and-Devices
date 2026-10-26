@@ -106,6 +106,33 @@ const terminal = () =>
     gold: 15,
     activeWager: { stake: 5, threshold: 300 },
   });
+/** Last hand, heat below quota — score any small payout in browser to trigger bust flow. */
+const bustLastHand = () =>
+  run({
+    hands: 1,
+    discards: 0,
+    score: 0,
+    target: 130,
+    hasRolled: true,
+    dice: dice([1, 2, 3, 4, 5]),
+  });
+/** Final job, one hand left — score Sixes (30 heat) in browser to trigger victory flow. */
+const victoryLastHand = () =>
+  run({
+    round: 10,
+    hands: 1,
+    discards: 0,
+    score: 125,
+    target: 130,
+    hasRolled: true,
+    dice: dice([6, 6, 6, 6, 6]),
+    runStats: {
+      totalHeat: 400,
+      biggestHustle: 80,
+      finalBoss: "",
+      build: { primary: "UNKNOWN", peakConfidence: 0, keyItems: [] },
+    },
+  });
 const bossCases = [
   ["BOUNCER", 195],
   ["LOAN_SHARK", 130],
@@ -123,5 +150,7 @@ module.exports = {
   gamble,
   carving,
   terminal,
+  bustLastHand,
+  victoryLastHand,
   bossCases,
 };
