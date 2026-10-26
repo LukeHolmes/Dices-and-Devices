@@ -7,12 +7,12 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test tests/rules.test.cjs tests/saves.test.cjs tests/source.test.cjs",
+    "test": "node --test tests/rules.test.cjs tests/saves.test.cjs tests/source.test.cjs tests/regression-defects.test.cjs",
     "audit:known-issues": "node tests/known-issues.cjs",
     "test:known-issues": "node tests/known-issues.cjs --strict",
     "check": "npm test && npm run audit:known-issues",
     "check:parity": "node tests/parity.cjs",
-    "check:release": "npm run check && npm run check:parity",
+    "check:release": "npm run check",
     "dump:save": "node scripts/dump-fixture-save.cjs"
   }
 }

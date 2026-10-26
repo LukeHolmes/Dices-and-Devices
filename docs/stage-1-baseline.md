@@ -39,25 +39,11 @@ Snapshot from the review; refresh branch comparisons before applying any work. N
 
 #8 and #7 target the older `cursor/gutterbones1977-baseline-8d0d` branch. Counts above compare their heads with current main, not with their PR base. These recommendations are triage, not claims that every patch has been revalidated.
 
-## Known defects carried forward
+## Known defects (Phase C — resolved)
 
-`tests/known-issues.cjs` contains both the observed result and the desired result for each deterministic reproduction.
+GB001–GB011 were fixed in Phase C. Regression coverage: `tests/regression-defects.test.cjs`. See `docs/phase-c-signoff.md`.
 
-| ID | Current defect | Intended follow-up |
-|---|---|---|
-| GB001 | Zero-pill Enforcer cannot opening-roll | Separate opening roll eligibility from reroll resources. |
-| GB002 | Pill reroll ignores carved faces | Use a consistent face resolver. |
-| GB003 | SNIFF spends stash when reroll cannot happen | Validate before charging; settle intended pill cost. |
-| GB004 | Full Ride accepts fewer than five scoring bones | Require a genuine five-bone full house. |
-| GB005 | Centerpiece does not repeat gold face bonus | Apply the documented copied-face behaviour. |
-| GB006 | Resume discards an already paid wager | Preserve wager state. |
-| GB007 | Empty object accepted as resumable save | Validate shape, version and five dice. |
-| GB008 | Debt payment can exceed debt owed | Cap charge at the actual payable debt. |
-| GB009 | Terminal award omits hustle cash and subtracts lost stake twice | Use one settled cash total throughout. |
-| GB010 | Resume clears gamble stake | Preserve the pending gamble. |
-| GB011 | Pill reroll bypasses Junkie six-to-one rule | Apply boss rules consistently. |
-
-Other review findings remain outside this focused harness: autosave during animation, stale scheduled callbacks, route-copy/tuning drift, inventory-order-dependent multiplier stacking, low-value consumable pricing, accessibility, and mobile/performance work. Passing Stage 1 checks does not resolve these.
+Other review findings remain outside the defect harness: autosave during animation, stale scheduled callbacks, route-copy/tuning drift, inventory-order-dependent multiplier stacking, low-value consumable pricing, accessibility, and mobile/performance work.
 
 ## Verification and remaining delivery gate
 

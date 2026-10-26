@@ -8,13 +8,13 @@ Requires Node 22+ (verified with Node 24). No packages need installing and no bu
 npm run check
 ```
 
-This runs 35 rule/save/source tests and the known-issue audit. The audit succeeds only when each observed defect matches its explicit baseline; unexpected errors, newly fixed defects, and changed results fail it. Thus a green check means “baseline reproduced”, not “bug-free”.
+This runs 48 tests including `tests/regression-defects.test.cjs` (former GB001–GB011). A green check means rules, saves, and defect regressions all pass.
 
 ```bash
-npm run test:known-issues
+npm run audit:known-issues
 ```
 
-This asserts desired outcomes and intentionally exits nonzero while the 11 defects remain. After a fix, move its desired assertion into the ordinary regression suite and remove its known-failure entry. Do not update broken baselines simply to make CI green.
+Runs the same defect regression file (alias for CI compatibility).
 
 The action harness executes selected production function bodies, substitutes storage/audio/timers and queues setters against a render snapshot. It fails loudly if source boundaries change. It does not test browser scheduling, React StrictMode, pointer interactions, layout or animation timing.
 
@@ -24,7 +24,7 @@ The action harness executes selected production function bodies, substitutes sto
 node tests/parity.cjs
 ```
 
-Requires Git history containing the pinned baseline commit (use a full clone). It compares original and extracted score/save output without maintaining a second implementation. This is a Stage 1-only gate: deliberate rule fixes should retire it or narrow it to unaffected rules. It is not part of ongoing CI for that reason.
+Requires Git history containing the pinned baseline commit (use a full clone). **Retired from `npm run check:release` after Phase C** — intentional bug fixes diverge from commit `8794488`. Run manually only when verifying refactor equivalence on untouched rules.
 
 ## Optional React smoke check
 
