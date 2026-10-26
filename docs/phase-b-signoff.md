@@ -12,7 +12,7 @@ Stage 1 **Phase A** lands the reproducible baseline (PR #27). **Phase B** confir
 | Optional React smoke | See `docs/testing.md` | Pass |
 | GitHub Actions | [Baseline checks on PR #27](https://github.com/LukeHolmes/Dices-and-Devices/pull/27) | Pass |
 | Vercel preview (branch) | `https://auditrelease-lyuv1lyro-holmeslukej-2774s-projects.vercel.app` (commit `ddee2d8`) | Ready |
-| Production rollback pin | `8794488` on `auditrelease.vercel.app` | Unchanged until promote |
+| Production | `auditrelease.vercel.app` → `main` @ `26f57d8` | Auto-promoted 26 Oct 2026 |
 
 ## Manual browser checklist (`docs/testing.md`)
 
@@ -45,11 +45,11 @@ Fixtures: `normal`, `wager`, `gamble`, `carving`. Wager/gamble resume bugs (GB00
 
 ## Production promote (remaining Phase B)
 
-1. Merge PR #27 to `main`.
-2. Confirm CI green on `main`.
-3. Promote Vercel production to the new `main` commit (or your usual alias flow).
-4. Smoke `https://auditrelease.vercel.app/index.html` after promote.
-5. Keep rollback at `8794488` until Stage 2 defect fixes are validated.
+1. ~~Merge PR #27 to `main`.~~ **Done** (merge commit `26f57d8`, 26 Oct 2026).
+2. Confirm CI green on `main` after each push.
+3. ~~Promote Vercel production~~ **Auto-deployed** to `26f57d8` on merge.
+4. Smoke `https://auditrelease.vercel.app/index.html` — confirm `gutterbones-rules` script present (Stage 1 build).
+5. Rollback pin remains `8794488` in git history if production must revert.
 
 ## Phase C pointer
 
