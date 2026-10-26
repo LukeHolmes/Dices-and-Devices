@@ -23,7 +23,7 @@ for (const [name, fixture] of Object.entries({
   });
 test("Non-object saves rejected", () => {
   const g = createGame();
-  for (const v of [null, undefined, false, 3, "bad"])
+  for (const v of [null, undefined, false, 3, "bad", {}])
     assert.equal(g.api.normalizeSavedRun(v), null);
 });
 test("Optional fields receive defaults", () => {

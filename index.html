@@ -564,7 +564,12 @@ const GutterbonesRules = (() => {
             case 'SIXES': valid = true; chips = ((counts[6] || 0) + wilds) * 6; break;
             case 'TOK': valid = maxCount + wilds >= 3; if (valid) { chips = 20; mult *= 2; } break;
             case 'FOK': valid = maxCount + wilds >= 4; if (valid) { chips = 35; mult *= 3; } break;
-            case 'FH': valid = (cArr.includes(3) && cArr.includes(2)) || (wilds >= 1 && cArr.length <= 2 && maxCount >= 2); if (valid) { chips = 30; mult *= 3; } break;
+            case 'FH': {
+                const scoringBones = resolved.filter((d, i) => !destroyed.has(i) && (d.value === 'W' || (typeof d.value === 'number' && d.value > 0))).length;
+                valid = scoringBones >= 5 && ((cArr.includes(3) && cArr.includes(2)) || (wilds >= 1 && cArr.length <= 2 && maxCount >= 2));
+                if (valid) { chips = 30; mult *= 3; }
+                break;
+            }
             case 'SS': {
                 const has = req => req.filter(v => !standardVals.includes(v)).length <= wilds;
                 valid = has([1,2,3,4]) || has([2,3,4,5]) || has([3,4,5,6]);
@@ -618,6 +623,7 @@ const GutterbonesRules = (() => {
                         }
                         if (center.faceId === 'MULT_FACE') { mult += 1; centerMult += 1; }
                         if (center.faceId === 'GHOST_FACE') { mult += 2; centerMult += 2; }
+                        if (center.faceId === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CENTER', value: '+$2' }); }
                         triggers.push({ name: 'CENTER', value: 'slot 3' });
                         hardwareTriggerCount += 1;
                         pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
@@ -682,6 +688,7 @@ const GutterbonesRules = (() => {
     const normalizeSavedRun = (raw, context) => {
         const { RUN_SAVE_VERSION, RUN_PHASES, WAGER_TUNING, DEFAULT_RUN_BUILD, BUILD_IDS } = context;
         if (!raw || typeof raw !== 'object') return null;
+        if (typeof raw.personaId !== 'string' || !Array.isArray(raw.dice) || raw.dice.length !== 5) return null;
         const normalized = { ...raw };
         normalized.version = RUN_SAVE_VERSION;
         if (!RUN_PHASES.includes(normalized.phase)) normalized.phase = 'PLAY';
@@ -2319,7 +2326,7 @@ const GutterbonesRules = (() => {
 
         const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
-        const rollReady = !rolling && discards > 0 && hands > 0 && !swapMode;
+        const rollReady = !rolling && hands > 0 && !swapMode && (!hasRolled || discards > 0);
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
@@ -2504,8 +2511,8 @@ const GutterbonesRules = (() => {
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
-            setGambleStake(0);
-            setActiveWager(null);
+            setGambleStake(typeof saved.gambleStake === 'number' ? saved.gambleStake : 0);
+            setActiveWager(saved.activeWager || null);
             setRunClosed(false);
             setFixerLine('Back in the game. Pick your spot.');
             setPhase(saved.phase || 'PLAY');
@@ -2813,7 +2820,8 @@ const GutterbonesRules = (() => {
         };
 
         const rollBones = () => {
-            if (rolling || discards <= 0 || hands <= 0) return;
+            if (rolling || hands <= 0) return;
+            if (hasRolled && discards <= 0) return;
             const settleMs = 1120;
             let toll = 0;
             if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
@@ -2834,7 +2842,7 @@ const GutterbonesRules = (() => {
             setFeltPulse(true);
             triggerCameraKick('soft');
             scheduleTimeout(() => setFeltPulse(false), 650);
-            setDiscards(d => d - 1);
+            if (hasRolled) setDiscards(d => d - 1);
             setHasRolled(true);
             const interval = scheduleInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 70);
             scheduleTimeout(() => {
@@ -2868,7 +2876,20 @@ const GutterbonesRules = (() => {
             setActiveMechanicPopup(null);
             setDice(prev => {
                 const next = [...prev];
-                next[idx] = { ...next[idx], value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard', id: Math.random() };
+                const die = next[idx];
+                const face = die.faces[Math.floor(Math.random() * die.faces.length)];
+                const isStandard = face.type === 'standard';
+                let value = face.value;
+                if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
+                next[idx] = {
+                    ...die,
+                    value,
+                    faceId: isStandard ? null : face.id,
+                    faceLabel: isStandard ? null : face.label,
+                    faceStyle: isStandard ? null : face.style,
+                    type: isStandard ? 'standard' : face.type,
+                    id: Math.random()
+                };
                 return next;
             });
             if (!reducedMotion) {
@@ -2884,6 +2905,7 @@ const GutterbonesRules = (() => {
             const wager = activeWager;
             let wagerNet = 0;
             let projectedCash = gold;
+            let settlementCash = gold;
             setUsedCats(prev => [...prev, catId]);
             setHands(h => h - 1);
             setKept([false,false,false,false,false]);
@@ -2940,6 +2962,7 @@ const GutterbonesRules = (() => {
                 const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
                 if (hustleCash > 0) setGold(g => g + hustleCash);
                 projectedCash = Math.max(0, gold + (result.gDelta || 0) + hustleCash);
+                settlementCash = projectedCash;
                 if (result.total >= ECONOMY_TUNING.debtReliefThreshold) {
                     setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
                 }
@@ -2977,10 +3000,10 @@ const GutterbonesRules = (() => {
                     wagerNet = wagerPayout;
                     setGold(g => g + wagerPayout);
                     projectedCash += wagerPayout;
+                    settlementCash += wagerPayout;
                     setFixerLine(`Side bet cashed: +$${wagerPayout}.`);
                     spawnPaperStamp('BET HIT', '#0f766e');
                 } else {
-                    wagerNet = -wager.stake;
                     setFixerLine('Side bet burned. Keep playing clean.');
                     spawnPaperStamp('BET LOST');
                 }
@@ -3007,7 +3030,7 @@ const GutterbonesRules = (() => {
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 setGambleStake(0);
                 setFixerLine('Quota missed. Keep your chin down.');
-                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: gold + (result.gDelta || 0) + wagerNet });
+                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: settlementCash });
                 setBustActive(true);
                 triggerCameraKick('hard');
                 if (!reducedMotion) setCinematic('bust');
@@ -3019,7 +3042,7 @@ const GutterbonesRules = (() => {
                     setLossExplanation(null);
                     setGambleStake(0);
                     setFixerLine('You cleared the city. Time to disappear.');
-                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: gold + (result.gDelta || 0) + wagerNet });
+                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: settlementCash });
                     AudioSystem.paper();
                     if (!reducedMotion) setCinematic('victory');
                     scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
@@ -3076,10 +3099,14 @@ const GutterbonesRules = (() => {
         const handleProgram = (p) => {
             showMechanicPopup(`PROGRAM_${p.id}`);
             if (stash < p.cost || activeBoss?.id === 'INFORMANT') return;
+            if (p.id === 'SNIFF') {
+                const free = dice.map((_, i) => i).filter(i => !kept[i]);
+                if (discards <= 0 || !free.length) return;
+            }
             setStash(s => s - p.cost);
             if (p.id === 'SNIFF') {
                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
-                if (free.length) popPill(free[Math.floor(Math.random() * free.length)]);
+                popPill(free[Math.floor(Math.random() * free.length)]);
             }
             if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
             if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
@@ -3208,7 +3235,8 @@ const GutterbonesRules = (() => {
 
         const payDebtFromCash = (amount) => {
             if (phase !== 'SHOP' || debt <= 0 || gold <= 0) return;
-            const payment = Math.min(amount, gold);
+            const maxPaymentForDebt = Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier);
+            const payment = Math.min(amount, gold, maxPaymentForDebt);
             if (payment <= 0) return;
             const debtRelief = Math.min(debt, Math.max(1, Math.floor(payment * DEBT_PAYDOWN_TUNING.reliefMultiplier)));
             setGold(g => g - payment);

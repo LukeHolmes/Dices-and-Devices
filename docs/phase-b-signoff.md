@@ -60,6 +60,6 @@ location.reload();
 4. Production HTML verified to include inline `gutterbones-rules`.
 5. Git rollback pin: `8794488` if revert required.
 
-## Phase C (next)
+## Phase C
 
-Fix known defects starting with **GB007** → **GB006/GB010** → pill/scoring issues per `docs/stage-1-baseline.md`. Use `npm run test:known-issues` while fixing.
+**Complete** — see `docs/phase-c-signoff.md`.
