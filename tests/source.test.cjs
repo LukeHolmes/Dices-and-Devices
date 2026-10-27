@@ -52,7 +52,8 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   assert.ok(stepMatches);
   const stepsBlock = appSource.slice(appSource.indexOf("ONBOARDING_STEPS"));
   const stepCount = (stepsBlock.match(/title:\s*'/g) || []).length;
-  assert.ok(stepCount >= 6, `expected >= 6 onboarding steps, got ${stepCount}`);
+  assert.ok(stepCount >= 7, `expected >= 7 onboarding steps, got ${stepCount}`);
+  assert.match(appSource, /LockedPayoutRow/);
   assert.match(
     actionSource("calculateScore"),
     /GutterbonesRules.calculateScore/,
