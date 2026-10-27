@@ -129,6 +129,10 @@ http://localhost:8080/index.html
 
 Opening `index.html` directly may work in some browsers, but serving over HTTP is recommended because the game loads React, Babel, Tailwind, and fonts from CDNs.
 
+**Build mode:** On `localhost` / `127.0.0.1`, the page loads React development builds and enables the in-run dev QA panel (`Ctrl+Shift+D`). On any other host it loads **React production** builds and hides dev cheats unless you add `?dev=1` to the URL (for staged QA only).
+
+**Branding:** Display title and year are set once in the bootstrap block at the top of `index.html` (`__GUTTERBONES_BRANDING__`). Storage keys remain `gutterbones1977:*` for save compatibility.
+
 ## Deploying / Embedding
 
 The project is static and can be hosted on GitHub Pages, Netlify, Vercel, Itch.io, or any static host.
@@ -146,7 +150,10 @@ Gutterbones uses browser `localStorage` for local save records:
 ```text
 gutterbones1977:run:v1           Active run state for Resume Hustle
 gutterbones1977:meta:v1          Safehouse cash, unlocks, and best-run stats
+gutterbones1977:settings:v1      Audio mute flag and master volume (0–1)
 ```
+
+Sound uses procedural Web Audio in `assets/audio/gutterbones-audio.js` (no sample files). Toggle **SOUND** and **VOLUME** from the in-run system menu (`Escape`).
 
 Runs autosave during play, shop, carving, and gambling phases. Completed or busted runs clear the active run save after awarding Safehouse cash.
 

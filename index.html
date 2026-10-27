@@ -1,10 +1,33 @@
 <div id="root-gutterbones" style="width:100%;min-height:800px;background:#121113;color:#d6b85c;position:relative;overflow:hidden;border-radius:8px;">
-    <div style="font-family:monospace;text-align:center;padding-top:100px;">LOADING GUTTERBONES 1977...</div>
+    <div id="gutterbones-loading" style="font-family:monospace;text-align:center;padding-top:100px;">LOADING…</div>
 </div>
 
 <meta charset="UTF-8">
-<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script>
+(function gutterbonesBootstrap() {
+    var branding = Object.freeze({
+        title: 'GUTTERBONES',
+        year: '1977',
+        get displayName() { return this.title + ' ' + this.year; },
+        get loadingMessage() { return 'LOADING ' + this.displayName + '…'; }
+    });
+    window.__GUTTERBONES_BRANDING__ = branding;
+    var loadingEl = document.getElementById('gutterbones-loading');
+    if (loadingEl) loadingEl.textContent = branding.loadingMessage;
+
+    var params = new URLSearchParams(window.location.search);
+    var host = window.location.hostname;
+    var isDevHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '';
+    var isDev = isDevHost || params.get('dev') === '1';
+    window.__GUTTERBONES_DEV__ = isDev;
+
+    var reactFile = isDev ? 'react.development.js' : 'react.production.min.js';
+    var reactDomFile = isDev ? 'react-dom.development.js' : 'react-dom.production.min.js';
+    document.write('<script crossorigin src="https://unpkg.com/react@18/umd/' + reactFile + '"><\/script>');
+    document.write('<script crossorigin src="https://unpkg.com/react-dom@18/umd/' + reactDomFile + '"><\/script>');
+})();
+</script>
+<script src="assets/audio/gutterbones-audio.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -732,9 +755,21 @@ const GutterbonesRules = (() => {
 <script type="text/babel">
     const { useEffect, useMemo, useRef, useState } = React;
 
-    const AudioSystem = {
+    const GAME_BRANDING = window.__GUTTERBONES_BRANDING__ || Object.freeze({
+        title: 'GUTTERBONES',
+        year: '1977',
+        get displayName() { return 'GUTTERBONES 1977'; },
+        get loadingMessage() { return 'LOADING GUTTERBONES 1977…'; }
+    });
+    const IS_DEV_BUILD = !!(typeof window !== 'undefined' && window.__GUTTERBONES_DEV__);
+
+    const AudioSystem = window.GutterbonesAudio || {
         init() {},
         setVolume() {},
+        setMuted() {},
+        isMuted() { return true; },
+        loadSettings() {},
+        getSettings() { return { audioMuted: true, audioVolume: 0.82 }; },
         startAmbient() {},
         stopAmbient() {},
         playNoiseBurst() {},
@@ -745,6 +780,15 @@ const GutterbonesRules = (() => {
         bossSting() {},
         bust() {},
         paper() {}
+    };
+
+    const AUDIO_VOLUME_STEPS = [0.35, 0.55, 0.82, 1];
+    const formatVolumeLabel = (v) => {
+        const pct = Math.round(v * 100);
+        if (pct <= 40) return 'LOW';
+        if (pct <= 65) return 'MID';
+        if (pct <= 90) return 'HIGH';
+        return 'MAX';
     };
 
     const PERSONAS = [
@@ -1308,7 +1352,31 @@ const GutterbonesRules = (() => {
 
     const STORAGE_KEYS = {
         run: 'gutterbones1977:run:v1',
-        meta: 'gutterbones1977:meta:v1'
+        meta: 'gutterbones1977:meta:v1',
+        settings: 'gutterbones1977:settings:v1'
+    };
+
+    const DEFAULT_SETTINGS = {
+        audioMuted: false,
+        audioVolume: 0.82
+    };
+
+    const loadSettingsState = () => {
+        const stored = loadJson(STORAGE_KEYS.settings);
+        if (!stored || typeof stored !== 'object') return { ...DEFAULT_SETTINGS };
+        return {
+            audioMuted: typeof stored.audioMuted === 'boolean' ? stored.audioMuted : DEFAULT_SETTINGS.audioMuted,
+            audioVolume: typeof stored.audioVolume === 'number' && !Number.isNaN(stored.audioVolume)
+                ? Math.max(0, Math.min(1, stored.audioVolume))
+                : DEFAULT_SETTINGS.audioVolume
+        };
+    };
+
+    const saveSettingsState = (settings) => {
+        saveJson(STORAGE_KEYS.settings, {
+            audioMuted: !!settings.audioMuted,
+            audioVolume: Math.max(0, Math.min(1, settings.audioVolume))
+        });
     };
 
     const RUN_SAVE_VERSION = 2;
@@ -2077,7 +2145,11 @@ const GutterbonesRules = (() => {
         onOpenHelp,
         onExitToLineup,
         reducedMotion,
-        onToggleReducedMotion
+        onToggleReducedMotion,
+        audioMuted,
+        onToggleAudioMuted,
+        audioVolume,
+        onCycleAudioVolume
     }) => (
         <div className="absolute inset-0 z-[750] bg-black/70 p-4 md:p-8 flex items-start justify-end" onClick={onResume}>
             <div className="w-full max-w-sm bg-[#1a1a1a] border-4 border-[#0df] rounded-xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -2088,6 +2160,12 @@ const GutterbonesRules = (() => {
                     <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
                     <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                         ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
+                    </button>
+                    <button onClick={onToggleAudioMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">
+                        SOUND {audioMuted ? 'MUTED' : 'ON'}
+                    </button>
+                    <button onClick={onCycleAudioVolume} disabled={audioMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16] disabled:opacity-40 disabled:hover:border-gray-700">
+                        VOLUME: {formatVolumeLabel(audioVolume)} ({Math.round(audioVolume * 100)}%)
                     </button>
                     <button onClick={onExitToLineup} className="w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">EXIT TO LINEUP</button>
                 </div>
@@ -2242,6 +2320,7 @@ const GutterbonesRules = (() => {
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        const [audioSettings, setAudioSettings] = useState(() => loadSettingsState());
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
         const [mechanicPopup, setMechanicPopup] = useState(null);
@@ -2351,6 +2430,34 @@ const GutterbonesRules = (() => {
             };
         }, []);
 
+        const applyAudioSettings = (next) => {
+            setAudioSettings(next);
+            AudioSystem.loadSettings(next);
+            AudioSystem.setVolume(next.audioVolume);
+            AudioSystem.setMuted(next.audioMuted);
+            saveSettingsState(next);
+        };
+
+        useEffect(() => {
+            AudioSystem.loadSettings(audioSettings);
+            AudioSystem.setVolume(audioSettings.audioVolume);
+            AudioSystem.setMuted(audioSettings.audioMuted);
+        }, []);
+
+        useEffect(() => {
+            if (audioSettings.audioMuted) {
+                AudioSystem.stopAmbient();
+                return undefined;
+            }
+            if (phase === 'PLAY') {
+                AudioSystem.init();
+                AudioSystem.startAmbient();
+            } else {
+                AudioSystem.stopAmbient();
+            }
+            return undefined;
+        }, [phase, audioSettings.audioMuted]);
+
         useEffect(() => {
             if (inRunPhase) return;
             setShowSystemMenu(false);
@@ -2389,6 +2496,7 @@ const GutterbonesRules = (() => {
         }, [showLorePanel]);
 
         useEffect(() => {
+            if (!IS_DEV_BUILD) return undefined;
             const onKeyDown = (event) => {
                 if (!event.ctrlKey || !event.shiftKey || event.key.toLowerCase() !== 'd') return;
                 event.preventDefault();
@@ -2397,6 +2505,10 @@ const GutterbonesRules = (() => {
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
         }, []);
+
+        useEffect(() => {
+            if (!IS_DEV_BUILD && showDevPanel) setShowDevPanel(false);
+        }, [showDevPanel]);
 
         useEffect(() => () => {
             timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
@@ -3442,6 +3554,24 @@ const GutterbonesRules = (() => {
                         }}
                         reducedMotion={reducedMotion}
                         onToggleReducedMotion={() => setReducedMotion(v => !v)}
+                        audioMuted={audioSettings.audioMuted}
+                        onToggleAudioMuted={() => {
+                            const nextMuted = !audioSettings.audioMuted;
+                            applyAudioSettings({ ...audioSettings, audioMuted: nextMuted });
+                            if (!nextMuted) {
+                                AudioSystem.init();
+                                AudioSystem.playTone(520, 'sine', 0.08);
+                            }
+                        }}
+                        audioVolume={audioSettings.audioVolume}
+                        onCycleAudioVolume={() => {
+                            const idx = AUDIO_VOLUME_STEPS.findIndex((v) => Math.abs(v - audioSettings.audioVolume) < 0.02);
+                            const nextIdx = idx < 0 ? 0 : (idx + 1) % AUDIO_VOLUME_STEPS.length;
+                            const nextVol = AUDIO_VOLUME_STEPS[nextIdx];
+                            applyAudioSettings({ ...audioSettings, audioVolume: nextVol });
+                            AudioSystem.init();
+                            AudioSystem.playTone(440 + nextIdx * 80, 'sine', 0.07);
+                        }}
                     />
                 )}
                 {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
@@ -3459,7 +3589,7 @@ const GutterbonesRules = (() => {
                         />
                     </>
                 )}
-                {showDevPanel && inRunPhase && (
+                {IS_DEV_BUILD && showDevPanel && inRunPhase && (
                     <div className="absolute bottom-4 right-4 z-[820] w-80 bg-black/95 border-2 border-fuchsia-500 rounded p-3 shadow-2xl text-[10px] font-mono">
                         <div className="flex justify-between items-center mb-2">
                             <div className="text-fuchsia-300 tracking-[.25em]">DEV QA PANEL</div>
@@ -3520,7 +3650,7 @@ const GutterbonesRules = (() => {
 
                 {phase === 'LINEUP' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
-                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">GUTTERBONES 1977</h1>
+                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">{GAME_BRANDING.displayName}</h1>
                         <div className="font-mono text-sm text-[#d6b85c] mb-6 flex flex-wrap gap-3 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
