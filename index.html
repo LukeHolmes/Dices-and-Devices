@@ -27,6 +27,7 @@
     document.write('<script crossorigin src="https://unpkg.com/react-dom@18/umd/' + reactDomFile + '"><\/script>');
 })();
 </script>
+<script src="assets/audio/gutterbones-audio.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -762,9 +763,13 @@ const GutterbonesRules = (() => {
     });
     const IS_DEV_BUILD = !!(typeof window !== 'undefined' && window.__GUTTERBONES_DEV__);
 
-    const AudioSystem = {
+    const AudioSystem = window.GutterbonesAudio || {
         init() {},
         setVolume() {},
+        setMuted() {},
+        isMuted() { return true; },
+        loadSettings() {},
+        getSettings() { return { audioMuted: true, audioVolume: 0.82 }; },
         startAmbient() {},
         stopAmbient() {},
         playNoiseBurst() {},
@@ -775,6 +780,15 @@ const GutterbonesRules = (() => {
         bossSting() {},
         bust() {},
         paper() {}
+    };
+
+    const AUDIO_VOLUME_STEPS = [0.35, 0.55, 0.82, 1];
+    const formatVolumeLabel = (v) => {
+        const pct = Math.round(v * 100);
+        if (pct <= 40) return 'LOW';
+        if (pct <= 65) return 'MID';
+        if (pct <= 90) return 'HIGH';
+        return 'MAX';
     };
 
     const PERSONAS = [
@@ -1338,7 +1352,31 @@ const GutterbonesRules = (() => {
 
     const STORAGE_KEYS = {
         run: 'gutterbones1977:run:v1',
-        meta: 'gutterbones1977:meta:v1'
+        meta: 'gutterbones1977:meta:v1',
+        settings: 'gutterbones1977:settings:v1'
+    };
+
+    const DEFAULT_SETTINGS = {
+        audioMuted: false,
+        audioVolume: 0.82
+    };
+
+    const loadSettingsState = () => {
+        const stored = loadJson(STORAGE_KEYS.settings);
+        if (!stored || typeof stored !== 'object') return { ...DEFAULT_SETTINGS };
+        return {
+            audioMuted: typeof stored.audioMuted === 'boolean' ? stored.audioMuted : DEFAULT_SETTINGS.audioMuted,
+            audioVolume: typeof stored.audioVolume === 'number' && !Number.isNaN(stored.audioVolume)
+                ? Math.max(0, Math.min(1, stored.audioVolume))
+                : DEFAULT_SETTINGS.audioVolume
+        };
+    };
+
+    const saveSettingsState = (settings) => {
+        saveJson(STORAGE_KEYS.settings, {
+            audioMuted: !!settings.audioMuted,
+            audioVolume: Math.max(0, Math.min(1, settings.audioVolume))
+        });
     };
 
     const RUN_SAVE_VERSION = 2;
@@ -2107,7 +2145,11 @@ const GutterbonesRules = (() => {
         onOpenHelp,
         onExitToLineup,
         reducedMotion,
-        onToggleReducedMotion
+        onToggleReducedMotion,
+        audioMuted,
+        onToggleAudioMuted,
+        audioVolume,
+        onCycleAudioVolume
     }) => (
         <div className="absolute inset-0 z-[750] bg-black/70 p-4 md:p-8 flex items-start justify-end" onClick={onResume}>
             <div className="w-full max-w-sm bg-[#1a1a1a] border-4 border-[#0df] rounded-xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -2118,6 +2160,12 @@ const GutterbonesRules = (() => {
                     <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
                     <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                         ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
+                    </button>
+                    <button onClick={onToggleAudioMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">
+                        SOUND {audioMuted ? 'MUTED' : 'ON'}
+                    </button>
+                    <button onClick={onCycleAudioVolume} disabled={audioMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16] disabled:opacity-40 disabled:hover:border-gray-700">
+                        VOLUME: {formatVolumeLabel(audioVolume)} ({Math.round(audioVolume * 100)}%)
                     </button>
                     <button onClick={onExitToLineup} className="w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">EXIT TO LINEUP</button>
                 </div>
@@ -2272,6 +2320,7 @@ const GutterbonesRules = (() => {
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        const [audioSettings, setAudioSettings] = useState(() => loadSettingsState());
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
         const [unlockNotification, setUnlockNotification] = useState(null);
         const [mechanicPopup, setMechanicPopup] = useState(null);
@@ -2380,6 +2429,34 @@ const GutterbonesRules = (() => {
                 else mediaQuery.removeListener(onChange);
             };
         }, []);
+
+        const applyAudioSettings = (next) => {
+            setAudioSettings(next);
+            AudioSystem.loadSettings(next);
+            AudioSystem.setVolume(next.audioVolume);
+            AudioSystem.setMuted(next.audioMuted);
+            saveSettingsState(next);
+        };
+
+        useEffect(() => {
+            AudioSystem.loadSettings(audioSettings);
+            AudioSystem.setVolume(audioSettings.audioVolume);
+            AudioSystem.setMuted(audioSettings.audioMuted);
+        }, []);
+
+        useEffect(() => {
+            if (audioSettings.audioMuted) {
+                AudioSystem.stopAmbient();
+                return undefined;
+            }
+            if (phase === 'PLAY') {
+                AudioSystem.init();
+                AudioSystem.startAmbient();
+            } else {
+                AudioSystem.stopAmbient();
+            }
+            return undefined;
+        }, [phase, audioSettings.audioMuted]);
 
         useEffect(() => {
             if (inRunPhase) return;
@@ -3477,6 +3554,24 @@ const GutterbonesRules = (() => {
                         }}
                         reducedMotion={reducedMotion}
                         onToggleReducedMotion={() => setReducedMotion(v => !v)}
+                        audioMuted={audioSettings.audioMuted}
+                        onToggleAudioMuted={() => {
+                            const nextMuted = !audioSettings.audioMuted;
+                            applyAudioSettings({ ...audioSettings, audioMuted: nextMuted });
+                            if (!nextMuted) {
+                                AudioSystem.init();
+                                AudioSystem.playTone(520, 'sine', 0.08);
+                            }
+                        }}
+                        audioVolume={audioSettings.audioVolume}
+                        onCycleAudioVolume={() => {
+                            const idx = AUDIO_VOLUME_STEPS.findIndex((v) => Math.abs(v - audioSettings.audioVolume) < 0.02);
+                            const nextIdx = idx < 0 ? 0 : (idx + 1) % AUDIO_VOLUME_STEPS.length;
+                            const nextVol = AUDIO_VOLUME_STEPS[nextIdx];
+                            applyAudioSettings({ ...audioSettings, audioVolume: nextVol });
+                            AudioSystem.init();
+                            AudioSystem.playTone(440 + nextIdx * 80, 'sine', 0.07);
+                        }}
                     />
                 )}
                 {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}

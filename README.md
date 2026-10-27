@@ -150,7 +150,10 @@ Gutterbones uses browser `localStorage` for local save records:
 ```text
 gutterbones1977:run:v1           Active run state for Resume Hustle
 gutterbones1977:meta:v1          Safehouse cash, unlocks, and best-run stats
+gutterbones1977:settings:v1      Audio mute flag and master volume (0–1)
 ```
+
+Sound uses procedural Web Audio in `assets/audio/gutterbones-audio.js` (no sample files). Toggle **SOUND** and **VOLUME** from the in-run system menu (`Escape`).
 
 Runs autosave during play, shop, carving, and gambling phases. Completed or busted runs clear the active run save after awarding Safehouse cash.
 

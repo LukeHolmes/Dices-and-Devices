@@ -9,6 +9,28 @@ const {
   actionSource,
   appSource,
 } = require("./helpers/game.cjs");
+test("Audio module exposes gameplay API", () => {
+  const audioPath = path.join(__dirname, "../assets/audio/gutterbones-audio.js");
+  assert.ok(fs.existsSync(audioPath), "gutterbones-audio.js");
+  assert.match(html, /assets\/audio\/gutterbones-audio\.js/);
+  const audioSource = fs.readFileSync(audioPath, "utf8");
+  for (const fn of [
+    "init",
+    "clatter",
+    "stinger",
+    "bossSting",
+    "bust",
+    "paper",
+    "playTone",
+    "setMuted",
+    "setVolume",
+  ]) {
+    assert.match(audioSource, new RegExp(`${fn}\\(`));
+  }
+  assert.match(appSource, /window\.GutterbonesAudio/);
+  assert.match(appSource, /gutterbones1977:settings:v1/);
+});
+
 test("Bootstrap selects production React and gates dev tools on public hosts", () => {
   assert.match(html, /window\.__GUTTERBONES_DEV__/);
   assert.match(html, /react\.production\.min\.js/);
