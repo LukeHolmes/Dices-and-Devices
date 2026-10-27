@@ -1,6 +1,6 @@
 # Phase 4 — Story MVP (Arc E: The Witness)
 
-**Status:** Planned (not on `main`; draft implementation in [PR #35](https://github.com/LukeHolmes/Dices-and-Devices/pull/35))  
+**Status:** Complete (merge via PR #35 / `cursor/phase-4-story-mvp-048e`)  
 **Depends on:** Phase 1–3 on `main` (ship hygiene, audio, first-hour UX — merged Oct 2026)  
 **Goal:** A run feels like it has a **plot**, not only mechanics — grindhouse comic beats at natural pauses, skippable, save-safe, **no scoring/rule changes**.
 
