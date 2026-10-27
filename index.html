@@ -1,10 +1,32 @@
 <div id="root-gutterbones" style="width:100%;min-height:800px;background:#121113;color:#d6b85c;position:relative;overflow:hidden;border-radius:8px;">
-    <div style="font-family:monospace;text-align:center;padding-top:100px;">LOADING GUTTERBONES 1977...</div>
+    <div id="gutterbones-loading" style="font-family:monospace;text-align:center;padding-top:100px;">LOADING…</div>
 </div>
 
 <meta charset="UTF-8">
-<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script>
+(function gutterbonesBootstrap() {
+    var branding = Object.freeze({
+        title: 'GUTTERBONES',
+        year: '1977',
+        get displayName() { return this.title + ' ' + this.year; },
+        get loadingMessage() { return 'LOADING ' + this.displayName + '…'; }
+    });
+    window.__GUTTERBONES_BRANDING__ = branding;
+    var loadingEl = document.getElementById('gutterbones-loading');
+    if (loadingEl) loadingEl.textContent = branding.loadingMessage;
+
+    var params = new URLSearchParams(window.location.search);
+    var host = window.location.hostname;
+    var isDevHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '';
+    var isDev = isDevHost || params.get('dev') === '1';
+    window.__GUTTERBONES_DEV__ = isDev;
+
+    var reactFile = isDev ? 'react.development.js' : 'react.production.min.js';
+    var reactDomFile = isDev ? 'react-dom.development.js' : 'react-dom.production.min.js';
+    document.write('<script crossorigin src="https://unpkg.com/react@18/umd/' + reactFile + '"><\/script>');
+    document.write('<script crossorigin src="https://unpkg.com/react-dom@18/umd/' + reactDomFile + '"><\/script>');
+})();
+</script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -731,6 +753,14 @@ const GutterbonesRules = (() => {
 
 <script type="text/babel">
     const { useEffect, useMemo, useRef, useState } = React;
+
+    const GAME_BRANDING = window.__GUTTERBONES_BRANDING__ || Object.freeze({
+        title: 'GUTTERBONES',
+        year: '1977',
+        get displayName() { return 'GUTTERBONES 1977'; },
+        get loadingMessage() { return 'LOADING GUTTERBONES 1977…'; }
+    });
+    const IS_DEV_BUILD = !!(typeof window !== 'undefined' && window.__GUTTERBONES_DEV__);
 
     const AudioSystem = {
         init() {},
@@ -2389,6 +2419,7 @@ const GutterbonesRules = (() => {
         }, [showLorePanel]);
 
         useEffect(() => {
+            if (!IS_DEV_BUILD) return undefined;
             const onKeyDown = (event) => {
                 if (!event.ctrlKey || !event.shiftKey || event.key.toLowerCase() !== 'd') return;
                 event.preventDefault();
@@ -2397,6 +2428,10 @@ const GutterbonesRules = (() => {
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
         }, []);
+
+        useEffect(() => {
+            if (!IS_DEV_BUILD && showDevPanel) setShowDevPanel(false);
+        }, [showDevPanel]);
 
         useEffect(() => () => {
             timeoutIdsRef.current.forEach((id) => window.clearTimeout(id));
@@ -3459,7 +3494,7 @@ const GutterbonesRules = (() => {
                         />
                     </>
                 )}
-                {showDevPanel && inRunPhase && (
+                {IS_DEV_BUILD && showDevPanel && inRunPhase && (
                     <div className="absolute bottom-4 right-4 z-[820] w-80 bg-black/95 border-2 border-fuchsia-500 rounded p-3 shadow-2xl text-[10px] font-mono">
                         <div className="flex justify-between items-center mb-2">
                             <div className="text-fuchsia-300 tracking-[.25em]">DEV QA PANEL</div>
@@ -3520,7 +3555,7 @@ const GutterbonesRules = (() => {
 
                 {phase === 'LINEUP' && (
                     <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
-                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">GUTTERBONES 1977</h1>
+                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">{GAME_BRANDING.displayName}</h1>
                         <div className="font-mono text-sm text-[#d6b85c] mb-6 flex flex-wrap gap-3 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>

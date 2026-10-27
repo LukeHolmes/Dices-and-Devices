@@ -129,6 +129,10 @@ http://localhost:8080/index.html
 
 Opening `index.html` directly may work in some browsers, but serving over HTTP is recommended because the game loads React, Babel, Tailwind, and fonts from CDNs.
 
+**Build mode:** On `localhost` / `127.0.0.1`, the page loads React development builds and enables the in-run dev QA panel (`Ctrl+Shift+D`). On any other host it loads **React production** builds and hides dev cheats unless you add `?dev=1` to the URL (for staged QA only).
+
+**Branding:** Display title and year are set once in the bootstrap block at the top of `index.html` (`__GUTTERBONES_BRANDING__`). Storage keys remain `gutterbones1977:*` for save compatibility.
+
 ## Deploying / Embedding
 
 The project is static and can be hosted on GitHub Pages, Netlify, Vercel, Itch.io, or any static host.

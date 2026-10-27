@@ -3,7 +3,22 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { html, sharedSource, actionSource } = require("./helpers/game.cjs");
+const {
+  html,
+  sharedSource,
+  actionSource,
+  appSource,
+} = require("./helpers/game.cjs");
+test("Bootstrap selects production React and gates dev tools on public hosts", () => {
+  assert.match(html, /window\.__GUTTERBONES_DEV__/);
+  assert.match(html, /react\.production\.min\.js/);
+  assert.match(html, /react-dom\.production\.min\.js/);
+  assert.match(html, /react\.development\.js/);
+  assert.match(appSource, /IS_DEV_BUILD/);
+  assert.match(appSource, /__GUTTERBONES_DEV__/);
+  assert.match(html, /__GUTTERBONES_BRANDING__/);
+});
+
 test("Shared inline rules precede the app without adding a runtime request", () => {
   assert.ok(
     html.indexOf('<script id="gutterbones-rules">') <

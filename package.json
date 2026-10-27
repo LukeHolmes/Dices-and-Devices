@@ -2,7 +2,7 @@
   "name": "gutterbones-1977",
   "version": "0.0.0",
   "private": true,
-  "description": "Static game; Node is used only for baseline checks, not the playable build.",
+  "description": "Gutterbones 1977 — static browser dice roguelike (index.html). Node runs baseline checks only.",
   "engines": {
     "node": ">=22"
   },
