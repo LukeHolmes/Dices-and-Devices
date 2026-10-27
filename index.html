@@ -2067,7 +2067,7 @@ const GutterbonesStory = (() => {
         const finish = () => {
             if (exiting) return;
             setExiting(true);
-            scheduleTimeout(() => finishRef.current?.(), 280);
+            window.setTimeout(() => finishRef.current?.(), 280);
         };
 
         useEffect(() => {
@@ -2082,7 +2082,7 @@ const GutterbonesStory = (() => {
                 : (beat.holdMs || 1800);
             let typeInterval = null;
             if (!reducedMotion && caption.length) {
-                typeInterval = scheduleInterval(() => {
+                typeInterval = window.setInterval(() => {
                     setCharIdx((n) => {
                         if (n >= caption.length) return n;
                         return n + 1;
@@ -2091,12 +2091,13 @@ const GutterbonesStory = (() => {
             } else {
                 setCharIdx(caption.length);
             }
-            scheduleTimeout(() => {
+            const holdTimer = window.setTimeout(() => {
                 if (!cancelled) finish();
             }, holdMs);
             return () => {
                 cancelled = true;
-                if (typeInterval) clearScheduledInterval(typeInterval);
+                if (typeInterval) window.clearInterval(typeInterval);
+                window.clearTimeout(holdTimer);
             };
         }, [beat?.src, reducedMotion]);
 
