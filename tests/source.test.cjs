@@ -41,11 +41,18 @@ test("Bootstrap selects production React and gates dev tools on public hosts", (
   assert.match(html, /__GUTTERBONES_BRANDING__/);
 });
 
-test("Shared inline rules precede the app without adding a runtime request", () => {
-  assert.ok(
-    html.indexOf('<script id="gutterbones-rules">') <
-      html.indexOf('<script type="text/babel">'),
-  );
+test("Shared inline rules and onboarding precede the app without extra requests", () => {
+  const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
+  const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
+  const appIdx = html.indexOf('<script type="text/babel">');
+  assert.ok(rulesIdx >= 0 && onboardingIdx > rulesIdx && appIdx > onboardingIdx);
+  assert.match(appSource, /GutterbonesOnboarding/);
+  assert.match(appSource, /CategoryUnlockFooter/);
+  const stepMatches = appSource.match(/ONBOARDING_STEPS\s*=\s*\[/);
+  assert.ok(stepMatches);
+  const stepsBlock = appSource.slice(appSource.indexOf("ONBOARDING_STEPS"));
+  const stepCount = (stepsBlock.match(/title:\s*'/g) || []).length;
+  assert.ok(stepCount >= 6, `expected >= 6 onboarding steps, got ${stepCount}`);
   assert.match(
     actionSource("calculateScore"),
     /GutterbonesRules.calculateScore/,

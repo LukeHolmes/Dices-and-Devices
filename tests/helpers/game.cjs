@@ -17,6 +17,7 @@ function block(open) {
 }
 
 const sharedSource = block('<script id="gutterbones-rules">');
+const onboardingSource = block('<script id="gutterbones-onboarding">');
 const appSource = block('<script type="text/babel">');
 const definitionsStart = appSource.indexOf("    const PERSONAS =");
 const definitionsEnd = appSource.indexOf("    const CashRain =");
@@ -115,6 +116,7 @@ function createGame(snapshot = {}, options = {}) {
     cascadeTriggers: noOp,
     triggerCameraKick: noOp,
     analyzeRunFailure: () => ({ primaryReason: "test scenario" }),
+    patchSettings: noOp,
     generateShop: () => calls.push("generateShop"),
     scheduleTimeout: (callback) => {
       timers.push(callback);
@@ -136,6 +138,8 @@ function createGame(snapshot = {}, options = {}) {
   const context = vm.createContext(sandbox);
   new vm.Script(
     sharedSource +
+      "\n" +
+      onboardingSource +
       "\n" +
       definitions +
       "\n" +
@@ -163,6 +167,7 @@ module.exports = {
   plain,
   html,
   sharedSource,
+  onboardingSource,
   appSource,
   actionSource,
 };
