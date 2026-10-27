@@ -752,6 +752,71 @@ const GutterbonesRules = (() => {
 })();
 </script>
 
+<script id="gutterbones-onboarding">
+const GutterbonesOnboarding = (() => {
+    const THRESHOLDS = Object.freeze({
+        BASIC_COMBOS: 2,
+        ALL_CATEGORIES: 5,
+        RARE_FACES: 3
+    });
+
+    const getAvailableCategoryIds = (totalRuns = 0) => {
+        const runs = Math.max(0, Math.floor(Number(totalRuns) || 0));
+        if (runs < THRESHOLDS.BASIC_COMBOS) {
+            return ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES', 'TOK', 'FH', 'C'];
+        }
+        if (runs < THRESHOLDS.ALL_CATEGORIES) {
+            return ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES', 'TOK', 'FOK', 'FH', 'C'];
+        }
+        return null;
+    };
+
+    const unlockRunForCategory = (categoryId) => {
+        if (categoryId === 'FOK') return THRESHOLDS.BASIC_COMBOS;
+        if (categoryId === 'SS' || categoryId === 'LS' || categoryId === 'Y') return THRESHOLDS.ALL_CATEGORIES;
+        return 0;
+    };
+
+    const getCategoryUnlockInfo = (totalRuns, allCategoryIds) => {
+        const runs = Math.max(0, Math.floor(Number(totalRuns) || 0));
+        const all = Array.isArray(allCategoryIds) ? allCategoryIds : [];
+        const limited = getAvailableCategoryIds(runs);
+        const available = limited === null ? all : limited.filter((id) => all.includes(id));
+        const availableSet = new Set(available);
+        const locked = all.filter((id) => !availableSet.has(id));
+        const lockedDetails = locked.map((id) => {
+            const need = unlockRunForCategory(id);
+            const runsUntil = need > runs ? need - runs : 0;
+            return { id, unlockAtRun: need, runsUntil };
+        });
+        let nextThreshold = null;
+        let runsUntilNext = 0;
+        if (runs < THRESHOLDS.BASIC_COMBOS) {
+            nextThreshold = THRESHOLDS.BASIC_COMBOS;
+            runsUntilNext = THRESHOLDS.BASIC_COMBOS - runs;
+        } else if (runs < THRESHOLDS.ALL_CATEGORIES) {
+            nextThreshold = THRESHOLDS.ALL_CATEGORIES;
+            runsUntilNext = THRESHOLDS.ALL_CATEGORIES - runs;
+        }
+        return {
+            totalRuns: runs,
+            available,
+            locked,
+            lockedDetails,
+            nextThreshold,
+            runsUntilNext
+        };
+    };
+
+    return Object.freeze({
+        THRESHOLDS,
+        getAvailableCategoryIds,
+        getCategoryUnlockInfo,
+        unlockRunForCategory
+    });
+})();
+</script>
+
 <script type="text/babel">
     const { useEffect, useMemo, useRef, useState } = React;
 
@@ -1327,7 +1392,7 @@ const GutterbonesRules = (() => {
         C: { id: 'C', name: 'Slop' }
     };
 
-    const ONBOARDING_THRESHOLDS = {
+    const ONBOARDING_THRESHOLDS = GutterbonesOnboarding?.THRESHOLDS || {
         BASIC_COMBOS: 2,
         ALL_CATEGORIES: 5,
         RARE_FACES: 3
@@ -1335,14 +1400,16 @@ const GutterbonesRules = (() => {
 
     const getAvailableCategories = (meta) => {
         const runs = meta?.totalRuns || 0;
-        if (runs < ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FH','C'];
-        }
-        if (runs < ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
-            return ['ONES','TWOS','THREES','FOURS','FIVES','SIXES','TOK','FOK','FH','C'];
-        }
-        return Object.keys(CATEGORIES);
+        const allIds = Object.keys(CATEGORIES);
+        const limited = GutterbonesOnboarding?.getAvailableCategoryIds(runs);
+        if (limited === null) return allIds;
+        return limited.filter((id) => allIds.includes(id));
     };
+
+    const getCategoryUnlockInfo = (meta) => (
+        GutterbonesOnboarding?.getCategoryUnlockInfo(meta?.totalRuns || 0, Object.keys(CATEGORIES))
+        || { totalRuns: 0, available: Object.keys(CATEGORIES), locked: [], lockedDetails: [], nextThreshold: null, runsUntilNext: 0 }
+    );
 
     const isShopFaceAvailable = (face, meta) => {
         const runs = meta?.totalRuns || 0;
@@ -1358,7 +1425,10 @@ const GutterbonesRules = (() => {
 
     const DEFAULT_SETTINGS = {
         audioMuted: false,
-        audioVolume: 0.82
+        audioVolume: 0.82,
+        dismissPillPulse: false,
+        dismissScoreHint: false,
+        dismissBossHint: false
     };
 
     const loadSettingsState = () => {
@@ -1368,14 +1438,20 @@ const GutterbonesRules = (() => {
             audioMuted: typeof stored.audioMuted === 'boolean' ? stored.audioMuted : DEFAULT_SETTINGS.audioMuted,
             audioVolume: typeof stored.audioVolume === 'number' && !Number.isNaN(stored.audioVolume)
                 ? Math.max(0, Math.min(1, stored.audioVolume))
-                : DEFAULT_SETTINGS.audioVolume
+                : DEFAULT_SETTINGS.audioVolume,
+            dismissPillPulse: !!stored.dismissPillPulse,
+            dismissScoreHint: !!stored.dismissScoreHint,
+            dismissBossHint: !!stored.dismissBossHint
         };
     };
 
     const saveSettingsState = (settings) => {
         saveJson(STORAGE_KEYS.settings, {
             audioMuted: !!settings.audioMuted,
-            audioVolume: Math.max(0, Math.min(1, settings.audioVolume))
+            audioVolume: Math.max(0, Math.min(1, settings.audioVolume)),
+            dismissPillPulse: !!settings.dismissPillPulse,
+            dismissScoreHint: !!settings.dismissScoreHint,
+            dismissBossHint: !!settings.dismissBossHint
         });
     };
 
@@ -1513,7 +1589,7 @@ const GutterbonesRules = (() => {
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion }) => {
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion, canPill = true, pillPulse = false }) => {
         const ref = useRef({
             locked: false,
             vars: {
@@ -1593,7 +1669,21 @@ const GutterbonesRules = (() => {
                         </div>
                     ) : <span className="font-serif text-5xl text-gray-900 opacity-80">{data.value}</span>}
                 </button>
-                {!rolling && <button onClick={(e) => { e.stopPropagation(); onPill(); }} onMouseEnter={onExplainPill} onFocus={onExplainPill} title="Pill reroll this bone" className="absolute -top-2 -right-2 min-w-8 h-6 px-1 bg-black border border-[#0df]/60 rounded-full flex items-center justify-center text-[8px] text-[#0df] font-mono font-bold opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-50">PILL{raidPill && <span className="absolute -bottom-4 text-[8px] text-red-500 font-bold font-mono">-$2</span>}</button>}
+                {!rolling && (
+                    <button
+                        type="button"
+                        disabled={!canPill}
+                        onClick={(e) => { e.stopPropagation(); if (canPill) onPill(); }}
+                        onMouseEnter={onExplainPill}
+                        onFocus={onExplainPill}
+                        title={canPill ? 'Pill reroll this bone' : 'No pills left'}
+                        aria-label={canPill ? 'Reroll this bone (spend 1 pill)' : 'No pills remaining'}
+                        className={`absolute -top-3 -right-3 z-50 flex min-h-11 min-w-11 md:min-h-8 md:min-w-9 items-center justify-center rounded-full border border-[#0df]/70 bg-black px-1.5 font-mono text-[9px] font-bold text-[#0df] shadow-[0_0_10px_rgba(0,221,255,.25)] transition-opacity ${canPill ? 'opacity-100 hover:bg-[#0a1520]' : 'cursor-not-allowed opacity-35'} ${pillPulse && canPill ? 'animate-pulse ring-2 ring-[#ff007f]/80' : ''}`}
+                    >
+                        PILL
+                        {raidPill && canPill && <span className="absolute -bottom-4 text-[8px] font-bold font-mono text-red-500">-$2</span>}
+                    </button>
+                )}
             </div>
         );
     };
@@ -1615,6 +1705,27 @@ const GutterbonesRules = (() => {
                     </div>
                 )}
                 <div className="mt-1 text-yellow-400 font-bold">TOTAL: {result.total}</div>
+            </div>
+        );
+    };
+
+    const CategoryUnlockFooter = ({ meta }) => {
+        const info = getCategoryUnlockInfo(meta);
+        if (!info.locked.length) return null;
+        return (
+            <div className="mt-2 pt-2 border-t border-dashed border-gray-500 text-[10px] font-mono text-left space-y-1">
+                <div className="font-bold text-gray-800 tracking-wide">LOCKED PAYOUTS</div>
+                <p className="text-gray-600 leading-snug">
+                    The fixer holds rows back until you survive more contracts. Completed runs: <b>{info.totalRuns}</b>.
+                </p>
+                {info.lockedDetails.map((row) => (
+                    <div key={row.id} className="text-gray-700 leading-snug">
+                        <span className="font-bold">{CATEGORIES[row.id]?.name || row.id}</span>
+                        {row.unlockAtRun > 0 && (
+                            <span>{row.runsUntil > 0 ? ` — unlocks at ${row.unlockAtRun} runs (${row.runsUntil} to go)` : ` — unlocks at ${row.unlockAtRun} runs`}</span>
+                        )}
+                    </div>
+                ))}
             </div>
         );
     };
@@ -1803,12 +1914,15 @@ const GutterbonesRules = (() => {
 
     const ONBOARDING_STEPS = [
         { title: 'ROLL YOUR BONES', desc: 'Hit ROLL to throw all 5 bones onto the felt.' },
-        { title: 'KEEP THE GOOD ONES', desc: 'Click any bone to lock it. Unrolled bones stay safe.' },
-        { title: 'PICK A PAYOUT', desc: 'Choose a scoring category on the left. That\'s your hand.' }
+        { title: 'KEEP THE GOOD ONES', desc: 'Click any bone to lock it. Kept bones stay safe on the next roll.' },
+        { title: 'PICK A PAYOUT', desc: 'Choose one row on THE PAYOUTS sheet. That scores your hand.' },
+        { title: 'BEAT THE QUOTA', desc: 'Street heat must reach the quota before your plays run out. Each payout row costs one play — invalid hands still burn a play.' },
+        { title: 'POP A PILL', desc: 'Pills reroll a single bone. Tap the PILL badge on any die after you roll. On THE RAID, each pill also costs $2.' },
+        { title: 'BOSS TURF', desc: 'Some jobs bring a boss. The red banner rewrites the rules — higher quota, tolls, frozen stash, or disabled hardware. Read it every round.' }
     ];
 
-    const ONBOARDING_BADGES = ['STEP 01', 'STEP 02', 'STEP 03'];
-    const ONBOARDING_KICKERS = ['THROW', 'LOCK', 'SCORE'];
+    const ONBOARDING_BADGES = ['STEP 01', 'STEP 02', 'STEP 03', 'STEP 04', 'STEP 05', 'STEP 06'];
+    const ONBOARDING_KICKERS = ['THROW', 'LOCK', 'SCORE', 'QUOTA', 'PILL', 'BOSS'];
 
     const FirstRunOverlay = ({ onDismiss }) => {
         const [step, setStep] = useState(0);
@@ -2115,23 +2229,40 @@ const GutterbonesRules = (() => {
                             <li>1. Roll bones.</li>
                             <li>2. Keep what you want.</li>
                             <li>3. Pick one payout row.</li>
-                            <li>4. Beat quota before plays run out.</li>
+                            <li>4. Beat quota (heat ≥ target) before plays run out.</li>
+                        </ul>
+                    </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3">
+                        <div className="text-[#0df] mb-2 tracking-wider">QUOTA &amp; PLAYS</div>
+                        <ul className="space-y-1 text-gray-200">
+                            <li>Heat is the score you bank toward the round quota.</li>
+                            <li>Each payout row you use costs one play.</li>
+                            <li>Invalid hands score 0 but still consume a play.</li>
+                            <li>Debt and some bosses raise pressure on later rounds.</li>
                         </ul>
                     </div>
                     <div className="bg-black/50 border border-gray-700 rounded p-3">
                         <div className="text-[#0df] mb-2 tracking-wider">PILLS + STASH</div>
                         <ul className="space-y-1 text-gray-200">
-                            <li>Pills reroll one slot immediately.</li>
+                            <li>Pills reroll one slot immediately (PILL badge on each bone).</li>
                             <li>Stash fills from strong hands.</li>
                             <li>SNIFF rerolls one random free slot.</li>
                             <li>BRIBE, FIX GAME, and LAUNDER spend stash.</li>
                         </ul>
                     </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3">
+                        <div className="text-[#0df] mb-2 tracking-wider">HEAT BOSSES</div>
+                        <ul className="space-y-1 text-gray-200 text-[11px] leading-relaxed">
+                            {Object.values(BOSSES).map((boss) => (
+                                <li key={boss.id}><span className={boss.color}>{boss.name}:</span> {boss.desc}</li>
+                            ))}
+                        </ul>
+                    </div>
                     <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
                         <div className="text-[#0df] mb-2 tracking-wider">SURVIVAL NOTES</div>
                         <p className="text-gray-200 leading-relaxed">
-                            Keep an eye on active boss rules, debt pressure, and hardware synergies.
                             Cash keeps you flexible in the shop; stash keeps you alive mid-round.
+                            Locked payout rows on the sheet unlock as you survive more runs — the fixer does not trust you with the full board on night one.
                         </p>
                     </div>
                 </div>
@@ -2216,6 +2347,14 @@ const GutterbonesRules = (() => {
                     ))}
                     {tab === 'archive' && (
                         <div className="md:col-span-2 grid gap-3">
+                            <section className="border border-gray-700 bg-black/40 rounded p-3">
+                                <div className="font-mono text-[11px] tracking-[.25em] text-cyan-300 mb-2">PAYOUT SHEET PROGRESSION</div>
+                                <p className="font-mono text-xs text-gray-200 leading-relaxed">
+                                    The fixer limits which payout rows you can hit early on. Quad unlocks after <b>{ONBOARDING_THRESHOLDS.BASIC_COMBOS}</b> completed runs;
+                                    Short Run, Long Run, and Jackpot unlock after <b>{ONBOARDING_THRESHOLDS.ALL_CATEGORIES}</b>.
+                                    Rare shop faces appear after <b>{ONBOARDING_THRESHOLDS.RARE_FACES}</b> runs.
+                                </p>
+                            </section>
                             <section className="border border-gray-700 bg-black/40 rounded p-3">
                                 <div className="font-mono text-[11px] tracking-[.25em] text-cyan-300 mb-2">CONTRABAND FACES</div>
                                 <div className="grid md:grid-cols-2 gap-2">
@@ -2438,6 +2577,17 @@ const GutterbonesRules = (() => {
             saveSettingsState(next);
         };
 
+        const patchSettings = (patch) => {
+            setAudioSettings((prev) => {
+                const next = { ...prev, ...patch };
+                AudioSystem.loadSettings(next);
+                AudioSystem.setVolume(next.audioVolume);
+                AudioSystem.setMuted(next.audioMuted);
+                saveSettingsState(next);
+                return next;
+            });
+        };
+
         useEffect(() => {
             AudioSystem.loadSettings(audioSettings);
             AudioSystem.setVolume(audioSettings.audioVolume);
@@ -2524,11 +2674,11 @@ const GutterbonesRules = (() => {
             prevTotalRunsRef.current = curr;
             if (prev === curr) return;
             if (prev < ONBOARDING_THRESHOLDS.BASIC_COMBOS && curr >= ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-                setUnlockNotification('Quad payouts now available!');
+                setUnlockNotification('Quad (FOK) unlocked on the payout sheet — 2 runs survived.');
             } else if (prev < ONBOARDING_THRESHOLDS.RARE_FACES && curr >= ONBOARDING_THRESHOLDS.RARE_FACES) {
-                setUnlockNotification('Rare contraband now appears in shops!');
+                setUnlockNotification('Rare contraband now appears in Back Alley shops (3 runs).');
             } else if (prev < ONBOARDING_THRESHOLDS.ALL_CATEGORIES && curr >= ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
-                setUnlockNotification('All payout categories unlocked!');
+                setUnlockNotification('Full payout sheet unlocked — Short Run, Long Run, Jackpot (5 runs).');
             }
         }, [meta.totalRuns]);
 
@@ -2974,6 +3124,7 @@ const GutterbonesRules = (() => {
         const popPill = (idx) => {
             showMechanicPopup('PILL');
             if (discards <= 0 || rolling) return;
+            patchSettings({ dismissPillPulse: true });
             if (activeBoss?.id === 'THE_RAID') {
                 spawnHitCallout('BOSS: RAID PILL TOLL');
                 setGold(g => {
@@ -3013,6 +3164,7 @@ const GutterbonesRules = (() => {
         };
 
         const executePayout = (catId) => {
+            patchSettings({ dismissScoreHint: true });
             const result = calculateScore(catId, dice);
             const wager = activeWager;
             let wagerNet = 0;
@@ -3456,6 +3608,10 @@ const GutterbonesRules = (() => {
             if (path.boss) {
                 setFixerLine(pickLine(FIXER_LINES.boss));
                 setBossIntro(path.boss);
+                if (meta.totalRuns < 3 && !audioSettings.dismissBossHint) {
+                    spawnHitCallout('BOSS RULES — READ BANNER');
+                    patchSettings({ dismissBossHint: true });
+                }
                 if (!reducedMotion) setBossKick(true);
                 triggerCameraKick('hard');
                 AudioSystem.bossSting();
@@ -3754,8 +3910,14 @@ const GutterbonesRules = (() => {
                                     <div className="text-xs opacity-50">STREET HEAT</div>
                                     <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
                                     <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
+                                    <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget} · Pills {discards}</div>
                                 </div>
-                                <div className="flex gap-3 md:gap-6 text-right">
+                                {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
+                                <div className="mx-3 md:mx-4 mb-1 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide">
+                                    Tap a payout row on the left to score this hand.
+                                </div>
+                            )}
+                            <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
                                     <div className="relative">
                                         <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
@@ -3808,16 +3970,10 @@ const GutterbonesRules = (() => {
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 sticky top-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
                                 {(() => {
                                     const available = getAvailableCategories(meta);
-                                    const totalCats = Object.keys(CATEGORIES).length;
-                                    const lockedCount = totalCats - available.length;
                                     const rows = Object.values(CATEGORIES).filter(cat => available.includes(cat.id)).map(cat => (
                                         <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
                                     ));
-                                    if (lockedCount > 0) rows.push(
-                                        <div key="locked-hint" className="text-center py-2 text-[10px] font-mono opacity-50 border-t border-dashed border-gray-400 mt-1">
-                                            {lockedCount} more payout{lockedCount > 1 ? 's' : ''} unlock with experience
-                                        </div>
-                                    );
+                                    rows.push(<CategoryUnlockFooter key="cat-unlock" meta={meta} />);
                                     return rows;
                                 })()}
                             </div>
@@ -3831,7 +3987,7 @@ const GutterbonesRules = (() => {
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 <div className={`flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
-                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} onExplainPill={() => showMechanicPopup('PILL')} onPill={() => popPill(i)} onClick={() => {
+                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} canPill={discards > 0 && hasRolled && !rolling} pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0} onExplainPill={() => showMechanicPopup('PILL')} onPill={() => popPill(i)} onClick={() => {
                                         if (swapMode) {
                                             if (swapIdx === null) setSwapIdx(i);
                                             else {
