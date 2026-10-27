@@ -51,6 +51,7 @@ Before publishing, check:
 - Start Street Rat; walk through all six onboarding steps (quota, pill, boss); roll, keep a bone, pop a pill without hovering (PILL badge visible on each die), and score.
 - On a fresh profile, confirm locked payout rows show run-count unlock copy in the payout footer; after two completed runs, FOK unlocks.
 - Open Help → QUOTA & PLAYS and HEAT BOSSES; Case Files → ARCHIVE → payout progression blurb.
+- Start a new run: Witness prologue panel (caption + image) before round 1; skip with Space; after shop path pick, round-2 story beat; bust/victory show arc ending panels before rap sheet / victory ticket.
 - Compare displayed preview and awarded heat; review the payout explanation.
 - Exit/reload and resume a normal save. Exercise CARVING and GAMBLE synthetic fixtures separately; wager/gamble resume defects are currently expected. Generate injectable saves with `npm run dump:save -- [normal|wager|gamble|carving|bust|victory]` (see `docs/phase-b-signoff.md`).
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.

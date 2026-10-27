@@ -32,4 +32,5 @@ Run `npm run check` using Node 22+; no install is needed. Pure rules live in the
 - **Gamble:** `assets/scenes/gamble-double-or-nothing.png` as `.gamble-backdrop` during `GAMBLE`.
 - **Carving / The Mod:** `assets/scenes/the-mod-bench.png` as `.carving-mod-backdrop` during `CARVING`.
 - **Boss intro:** Shared `assets/scenes/boss-turf-pressure.png` as `.boss-intro-backdrop` under the turf-war card (plus dim layer and blinds).
+- **Story panels (Phase 4):** Arc E (Witness) uses `assets/panels/witness/*.png` with captions from `gutterbones-story`; missing images skip silently. Run saves include `arcId` (default `witness`).
 - **Audio:** Procedural Web Audio lives in `assets/audio/gutterbones-audio.js` (`window.GutterbonesAudio`). Settings persist under `gutterbones1977:settings:v1`.

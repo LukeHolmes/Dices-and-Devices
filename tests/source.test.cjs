@@ -44,8 +44,24 @@ test("Bootstrap selects production React and gates dev tools on public hosts", (
 test("Shared inline rules and onboarding precede the app without extra requests", () => {
   const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
+  const storyIdx = html.indexOf('<script id="gutterbones-story">');
   const appIdx = html.indexOf('<script type="text/babel">');
-  assert.ok(rulesIdx >= 0 && onboardingIdx > rulesIdx && appIdx > onboardingIdx);
+  assert.ok(
+    rulesIdx >= 0 &&
+      onboardingIdx > rulesIdx &&
+      storyIdx > onboardingIdx &&
+      appIdx > storyIdx,
+  );
+  assert.match(appSource, /StoryPanelOverlay/);
+  assert.match(appSource, /playStoryBeat/);
+  for (const panel of [
+    "assets/panels/witness/prologue.png",
+    "assets/panels/witness/r2.png",
+    "assets/panels/witness/bust.png",
+    "assets/panels/witness/victory.png",
+  ]) {
+    assert.ok(fs.existsSync(path.join(__dirname, "..", panel)), panel);
+  }
   assert.match(appSource, /GutterbonesOnboarding/);
   assert.match(appSource, /CategoryUnlockFooter/);
   const stepMatches = appSource.match(/ONBOARDING_STEPS\s*=\s*\[/);

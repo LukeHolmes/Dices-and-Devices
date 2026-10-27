@@ -18,6 +18,7 @@ function block(open) {
 
 const sharedSource = block('<script id="gutterbones-rules">');
 const onboardingSource = block('<script id="gutterbones-onboarding">');
+const storySource = block('<script id="gutterbones-story">');
 const appSource = block('<script type="text/babel">');
 const definitionsStart = appSource.indexOf("    const PERSONAS =");
 const definitionsEnd = appSource.indexOf("    const CashRain =");
@@ -168,6 +169,7 @@ module.exports = {
   html,
   sharedSource,
   onboardingSource,
+  storySource,
   appSource,
   actionSource,
 };

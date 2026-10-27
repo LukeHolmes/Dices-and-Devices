@@ -165,6 +165,23 @@
         10%, 35% { opacity: 0.3; }
         100% { transform: translateX(110%); opacity: 0; }
     }
+    @keyframes storyKenBurns {
+        0% { transform: scale(1) translate3d(0, 0, 0); }
+        100% { transform: scale(1.05) translate3d(-1.5%, -1%, 0); }
+    }
+    .story-ken-burns {
+        animation: storyKenBurns 8s ease-out forwards;
+    }
+    @keyframes storyFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes storyFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+    .story-panel-fade-in { animation: storyFadeIn 0.3s ease-out forwards; }
+    .story-panel-fade-out { animation: storyFadeOut 0.3s ease-in forwards; }
     @keyframes paperSway {
         0%, 100% { transform: rotate(var(--paper-rot, -2deg)); }
         50% { transform: rotate(calc(var(--paper-rot, -2deg) + 0.4deg)); }
@@ -729,6 +746,7 @@ const GutterbonesRules = (() => {
         }
         if (!normalized.currentRouteEffect || typeof normalized.currentRouteEffect !== 'object') normalized.currentRouteEffect = null;
         else if (!Array.isArray(normalized.currentRouteEffect.effects)) normalized.currentRouteEffect = { ...normalized.currentRouteEffect, effects: [] };
+        if (typeof normalized.arcId !== 'string' || !normalized.arcId) normalized.arcId = 'witness';
         if (!normalized.runStats || typeof normalized.runStats !== 'object') {
             normalized.runStats = { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } };
         } else {
@@ -813,6 +831,71 @@ const GutterbonesOnboarding = (() => {
         getAvailableCategoryIds,
         getCategoryUnlockInfo,
         unlockRunForCategory
+    });
+})();
+</script>
+
+<script id="gutterbones-story">
+const GutterbonesStory = (() => {
+    const DEFAULT_ARC_ID = 'witness';
+    const HOLD_MS = Object.freeze({
+        prologue: 2500,
+        round: 1800,
+        bust: 1200,
+        victory: 2000,
+        reducedMotion: 1000
+    });
+
+    const WITNESS_CAPTIONS = Object.freeze({
+        prologue: '"Wrong alley. Wrong minute."',
+        r2: '"They don\'t know your face yet."',
+        r3: '"The headline was a question, not a fact."',
+        r4: '"Two people looking for you. Different reasons."',
+        r5: '"Every car could be the one."',
+        r6: '"Now you have a price."',
+        r7: '"Talk and you\'re free. Talk and you\'re dead."',
+        r8: '"New face. Same trouble."',
+        bust: '"They found you first."',
+        victory: '"Somebody else\'s problem now."'
+    });
+
+    const panelFile = (arcId, key) => `assets/panels/${arcId}/${key}.png`;
+
+    const beat = (arcId, key, kind) => {
+        const caption = WITNESS_CAPTIONS[key];
+        if (!caption) return null;
+        const holdKey = kind === 'prologue' ? 'prologue' : kind === 'bust' ? 'bust' : kind === 'victory' ? 'victory' : 'round';
+        return {
+            src: panelFile(arcId, key === 'prologue' ? 'prologue' : key),
+            caption,
+            holdMs: HOLD_MS[holdKey]
+        };
+    };
+
+    const getProloguePanel = (arcId = DEFAULT_ARC_ID) => (arcId === 'witness' ? beat(arcId, 'prologue', 'prologue') : null);
+
+    const getRoundTransitionPanel = (arcId, roundNumber) => {
+        if (arcId !== 'witness') return null;
+        const r = Math.floor(Number(roundNumber) || 0);
+        if (r < 2 || r > 8) return null;
+        return beat(arcId, `r${r}`, 'round');
+    };
+
+    const getBustPanel = (arcId = DEFAULT_ARC_ID) => (arcId === 'witness' ? beat(arcId, 'bust', 'bust') : null);
+
+    const getVictoryPanel = (arcId = DEFAULT_ARC_ID) => (arcId === 'witness' ? beat(arcId, 'victory', 'victory') : null);
+
+    const getReducedMotionHold = () => HOLD_MS.reducedMotion;
+
+    return Object.freeze({
+        DEFAULT_ARC_ID,
+        HOLD_MS,
+        getProloguePanel,
+        getRoundTransitionPanel,
+        getBustPanel,
+        getVictoryPanel,
+        getReducedMotionHold,
+        panelFile
     });
 })();
 </script>
@@ -1974,6 +2057,84 @@ const GutterbonesOnboarding = (() => {
         );
     };
 
+    const StoryPanelOverlay = ({ beat, reducedMotion, onFinish }) => {
+        const [exiting, setExiting] = useState(false);
+        const [charIdx, setCharIdx] = useState(0);
+        const [imageFailed, setImageFailed] = useState(false);
+        const finishRef = useRef(onFinish);
+        finishRef.current = onFinish;
+
+        const finish = () => {
+            if (exiting) return;
+            setExiting(true);
+            scheduleTimeout(() => finishRef.current?.(), 280);
+        };
+
+        useEffect(() => {
+            if (!beat) return undefined;
+            setExiting(false);
+            setCharIdx(0);
+            setImageFailed(false);
+            let cancelled = false;
+            const caption = beat.caption || '';
+            const holdMs = reducedMotion
+                ? (GutterbonesStory?.getReducedMotionHold?.() || 1000)
+                : (beat.holdMs || 1800);
+            let typeInterval = null;
+            if (!reducedMotion && caption.length) {
+                typeInterval = scheduleInterval(() => {
+                    setCharIdx((n) => {
+                        if (n >= caption.length) return n;
+                        return n + 1;
+                    });
+                }, 30);
+            } else {
+                setCharIdx(caption.length);
+            }
+            scheduleTimeout(() => {
+                if (!cancelled) finish();
+            }, holdMs);
+            return () => {
+                cancelled = true;
+                if (typeInterval) clearScheduledInterval(typeInterval);
+            };
+        }, [beat?.src, reducedMotion]);
+
+        useEffect(() => {
+            if (imageFailed) finish();
+        }, [imageFailed]);
+
+        if (!beat) return null;
+
+        return (
+            <div
+                role="dialog"
+                aria-label="Story panel"
+                className={`fixed inset-0 z-[650] flex flex-col items-center justify-center bg-black cursor-pointer ${exiting ? 'story-panel-fade-out' : 'story-panel-fade-in'}`}
+                onClick={finish}
+            >
+                <div className="relative w-full max-w-3xl mx-auto px-4 flex-1 flex items-center justify-center overflow-hidden">
+                    {!imageFailed && (
+                        <img
+                            src={beat.src}
+                            alt=""
+                            className={`max-h-[min(62vh,520px)] w-full object-contain object-center drop-shadow-[0_12px_40px_rgba(0,0,0,0.85)] ${reducedMotion ? '' : 'story-ken-burns'}`}
+                            onError={() => setImageFailed(true)}
+                        />
+                    )}
+                </div>
+                <div className="w-full max-w-3xl px-4 pb-8 pointer-events-none">
+                    <div className="bg-black/70 border border-[#00ddff]/30 rounded px-4 py-3 text-center">
+                        <p className="font-mono text-sm italic text-[#e8e6e1] leading-relaxed min-h-[2.5rem]">
+                            {beat.caption?.slice(0, charIdx) || beat.caption}
+                        </p>
+                    </div>
+                    <div className="text-center mt-2 font-mono text-[10px] text-gray-500 tracking-widest">TAP OR SPACE TO SKIP</div>
+                </div>
+            </div>
+        );
+    };
+
     const UnlockNotification = ({ message, onDone }) => {
         useEffect(() => {
             const id = setTimeout(onDone, 3200);
@@ -2478,6 +2639,9 @@ const GutterbonesOnboarding = (() => {
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [audioSettings, setAudioSettings] = useState(() => loadSettingsState());
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
+        const [arcId, setArcId] = useState(GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
+        const [storyBeat, setStoryBeat] = useState(null);
+        const storyFinishRef = useRef(null);
         const [unlockNotification, setUnlockNotification] = useState(null);
         const [mechanicPopup, setMechanicPopup] = useState(null);
         const [scoreResolution, setScoreResolution] = useState(null);
@@ -2643,7 +2807,7 @@ const GutterbonesOnboarding = (() => {
         useEffect(() => {
             const onKeyDown = (event) => {
                 if (event.key !== 'Escape' || !inRunPhase) return;
-                if (showFirstRunOverlay || bossIntro) return;
+                if (showFirstRunOverlay || bossIntro || storyBeat) return;
                 if (showHelpOverlay) {
                     setShowHelpOverlay(false);
                     return;
@@ -2652,7 +2816,19 @@ const GutterbonesOnboarding = (() => {
             };
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
-        }, [inRunPhase, showFirstRunOverlay, showHelpOverlay, bossIntro]);
+        }, [inRunPhase, showFirstRunOverlay, showHelpOverlay, bossIntro, storyBeat]);
+
+        useEffect(() => {
+            if (!storyBeat) return undefined;
+            const onKeyDown = (event) => {
+                if (event.key === ' ' || event.key === 'Spacebar' || event.key === 'Enter') {
+                    event.preventDefault();
+                    storyFinishRef.current?.();
+                }
+            };
+            window.addEventListener('keydown', onKeyDown);
+            return () => window.removeEventListener('keydown', onKeyDown);
+        }, [storyBeat]);
 
         useEffect(() => {
             const onKeyDown = (event) => {
@@ -2699,9 +2875,22 @@ const GutterbonesOnboarding = (() => {
             }
         }, [meta.totalRuns]);
 
+        const playStoryBeat = (panel, onDone) => {
+            if (!panel || !panel.src) {
+                onDone?.();
+                return;
+            }
+            storyFinishRef.current = () => {
+                setStoryBeat(null);
+                onDone?.();
+            };
+            setStoryBeat(panel);
+        };
+
         const serializeRun = (phaseOverride = phase) => ({
             version: RUN_SAVE_VERSION,
             phase: phaseOverride,
+            arcId,
             personaId: persona.id,
             personaIdx,
             round,
@@ -2792,6 +2981,8 @@ const GutterbonesOnboarding = (() => {
             setPillBursts([]);
             setGambleStake(typeof saved.gambleStake === 'number' ? saved.gambleStake : 0);
             setActiveWager(saved.activeWager || null);
+            setArcId(saved.arcId || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
+            setStoryBeat(null);
             setRunClosed(false);
             setFixerLine('Back in the game. Pick your spot.');
             setPhase(saved.phase || 'PLAY');
@@ -2987,11 +3178,13 @@ const GutterbonesOnboarding = (() => {
         useEffect(() => {
             if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
+            const runArcId = GutterbonesStory?.DEFAULT_ARC_ID || 'witness';
+            setArcId(runArcId);
             const openingTargetBase = p.id === 'CARD_COUNTER'
                 ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
                 : EARLY_GAME_TUNING.openingTarget;
@@ -3038,10 +3231,14 @@ const GutterbonesOnboarding = (() => {
             const bones = Array(5).fill(0).map(makeBone);
             if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
             setDice(bones);
-            if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
             setShowSystemMenu(false);
             setShowHelpOverlay(false);
-            setPhase('PLAY');
+            const enterPlay = () => {
+                setPhase('PLAY');
+                if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
+            };
+            const prologue = GutterbonesStory?.getProloguePanel?.(runArcId);
+            playStoryBeat(prologue, enterPlay);
         };
 
         const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
@@ -3316,8 +3513,14 @@ const GutterbonesOnboarding = (() => {
                 triggerCameraKick('hard');
                 if (!reducedMotion) setCinematic('bust');
                 AudioSystem.bust();
-                scheduleTimeout(() => setPhase('RAP_SHEET'), reducedMotion ? 950 : 1700);
-                if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1850);
+                const goRapSheet = () => {
+                    setPhase('RAP_SHEET');
+                    if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 350);
+                };
+                const bustDelay = reducedMotion ? 400 : 900;
+                scheduleTimeout(() => {
+                    playStoryBeat(GutterbonesStory?.getBustPanel?.(arcId), goRapSheet);
+                }, bustDelay);
             } else if (hands <= 1) {
                 if (round >= 10) {
                     setLossExplanation(null);
@@ -3326,8 +3529,13 @@ const GutterbonesOnboarding = (() => {
                     awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: settlementCash });
                     AudioSystem.paper();
                     if (!reducedMotion) setCinematic('victory');
-                    scheduleTimeout(() => setPhase('VICTORY'), reducedMotion ? 120 : 560);
-                    if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 1400);
+                    const goVictory = () => {
+                        setPhase('VICTORY');
+                        if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 800);
+                    };
+                    scheduleTimeout(() => {
+                        playStoryBeat(GutterbonesStory?.getVictoryPanel?.(arcId), goVictory);
+                    }, reducedMotion ? 120 : 480);
                 } else {
                     const stake = Math.min(GAMBLE_TUNING.stakeCap, Math.max(GAMBLE_TUNING.minStake, Math.floor(projectedCash * GAMBLE_TUNING.stakeRate)));
                     const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
@@ -3583,6 +3791,7 @@ const GutterbonesOnboarding = (() => {
         const handleAdvance = (path) => {
             const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
             const nextRound = round + 1;
+            const storyPanel = GutterbonesStory?.getRoundTransitionPanel?.(arcId, nextRound);
             const roundCurve = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
                 ? ROUND_CURVE_TUNING.early
                 : nextRound <= ROUND_CURVE_TUNING.midMaxRound
@@ -3647,7 +3856,8 @@ const GutterbonesOnboarding = (() => {
                 }
             }
             setRunClosed(false);
-            setPhase('PLAY');
+            const commitAdvance = () => setPhase('PLAY');
+            playStoryBeat(storyPanel, commitAdvance);
         };
 
         const grantRandomConsumable = () => {
@@ -3700,7 +3910,14 @@ const GutterbonesOnboarding = (() => {
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
                 {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
-                {showFirstRunOverlay && phase === 'PLAY' && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
+                {storyBeat && (
+                    <StoryPanelOverlay
+                        beat={storyBeat}
+                        reducedMotion={reducedMotion}
+                        onFinish={() => storyFinishRef.current?.()}
+                    />
+                )}
+                {showFirstRunOverlay && phase === 'PLAY' && !storyBeat && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
                 {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
                 {scoreResolution && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}

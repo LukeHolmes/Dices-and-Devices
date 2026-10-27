@@ -22,6 +22,7 @@ const dice = (values) => values.map((value, slot) => bone(value, slot));
 function run(overrides = {}) {
   return {
     version: 2,
+    arcId: "witness",
     phase: "PLAY",
     personaId: "STREET_RAT",
     personaIdx: 0,
