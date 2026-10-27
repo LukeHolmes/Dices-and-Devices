@@ -1,7 +1,7 @@
 # Phase 3 — First-Hour UX (Onboarding, Pills, Category Gates)
 
-**Status:** Planned (not started)  
-**Depends on:** Phase 1 + Phase 2 on `main` (merged 27 Oct 2026)  
+**Status:** Complete (merged PR [#34](https://github.com/LukeHolmes/Dices-and-Devices/pull/34), 27 Oct 2026)  
+**Depends on:** Phase 1 + Phase 2 on `main`  
 **Goal:** A first-time player understands quota, pills, stash, bosses, and locked payout rows before they bust on run 1–2.
 
 ---
@@ -23,11 +23,11 @@
 
 Manual browser checklist (see §8) plus:
 
-- [ ] New tester can state: “I need **heat** ≥ **quota** before **plays** run out.”
-- [ ] New tester finds **PILL** without Help Dossier on **390px mobile** and **1280px desktop**.
-- [ ] Locked payout rows show **what** is locked and **when** it unlocks (run count from `ONBOARDING_THRESHOLDS`).
-- [ ] First boss banner: player knows it is a **rule change**, not flavor.
-- [ ] `npm run check` stays green; no changes to `GutterbonesRules` scoring unless explicitly scoped.
+- [x] New tester can state: “I need **heat** ≥ **quota** before **plays** run out.”
+- [x] New tester finds **PILL** without Help Dossier on **390px mobile** and **1280px desktop**.
+- [x] Locked payout rows show **what** is locked and **when** it unlocks (run count from `ONBOARDING_THRESHOLDS`).
+- [x] First boss banner: player knows it is a **rule change**, not flavor.
+- [x] `npm run check` stays green; no changes to `GutterbonesRules` scoring unless explicitly scoped.
 
 ---
 
