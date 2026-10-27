@@ -1,7 +1,7 @@
 # Phase 3 — First-Hour UX (Onboarding, Pills, Category Gates)
 
-**Status:** Planned (not started)  
-**Depends on:** Phase 1 + Phase 2 on `main` (merged 27 Oct 2026)  
+**Status:** Complete (PR [#34](https://github.com/LukeHolmes/Dices-and-Devices/pull/34), [#36](https://github.com/LukeHolmes/Dices-and-Devices/pull/36))  
+**Depends on:** Phase 1 + Phase 2 on `main`  
 **Goal:** A first-time player understands quota, pills, stash, bosses, and locked payout rows before they bust on run 1–2.
 
 ---
@@ -243,7 +243,7 @@ Boss one-liner: **“Bosses rewrite the rules for this round’s job.”**
 ## 11. After Phase 3
 
 1. **Phase 5** — missing portraits (Counter, Bouncer, Crooked Cop).  
-2. **Phase 4** — Witness arc (10 panels).  
+2. **Phase 4** — Witness arc (10 panels) — see `docs/phase-4-story-mvp.md`.  
 3. **Phase 6a** — route/gamble UI clarity (no RNG change).
 
 ---
