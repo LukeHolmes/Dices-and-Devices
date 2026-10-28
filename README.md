@@ -97,7 +97,7 @@ Bosses change the rules instead of acting as simple flavor text:
 
 ```text
 index.html                    Canonical playable Gutterbones 1977 build
-gutterbones1977.html           Earlier standalone Gutterbones fork; not the current canonical build
+gutterbones1977.html           Legacy URL; redirects to the current game (index.html)
 dice-and-devises-legacy.html   Archived cyberpunk Dice & Devises prototype
 ANIMATION_PLAN.md              Historical polish plan; many ideas are now implemented in index.html
 docs/notion/                   Notion-ready project notes
