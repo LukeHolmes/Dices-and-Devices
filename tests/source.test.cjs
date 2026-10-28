@@ -76,6 +76,19 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   );
   assert.doesNotMatch(sharedSource, /localStorage|setTimeout|document\./);
 });
+test("Phase 5 roster portraits wired and on disk", () => {
+  for (const asset of [
+    "assets/personas/card-counter.png",
+    "assets/bosses/bouncer.png",
+    "assets/bosses/crooked-cop.png",
+  ]) {
+    assert.ok(fs.existsSync(path.join(__dirname, "..", asset)), asset);
+  }
+  assert.match(appSource, /card-counter\.png/);
+  assert.match(appSource, /bosses\/bouncer\.png/);
+  assert.match(appSource, /crooked-cop\.png/);
+});
+
 test("Referenced local artwork exists", () => {
   const refs = [
     ...html.matchAll(/['"`](assets\/[\w/.-]+\.(?:png|jpg|webp|svg))['"`]/g),
