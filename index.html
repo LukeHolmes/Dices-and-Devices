@@ -900,6 +900,193 @@ const GutterbonesStory = (() => {
 })();
 </script>
 
+<script id="gutterbones-routes">
+const GutterbonesRoutes = (() => {
+    const BOSS_TUNING = Object.freeze({
+        debtQuotaPenaltyRatio: 1.5,
+        debtQuotaPenaltyCap: 120,
+        earlyBossRoundCap: 4,
+        earlyBouncerRelief: 0.9,
+        raidQuotaRelief: 0.92,
+        bossPathTargetRelief: 0.93
+    });
+
+    const EARLY_GAME_TUNING = Object.freeze({
+        debtPenaltyStartsRound: 4
+    });
+
+    const ROUND_CURVE_TUNING = Object.freeze({
+        earlyMaxRound: 3,
+        midMaxRound: 6,
+        early: { pathModWeight: 0.7, flatIncrease: 28 },
+        mid: { pathModWeight: 0.95, flatIncrease: 42 },
+        late: { pathModWeight: 1.1, flatIncrease: 58 }
+    });
+
+    const PROGRESSION_GUARDRAILS = Object.freeze({
+        minGrowthRate: 1.08,
+        earlyMaxGrowthRate: 1.35,
+        midMaxGrowthRate: 1.42,
+        lateMaxGrowthRate: 1.5
+    });
+
+    const INSANE_CONTRACT_MODIFIERS = Object.freeze({
+        targetMultiplier: 1.28,
+        debtPenaltyMultiplier: 1.35,
+        playPenalty: 1
+    });
+
+    const roundCurveFor = (nextRound) => (
+        nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
+            ? ROUND_CURVE_TUNING.early
+            : nextRound <= ROUND_CURVE_TUNING.midMaxRound
+                ? ROUND_CURVE_TUNING.mid
+                : ROUND_CURVE_TUNING.late
+    );
+
+    const growthCapFor = (nextRound) => (
+        nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
+            ? PROGRESSION_GUARDRAILS.earlyMaxGrowthRate
+            : nextRound <= ROUND_CURVE_TUNING.midMaxRound
+                ? PROGRESSION_GUARDRAILS.midMaxGrowthRate
+                : PROGRESSION_GUARDRAILS.lateMaxGrowthRate
+    );
+
+    const applyBossAdjustedTarget = (baseTarget, boss, roundNum) => {
+        if (!boss?.applyTarget) return baseTarget;
+        let adjusted = boss.applyTarget(baseTarget);
+        if (boss.id === 'BOUNCER' && roundNum <= BOSS_TUNING.earlyBossRoundCap) {
+            adjusted = Math.floor(adjusted * BOSS_TUNING.earlyBouncerRelief);
+        }
+        if (boss.id === 'THE_RAID') {
+            adjusted = Math.floor(adjusted * BOSS_TUNING.raidQuotaRelief);
+        }
+        return adjusted;
+    };
+
+    const describePathModifiers = (path) => {
+        if (!path) return [];
+        const notes = [];
+        if (path.mod && path.mod !== 1) notes.push(`Quota x${path.mod.toFixed(2)} (scaled by round curve)`);
+        if (path.reward) notes.push(`+$${path.reward} cash on pick`);
+        if (path.fillStash) notes.push('Stash to 100% on pick');
+        if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play next round`);
+        if (path.discardDelta) notes.push(`${path.discardDelta > 0 ? '+' : ''}${path.discardDelta} pill next round`);
+        if (path.grantRandomConsumable) notes.push('Random one-shot on pick');
+        return notes;
+    };
+
+    const sideBetPayout = (stake, payoutMultiplier = 1.75) => (
+        Math.max(stake + 1, Math.round(stake * payoutMultiplier))
+    );
+
+    const wagerThresholdForRound = (round, tuning = { baseThreshold: 110, roundThresholdStep: 8 }) => (
+        tuning.baseThreshold + Math.max(0, round - 1) * tuning.roundThresholdStep
+    );
+
+    const projectNextRound = ({
+        path,
+        round,
+        target,
+        debt = 0,
+        insaneContract = false,
+        hasLedger = false,
+        personaPlays = 4,
+        personaPills = 3
+    }) => {
+        const warnings = [];
+        const effectLines = describePathModifiers(path);
+        const nextRound = Math.max(1, Math.floor(Number(round) || 0)) + 1;
+        const currentTarget = Math.max(1, Math.floor(Number(target) || 0));
+        const roundCurve = roundCurveFor(nextRound);
+        const scaledPathMod = 1 + (((path?.mod || 1) - 1) * roundCurve.pathModWeight);
+        let nextTarget = Math.floor(currentTarget * scaledPathMod) + roundCurve.flatIncrease;
+
+        let debtPenaltyApplied = 0;
+        if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
+            debtPenaltyApplied = Math.min(
+                BOSS_TUNING.debtQuotaPenaltyCap,
+                Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio)
+            );
+            if (insaneContract) {
+                debtPenaltyApplied = Math.floor(debtPenaltyApplied * INSANE_CONTRACT_MODIFIERS.debtPenaltyMultiplier);
+            }
+            nextTarget += debtPenaltyApplied;
+            effectLines.push(`Debt pressure +${debtPenaltyApplied} quota`);
+        }
+
+        if (path?.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
+            nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
+            effectLines.push('Boss turf: early-route quota relief applied');
+        }
+
+        const growthCap = growthCapFor(nextRound);
+        const minTarget = Math.floor(currentTarget * PROGRESSION_GUARDRAILS.minGrowthRate);
+        const maxTarget = Math.floor(currentTarget * growthCap);
+        const beforeGuardrail = nextTarget;
+        nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
+        if (nextTarget === minTarget && beforeGuardrail < minTarget) {
+            warnings.push(`Quota growth clamped to minimum (+${Math.round((PROGRESSION_GUARDRAILS.minGrowthRate - 1) * 100)}%)`);
+            effectLines.push(`Guardrail: quota floored at ${nextTarget}`);
+        } else if (nextTarget === maxTarget && beforeGuardrail > maxTarget) {
+            warnings.push(`Quota growth clamped to maximum (+${Math.round((growthCap - 1) * 100)}%)`);
+            effectLines.push(`Guardrail: quota capped at ${nextTarget}`);
+        }
+
+        if (insaneContract) {
+            nextTarget = Math.floor(nextTarget * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
+            effectLines.push('Insane contract: quota +28%');
+        }
+
+        const delta = nextTarget - currentTarget;
+        effectLines.unshift(`Next quota base: ${nextTarget} (${delta >= 0 ? '+' : ''}${delta} vs this round)`);
+
+        const nextTargetDisplay = applyBossAdjustedTarget(nextTarget, path?.boss, nextRound);
+        if (path?.boss?.applyTarget && nextTargetDisplay !== nextTarget) {
+            effectLines.push(`Boss ${path.boss.name}: displayed quota ~${nextTargetDisplay} (applyTarget during round)`);
+        } else if (path?.boss) {
+            effectLines.push(`Boss ${path.boss.name}: ${path.boss.desc}`);
+        }
+
+        const baseHands = Math.max(
+            1,
+            personaPlays
+                - (hasLedger && debt > 0 ? 1 : 0)
+                - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)
+        );
+        const nextHands = Math.max(1, baseHands + (path?.handDelta || 0));
+        const nextDiscards = Math.max(0, personaPills + (path?.discardDelta || 0));
+
+        if (nextHands !== personaPlays) {
+            effectLines.push(`Plays next round: ${nextHands}`);
+        }
+        if (nextDiscards !== personaPills) {
+            effectLines.push(`Pills next round: ${nextDiscards}`);
+        }
+
+        return {
+            nextRound,
+            nextTarget,
+            nextTargetDisplay,
+            nextHands,
+            nextDiscards,
+            effectLines,
+            warnings
+        };
+    };
+
+    return Object.freeze({
+        BOSS_TUNING,
+        ROUND_CURVE_TUNING,
+        projectNextRound,
+        applyBossAdjustedTarget,
+        describePathModifiers,
+        sideBetPayout,
+        wagerThresholdForRound
+    });
+})();
+</script>
+
 <script type="text/babel">
     const { useEffect, useMemo, useRef, useState } = React;
 
@@ -2321,7 +2508,22 @@ const GutterbonesStory = (() => {
                     <div className="text-gray-300">No active route modifier.</div>
                 )}
                 {upcomingPaths.length > 0 && (
-                    <div className="mt-1 text-gray-300">Upcoming: {upcomingPaths.slice(0, 3).map(p => p.name).join(', ')}</div>
+                    <div className="mt-2 space-y-1">
+                        <div className="text-gray-400 tracking-[.1em]">SHOP ROUTES (preview)</div>
+                        {upcomingPaths.slice(0, 3).map((p) => {
+                            const preview = typeof p._projection === 'object' ? p._projection : null;
+                            return (
+                                <div key={p.id} className="text-gray-200 leading-snug border-l-2 border-gray-700 pl-2">
+                                    <span className="text-[#f4d67b] font-bold">{p.name}</span>
+                                    {preview ? (
+                                        <span className="text-gray-300"> — quota ~{preview.nextTargetDisplay ?? preview.nextTarget}, {preview.nextHands} plays{p.boss ? `, ${p.boss.name}` : ''}</span>
+                                    ) : (
+                                        <span className="text-gray-400"> — {p.desc}</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
@@ -2348,6 +2550,42 @@ const GutterbonesStory = (() => {
             </div>
         </div>
     );
+
+    const RouteChoiceCard = ({ path, projection, onPick }) => {
+        const quota = projection?.nextTargetDisplay ?? projection?.nextTarget;
+        const aria = `${path.name}, next quota about ${quota}${path.boss ? `, boss ${path.boss.name}` : ''}${projection?.nextHands ? `, ${projection.nextHands} plays` : ''}`;
+        return (
+            <button
+                type="button"
+                onClick={() => onPick(path)}
+                aria-label={aria}
+                className={`w-full min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all ${path.color}`}
+            >
+                <div className="font-bold text-xl uppercase tracking-wider">{path.name}</div>
+                <div className="text-xs opacity-70 mt-1 font-mono">{path.desc}</div>
+                {projection && (
+                    <div className="mt-2 font-mono text-sm text-yellow-200">
+                        Next quota: <span className="font-bold text-white">~{quota}</span>
+                    </div>
+                )}
+                {projection?.effectLines?.length > 0 && (
+                    <ul className="mt-2 space-y-0.5 text-[10px] font-mono text-gray-300 list-disc list-inside">
+                        {projection.effectLines.slice(0, 5).map((line, idx) => (
+                            <li key={idx}>{line}</li>
+                        ))}
+                    </ul>
+                )}
+                {path.boss && (
+                    <div className="mt-3 pt-2 border-t border-current flex gap-2 items-start text-[10px] font-bold font-mono">
+                        <BossPortrait boss={path.boss} variant="intel" />
+                        <div className="min-w-0">
+                            <span className="text-white">BOSS:</span> {path.boss.name} — {path.boss.desc}
+                        </div>
+                    </div>
+                )}
+            </button>
+        );
+    };
 
     const BuildIndicator = ({ analysis, inline = false }) => {
         const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
@@ -2436,6 +2674,26 @@ const GutterbonesStory = (() => {
                                 <li key={boss.id}><span className={boss.color}>{boss.name}:</span> {boss.desc}</li>
                             ))}
                         </ul>
+                    </div>
+                    <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
+                        <div className="text-[#0df] mb-2 tracking-wider">ROUTES &amp; GAMBLE</div>
+                        <ul className="space-y-1 text-gray-200 text-[11px] leading-relaxed mb-3">
+                            <li><span className="text-[#f4d67b]">BACK ALLEY:</span> Standard quota curve — safe default.</li>
+                            <li><span className="text-[#c78b16]">PAWN SHOP:</span> Higher quota for +$15 cash on pick.</li>
+                            <li><span className="text-cyan-400">SAFEHOUSE CUT:</span> Moderate quota, +1 play, −1 pill.</li>
+                            <li><span className="text-emerald-400">SMUGGLE RUN:</span> High quota, cash, and a random one-shot.</li>
+                            <li><span className="text-[#ff007f]">VIP ROOM:</span> Steep quota but refills stash to 100%.</li>
+                            <li><span className="text-red-400">TURF WAR:</span> From round 4 on even shop stops — last route adds a boss (quota rules on the banner).</li>
+                        </ul>
+                        <p className="text-gray-200 text-[11px] leading-relaxed mb-2">
+                            <span className="text-[#0df]">Double or nothing</span> appears when you clear a round with ${GAMBLE_TUNING.minStake}+ cash from round {GAMBLE_TUNING.minRound} onward.
+                            <b className="text-gray-100"> Safe cut</b> keeps all cash and skips the flip;
+                            <b className="text-gray-100"> Flip</b> is a true 50/50 for ± the stake (22% of cash, capped at ${GAMBLE_TUNING.stakeCap}).
+                        </p>
+                        <p className="text-gray-200 text-[11px] leading-relaxed">
+                            <span className="text-[#0df]">Side bets</span> lock before your first roll. Threshold starts at {WAGER_TUNING.baseThreshold} heat and rises +{WAGER_TUNING.roundThresholdStep} each round.
+                            Wins pay about {WAGER_TUNING.payoutMultiplier}× stake (stake is spent when you place the bet).
+                        </p>
                     </div>
                     <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
                         <div className="text-[#0df] mb-2 tracking-wider">SURVIVAL NOTES</div>
@@ -2713,15 +2971,7 @@ const GutterbonesStory = (() => {
         const toggleMechanicPopup = (popupId) => setActiveMechanicPopup(current => (current === popupId ? null : popupId));
 
         const getBossAdjustedTarget = (baseTarget, boss, roundNum) => {
-            if (!boss?.applyTarget) return baseTarget;
-            let adjusted = boss.applyTarget(baseTarget);
-            if (boss.id === 'BOUNCER' && roundNum <= BOSS_TUNING.earlyBossRoundCap) {
-                adjusted = Math.floor(adjusted * BOSS_TUNING.earlyBouncerRelief);
-            }
-            if (boss.id === 'THE_RAID') {
-                adjusted = Math.floor(adjusted * BOSS_TUNING.raidQuotaRelief);
-            }
-            return adjusted;
+            return GutterbonesRoutes.applyBossAdjustedTarget(baseTarget, boss, roundNum);
         };
 
         const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
@@ -2733,7 +2983,7 @@ const GutterbonesStory = (() => {
         const inRunPhase = RUN_PHASES.includes(phase);
         const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
         const flowMultiplier = getFlowMultiplier(flowStreak);
-        const wagerThreshold = WAGER_TUNING.baseThreshold + Math.max(0, round - 1) * WAGER_TUNING.roundThresholdStep;
+        const wagerThreshold = GutterbonesRoutes.wagerThresholdForRound(round, WAGER_TUNING);
         const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
         const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
@@ -3789,43 +4039,37 @@ const GutterbonesStory = (() => {
             setPhase('SHOP');
         };
 
+        const routeProjectionInput = () => ({
+            round,
+            target,
+            debt,
+            insaneContract,
+            hasLedger: inventory.some(i => i.id === 'SHADY_LEDGER'),
+            personaPlays: persona.plays,
+            personaPills: persona.pills
+        });
+
+        const projectPath = (path) => GutterbonesRoutes.projectNextRound({ path, ...routeProjectionInput() });
+
+        const bestPreviewHeat = (phase === 'PLAY' && hasRolled && !rolling)
+            ? getAvailableCategories(meta).reduce((max, catId) => {
+                const result = calculateScore(catId, dice);
+                return result.valid && result.total > max ? result.total : max;
+            }, 0)
+            : null;
+        const shopRoutePreviews = phase === 'SHOP'
+            ? paths.map((p) => ({ ...p, _projection: projectPath(p) }))
+            : [];
+
         const handleAdvance = (path) => {
-            const hasLedger = inventory.some(i => i.id === 'SHADY_LEDGER');
-            const nextRound = round + 1;
+            const projection = projectPath(path);
+            const nextRound = projection.nextRound;
             const storyPanel = GutterbonesStory?.getRoundTransitionPanel?.(arcId, nextRound);
-            const roundCurve = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
-                ? ROUND_CURVE_TUNING.early
-                : nextRound <= ROUND_CURVE_TUNING.midMaxRound
-                    ? ROUND_CURVE_TUNING.mid
-                    : ROUND_CURVE_TUNING.late;
-            const scaledPathMod = 1 + ((path.mod - 1) * roundCurve.pathModWeight);
-            let nextTarget = Math.floor(target * scaledPathMod) + roundCurve.flatIncrease;
-            if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
-                const debtPenalty = Math.min(BOSS_TUNING.debtQuotaPenaltyCap, Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio));
-                nextTarget += insaneContract
-                    ? Math.floor(debtPenalty * INSANE_CONTRACT_MODIFIERS.debtPenaltyMultiplier)
-                    : debtPenalty;
-            }
-            if (path.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
-                nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
-            }
-            const growthCap = nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
-                ? PROGRESSION_GUARDRAILS.earlyMaxGrowthRate
-                : nextRound <= ROUND_CURVE_TUNING.midMaxRound
-                    ? PROGRESSION_GUARDRAILS.midMaxGrowthRate
-                    : PROGRESSION_GUARDRAILS.lateMaxGrowthRate;
-            const minTarget = Math.floor(target * PROGRESSION_GUARDRAILS.minGrowthRate);
-            const maxTarget = Math.floor(target * growthCap);
-            nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
-            if (insaneContract) nextTarget = Math.floor(nextTarget * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
-            const baseHands = Math.max(1, persona.plays - (hasLedger && debt > 0 ? 1 : 0) - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0));
-            const adjustedHands = Math.max(1, baseHands + (path.handDelta || 0));
-            const adjustedDiscards = Math.max(0, persona.pills + (path.discardDelta || 0));
             setRound(r => r + 1);
             setScore(0);
-            setTarget(nextTarget);
-            setHands(adjustedHands);
-            setDiscards(adjustedDiscards);
+            setTarget(projection.nextTarget);
+            setHands(projection.nextHands);
+            setDiscards(projection.nextDiscards);
             setUsedCats([]);
             setFlowStreak(0);
             setHasRolled(false);
@@ -3883,6 +4127,23 @@ const GutterbonesStory = (() => {
                 { id: 'wager-options', label: 'Wager options valid', pass: Array.isArray(WAGER_TUNING.stakeOptions) && WAGER_TUNING.stakeOptions.length >= 2 },
                 { id: 'consumables-catalog', label: 'Consumables have valid costs', pass: Object.values(CONSUMABLES).every(item => Number.isFinite(item.cost) && item.cost > 0) },
                 { id: 'routes-variants', label: 'Route variants available', pass: PATHS.some(path => path.id === 'HIDEOUT') && PATHS.some(path => path.id === 'SMUGGLE') },
+                {
+                    id: 'route-projection',
+                    label: 'Route projection returns finite quota',
+                    pass: (() => {
+                        const sample = GutterbonesRoutes.projectNextRound({
+                            path: PATHS[0],
+                            round: 2,
+                            target: 130,
+                            debt: 0,
+                            insaneContract: false,
+                            hasLedger: false,
+                            personaPlays: 4,
+                            personaPills: 3
+                        });
+                        return Number.isFinite(sample.nextTarget) && sample.nextTarget > 0 && Number.isFinite(sample.nextTargetDisplay);
+                    })()
+                },
                 {
                     id: 'save-shape',
                     label: 'Run snapshot includes critical fields',
@@ -3976,7 +4237,7 @@ const GutterbonesStory = (() => {
                             routeEffect={currentRouteEffect}
                             boss={activeBoss}
                             consumables={consumables}
-                            upcomingPaths={phase === 'SHOP' ? paths : []}
+                            upcomingPaths={shopRoutePreviews}
                         />
                     </>
                 )}
@@ -4180,22 +4441,42 @@ const GutterbonesStory = (() => {
                                 </div>
                             </div>
                             <div className="px-3 md:px-4 pb-3 border-t border-gray-800 pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <div className="font-mono text-[10px] text-gray-400">
+                                <div className="font-mono text-[10px] text-gray-400 space-y-0.5">
                                     {activeWager
-                                        ? `SIDE BET LIVE: $${activeWager.stake} on ${activeWager.threshold}+ heat`
-                                        : `SIDE BET: choose stake before first roll (${wagerThreshold}+ heat target)`}
+                                        ? `SIDE BET LIVE: $${activeWager.stake} on ${activeWager.threshold}+ heat (win +$${GutterbonesRoutes.sideBetPayout(activeWager.stake, WAGER_TUNING.payoutMultiplier)})`
+                                        : (
+                                            <>
+                                                <div>SIDE BET: choose stake before first roll — need {wagerThreshold}+ heat this round</div>
+                                                {hasRolled ? (
+                                                    <div className={bestPreviewHeat >= wagerThreshold ? 'text-emerald-400' : 'text-amber-400/90'}>
+                                                        Best preview: {bestPreviewHeat} vs {wagerThreshold}+ target
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-gray-500">Roll first to preview heat on the board.</div>
+                                                )}
+                                            </>
+                                        )}
                                 </div>
-                                <div className="flex gap-2">
-                                    {WAGER_TUNING.stakeOptions.map((stake) => (
-                                        <button
-                                            key={stake}
-                                            onClick={() => placeSideWager(stake)}
-                                            disabled={!canPlaceWager || gold < stake}
-                                            className="px-2 py-1 border border-emerald-700/70 text-emerald-300 bg-emerald-950/20 font-mono text-[10px] hover:bg-emerald-900/30 disabled:opacity-35 disabled:cursor-not-allowed"
-                                        >
-                                            BET ${stake}
-                                        </button>
-                                    ))}
+                                <div className="flex flex-wrap gap-2">
+                                    {WAGER_TUNING.stakeOptions.map((stake) => {
+                                        const winPayout = GutterbonesRoutes.sideBetPayout(stake, WAGER_TUNING.payoutMultiplier);
+                                        const disabled = !canPlaceWager || gold < stake;
+                                        const disabledReason = gold < stake ? 'Not enough cash' : !canPlaceWager ? 'Bet locked after first roll' : '';
+                                        return (
+                                            <button
+                                                key={stake}
+                                                onClick={() => placeSideWager(stake)}
+                                                disabled={disabled}
+                                                aria-disabled={disabled}
+                                                aria-label={disabled ? `Bet $${stake}, win +$${winPayout}, ${disabledReason}` : `Bet $${stake}, win +$${winPayout} if ${wagerThreshold} plus heat`}
+                                                title={disabled ? disabledReason : undefined}
+                                                className="px-2 py-1.5 min-h-[44px] border border-emerald-700/70 text-emerald-300 bg-emerald-950/20 font-mono text-[10px] hover:bg-emerald-900/30 disabled:opacity-35 disabled:cursor-not-allowed text-left"
+                                            >
+                                                <div className="font-bold">BET ${stake}</div>
+                                                <div className="text-emerald-400/90">Win +${winPayout}</div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <button onClick={() => setShowMobileStash(true)} className="md:hidden w-full bg-gray-800 text-gray-300 py-2 border-t border-gray-700 text-[10px] font-mono font-bold tracking-widest">OPEN STASH / HARDWARE</button>
@@ -4347,13 +4628,30 @@ const GutterbonesStory = (() => {
                         <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl relative z-10">
                             <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
                             <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
+                            <p className="font-mono text-xs text-gray-400 text-center mb-2">
+                                Stake on table: <b className="text-yellow-300">${gambleStake}</b>
+                                {' '}(22% of cash, min ${GAMBLE_TUNING.minStake}, cap ${GAMBLE_TUNING.stakeCap})
+                            </p>
                             <p className="font-mono text-sm text-gray-300 text-center mb-5">
-                                Put <b className="text-yellow-300">${gambleStake}</b> on the line for a 50/50 flip before the next stop.
+                                Appears after round {GAMBLE_TUNING.minRound}+ when you hold at least ${GAMBLE_TUNING.minStake} cash.
                             </p>
                             <div className="grid sm:grid-cols-2 gap-3">
-                                <button onClick={() => resolveGamble(false)} className="py-3 border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df]">TAKE SAFE CUT</button>
-                                <button onClick={() => resolveGamble(true)} className="py-3 border-2 border-[#ff007f] bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120]">
-                                    FLIP IT (+/- ${gambleStake})
+                                <button
+                                    onClick={() => resolveGamble(false)}
+                                    aria-label={`Take safe cut, keep all ${gold} dollars, enter shop`}
+                                    className="py-3 px-2 min-h-[44px] border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df] text-left"
+                                >
+                                    <div className="font-bold">TAKE SAFE CUT</div>
+                                    <div className="text-[11px] text-gray-400 mt-1">Keep all ${gold}. Enter shop.</div>
+                                </button>
+                                <button
+                                    onClick={() => resolveGamble(true)}
+                                    aria-label={`Flip fifty fifty, win plus ${gambleStake} or lose ${gambleStake}`}
+                                    className="py-3 px-2 min-h-[44px] border-2 border-[#ff007f] bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120] text-left"
+                                >
+                                    <div className="font-bold">FLIP IT</div>
+                                    <div className="text-[11px] mt-1">50%: +${gambleStake} cash</div>
+                                    <div className="text-[11px] text-red-300/90">50%: −${gambleStake} cash</div>
                                 </button>
                             </div>
                         </div>
@@ -4422,7 +4720,7 @@ const GutterbonesStory = (() => {
                                     </div>
                                 </div>
                                 {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
-                                <div className="flex flex-col gap-3 flex-1">{paths.map(p => <button key={p.id} onClick={() => handleAdvance(p)} className={`w-full p-4 border-2 rounded text-left hover:bg-white/5 transition-all ${p.color}`}><div className="font-bold text-xl uppercase tracking-wider">{p.name}</div><div className="text-xs opacity-70 mt-1 font-mono">{p.desc}</div>{p.boss && <div className="mt-2 pt-2 border-t border-current text-[10px] font-bold font-mono"><span className="text-white">BOSS:</span> {p.boss.name} - {p.boss.desc}</div>}</button>)}</div>
+                                <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">{paths.map(p => <RouteChoiceCard key={p.id} path={p} projection={projectPath(p)} onPick={handleAdvance} />)}</div>
                             </div>
                         </div>
                     </div>
