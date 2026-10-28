@@ -37,4 +37,4 @@ Re-checked items that were unclear on the stale `gutterbones1977.html` playtest 
 | Victory / GB009 settlement | Regression GB009 still green on `npm run check` |
 | Audio mute in settings | Present on canonical `index.html` |
 
-Phases **6c–6e** polish and balance landed on stacked PRs **#45–#47**; see `docs/phase-6c-quick-wins.md` through `docs/phase-6e-opening-balance.md`.
+Phases **6c–6f** are **merged to `main`** (PRs **#45–#48**, 28 Oct 2026). See `docs/phase-6c-quick-wins.md` through `docs/phase-6f-qa-pass.md`.

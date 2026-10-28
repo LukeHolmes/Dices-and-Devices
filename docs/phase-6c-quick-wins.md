@@ -1,7 +1,7 @@
 # Phase 6c — Quick wins (playtest polish)
 
-**Status:** Complete (PR #45)  
-**Base:** `main` @ d7a32b8 · **Scope:** `index.html` only (pre–Phase 7)
+**Status:** **Merged** — PR [#45](https://github.com/LukeHolmes/Dices-and-Devices/pull/45) → `main` (28 Oct 2026)  
+**Base:** Playtest fix plan · **Scope:** `index.html` (pre–Phase 7)
 
 ## Goals
 

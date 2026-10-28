@@ -1,6 +1,6 @@
 # Phase 6f — QA pass (unverified playtest items)
 
-**Status:** Shipped on branch `cursor/phase-6f-qa-pass-048e` (stacked on 6e)  
+**Status:** **Merged** — PR [#48](https://github.com/LukeHolmes/Dices-and-Devices/pull/48) → `main` (28 Oct 2026)  
 **Base:** Playtest fix plan § Phase 6f
 
 ## Verified on `index.html`
@@ -19,7 +19,3 @@
 ## Verification
 
 - `npm run check` (81 tests with 6f source test)
-
-## Stack note
-
-Includes **6c–6e** until prior PRs merge. Merge order: **#45 → #46 → #47 → this PR**.

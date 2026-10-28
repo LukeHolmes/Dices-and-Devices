@@ -1,6 +1,6 @@
 # Phase 6d — Input & first-run UX
 
-**Status:** Shipped on branch `cursor/phase-6d-input-first-run-048e` (stacked on 6c)  
+**Status:** **Merged** — PR [#46](https://github.com/LukeHolmes/Dices-and-Devices/pull/46) → `main` (28 Oct 2026)  
 **Base:** Playtest fix plan · **Scope:** `index.html` + tests
 
 ## Fixes
@@ -21,4 +21,4 @@
 
 ## Next
 
-**Phase 6e** — opening balance (`docs/phase-6e-opening-balance.md`).
+Playtest fix plan **6c–6f** complete on `main`. **Phase 7** (Vite split) is tracked separately (PR #44).

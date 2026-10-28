@@ -1,6 +1,6 @@
 # Phase 6e — Opening balance
 
-**Status:** Shipped on branch `cursor/phase-6e-opening-balance-048e` (stacked on 6d)  
+**Status:** **Merged** — PR [#47](https://github.com/LukeHolmes/Dices-and-Devices/pull/47) → `main` (28 Oct 2026)  
 **Base:** Playtest fix plan · **Scope:** `index.html`, `scripts/sim-opening.cjs`, tests
 
 ## Tuning changes
@@ -39,4 +39,4 @@ Back Alley quota **entering round 6** from R1 @85: **297** (legacy reference ~31
 
 ## Next
 
-**Phase 6f** — QA pass (`docs/phase-6f-qa-pass.md` / playtest addendum).
+**Phase 6f** merged with this stack. See **Phase 7** when ready to split the monolith.
