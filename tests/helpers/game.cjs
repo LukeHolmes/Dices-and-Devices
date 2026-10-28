@@ -127,6 +127,9 @@ function createGame(snapshot = {}, options = {}) {
     },
     scheduleInterval: () => 1,
     clearScheduledInterval: noOp,
+    rollLockRef: { current: false },
+    lastRollStartedAtRef: { current: 0 },
+    pendingPayoutRef: { current: null },
   };
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);

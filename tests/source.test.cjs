@@ -97,6 +97,14 @@ test("Phase 5 roster portraits wired and on disk", () => {
   assert.match(appSource, /crooked-cop\.png/);
 });
 
+test("Phase 6d input UX hooks present", () => {
+  assert.match(appSource, /rollLockRef/);
+  assert.match(appSource, /pendingPayoutRef/);
+  assert.match(appSource, /seenHelpDossier/);
+  assert.match(appSource, /CATEGORY_RULE_TOOLTIPS/);
+  assert.match(sharedSource, /reason: invalidReason/);
+});
+
 test("Phase 6c safehouse and favicon polish", () => {
   assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
   assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
