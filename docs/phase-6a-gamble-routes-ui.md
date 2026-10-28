@@ -1,6 +1,6 @@
 # Phase 6a — Route & Gamble UI Clarity
 
-**Status:** Planned (not started)  
+**Status:** Complete (implemented on `cursor/phase-6a-gamble-routes-ui-048e`)  
 **Depends on:** Phases 1–5 on `main` (UX, audio, story, portraits)  
 **Goal:** Players treat **route picks**, **double-or-nothing**, and **side wagers** as informed choices — not opaque coin flips — **without changing RNG or balance constants** in this phase.
 
