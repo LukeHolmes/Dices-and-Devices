@@ -34,3 +34,7 @@ Implementation: `<script id="gutterbones-gamble">` (`GutterbonesGamble.resolveFl
 1. Clear round 3+ with $20+ → **GAMBLE** shows safe cut + three tier buttons with % and ± amounts.
 2. Flow streak &gt; 0 → line shows bonus win odds.
 3. Help → **ROUTES & GAMBLE** mentions tiers and flow bonus.
+
+## Next
+
+See **`docs/phase-7-module-split.md`** (recommended code phase) and story panel art backlog in **`docs/story-arcs.md`** §4.
