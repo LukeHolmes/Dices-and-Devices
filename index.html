@@ -4068,6 +4068,7 @@ const GutterbonesGamble = (() => {
                     playStoryBeat(GutterbonesStory?.getBustPanel?.(arcId), goRapSheet);
                 }, bustDelay);
             } else if (hands <= 1) {
+                const quotaCleared = score + gained >= currentTarget;
                 if (round >= 10) {
                     setLossExplanation(null);
                     setGambleStake(0);
@@ -4090,10 +4091,15 @@ const GutterbonesGamble = (() => {
                     const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
                     if (allowGamble) {
                         setGambleStake(stake);
-                        setFixerLine(pickLine(FIXER_LINES.gamble));
+                        setFixerLine(quotaCleared
+                            ? `Round ${round} quota cleared. ${pickLine(FIXER_LINES.gamble)}`
+                            : pickLine(FIXER_LINES.gamble));
                         setPhase('GAMBLE');
                     } else {
                         generateShop();
+                        if (quotaCleared) {
+                            setFixerLine(`Round ${round} quota cleared. Pick a route — Pawn/Smuggle pay +$15 bonus cash.`);
+                        }
                         setPhase('SHOP');
                     }
                 }
@@ -5017,7 +5023,8 @@ const GutterbonesGamble = (() => {
                         <div className="shop-counting-cash-backdrop" aria-hidden></div>
                         <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0 relative z-10">
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
-                                <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
+                                <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
+                                <p className="text-[10px] font-mono text-amber-200/85 mb-4 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;

@@ -105,6 +105,12 @@ test("Phase 6d input UX hooks present", () => {
   assert.match(sharedSource, /reason: invalidReason/);
 });
 
+test("Phase 6f shop loan and audio settings present", () => {
+  assert.match(appSource, /LOAN appears when cash is short/);
+  assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);
+  assert.match(appSource, /Round \$\{round\} quota cleared/);
+});
+
 test("Phase 6c safehouse and favicon polish", () => {
   assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
   assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
