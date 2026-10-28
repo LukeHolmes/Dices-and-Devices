@@ -66,7 +66,7 @@ Runs autosave during play, shop, and carving. Completed or busted runs clear the
 
 ```text
 index.html                    Main playable Gutterbones 1977 build
-gutterbones1977.html           Standalone copy of the Gutterbones fork
+gutterbones1977.html           Legacy URL; redirects to index.html
 dice-and-devises-legacy.html   Previous cyberpunk Dice & Devises prototype
 README.md                      Project overview
 docs/notion/                   Notion-ready project documents
