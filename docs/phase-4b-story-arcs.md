@@ -23,3 +23,8 @@ Only `assets/panels/witness/` ships PNGs. Other arcs skip broken images fast (`S
 
 - Start several runs — prologue caption/title should vary by arc.
 - Resume mid-run — same `arcId`, no prologue replay.
+
+## Next
+
+- **Phase 7** — Vite / module split (`docs/phase-7-module-split.md`).
+- **Parallel:** panel PNGs for `setup`, `debt`, `inside`, `borough`; optional **Phase 4.1** boss approach beats.
