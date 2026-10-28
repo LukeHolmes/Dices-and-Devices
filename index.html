@@ -1023,7 +1023,7 @@ const GutterbonesRoutes = (() => {
         earlyMaxRound: 3,
         midMaxRound: 6,
         early: { pathModWeight: 0.7, flatIncrease: 28 },
-        mid: { pathModWeight: 0.95, flatIncrease: 42 },
+        mid: { pathModWeight: 0.95, flatIncrease: 52 },
         late: { pathModWeight: 1.1, flatIncrease: 58 }
     });
 
@@ -1336,7 +1336,7 @@ const GutterbonesGamble = (() => {
         { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
         { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700', portraitSrc: 'assets/personas/hustler.png', portraitAlt: 'The Hustler' },
         { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900', portraitSrc: 'assets/personas/enforcer.png', portraitAlt: 'The Enforcer' },
-        { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 20% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' }
+        { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 15% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' }
     ];
 
     const FACE_DATABASE = {
@@ -1688,8 +1688,14 @@ const GutterbonesGamble = (() => {
         maxAffordableBuffer: 25
     };
 
+    const FIRST_RUN_TUNING = {
+        enabled: true,
+        openingTarget: 70,
+        enforcerRound1Pills: 1
+    };
+
     const EARLY_GAME_TUNING = {
-        openingTarget: 130,
+        openingTarget: 85,
         counterOpeningMultiplier: 1.15,
         debtPenaltyStartsRound: 4,
         bossPathStartsRound: 4
@@ -1699,7 +1705,7 @@ const GutterbonesGamble = (() => {
         earlyMaxRound: 3,
         midMaxRound: 6,
         early: { pathModWeight: 0.7, flatIncrease: 28 },
-        mid: { pathModWeight: 0.95, flatIncrease: 42 },
+        mid: { pathModWeight: 0.95, flatIncrease: 52 },
         late: { pathModWeight: 1.1, flatIncrease: 58 }
     };
 
@@ -3701,9 +3707,13 @@ const GutterbonesGamble = (() => {
             const runArcId = GutterbonesStory?.pickRandomArcId?.(Math.random()) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness';
             const arcMeta = GutterbonesStory?.getArc?.(runArcId);
             setArcId(runArcId);
+            let openingBase = EARLY_GAME_TUNING.openingTarget;
+            if (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0) {
+                openingBase = FIRST_RUN_TUNING.openingTarget;
+            }
             const openingTargetBase = p.id === 'CARD_COUNTER'
-                ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
-                : EARLY_GAME_TUNING.openingTarget;
+                ? Math.floor(openingBase * EARLY_GAME_TUNING.counterOpeningMultiplier)
+                : openingBase;
             clearSavedRun();
             setHasSavedRun(false);
             setRunClosed(false);
@@ -3714,7 +3724,10 @@ const GutterbonesGamble = (() => {
             setScore(0);
             setTarget(insaneContract ? Math.floor(openingTargetBase * INSANE_CONTRACT_MODIFIERS.targetMultiplier) : openingTargetBase);
             setHands(Math.max(1, p.plays - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
-            setDiscards(p.pills);
+            const round1Pills = (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0 && p.id === 'ENFORCER')
+                ? FIRST_RUN_TUNING.enforcerRound1Pills
+                : p.pills;
+            setDiscards(round1Pills);
             setGold(p.cash);
             setDebt(0);
             setStash(0);

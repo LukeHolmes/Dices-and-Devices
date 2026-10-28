@@ -34,12 +34,12 @@ const THE_RAID = {
   applyTarget: (t) => Math.floor(t * 3),
 };
 
-test("projectNextRound — early BACK ALLEY from round 1 target 130", () => {
+test("projectNextRound — early BACK ALLEY from round 1 target 85", () => {
   const routes = loadRoutes();
   const out = routes.projectNextRound({
     path: BACK_ALLEY,
     round: 1,
-    target: 130,
+    target: 85,
     debt: 0,
     insaneContract: false,
     hasLedger: false,
@@ -47,15 +47,15 @@ test("projectNextRound — early BACK ALLEY from round 1 target 130", () => {
     personaPills: 3,
   });
   assert.equal(out.nextRound, 2);
-  assert.equal(out.nextTarget, 158);
-  assert.equal(out.nextTargetDisplay, 158);
+  assert.equal(out.nextTarget, 113);
+  assert.equal(out.nextTargetDisplay, 113);
   assert.equal(out.nextHands, 4);
   assert.equal(out.nextDiscards, 3);
 });
 
 test("projectNextRound — PAWN scales quota higher than alley", () => {
   const routes = loadRoutes();
-  const base = { round: 2, target: 158, debt: 0, insaneContract: false, hasLedger: false, personaPlays: 4, personaPills: 3 };
+  const base = { round: 2, target: 113, debt: 0, insaneContract: false, hasLedger: false, personaPlays: 4, personaPills: 3 };
   const alley = routes.projectNextRound({ path: BACK_ALLEY, ...base });
   const pawn = routes.projectNextRound({ path: PAWN, ...base });
   assert.ok(pawn.nextTarget > alley.nextTarget);
