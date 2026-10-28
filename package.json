@@ -2,11 +2,14 @@
   "name": "gutterbones-1977",
   "version": "0.0.0",
   "private": true,
-  "description": "Gutterbones 1977 — static browser dice roguelike (index.html). Node runs baseline checks only.",
+  "description": "Gutterbones 1977 — Vite + React dice roguelike. Node runs baseline checks against src modules.",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 8080",
     "test": "node --test tests/rules.test.cjs tests/saves.test.cjs tests/source.test.cjs tests/onboarding.test.cjs tests/story.test.cjs tests/routes.test.cjs tests/gamble.test.cjs tests/regression-defects.test.cjs",
     "audit:known-issues": "node tests/known-issues.cjs",
     "test:known-issues": "node tests/known-issues.cjs --strict",
@@ -14,5 +17,11 @@
     "check:parity": "node tests/parity.cjs",
     "check:release": "npm run check",
     "dump:save": "node scripts/dump-fixture-save.cjs"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }

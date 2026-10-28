@@ -1,0 +1,498 @@
+#root-gutterbones { font-family: Georgia, serif; }
+    #root-gutterbones .font-marker { font-family: Impact, "Arial Black", sans-serif; }
+    #root-gutterbones .font-mono { font-family: "Courier New", monospace; }
+    @keyframes flicker {
+        0%, 14%, 15%, 33%, 34%, 48%, 49%, 72%, 73%, 100% { opacity: 1; text-shadow: 0 0 6px #ff007f, 0 0 18px #00ddff; }
+        14.2%, 14.6%, 33.2%, 48.2%, 72.5% { opacity: .5; text-shadow: none; }
+        14.8% { opacity: .88; text-shadow: 0 0 5px #00ddff, 0 0 12px #00ddff; }
+    }
+    @keyframes stampSlam {
+        0% { transform: scale(2.5) rotate(15deg); opacity: 0; }
+        100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+    }
+    @keyframes cashFall {
+        0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 1; }
+        100% { transform: translateY(110vh) rotate(720deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes flyScore {
+        0% { transform: translate(-50%, 0) scale(.7); opacity: 0; }
+        35% { opacity: 1; }
+        100% { transform: translate(-50%, -120px) scale(1.05); opacity: 0; }
+    }
+    @keyframes bossIntro {
+        0% { transform: scale(.85); opacity: 0; filter: blur(8px); }
+        100% { transform: scale(1); opacity: 1; filter: blur(0); }
+    }
+    @keyframes grainShift {
+        0% { transform: translate3d(0, 0, 0); }
+        33% { transform: translate3d(-1.5%, 1%, 0); }
+        66% { transform: translate3d(1%, -1.5%, 0); }
+        100% { transform: translate3d(0.5%, 0.5%, 0); }
+    }
+    @keyframes leakPulse {
+        0%, 100% { opacity: 0.18; transform: scale(1) translate3d(0, 0, 0); }
+        50% { opacity: 0.3; transform: scale(1.08) translate3d(-1.5%, 1%, 0); }
+    }
+    @keyframes smokeDrift {
+        0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.06; }
+        45% { opacity: 0.1; }
+        100% { transform: translate3d(var(--sx, 40px), var(--sy, -24px), 0) scale(1.25); opacity: 0.04; }
+    }
+    @keyframes feltRollPulse {
+        0% { opacity: 0; box-shadow: inset 0 0 0 rgba(255, 0, 127, 0); }
+        30% { opacity: 0.4; box-shadow: inset 0 0 28px rgba(255, 0, 127, 0.28); }
+        100% { opacity: 0; box-shadow: inset 0 0 6px rgba(255, 0, 127, 0); }
+    }
+    @keyframes boneRoll {
+        0% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)) scale(1); }
+        12% { transform: translate3d(0, 8px, 0) rotate(var(--rest-rotate, 0deg)) scale(0.9); }
+        25% { transform: translate3d(var(--tx1), var(--ty1), 0) rotate(var(--r1)) scale(1.16); }
+        70% { transform: translate3d(var(--tx2), var(--ty2), 0) rotate(var(--r2)) scale(0.95); }
+        86% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1.08); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rf)) scale(1); }
+    }
+    @keyframes boneIdle {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+        40% { transform: translate3d(1px, -1px, 0) rotate(calc(var(--rest-rotate, 0deg) + 0.5deg)); }
+        70% { transform: translate3d(-1px, 0, 0) rotate(calc(var(--rest-rotate, 0deg) - 0.35deg)); }
+    }
+    @keyframes keptBob {
+        0%, 100% { transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); }
+        50% { transform: translate3d(0, -11px, 0) rotate(var(--rest-rotate, 0deg)); }
+    }
+    @keyframes verdictBloom {
+        0% { opacity: 0; transform: scale(0.8); box-shadow: 0 0 0 var(--verdict-color); }
+        35% { opacity: 0.95; transform: scale(1.1); box-shadow: 0 0 32px var(--verdict-color); }
+        100% { opacity: 0; transform: scale(1.25); box-shadow: 0 0 8px transparent; }
+    }
+    @keyframes settleJolt {
+        0% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+        25% { transform: translate3d(1px, -1px, 0) rotate(calc(var(--rest-rotate, 0deg) + 1.2deg)); }
+        50% { transform: translate3d(-1px, 1px, 0) rotate(calc(var(--rest-rotate, 0deg) - 1deg)); }
+        75% { transform: translate3d(1px, 0, 0) rotate(calc(var(--rest-rotate, 0deg) + 0.7deg)); }
+        100% { transform: translate3d(0, 0, 0) rotate(var(--rest-rotate, 0deg)); }
+    }
+    @keyframes impactParticle {
+        0% { opacity: .95; transform: translate3d(0, 0, 0) scale(1); }
+        100% { opacity: 0; transform: translate3d(var(--px), var(--py), 0) scale(.2); }
+    }
+    @keyframes badgePop {
+        0% { opacity: 0; transform: translateY(3px) scale(0.9); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes scorePulse {
+        0% { transform: scale(1); }
+        35% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    @keyframes bossKick {
+        0%, 100% { transform: translate3d(0, 0, 0); }
+        25% { transform: translate3d(0, 2px, 0); }
+        50% { transform: translate3d(-2px, 0, 0); }
+        75% { transform: translate3d(2px, 0, 0); }
+    }
+    @keyframes blindSweepTop {
+        0% { transform: translateY(-100%); opacity: 0; }
+        30% { transform: translateY(0); opacity: 0.85; }
+        100% { transform: translateY(-100%); opacity: 0; }
+    }
+    @keyframes blindSweepBottom {
+        0% { transform: translateY(100%); opacity: 0; }
+        30% { transform: translateY(0); opacity: 0.85; }
+        100% { transform: translateY(100%); opacity: 0; }
+    }
+    @keyframes bossScan {
+        0% { transform: translateX(-110%); opacity: 0; }
+        10%, 35% { opacity: 0.3; }
+        100% { transform: translateX(110%); opacity: 0; }
+    }
+    @keyframes storyKenBurns {
+        0% { transform: scale(1) translate3d(0, 0, 0); }
+        100% { transform: scale(1.05) translate3d(-1.5%, -1%, 0); }
+    }
+    .story-ken-burns {
+        animation: storyKenBurns 8s ease-out forwards;
+    }
+    @keyframes storyFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes storyFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+    .story-panel-fade-in { animation: storyFadeIn 0.3s ease-out forwards; }
+    .story-panel-fade-out { animation: storyFadeOut 0.3s ease-in forwards; }
+    @keyframes paperSway {
+        0%, 100% { transform: rotate(var(--paper-rot, -2deg)); }
+        50% { transform: rotate(calc(var(--paper-rot, -2deg) + 0.4deg)); }
+    }
+    @keyframes stampFade {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(-8deg); }
+        45% { opacity: .95; transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.04) rotate(-4deg); }
+    }
+    @keyframes soldCollapse {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(.9) translateY(12px); opacity: 0; }
+    }
+    @keyframes tagSwing {
+        0%, 100% { transform: rotate(-6deg); }
+        50% { transform: rotate(6deg); }
+    }
+    @keyframes carveSpark {
+        0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        100% { opacity: 0; transform: translate3d(var(--sx), var(--sy), 0) scale(0.2); }
+    }
+    @keyframes sweepIris {
+        0% { clip-path: circle(75% at 50% 50%); opacity: 0; }
+        35% { opacity: 1; }
+        100% { clip-path: circle(0% at 50% 50%); opacity: 1; }
+    }
+    @keyframes sirenWash {
+        0% { background: rgba(255,0,0,.06); }
+        33% { background: rgba(255,0,0,.24); }
+        66% { background: rgba(32,80,255,.2); }
+        100% { background: rgba(255,255,255,.15); }
+    }
+    @keyframes riseSun {
+        0% { transform: translateY(80px); opacity: .5; }
+        100% { transform: translateY(-10px); opacity: 1; }
+    }
+    @keyframes writeSig {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes pillEject {
+        0% { opacity: 1; transform: translate3d(0, 0, 0) scale(0.9); }
+        100% { opacity: 0; transform: translate3d(var(--pill-x), var(--pill-y), 0) scale(0.3); }
+    }
+    @keyframes billSway {
+        0%, 100% { transform: translateX(0) rotate(-4deg); }
+        50% { transform: translateX(12px) rotate(4deg); }
+    }
+    @keyframes cashNear {
+        0% { transform: translateY(-12vh) rotate(0deg) translateX(0); opacity: 0.95; }
+        100% { transform: translateY(112vh) rotate(540deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes cashMid {
+        0% { transform: translateY(-12vh) rotate(0deg) translateX(0); opacity: 0.75; }
+        100% { transform: translateY(112vh) rotate(430deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes cashFar {
+        0% { transform: translateY(-12vh) rotate(0deg) translateX(0); opacity: 0.45; }
+        100% { transform: translateY(112vh) rotate(320deg) translateX(var(--tx)); opacity: 0; }
+    }
+    @keyframes cashFlash {
+        0% { color: #4ade80; }
+        100% { color: #f87171; }
+    }
+    @keyframes debtPulse {
+        0%, 100% { opacity: .7; }
+        50% { opacity: 1; }
+    }
+    @keyframes debtTwitch {
+        0%, 90%, 100% { transform: translate3d(0, 0, 0); }
+        92% { transform: translate3d(-1px, 0, 0); }
+        94% { transform: translate3d(1px, 0, 0); }
+        96% { transform: translate3d(-1px, 0, 0); }
+    }
+    @keyframes copSweep {
+        0%, 82% { transform: translateX(-120%); opacity: 0; }
+        86% { opacity: .2; }
+        95% { transform: translateX(120%); opacity: .22; }
+        100% { transform: translateX(120%); opacity: 0; }
+    }
+    @keyframes junkieGlitch {
+        0%, 88%, 100% { text-shadow: none; transform: translate3d(0,0,0); }
+        89% { text-shadow: -1px 0 #ff007f, 1px 0 #00ddff; transform: translate3d(-1px,0,0); }
+        90% { text-shadow: 1px 0 #ff007f, -1px 0 #00ddff; transform: translate3d(1px,0,0); }
+        91% { text-shadow: none; transform: translate3d(0,0,0); }
+    }
+    @keyframes quotaThump {
+        0%, 90%, 100% { transform: scale(1); }
+        93% { transform: scale(1.08); }
+        96% { transform: scale(.98); }
+    }
+    @keyframes informantShimmer {
+        0% { transform: translateX(-120%); opacity: 0; }
+        20% { opacity: .2; }
+        60% { opacity: .28; }
+        100% { transform: translateX(120%); opacity: 0; }
+    }
+    @keyframes cameraKickSoft {
+        0% { transform: translate3d(0, 0, 0); }
+        30% { transform: translate3d(-2px, 1px, 0) rotate(-0.15deg); }
+        70% { transform: translate3d(1px, -1px, 0) rotate(0.12deg); }
+        100% { transform: translate3d(0, 0, 0); }
+    }
+    @keyframes cameraKickHard {
+        0% { transform: translate3d(0, 0, 0); }
+        24% { transform: translate3d(-4px, 2px, 0) rotate(-0.22deg); }
+        58% { transform: translate3d(3px, -2px, 0) rotate(0.2deg); }
+        100% { transform: translate3d(0, 0, 0); }
+    }
+    @keyframes scoreReadyGlow {
+        0%, 100% { box-shadow: inset 0 0 0 rgba(0,0,0,0); background-color: rgba(0,0,0,.06); }
+        50% { box-shadow: inset 0 0 0 1px rgba(0,221,255,.32); background-color: rgba(0,221,255,.08); }
+    }
+    @keyframes scoreBustWarn {
+        0%, 100% { background-color: rgba(127,29,29,.04); }
+        50% { background-color: rgba(220,38,38,.12); }
+    }
+    @keyframes rollReadyPulse {
+        0%, 100% { transform: translateY(0); box-shadow: 0 6px 0 #7a003d, 0 0 0 rgba(255,0,127,0); }
+        50% { transform: translateY(-1px); box-shadow: 0 7px 0 #7a003d, 0 0 14px rgba(255,0,127,.4); }
+    }
+    @keyframes pressureLow {
+        0%, 100% { opacity: .1; }
+        50% { opacity: .2; }
+    }
+    @keyframes pressureHigh {
+        0%, 100% { opacity: .16; }
+        50% { opacity: .32; }
+    }
+    @keyframes dangerCountPulse {
+        0%, 100% { transform: scale(1); opacity: .95; }
+        50% { transform: scale(1.08); opacity: 1; }
+    }
+    @keyframes feltEdgeBreath {
+        0%, 100% { opacity: .18; transform: scale(1); }
+        50% { opacity: .3; transform: scale(1.01); }
+    }
+    @keyframes diceLaneFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-2px); }
+    }
+    @keyframes diceLaneRollFocus {
+        0% { transform: translateY(2px) scale(.985); }
+        55% { transform: translateY(-3px) scale(1.02); }
+        100% { transform: translateY(0) scale(1); }
+    }
+    @keyframes boneDepthIdle {
+        0%, 100% { filter: drop-shadow(0 7px 7px rgba(0,0,0,.28)); }
+        50% { filter: drop-shadow(0 10px 10px rgba(0,0,0,.36)); }
+    }
+    @keyframes boneDepthRoll {
+        0% { filter: drop-shadow(0 6px 8px rgba(0,0,0,.24)); }
+        40% { filter: drop-shadow(0 18px 14px rgba(0,0,0,.45)); }
+        100% { filter: drop-shadow(0 10px 10px rgba(0,0,0,.34)); }
+    }
+    #root-gutterbones .cash-bill { animation: cashFall 2s linear forwards; }
+    #root-gutterbones .fly-score { position: fixed; z-index: 300; pointer-events: none; animation: flyScore 1.1s cubic-bezier(.25,1,.5,1) forwards; color: #facc15; font: 900 2rem Impact, sans-serif; text-shadow: 0 0 12px #000; }
+    #root-gutterbones .preview-badge { display:inline-flex; border:1px solid rgba(0,221,255,.35); background:rgba(0,221,255,.08); color:#67e8f9; border-radius:999px; padding:1px 5px; font-size:9px; font-family:"Courier New", monospace; }
+    #root-gutterbones .risk-badge { display:inline-flex; border:1px solid rgba(255,0,127,.5); background:rgba(127,0,60,.45); color:#fbcfe8; border-radius:999px; padding:1px 6px; font-size:9px; font-weight:bold; font-family:"Courier New", monospace; }
+    #root-gutterbones .glow-rare { box-shadow: 0 0 18px rgba(0,221,255,.45); border-color: rgba(0,221,255,.75) !important; }
+    #root-gutterbones .glow-danger { box-shadow: 0 0 18px rgba(255,0,127,.45); border-color: rgba(255,0,127,.85) !important; }
+    #root-gutterbones .meta-stairwell-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(8, 7, 6, 0.72) 0%, rgba(14, 11, 9, 0.45) 42%, rgba(5, 4, 4, 0.88) 100%),
+        url('assets/scenes/stairwell-descent.png');
+      background-size: cover;
+      background-position: center 28%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .victory-escape-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 5, 5, 0.65) 0%, rgba(10, 8, 7, 0.35) 40%, rgba(14, 10, 9, 0.55) 100%),
+        url('assets/scenes/the-escape.png');
+      background-size: cover;
+      background-position: center 38%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .shop-counting-cash-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(4, 3, 2, 0.78) 0%, rgba(8, 6, 5, 0.5) 38%, rgba(6, 5, 4, 0.72) 100%),
+        url('assets/scenes/counting-cash.png');
+      background-size: cover;
+      background-position: center 42%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .rap-busted-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 4, 12, 0.82) 0%, rgba(10, 8, 18, 0.55) 42%, rgba(4, 3, 10, 0.85) 100%),
+        url('assets/scenes/busted.png');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .gamble-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(8, 2, 6, 0.88) 0%, rgba(18, 4, 12, 0.55) 45%, rgba(6, 1, 4, 0.9) 100%),
+        url('assets/scenes/gamble-double-or-nothing.png');
+      background-size: cover;
+      background-position: center 40%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .carving-mod-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 2, 2, 0.88) 0%, rgba(14, 6, 4, 0.55) 42%, rgba(4, 1, 1, 0.9) 100%),
+        url('assets/scenes/the-mod-bench.png');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .boss-intro-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(4, 2, 8, 0.82) 0%, rgba(12, 4, 8, 0.65) 50%, rgba(2, 1, 6, 0.88) 100%),
+        url('assets/scenes/boss-turf-pressure.png');
+      background-size: cover;
+      background-position: center 42%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
+    #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
+    #root-gutterbones .ambient-leak { position: absolute; inset: -8%; pointer-events: none; z-index: 3; mix-blend-mode: screen; background: radial-gradient(circle at 88% 10%, rgba(255,163,60,.35) 0%, rgba(255,163,60,.14) 25%, rgba(255,163,60,0) 52%); animation: leakPulse 3.8s ease-in-out infinite; }
+    #root-gutterbones .felt-surface {
+      background-color: #120608;
+      background-image:
+        radial-gradient(circle at 50% 44%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.45) 48%, rgba(0, 0, 0, 0.72) 100%),
+        radial-gradient(circle at 50% 48%, rgba(122, 39, 49, 0.42) 0%, rgba(78, 22, 30, 0.55) 45%, rgba(35, 10, 16, 0.75) 100%),
+        url('assets/scenes/alley-playfield.png');
+      background-size: cover, cover, cover;
+      background-position: center, center, center 52%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .felt-surface::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 34%), linear-gradient(45deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0) 67%); mix-blend-mode: soft-light; opacity: .75; }
+    #root-gutterbones .felt-surface::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+    #root-gutterbones .felt-roll-pulse::after { animation: feltRollPulse .65s ease-out forwards; }
+    #root-gutterbones .felt-edge-ring { position: absolute; inset: 0; pointer-events: none; z-index: 12; border-radius: inherit; border: 1px solid rgba(255,184,125,.14); box-shadow: inset 0 0 22px rgba(255,63,111,.15), inset 0 -24px 40px rgba(0,0,0,.2); animation: feltEdgeBreath 5.8s ease-in-out infinite; }
+    #root-gutterbones .felt-edge-ring-roll { box-shadow: inset 0 0 28px rgba(255,63,111,.22), inset 0 -30px 48px rgba(0,0,0,.28); }
+    #root-gutterbones .dice-lane-idle { animation: diceLaneFloat 5.4s ease-in-out infinite; transform-origin: 50% 100%; }
+    #root-gutterbones .dice-lane-roll { animation: diceLaneRollFocus .44s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 100%; }
+    #root-gutterbones .felt-smoke { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+    #root-gutterbones .felt-smoke-wisp { position: absolute; width: 45%; aspect-ratio: 1/1; border-radius: 999px; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.15) 0%, rgba(255,255,255,0) 68%); filter: blur(14px); animation: smokeDrift var(--dur, 48s) linear infinite; opacity: .08; }
+    #root-gutterbones .bone-rolling { animation-name: boneRoll; animation-duration: var(--roll-dur, .9s); animation-delay: var(--roll-delay, 0ms); animation-fill-mode: forwards; animation-timing-function: cubic-bezier(.25,1,.5,1); will-change: transform, filter; }
+    #root-gutterbones .bone-idle { animation: boneIdle 6.4s ease-in-out var(--idle-delay, 0s) infinite; }
+    #root-gutterbones .bone-kept { animation: keptBob 2.4s ease-in-out infinite; transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); box-shadow: 0 0 14px rgba(255,0,127,.7); border-color: #ff007f; }
+    #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
+    #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
+    #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
+    #root-gutterbones .bone-depth-idle { animation: boneDepthIdle 4.1s ease-in-out infinite; }
+    #root-gutterbones .bone-depth-roll { animation: boneDepthRoll .62s cubic-bezier(.2,.75,.32,1); }
+    #root-gutterbones .score-pulse { animation: scorePulse .4s ease-out; }
+    #root-gutterbones .boss-kick { animation: bossKick .26s linear; }
+    #root-gutterbones .boss-blind-top { animation: blindSweepTop .45s ease-out forwards; }
+    #root-gutterbones .boss-blind-bottom { animation: blindSweepBottom .45s ease-out forwards; }
+    #root-gutterbones .boss-banner-scan { position: relative; overflow: hidden; }
+    #root-gutterbones .boss-banner-scan::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent); animation: bossScan 8s linear infinite; pointer-events: none; }
+    #root-gutterbones .paper-card { animation: paperSway 10s ease-in-out infinite; transform-origin: 50% 90%; }
+    #root-gutterbones .paper-lift:hover { transform: translateY(-4px) scale(1.02) rotate(0deg) !important; box-shadow: 0 14px 30px rgba(0,0,0,.45); }
+    #root-gutterbones .stamp-overlay { position: fixed; left: 50%; top: 52%; border: 4px solid var(--stamp-color, #d30000); color: var(--stamp-color, #d30000); background: rgba(255,255,255,.85); font: 900 2rem Impact, sans-serif; letter-spacing: .06em; transform: translate(-50%, -50%); z-index: 650; padding: .35rem .8rem; pointer-events: none; animation: stampFade .9s ease-out forwards; }
+    #root-gutterbones .trigger-cascade { position: fixed; left: 50%; top: 43%; transform: translateX(-50%); z-index: 420; pointer-events: none; }
+    #root-gutterbones .trigger-cascade-row { animation: badgePop .26s ease-out forwards; opacity: 0; }
+    #root-gutterbones .pow-burst { position: fixed; left: 50%; top: 28%; transform: translateX(-50%) rotate(-5deg); z-index: 500; font: 900 4rem Impact, sans-serif; color: #fff; text-shadow: 0 0 10px #ff007f, 0 0 26px #ff007f; pointer-events: none; animation: stampSlam .28s ease-out forwards; }
+    #root-gutterbones .sold-collapse { animation: soldCollapse .22s ease-out forwards; }
+    #root-gutterbones .price-tag { position: absolute; top: -10px; right: 10px; background: #e8e6e1; color: #111; border: 2px solid #111; font: 700 10px "Courier New", monospace; padding: 2px 7px; transform-origin: top center; animation: tagSwing 2.8s ease-in-out infinite; }
+    #root-gutterbones .carve-spark { position: absolute; width: 8px; height: 8px; border-radius: 999px; background: radial-gradient(circle, #ffd166 0%, #ff007f 80%); pointer-events: none; z-index: 40; animation: carveSpark .35s ease-out forwards; }
+    #root-gutterbones .cinematic-iris { position: absolute; inset: 0; z-index: 610; pointer-events: none; background: #000; animation: sweepIris .65s ease-in forwards; }
+    #root-gutterbones .cinematic-siren { position: absolute; inset: 0; z-index: 611; pointer-events: none; animation: sirenWash .75s linear infinite alternate; }
+    #root-gutterbones .badge-pop { opacity: 0; transform: translateY(3px) scale(0.9); }
+    #root-gutterbones .score-row:hover .badge-pop { animation: badgePop .2s ease-out forwards; }
+    #root-gutterbones .paid-stamp { color: #b91c1c; border: 2px solid #b91c1c; background: rgba(255,255,255,.66); font: 900 .7rem Impact, sans-serif; letter-spacing: .08em; transform: rotate(-9deg); padding: 1px 4px; }
+    #root-gutterbones .sunrise { animation: riseSun 1.2s cubic-bezier(.25,1,.5,1) forwards; }
+    #root-gutterbones .signature-path { stroke-dasharray: 240; stroke-dashoffset: 240; animation: writeSig 1s ease-out .2s forwards; }
+    #root-gutterbones .pill-burst { position: absolute; width: 16px; height: 16px; border-radius: 999px; border: 1px solid #0df; background: radial-gradient(circle, #fff 15%, #0df 70%); pointer-events: none; animation: pillEject .35s ease-out forwards; z-index: 90; }
+    #root-gutterbones .readable-panel {
+      background: linear-gradient(180deg, rgba(12, 12, 13, 0.98), rgba(4, 5, 8, 0.98));
+      border: 2px solid rgba(0, 221, 255, 0.5);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      backdrop-filter: blur(8px);
+    }
+    #root-gutterbones .mechanic-popover { border: 2px solid rgba(0, 221, 255, 0.65); background: rgba(4, 12, 22, 0.98); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.72); border-radius: 10px; padding: 12px; }
+    #root-gutterbones .mechanic-popover-list { max-height: 168px; overflow-y: auto; }
+    #root-gutterbones .cash-bill.near { animation: cashNear 1.55s linear forwards; }
+    #root-gutterbones .cash-bill.mid { animation: cashMid 2.5s linear forwards; }
+    #root-gutterbones .cash-bill.far { animation: cashFar 3.9s linear forwards; filter: blur(.5px); }
+    #root-gutterbones .cash-bill-inner { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,.45); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); background: linear-gradient(120deg, rgba(255,255,255,.24) 5%, rgba(255,255,255,.02) 40%, rgba(0,0,0,.15) 90%); animation: billSway 1.8s ease-in-out infinite; }
+    #root-gutterbones .hud-cash-drop { animation: cashFlash .3s ease-out; }
+    #root-gutterbones .debt-pulse { animation: debtPulse 2s ease-in-out infinite; }
+    #root-gutterbones .loan-shark-debt { animation: debtPulse 2s ease-in-out infinite, debtTwitch 2.4s steps(2, end) infinite; display: inline-block; }
+    #root-gutterbones .cop-lights-sweep { position: absolute; inset: 0; pointer-events: none; z-index: 25; mix-blend-mode: screen; background: linear-gradient(90deg, rgba(255,40,40,.12), rgba(32,125,255,.13)); animation: copSweep 9s linear infinite; }
+    #root-gutterbones .junkie-glitch { animation: junkieGlitch 4.2s steps(2, end) infinite; }
+    #root-gutterbones .bouncer-quota-thump { display: inline-block; animation: quotaThump 3.6s ease-in-out infinite; }
+    #root-gutterbones .informant-shimmer { position: relative; overflow: hidden; }
+    #root-gutterbones .informant-shimmer::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(217,247,255,.36), transparent); animation: informantShimmer 4.6s linear infinite; pointer-events: none; }
+    #root-gutterbones .camera-kick-soft { animation: cameraKickSoft .18s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 46%; }
+    #root-gutterbones .camera-kick-hard { animation: cameraKickHard .24s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 46%; }
+    #root-gutterbones .score-row-ready { animation: scoreReadyGlow 2.3s ease-in-out infinite; }
+    #root-gutterbones .score-row-danger { animation: scoreBustWarn 1.35s ease-in-out infinite; }
+    #root-gutterbones .roll-ready-pulse { animation: rollReadyPulse 1.95s ease-in-out infinite; }
+    #root-gutterbones .pressure-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 22; mix-blend-mode: screen; }
+    #root-gutterbones .pressure-overlay.low { background: radial-gradient(circle at 50% 90%, rgba(255,109,89,.36) 0%, rgba(255,109,89,0) 62%); animation: pressureLow 2.7s ease-in-out infinite; }
+    #root-gutterbones .pressure-overlay.high { background: radial-gradient(circle at 50% 90%, rgba(255,0,110,.45) 0%, rgba(255,0,110,0) 68%); animation: pressureHigh 1.15s ease-in-out infinite; }
+    #root-gutterbones .danger-count-pulse { display: inline-block; animation: dangerCountPulse 1.15s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) {
+        #root-gutterbones .ambient-grain,
+        #root-gutterbones .ambient-leak,
+        #root-gutterbones .felt-smoke-wisp,
+        #root-gutterbones .bone-idle,
+        #root-gutterbones .bone-kept,
+        #root-gutterbones .bone-rolling,
+        #root-gutterbones .bone-verdict-glow,
+        #root-gutterbones .bone-settle-jolt,
+        #root-gutterbones .impact-particle,
+        #root-gutterbones .felt-edge-ring,
+        #root-gutterbones .dice-lane-idle,
+        #root-gutterbones .dice-lane-roll,
+        #root-gutterbones .bone-depth-idle,
+        #root-gutterbones .bone-depth-roll,
+        #root-gutterbones .paper-card,
+        #root-gutterbones .price-tag,
+        #root-gutterbones .trigger-cascade-row,
+        #root-gutterbones .pow-burst,
+        #root-gutterbones .boss-banner-scan::after,
+        #root-gutterbones .boss-blind-top,
+        #root-gutterbones .boss-blind-bottom,
+        #root-gutterbones .cinematic-iris,
+        #root-gutterbones .cinematic-siren,
+        #root-gutterbones .boss-kick,
+        #root-gutterbones .loan-shark-debt,
+        #root-gutterbones .cop-lights-sweep,
+        #root-gutterbones .junkie-glitch,
+        #root-gutterbones .bouncer-quota-thump,
+        #root-gutterbones .informant-shimmer::after,
+        #root-gutterbones .camera-kick-soft,
+        #root-gutterbones .camera-kick-hard,
+        #root-gutterbones .score-row-ready,
+        #root-gutterbones .score-row-danger,
+        #root-gutterbones .roll-ready-pulse,
+        #root-gutterbones .pressure-overlay,
+        #root-gutterbones .danger-count-pulse,
+        #root-gutterbones .signature-path,
+        #root-gutterbones .sunrise,
+        #root-gutterbones .pill-burst,
+        #root-gutterbones .cash-bill,
+        #root-gutterbones .cash-bill-inner { animation: none !important; }
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones .felt-smoke-wisp { filter: none; opacity: .05; }
+        #root-gutterbones .cash-bill.far { filter: none; }
+    }

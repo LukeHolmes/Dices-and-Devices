@@ -1,49 +1,55 @@
 "use strict";
-// Read the production code: never maintain a second implementation of the rules.
-// Action probes model one React render's snapshot and queued state updates only.
-// They are not a React/browser renderer, nor a substitute for the preview checklist.
+// Execute production modules in a VM sandbox (no second implementation of rules).
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const assert = require("node:assert/strict");
-const html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
 
-function block(open) {
-  assert.equal(html.split(open).length, 2, `Expected exactly one ${open}`);
-  const start = html.indexOf(open) + open.length;
-  const end = html.indexOf("</script>", start);
-  assert.ok(end > start, `Missing closing script for ${open}`);
-  return html.slice(start, end);
+const root = path.join(__dirname, "../..");
+const legacyHtmlPath = path.join(root, "index.legacy.html");
+const html = fs.existsSync(legacyHtmlPath)
+  ? fs.readFileSync(legacyHtmlPath, "utf8")
+  : fs.readFileSync(path.join(root, "index.html"), "utf8");
+
+function readSrc(rel) {
+  return fs.readFileSync(path.join(root, rel), "utf8");
 }
 
-const sharedSource = block('<script id="gutterbones-rules">');
-const onboardingSource = block('<script id="gutterbones-onboarding">');
-const storySource = block('<script id="gutterbones-story">');
-const routesSource = block('<script id="gutterbones-routes">');
-const gambleSource = block('<script id="gutterbones-gamble">');
-const appSource = block('<script type="text/babel">');
-const definitionsStart = appSource.indexOf("    const PERSONAS =");
-const definitionsEnd = appSource.indexOf("    const CashRain =");
-assert.ok(
-  definitionsStart >= 0 && definitionsEnd > definitionsStart,
-  "Catalog boundary changed; update the test loader explicitly",
+/** Strip ESM syntax so vm.Script can run modules as classic scripts. */
+function asClassicScript(source) {
+  return source
+    .replace(/^import .*;\n/gm, "")
+    .replace(/^export default .*;\n/gm, "")
+    .replace(/^export \{ .* \};\n/gm, "")
+    .replace(/^export const /gm, "const ");
+}
+
+const sharedSource = asClassicScript(readSrc("src/systems/rules.js"));
+const onboardingSource = asClassicScript(readSrc("src/systems/onboarding.js"));
+const storySource = asClassicScript(readSrc("src/systems/story.js"));
+const routesSource = asClassicScript(readSrc("src/systems/routes.js"));
+const gambleSource = asClassicScript(readSrc("src/systems/gamble.js"));
+const catalogSource = asClassicScript(readSrc("src/data/catalog.js"));
+const appSource = readSrc("src/App.jsx");
+
+const definitionsStart = catalogSource.indexOf("const PERSONAS =");
+const definitionsEnd = catalogSource.indexOf("const impactProfileForFace =");
+assert.ok(definitionsStart >= 0, "catalog PERSONAS missing");
+assert.ok(definitionsEnd > definitionsStart, "catalog impactProfileForFace missing");
+const definitionsEndLine = catalogSource.indexOf("\n", catalogSource.indexOf("};", definitionsEnd));
+const definitions = catalogSource.slice(
+  definitionsStart,
+  definitionsEndLine > definitionsEnd ? definitionsEndLine : catalogSource.length,
 );
-const definitions = appSource.slice(definitionsStart, definitionsEnd);
 
 function actionSource(name) {
-  const marker = `        const ${name} = `;
-  assert.equal(
-    appSource.split(marker).length,
-    2,
-    `Missing or duplicate action: ${name}`,
-  );
+  const marker = `    const ${name} = `;
+  assert.equal(appSource.split(marker).length, 2, `Missing or duplicate action: ${name}`);
   const start = appSource.indexOf(marker);
-  const closing = /\n        \}\)?;/.exec(appSource.slice(start));
+  const closing = /\n    \}\)?;/.exec(appSource.slice(start));
   assert.ok(closing, `Missing closing boundary: ${name}`);
   const end = start + closing.index + closing[0].length;
-  assert.ok(end > start, `Missing boundary for action ${name}`);
   const code = appSource.slice(start, end);
-  // A changed boundary must fail loudly rather than silently testing a partial body.
   new vm.Script(code);
   return code;
 }
@@ -150,10 +156,10 @@ function createGame(snapshot = {}, options = {}) {
       "\n" +
       gambleSource +
       "\n" +
-      definitions +
+      catalogSource +
       "\n" +
       actions +
-      "\nglobalThis.game = { GutterbonesRules, " +
+      "\nglobalThis.game = { GutterbonesRules, GutterbonesOnboarding, GutterbonesStory, GutterbonesRoutes, GutterbonesGamble, " +
       exportedNames.join(", ") +
       " };",
   ).runInContext(context, { timeout: 2000 });

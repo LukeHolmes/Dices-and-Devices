@@ -2,26 +2,26 @@
 
 ## Cursor Cloud specific instructions
 
-This is a single-file browser game (`index.html`) with no build step or runtime package dependencies. `package.json` provides dependency-free Node test commands. React 18, Babel, and Tailwind CSS are loaded from CDNs at runtime.
+This is a **Vite + React 18** app (`src/`) with a thin root `index.html` entry. Game logic lives in `src/systems/` and `src/data/catalog.js`; UI in `src/App.jsx`. Tailwind still loads from CDN. Run `npm install` once for Vite dev/build.
 
 ### Running the app
 
-Serve the project root with any static HTTP server:
-
 ```bash
-python3 -m http.server 8080
+npm run dev
 ```
 
-Then open `http://localhost:8080/index.html` in Chrome.
+Open `http://localhost:5173/` (or `npm run preview` after `npm run build` on port 8080).
+
+Legacy single-file snapshot: `index.legacy.html` (pre–Phase 7); do not ship it.
 
 ### Lint / Test / Build
 
-Run `npm run check` using Node 22+; no install is needed. Pure rules live in the inline `gutterbones-rules` script and JSX remains in the Babel block. Tests execute production helpers and selected action bodies. Known-issue audit success means existing failures were reproduced, not fixed. See `docs/testing.md` for strict checks, limitations, and the browser checklist. There is no build or linter step.
+Run `npm run check` using Node 22+ after `npm install`. Tests import `src/systems/*` and probe action bodies in `src/App.jsx` (no HTML script scraping). `npm run build` emits static `dist/` for deploy. See `docs/testing.md` for the browser checklist.
 
 ### Key gotchas
 
-- The app requires internet access to load CDN resources (React, Babel, Tailwind, Google Fonts). Without connectivity the page will not render.
-- Opening `index.html` via `file://` may fail in some browsers due to CORS restrictions on CDN scripts; always use an HTTP server.
+- Production bundles React via Vite; dev still needs CDN Tailwind (and optional Google Fonts). Without connectivity Tailwind may not apply.
+- Always use `npm run dev`, `npm run preview`, or a static host — not `file://`.
 - **Persona art:** Operator portraits load from `assets/personas/` (`street-rat.png`, `hustler.png`, `enforcer.png`, `card-counter.png`, etc.) when you serve the project root. See `assets/README.md`.
 - **Boss art:** Per-boss PNGs under `assets/bosses/` (`bouncer.png`, `crooked-cop.png`, `informant.png`, `loan-shark.png`, `junkie.png`, `the-raid.png`). Same serving rule as personas.
 - **Playfield scene:** The dice lane uses `assets/scenes/alley-playfield.png` as a layered background (see `#root-gutterbones .felt-surface` in `index.html`). Replace that file to reskin the alley.
@@ -32,5 +32,5 @@ Run `npm run check` using Node 22+; no install is needed. Pure rules live in the
 - **Gamble:** `assets/scenes/gamble-double-or-nothing.png` as `.gamble-backdrop` during `GAMBLE`.
 - **Carving / The Mod:** `assets/scenes/the-mod-bench.png` as `.carving-mod-backdrop` during `CARVING`.
 - **Boss intro:** Shared `assets/scenes/boss-turf-pressure.png` as `.boss-intro-backdrop` under the turf-war card (plus dim layer and blinds).
-- **Story panels (Phase 4):** Arc E (Witness) uses `assets/panels/witness/*.png` with captions from `gutterbones-story`; missing images skip silently. Run saves include `arcId` (default `witness`).
+- **Story panels (Phase 4):** Arc E (Witness) uses `assets/panels/witness/*.png` with captions from `src/systems/story.js`; missing images skip silently. Run saves include `arcId` (default `witness`).
 - **Audio:** Procedural Web Audio lives in `assets/audio/gutterbones-audio.js` (`window.GutterbonesAudio`). Settings persist under `gutterbones1977:settings:v1`.

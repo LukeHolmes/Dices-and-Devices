@@ -8,11 +8,22 @@ const {
   sharedSource,
   actionSource,
   appSource,
+  onboardingSource,
+  storySource,
+  routesSource,
+  gambleSource,
 } = require("./helpers/game.cjs");
+
+const root = path.join(__dirname, "..");
+const indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const mainJsx = fs.readFileSync(path.join(root, "src/main.jsx"), "utf8");
+const bootstrapJs = fs.readFileSync(path.join(root, "src/bootstrap.js"), "utf8");
+const catalogJs = fs.readFileSync(path.join(root, "src/data/catalog.js"), "utf8");
+
 test("Audio module exposes gameplay API", () => {
-  const audioPath = path.join(__dirname, "../assets/audio/gutterbones-audio.js");
+  const audioPath = path.join(root, "assets/audio/gutterbones-audio.js");
   assert.ok(fs.existsSync(audioPath), "gutterbones-audio.js");
-  assert.match(html, /assets\/audio\/gutterbones-audio\.js/);
+  assert.match(indexHtml, /assets\/audio\/gutterbones-audio\.js/);
   const audioSource = fs.readFileSync(audioPath, "utf8");
   for (const fn of [
     "init",
@@ -28,34 +39,22 @@ test("Audio module exposes gameplay API", () => {
     assert.match(audioSource, new RegExp(`${fn}\\(`));
   }
   assert.match(appSource, /window\.GutterbonesAudio/);
-  assert.match(appSource, /gutterbones1977:settings:v1/);
+  assert.match(catalogJs + appSource, /gutterbones1977:settings:v1/);
 });
 
-test("Bootstrap selects production React and gates dev tools on public hosts", () => {
-  assert.match(html, /window\.__GUTTERBONES_DEV__/);
-  assert.match(html, /react\.production\.min\.js/);
-  assert.match(html, /react-dom\.production\.min\.js/);
-  assert.match(html, /react\.development\.js/);
+test("Bootstrap gates dev tools and branding", () => {
+  assert.match(bootstrapJs, /window\.__GUTTERBONES_DEV__/);
+  assert.match(bootstrapJs, /window\.__GUTTERBONES_BRANDING__/);
   assert.match(appSource, /IS_DEV_BUILD/);
   assert.match(appSource, /__GUTTERBONES_DEV__/);
-  assert.match(html, /__GUTTERBONES_BRANDING__/);
+  assert.match(mainJsx, /bootstrap\.js/);
+  assert.match(indexHtml, /type="module"/);
+  assert.doesNotMatch(indexHtml, /text\/babel/);
 });
 
-test("Shared inline rules and onboarding precede the app without extra requests", () => {
-  const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
-  const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
-  const storyIdx = html.indexOf('<script id="gutterbones-story">');
-  const routesIdx = html.indexOf('<script id="gutterbones-routes">');
-  const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
-  const appIdx = html.indexOf('<script type="text/babel">');
-  assert.ok(
-    rulesIdx >= 0 &&
-      onboardingIdx > rulesIdx &&
-      storyIdx > onboardingIdx &&
-      routesIdx > storyIdx &&
-      gambleIdx > routesIdx &&
-      appIdx > gambleIdx,
-  );
+test("Systems load as src modules before App", () => {
+  assert.match(mainJsx, /App\.jsx/);
+  assert.match(appSource, /from "\.\/systems\/rules\.js"/);
   assert.match(appSource, /GutterbonesRoutes\.projectNextRound/);
   assert.match(appSource, /GutterbonesGamble\.resolveFlip/);
   assert.match(appSource, /RouteChoiceCard/);
@@ -67,7 +66,7 @@ test("Shared inline rules and onboarding precede the app without extra requests"
     "assets/panels/witness/bust.png",
     "assets/panels/witness/victory.png",
   ]) {
-    assert.ok(fs.existsSync(path.join(__dirname, "..", panel)), panel);
+    assert.ok(fs.existsSync(path.join(root, panel)), panel);
   }
   assert.match(appSource, /GutterbonesOnboarding/);
   assert.match(appSource, /CategoryUnlockFooter/);
@@ -82,25 +81,33 @@ test("Shared inline rules and onboarding precede the app without extra requests"
     /GutterbonesRules.calculateScore/,
   );
   assert.doesNotMatch(sharedSource, /localStorage|setTimeout|document\./);
+  assert.match(onboardingSource, /GutterbonesOnboarding/);
+  assert.match(storySource, /GutterbonesStory/);
+  assert.match(routesSource, /GutterbonesRoutes/);
+  assert.match(gambleSource, /GutterbonesGamble/);
+  assert.match(catalogJs, /export const PERSONAS/);
 });
+
 test("Phase 5 roster portraits wired and on disk", () => {
   for (const asset of [
     "assets/personas/card-counter.png",
     "assets/bosses/bouncer.png",
     "assets/bosses/crooked-cop.png",
   ]) {
-    assert.ok(fs.existsSync(path.join(__dirname, "..", asset)), asset);
+    assert.ok(fs.existsSync(path.join(root, asset)), asset);
   }
-  assert.match(appSource, /card-counter\.png/);
-  assert.match(appSource, /bosses\/bouncer\.png/);
-  assert.match(appSource, /crooked-cop\.png/);
+  const portraitCorpus = appSource + catalogJs;
+  assert.match(portraitCorpus, /card-counter\.png/);
+  assert.match(portraitCorpus, /bosses\/bouncer\.png/);
+  assert.match(portraitCorpus, /crooked-cop\.png/);
 });
 
 test("Referenced local artwork exists", () => {
+  const corpus = indexHtml + appSource + catalogJs + html;
   const refs = [
-    ...html.matchAll(/['"`](assets\/[\w/.-]+\.(?:png|jpg|webp|svg))['"`]/g),
+    ...corpus.matchAll(/['"`](assets\/[\w/.-]+\.(?:png|jpg|webp|svg))['"`]/g),
   ];
   assert.ok(refs.length > 10);
   for (const [, asset] of refs)
-    assert.ok(fs.existsSync(path.join(__dirname, "..", asset)), asset);
+    assert.ok(fs.existsSync(path.join(root, asset)), asset);
 });
