@@ -56,7 +56,7 @@ Before publishing, check:
 - Compare displayed preview and awarded heat; review the payout explanation.
 - Exit/reload and resume a normal save. Exercise CARVING and GAMBLE synthetic fixtures separately; wager/gamble resume defects are currently expected. Generate injectable saves with `npm run dump:save -- [normal|wager|gamble|carving|bust|victory]` (see `docs/phase-b-signoff.md`).
 - **Shop routes:** each NEXT JOB card shows next quota number, modifier bullets, and boss thumbnail on turf war; Run Intel lists three-route compare.
-- **Gamble (round 3+, $5+ cash):** safe cut vs flip outcomes match Help; stake line shows 22% / cap $30.
+- **Gamble (round 3+, $5+ cash):** safe cut; three flip tiers (Soft / Fair / Hard) show stake, win %, ± payout; flow streak shows odds bonus.
 - **Side bets:** stake buttons show win payout; after rolling, best preview heat vs threshold.
 - Open Help → **ROUTES & GAMBLE** section.
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.

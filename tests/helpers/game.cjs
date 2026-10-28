@@ -20,6 +20,7 @@ const sharedSource = block('<script id="gutterbones-rules">');
 const onboardingSource = block('<script id="gutterbones-onboarding">');
 const storySource = block('<script id="gutterbones-story">');
 const routesSource = block('<script id="gutterbones-routes">');
+const gambleSource = block('<script id="gutterbones-gamble">');
 const appSource = block('<script type="text/babel">');
 const definitionsStart = appSource.indexOf("    const PERSONAS =");
 const definitionsEnd = appSource.indexOf("    const CashRain =");
@@ -147,6 +148,8 @@ function createGame(snapshot = {}, options = {}) {
       "\n" +
       routesSource +
       "\n" +
+      gambleSource +
+      "\n" +
       definitions +
       "\n" +
       actions +
@@ -176,6 +179,7 @@ module.exports = {
   onboardingSource,
   storySource,
   routesSource,
+  gambleSource,
   appSource,
   actionSource,
 };
