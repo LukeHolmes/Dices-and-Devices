@@ -21,6 +21,7 @@ function asClassicScript(source) {
     .replace(/^import .*;\n/gm, "")
     .replace(/^export default .*;\n/gm, "")
     .replace(/^export \{ .* \};\n/gm, "")
+    .replace(/^export function createGameActions/gm, "function createGameActions")
     .replace(/^export const /gm, "const ");
 }
 
@@ -30,29 +31,12 @@ const storySource = asClassicScript(readSrc("src/systems/story.js"));
 const routesSource = asClassicScript(readSrc("src/systems/routes.js"));
 const gambleSource = asClassicScript(readSrc("src/systems/gamble.js"));
 const catalogSource = asClassicScript(readSrc("src/data/catalog.js"));
-const appSource = readSrc("src/App.jsx");
-
-const definitionsStart = catalogSource.indexOf("const PERSONAS =");
-const definitionsEnd = catalogSource.indexOf("const impactProfileForFace =");
-assert.ok(definitionsStart >= 0, "catalog PERSONAS missing");
-assert.ok(definitionsEnd > definitionsStart, "catalog impactProfileForFace missing");
-const definitionsEndLine = catalogSource.indexOf("\n", catalogSource.indexOf("};", definitionsEnd));
-const definitions = catalogSource.slice(
-  definitionsStart,
-  definitionsEndLine > definitionsEnd ? definitionsEndLine : catalogSource.length,
+let gameActionsSource = asClassicScript(readSrc("src/app/gameActions.js"));
+gameActionsSource = gameActionsSource.replace(
+  /const \{\s*[\s\S]*?\} = catalog;\s*/,
+  "",
 );
-
-function actionSource(name) {
-  const marker = `    const ${name} = `;
-  assert.equal(appSource.split(marker).length, 2, `Missing or duplicate action: ${name}`);
-  const start = appSource.indexOf(marker);
-  const closing = /\n    \}\)?;/.exec(appSource.slice(start));
-  assert.ok(closing, `Missing closing boundary: ${name}`);
-  const end = start + closing.index + closing[0].length;
-  const code = appSource.slice(start, end);
-  new vm.Script(code);
-  return code;
-}
+const appSource = readSrc("src/App.jsx");
 
 const actionNames = [
   "getBossAdjustedTarget",
@@ -69,7 +53,19 @@ const actionNames = [
   "payDebtFromCash",
   "registerDebtSpike",
 ];
-const actions = actionNames.map(actionSource).join("\n");
+
+/** For source.test.cjs — ensure action implementations live in gameActions module. */
+function actionSource(name) {
+  assert.ok(actionNames.includes(name), `Unknown action: ${name}`);
+  const marker = `const ${name} =`;
+  const start = gameActionsSource.indexOf(marker);
+  assert.ok(start >= 0, `${name} must be defined in src/app/gameActions.js`);
+  const slice = gameActionsSource.slice(start);
+  const endMatch = /\n  const [a-zA-Z]+ =/.exec(slice.slice(marker.length));
+  const end = endMatch ? start + marker.length + endMatch.index : start + 800;
+  return gameActionsSource.slice(start, end);
+}
+
 const exportedNames = [
   ...actionNames,
   "PERSONAS",
@@ -127,6 +123,7 @@ function createGame(snapshot = {}, options = {}) {
     analyzeRunFailure: () => ({ primaryReason: "test scenario" }),
     patchSettings: noOp,
     generateShop: () => calls.push("generateShop"),
+    playStoryBeat: noOp,
     scheduleTimeout: (callback) => {
       timers.push(callback);
       return timers.length;
@@ -134,14 +131,27 @@ function createGame(snapshot = {}, options = {}) {
     scheduleInterval: () => 1,
     clearScheduledInterval: noOp,
   };
-  for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
+  for (const setter of new Set(
+    (gameActionsSource.match(/\bset[A-Z]\w*/g) || []).concat([
+      "setGold",
+      "setDebt",
+      "setHands",
+      "setDiscards",
+      "setScore",
+      "setPhase",
+      "setRolling",
+      "setDice",
+      "setMeta",
+    ]),
+  )) {
     const key = setter[3].toLowerCase() + setter.slice(4);
     sandbox[setter] = (update) => {
-      const previous = pending.has(key) ? pending.get(key) : snapshot[key];
+      const previous = pending.has(key) ? pending.get(key) : sandbox[key];
       pending.set(
         key,
         typeof update === "function" ? update(previous) : update,
       );
+      sandbox[key] = pending.get(key);
     };
   }
   const context = vm.createContext(sandbox);
@@ -158,17 +168,18 @@ function createGame(snapshot = {}, options = {}) {
       "\n" +
       catalogSource +
       "\n" +
-      actions +
-      "\nglobalThis.game = { GutterbonesRules, GutterbonesOnboarding, GutterbonesStory, GutterbonesRoutes, GutterbonesGamble, " +
-      exportedNames.join(", ") +
+      gameActionsSource +
+      "\nconst __actions = createGameActions(() => globalThis);" +
+      "\nglobalThis.game = { GutterbonesRules, GutterbonesOnboarding, GutterbonesStory, GutterbonesRoutes, GutterbonesGamble, ...__actions, " +
+      exportedNames.filter((n) => !actionNames.includes(n)).join(", ") +
       " };",
-  ).runInContext(context, { timeout: 2000 });
+  ).runInContext(context, { timeout: 4000 });
   return {
     api: context.game,
     storage,
     warnings,
     calls,
-    state: (key) => (pending.has(key) ? pending.get(key) : snapshot[key]),
+    state: (key) => (pending.has(key) ? pending.get(key) : sandbox[key]),
     flushTimers: () => {
       const queued = timers.splice(0);
       queued.forEach((callback) => callback());
@@ -188,4 +199,5 @@ module.exports = {
   gambleSource,
   appSource,
   actionSource,
+  gameActionsSource,
 };

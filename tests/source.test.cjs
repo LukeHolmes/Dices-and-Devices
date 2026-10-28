@@ -12,6 +12,7 @@ const {
   storySource,
   routesSource,
   gambleSource,
+  gameActionsSource,
 } = require("./helpers/game.cjs");
 
 const root = path.join(__dirname, "..");
@@ -100,6 +101,30 @@ test("Phase 5 roster portraits wired and on disk", () => {
   assert.match(portraitCorpus, /card-counter\.png/);
   assert.match(portraitCorpus, /bosses\/bouncer\.png/);
   assert.match(portraitCorpus, /crooked-cop\.png/);
+});
+
+test("Phase 7 module layout and production bundle", () => {
+  for (const rel of [
+    "src/systems/rules.js",
+    "src/systems/story.js",
+    "src/app/gameActions.js",
+    "src/data/catalog.js",
+    "vite.config.js",
+  ]) {
+    assert.ok(fs.existsSync(path.join(root, rel)), rel);
+  }
+  assert.match(appSource, /createGameActions/);
+  assert.doesNotMatch(appSource, /text\/babel/);
+  assert.match(gameActionsSource, /function createGameActions/);
+  const { execSync } = require("node:child_process");
+  execSync("npm run build", { cwd: root, stdio: "pipe" });
+  const distIndex = fs.readFileSync(path.join(root, "dist/index.html"), "utf8");
+  assert.doesNotMatch(distIndex, /text\/babel/);
+  assert.doesNotMatch(distIndex, /babel\.standalone/);
+  assert.ok(
+    fs.existsSync(path.join(root, "dist/assets/panels/witness/prologue.png")),
+    "witness prologue in dist",
+  );
 });
 
 test("Referenced local artwork exists", () => {

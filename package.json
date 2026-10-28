@@ -15,7 +15,7 @@
     "test:known-issues": "node tests/known-issues.cjs --strict",
     "check": "npm test && npm run audit:known-issues",
     "check:parity": "node tests/parity.cjs",
-    "check:release": "npm run check",
+    "check:release": "npm run build && npm run check",
     "dump:save": "node scripts/dump-fixture-save.cjs"
   },
   "devDependencies": {

@@ -1,21 +1,21 @@
 # Gutterbones 1977
 
-A browser-native 1970s crime/noir dice roguelike built as a single static HTML game.
+A browser-native 1970s crime/noir dice roguelike built with **Vite + React 18**.
 
 ## Overview
 
-**Gutterbones 1977 is the main project.** The canonical playable build is `index.html`; everything else in the repo is supporting documentation or historical reference.
+**Gutterbones 1977 is the main project.** The canonical playable build is `npm run build` → `dist/` (Vite entry: root `index.html` + `src/`). `index.legacy.html` is the pre–Phase 7 monolith snapshot.
 
 The game keeps a Yahtzee-inspired scoring skeleton, but rebuilds it as a grimy crime-table roguelike about dirty cash, pills, carved bones, stash programs, hardware, debt, bosses, and one last getaway. Players roll bones, keep slots, pop pills to reroll individual bones, carve contraband faces into dice, buy gear in the back alley, take risky side action, and survive escalating jobs until **The Raid**.
 
 ## Current Game
 
-- **Primary file:** `index.html`
-- **Format:** single-file React/Tailwind/Babel browser game
+- **Primary entry:** `index.html` → `src/main.jsx`
+- **Format:** Vite-bundled React + Tailwind CDN + Web Audio helper script
 - **Genre:** dice roguelike / crime noir
 - **Setting:** 1970s gutter-crime underworld
-- **Runtime:** static HTML served by any web server
-- **Build step:** none
+- **Dev:** `npm install && npm run dev`
+- **Production:** `npm run build` (static output in `dist/`)
 
 ## Gameplay Loop
 
