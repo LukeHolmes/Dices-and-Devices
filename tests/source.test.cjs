@@ -46,15 +46,18 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
   const storyIdx = html.indexOf('<script id="gutterbones-story">');
   const routesIdx = html.indexOf('<script id="gutterbones-routes">');
+  const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
   const appIdx = html.indexOf('<script type="text/babel">');
   assert.ok(
     rulesIdx >= 0 &&
       onboardingIdx > rulesIdx &&
       storyIdx > onboardingIdx &&
       routesIdx > storyIdx &&
-      appIdx > routesIdx,
+      gambleIdx > routesIdx &&
+      appIdx > gambleIdx,
   );
   assert.match(appSource, /GutterbonesRoutes\.projectNextRound/);
+  assert.match(appSource, /GutterbonesGamble\.resolveFlip/);
   assert.match(appSource, /RouteChoiceCard/);
   assert.match(appSource, /StoryPanelOverlay/);
   assert.match(appSource, /playStoryBeat/);

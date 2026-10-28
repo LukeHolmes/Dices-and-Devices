@@ -1087,6 +1087,108 @@ const GutterbonesRoutes = (() => {
 })();
 </script>
 
+<script id="gutterbones-gamble">
+const GutterbonesGamble = (() => {
+    const TUNING = Object.freeze({
+        minRound: 3,
+        stakeRate: 0.22,
+        stakeCap: 30,
+        minStake: 5,
+        flowWinBonusPerStreak: 0.02,
+        flowWinBonusCap: 0.12,
+        tiers: Object.freeze([
+            {
+                id: 'SOFT',
+                name: 'Soft Touch',
+                blurb: 'Smaller stake, better odds.',
+                stakeMult: 0.65,
+                winChance: 0.58,
+                winMult: 1,
+                lossMult: 1
+            },
+            {
+                id: 'FAIR',
+                name: 'Fair Flip',
+                blurb: 'Street-standard double or nothing.',
+                stakeMult: 1,
+                winChance: 0.5,
+                winMult: 1,
+                lossMult: 1
+            },
+            {
+                id: 'HARD',
+                name: 'Hard Flip',
+                blurb: 'Long odds, bigger score if it lands.',
+                stakeMult: 1,
+                winChance: 0.38,
+                winMult: 1.5,
+                lossMult: 1
+            }
+        ])
+    });
+
+    const tierById = (tierId) => TUNING.tiers.find((t) => t.id === tierId) || TUNING.tiers[1];
+
+    const baseStake = (gold) => {
+        const cash = Math.max(0, Math.floor(Number(gold) || 0));
+        return Math.min(
+            TUNING.stakeCap,
+            Math.max(TUNING.minStake, Math.floor(cash * TUNING.stakeRate))
+        );
+    };
+
+    const stakeForTier = (gold, tierId) => {
+        const tier = tierById(tierId);
+        const scaled = Math.floor(baseStake(gold) * tier.stakeMult);
+        return Math.max(TUNING.minStake, Math.min(TUNING.stakeCap, scaled));
+    };
+
+    const flowWinBonus = (flowStreak = 0) => (
+        Math.min(TUNING.flowWinBonusCap, Math.max(0, Math.floor(Number(flowStreak) || 0)) * TUNING.flowWinBonusPerStreak)
+    );
+
+    const winProbability = (tierId, flowStreak = 0) => {
+        const tier = tierById(tierId);
+        const p = tier.winChance + flowWinBonus(flowStreak);
+        return Math.min(0.95, Math.max(0.05, p));
+    };
+
+    const resolveFlip = ({ tierId = 'FAIR', flowStreak = 0, gold = 0, random = Math.random() }) => {
+        const tier = tierById(tierId);
+        const stake = stakeForTier(gold, tier.id);
+        const pWin = winProbability(tier.id, flowStreak);
+        const won = random < pWin;
+        const winAmount = won ? Math.max(1, Math.round(stake * tier.winMult)) : 0;
+        const lossAmount = won ? 0 : Math.max(1, Math.round(stake * tier.lossMult));
+        return {
+            won,
+            stake,
+            pWin,
+            winAmount,
+            lossAmount,
+            tierId: tier.id,
+            tierName: tier.name
+        };
+    };
+
+    const allTiers = () => TUNING.tiers.slice();
+
+    const formatWinPercent = (p) => `${Math.round(p * 100)}%`;
+
+    return Object.freeze({
+        TUNING,
+        tierById,
+        baseStake,
+        stakeForTier,
+        flowWinBonus,
+        winProbability,
+        resolveFlip,
+        allTiers,
+        formatWinPercent
+    });
+})();
+</script>
+
 <script type="text/babel">
     const { useEffect, useMemo, useRef, useState } = React;
 
@@ -1547,12 +1649,7 @@ const GutterbonesRoutes = (() => {
         stakeOptions: [5, 10, 15]
     };
 
-    const GAMBLE_TUNING = {
-        minRound: 3,
-        stakeRate: 0.22,
-        stakeCap: 30,
-        minStake: 5
-    };
+    const GAMBLE_TUNING = GutterbonesGamble.TUNING;
 
     const DEBT_PAYDOWN_TUNING = {
         reliefMultiplier: 1.1
@@ -1624,8 +1721,8 @@ const GutterbonesRoutes = (() => {
         ],
         gamble: [
             'Side action time. No tears either way.',
-            'Fifty-fifty. Your call.',
-            'Take the safe cut or flip the street coin.'
+            'Pick your flip — soft, fair, or hard.',
+            'Take the safe cut or press your luck.'
         ]
     };
 
@@ -2688,7 +2785,7 @@ const GutterbonesRoutes = (() => {
                         <p className="text-gray-200 text-[11px] leading-relaxed mb-2">
                             <span className="text-[#0df]">Double or nothing</span> appears when you clear a round with ${GAMBLE_TUNING.minStake}+ cash from round {GAMBLE_TUNING.minRound} onward.
                             <b className="text-gray-100"> Safe cut</b> keeps all cash and skips the flip;
-                            <b className="text-gray-100"> Flip</b> is a true 50/50 for ± the stake (22% of cash, capped at ${GAMBLE_TUNING.stakeCap}).
+                            <b className="text-gray-100"> Flip tiers</b> — Soft (better odds, smaller stake), Fair (50/50), Hard (lower odds, +50% win payout). Flow streak adds a small win bonus (up to +{Math.round(GAMBLE_TUNING.flowWinBonusCap * 100)}%).
                         </p>
                         <p className="text-gray-200 text-[11px] leading-relaxed">
                             <span className="text-[#0df]">Side bets</span> lock before your first roll. Threshold starts at {WAGER_TUNING.baseThreshold} heat and rises +{WAGER_TUNING.roundThresholdStep} each round.
@@ -3788,7 +3885,7 @@ const GutterbonesRoutes = (() => {
                         playStoryBeat(GutterbonesStory?.getVictoryPanel?.(arcId), goVictory);
                     }, reducedMotion ? 120 : 480);
                 } else {
-                    const stake = Math.min(GAMBLE_TUNING.stakeCap, Math.max(GAMBLE_TUNING.minStake, Math.floor(projectedCash * GAMBLE_TUNING.stakeRate)));
+                    const stake = GutterbonesGamble.baseStake(projectedCash);
                     const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
                     if (allowGamble) {
                         setGambleStake(stake);
@@ -3802,19 +3899,24 @@ const GutterbonesRoutes = (() => {
             }
         };
 
-        const resolveGamble = (doubleDown) => {
+        const resolveGamble = (doubleDown, tierId = 'FAIR') => {
             if (phase !== 'GAMBLE') return;
-            const stake = gambleStake;
-            if (doubleDown && stake > 0) {
-                const won = Math.random() < 0.5;
-                if (won) {
-                    setGold(g => g + stake);
-                    setFixerLine('Lucky flip. Don\'t get greedy.');
+            if (doubleDown) {
+                const outcome = GutterbonesGamble.resolveFlip({
+                    tierId,
+                    flowStreak,
+                    gold,
+                    random: Math.random()
+                });
+                setGambleStake(outcome.stake);
+                if (outcome.won) {
+                    setGold(g => g + outcome.winAmount);
+                    setFixerLine(`${outcome.tierName} hit. +$${outcome.winAmount}.`);
                     spawnPaperStamp('DOUBLE', '#0f766e');
                     AudioSystem.playTone(980, 'square', 0.14);
                 } else {
-                    setGold(g => Math.max(0, g - stake));
-                    setFixerLine('Flip went south. Tighten up.');
+                    setGold(g => Math.max(0, g - outcome.lossAmount));
+                    setFixerLine(`${outcome.tierName} missed. −$${outcome.lossAmount}.`);
                     spawnPaperStamp('BUSTED BET');
                     AudioSystem.playTone(120, 'sawtooth', 0.18);
                 }
@@ -4142,6 +4244,14 @@ const GutterbonesRoutes = (() => {
                             personaPills: 3
                         });
                         return Number.isFinite(sample.nextTarget) && sample.nextTarget > 0 && Number.isFinite(sample.nextTargetDisplay);
+                    })()
+                },
+                {
+                    id: 'gamble-tiers',
+                    label: 'Gamble tiers resolve with finite stakes',
+                    pass: (() => {
+                        const out = GutterbonesGamble.resolveFlip({ tierId: 'FAIR', flowStreak: 2, gold: 40, random: 0.99 });
+                        return out.stake >= GAMBLE_TUNING.minStake && Number.isFinite(out.pWin) && out.pWin > 0.5;
                     })()
                 },
                 {
@@ -4625,34 +4735,50 @@ const GutterbonesRoutes = (() => {
                 {phase === 'GAMBLE' && (
                     <div className="h-full flex items-center justify-center p-4 z-[320] relative overflow-hidden">
                         <div className="gamble-backdrop" aria-hidden></div>
-                        <div className="w-full max-w-xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl relative z-10">
+                        <div className="w-full max-w-2xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl relative z-10 max-h-[92vh] overflow-y-auto">
                             <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
                             <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
                             <p className="font-mono text-xs text-gray-400 text-center mb-2">
-                                Stake on table: <b className="text-yellow-300">${gambleStake}</b>
-                                {' '}(22% of cash, min ${GAMBLE_TUNING.minStake}, cap ${GAMBLE_TUNING.stakeCap})
+                                Base stake from cash: <b className="text-yellow-300">${GutterbonesGamble.baseStake(gold)}</b>
+                                {' '}(22% rate, min ${GAMBLE_TUNING.minStake}, cap ${GAMBLE_TUNING.stakeCap})
                             </p>
-                            <p className="font-mono text-sm text-gray-300 text-center mb-5">
-                                Appears after round {GAMBLE_TUNING.minRound}+ when you hold at least ${GAMBLE_TUNING.minStake} cash.
-                            </p>
-                            <div className="grid sm:grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => resolveGamble(false)}
-                                    aria-label={`Take safe cut, keep all ${gold} dollars, enter shop`}
-                                    className="py-3 px-2 min-h-[44px] border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df] text-left"
-                                >
-                                    <div className="font-bold">TAKE SAFE CUT</div>
-                                    <div className="text-[11px] text-gray-400 mt-1">Keep all ${gold}. Enter shop.</div>
-                                </button>
-                                <button
-                                    onClick={() => resolveGamble(true)}
-                                    aria-label={`Flip fifty fifty, win plus ${gambleStake} or lose ${gambleStake}`}
-                                    className="py-3 px-2 min-h-[44px] border-2 border-[#ff007f] bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120] text-left"
-                                >
-                                    <div className="font-bold">FLIP IT</div>
-                                    <div className="text-[11px] mt-1">50%: +${gambleStake} cash</div>
-                                    <div className="text-[11px] text-red-300/90">50%: −${gambleStake} cash</div>
-                                </button>
+                            {flowStreak > 0 && (
+                                <p className="font-mono text-[11px] text-[#0df] text-center mb-2">
+                                    Flow streak +{GutterbonesGamble.formatWinPercent(GutterbonesGamble.flowWinBonus(flowStreak))} win odds on every tier.
+                                </p>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => resolveGamble(false)}
+                                aria-label={`Take safe cut, keep all ${gold} dollars, enter shop`}
+                                className="w-full py-3 px-2 min-h-[44px] mb-4 border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df] text-left"
+                            >
+                                <div className="font-bold">TAKE SAFE CUT</div>
+                                <div className="text-[11px] text-gray-400 mt-1">Keep all ${gold}. Enter shop — no flip.</div>
+                            </button>
+                            <div className="font-mono text-[10px] tracking-[.2em] text-gray-500 text-center mb-2">PICK YOUR FLIP</div>
+                            <div className="grid sm:grid-cols-3 gap-2">
+                                {GutterbonesGamble.allTiers().map((tier) => {
+                                    const tierStake = GutterbonesGamble.stakeForTier(gold, tier.id);
+                                    const pWin = GutterbonesGamble.winProbability(tier.id, flowStreak);
+                                    const winPay = Math.max(1, Math.round(tierStake * tier.winMult));
+                                    const lossPay = Math.max(1, Math.round(tierStake * tier.lossMult));
+                                    return (
+                                        <button
+                                            key={tier.id}
+                                            type="button"
+                                            onClick={() => resolveGamble(true, tier.id)}
+                                            aria-label={`${tier.name}, ${GutterbonesGamble.formatWinPercent(pWin)} win chance, plus ${winPay} or minus ${lossPay}`}
+                                            className="py-3 px-2 min-h-[44px] border-2 border-[#ff007f]/70 bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120] text-left"
+                                        >
+                                            <div className="font-bold text-sm">{tier.name.toUpperCase()}</div>
+                                            <div className="text-[10px] text-gray-400 mt-0.5">{tier.blurb}</div>
+                                            <div className="text-[11px] mt-2 text-yellow-200">Stake ${tierStake}</div>
+                                            <div className="text-[11px] text-emerald-300/90">{GutterbonesGamble.formatWinPercent(pWin)} → +${winPay}</div>
+                                            <div className="text-[11px] text-red-300/90">Miss → −${lossPay}</div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
