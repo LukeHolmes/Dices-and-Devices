@@ -20,3 +20,31 @@ test("Witness arc panels map rounds and endings", () => {
   assert.ok(st.getBustPanel("witness").src.endsWith("bust.png"));
   assert.ok(st.getVictoryPanel("witness").caption.includes("problem"));
 });
+
+test("All five arcs expose full beat captions", () => {
+  const st = loadStory();
+  assert.equal(st.ARC_IDS.length, 5);
+  for (const id of st.ARC_IDS) {
+    const arc = st.getArc(id);
+    assert.ok(arc.title);
+    assert.ok(st.getProloguePanel(id));
+    assert.ok(st.getRoundTransitionPanel(id, 4));
+    assert.ok(st.getBustPanel(id));
+    assert.ok(st.getVictoryPanel(id));
+    assert.equal(st.getRoundTransitionPanel(id, 9), null);
+  }
+});
+
+test("pickRandomArcId selects from catalog", () => {
+  const st = loadStory();
+  assert.equal(st.pickRandomArcId(0), st.ARC_IDS[0]);
+  assert.equal(st.pickRandomArcId(0.99), st.ARC_IDS[st.ARC_IDS.length - 1]);
+  assert.ok(st.ARC_IDS.includes(st.pickRandomArcId(0.42)));
+});
+
+test("Setup arc uses setup panel paths", () => {
+  const st = loadStory();
+  const p = st.getProloguePanel("setup");
+  assert.ok(p.src.includes("panels/setup/prologue.png"));
+  assert.ok(p.caption.includes("filed"));
+});
