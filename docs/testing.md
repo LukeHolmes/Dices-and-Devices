@@ -55,6 +55,10 @@ Before publishing, check:
 - Case Files / lineup: Counter shows `card-counter.png` when unlocked; dev panel force **BOUNCER** or **CROOKED_COP** — boss intro and banner show portrait (not color block fallback).
 - Compare displayed preview and awarded heat; review the payout explanation.
 - Exit/reload and resume a normal save. Exercise CARVING and GAMBLE synthetic fixtures separately; wager/gamble resume defects are currently expected. Generate injectable saves with `npm run dump:save -- [normal|wager|gamble|carving|bust|victory]` (see `docs/phase-b-signoff.md`).
+- **Shop routes:** each NEXT JOB card shows next quota number, modifier bullets, and boss thumbnail on turf war; Run Intel lists three-route compare.
+- **Gamble (round 3+, $5+ cash):** safe cut vs flip outcomes match Help; stake line shows 22% / cap $30.
+- **Side bets:** stake buttons show win payout; after rolling, best preview heat vs threshold.
+- Open Help → **ROUTES & GAMBLE** section.
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 
