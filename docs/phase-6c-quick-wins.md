@@ -1,6 +1,6 @@
 # Phase 6c — Quick wins (playtest polish)
 
-**Status:** Shipped on branch `cursor/phase-6c-quick-wins-048e`  
+**Status:** Complete (PR #45)  
 **Base:** `main` @ d7a32b8 · **Scope:** `index.html` only (pre–Phase 7)
 
 ## Goals
