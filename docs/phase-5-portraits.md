@@ -21,5 +21,5 @@ Placeholders ship until grindhouse art replaces files (same filenames — no cod
 
 ## Next
 
-- **Phase 6a** — route/gamble UI clarity (no RNG change)
+- **Phase 6a** — route/gamble UI clarity (no RNG change) — see `docs/phase-6a-gamble-routes-ui.md`
 - Art pass: replace Counter / Bouncer / Crooked Cop PNGs per `docs/art-direction.md`
