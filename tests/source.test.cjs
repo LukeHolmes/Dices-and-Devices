@@ -6,6 +6,7 @@ const path = require("node:path");
 const {
   html,
   sharedSource,
+  storySource,
   actionSource,
   appSource,
 } = require("./helpers/game.cjs");
@@ -94,6 +95,14 @@ test("Phase 5 roster portraits wired and on disk", () => {
   assert.match(appSource, /card-counter\.png/);
   assert.match(appSource, /bosses\/bouncer\.png/);
   assert.match(appSource, /crooked-cop\.png/);
+});
+
+test("Phase 6c safehouse and favicon polish", () => {
+  assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
+  assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
+  assert.match(appSource, /displayNameForUnlockId/);
+  assert.match(storySource, /PANEL_ART_AVAILABLE/);
+  assert.match(appSource, /TODO\(art\): card-counter\.png/);
 });
 
 test("Referenced local artwork exists", () => {

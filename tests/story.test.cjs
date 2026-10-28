@@ -45,6 +45,11 @@ test("pickRandomArcId selects from catalog", () => {
 test("Setup arc uses setup panel paths", () => {
   const st = loadStory();
   const p = st.getProloguePanel("setup");
-  assert.ok(p.src.includes("panels/setup/prologue.png"));
+  assert.equal(p.src, null, "setup arc has no shipped panel art yet");
   assert.ok(p.caption.includes("filed"));
+});
+
+test("Witness arc still loads panel PNGs", () => {
+  const st = loadStory();
+  assert.ok(st.getProloguePanel("witness").src.includes("prologue.png"));
 });

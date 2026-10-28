@@ -7,6 +7,7 @@ PNG portraits (served from the project root, e.g. `python3 -m http.server`):
 | `street-rat.png` | The Street Rat |
 | `hustler.png` | The Hustler |
 | `enforcer.png` | The Enforcer |
+| `card-counter.png` | The Counter (**TODO:** replace — file currently duplicates `hustler.png`; UI uses a tinted Street Rat placeholder until real art lands) |
 
 Recommended: ~3:4 head-and-shoulders, grindhouse comic style per `docs/art-direction.md`. Widescreen duo art should be **split into two files** (one mug per operator).
 
