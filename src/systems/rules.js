@@ -64,8 +64,19 @@ const GutterbonesRules = (() => {
             case 'C': valid = true; chips = sum; break;
         }
         if (!valid) {
-            pushStep('system', 'INVALID PAYOUT', `${categoryName} did not match this hand.`, 0);
-            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName };
+            const invalidReason = (() => {
+                switch (catId) {
+                    case 'TOK': return 'Triad needs three of a kind.';
+                    case 'FOK': return 'Quad needs four of a kind.';
+                    case 'FH': return 'Full Ride needs three of a kind plus a pair.';
+                    case 'SS': return 'Short Run needs four dice in a straight.';
+                    case 'LS': return 'Long Run needs five dice in a straight.';
+                    case 'Y': return 'Jackpot needs five of a kind.';
+                    default: return `${categoryName} did not match this hand.`;
+                }
+            })();
+            pushStep('system', 'INVALID PAYOUT', invalidReason, 0);
+            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason };
         }
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);

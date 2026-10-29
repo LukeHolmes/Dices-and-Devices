@@ -16,7 +16,7 @@ const GutterbonesRoutes = (() => {
         earlyMaxRound: 3,
         midMaxRound: 6,
         early: { pathModWeight: 0.7, flatIncrease: 28 },
-        mid: { pathModWeight: 0.95, flatIncrease: 42 },
+        mid: { pathModWeight: 0.95, flatIncrease: 52 },
         late: { pathModWeight: 1.1, flatIncrease: 58 }
     });
 

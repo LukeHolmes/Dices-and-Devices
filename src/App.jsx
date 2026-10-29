@@ -27,6 +27,7 @@ import {
   ECONOMY_TUNING,
   BOSS_TUNING,
   SHOP_TUNING,
+  FIRST_RUN_TUNING,
   EARLY_GAME_TUNING,
   ROUND_CURVE_TUNING,
   PROGRESSION_GUARDRAILS,
@@ -46,6 +47,7 @@ import {
   FIXER_LINES,
   pickLine,
   describeRouteEffects,
+  CATEGORY_RULE_TOOLTIPS,
   CATEGORIES,
   ONBOARDING_THRESHOLDS,
   getAvailableCategories,
@@ -58,6 +60,7 @@ import {
   RUN_SAVE_VERSION,
   RUN_PHASES,
   DEFAULT_META_STATE,
+  displayNameForUnlockId,
   SAFEHOUSE_UPGRADES,
   mergeMetaState,
   loadJson,
@@ -300,10 +303,12 @@ const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun }) => (
     </div>
 );
 
-const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel }) => {
+const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '' }) => {
     const [hover, setHover] = useState(false);
     const triggers = (result.triggers || []).slice(0, 2);
     const masteryBonus = getHandMasteryBonus(handLevel);
+    const showTriggers = canScore && result.valid && triggers.length > 0;
+    const titleParts = [ruleTooltip, canScore && !result.valid && result.reason ? result.reason : ''].filter(Boolean);
     return (
         <button
             onClick={() => onScore(id)}
@@ -312,7 +317,9 @@ const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_M
             onFocus={() => setHover(true)}
             onBlur={() => setHover(false)}
             disabled={!canScore}
-            className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-all text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}`}
+            title={titleParts.join(' — ')}
+            aria-label={titleParts.length ? `${cat.name}. ${titleParts.join(' ')}` : cat.name}
+            className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}`}
         >
             {hover && canScore && result.valid && <ScorePreview result={result} />}
             <span className="flex flex-col items-start">
@@ -321,7 +328,12 @@ const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_M
                     <span className="text-[10px] px-1 rounded border border-gray-500 text-gray-600">LV{handLevel}</span>
                 </span>
                 {masteryBonus > 0 && <span className="text-[10px] text-green-700 font-mono">+{masteryBonus} mastery chips</span>}
-                {canScore && result.valid && triggers.length > 0 && <span className="flex flex-wrap gap-1 mt-1">{triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}</span>}
+                <span className={`flex flex-wrap gap-1 mt-1 min-h-[18px] ${showTriggers ? '' : 'invisible'}`} aria-hidden={!showTriggers}>
+                    {triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}
+                </span>
+                {canScore && !result.valid && result.reason && (
+                    <span className="text-[10px] text-red-800 font-mono mt-0.5 max-w-[12rem] leading-tight">{result.reason}</span>
+                )}
             </span>
             <span>{used ? <span className="paid-stamp">PAID</span> : (canScore && result.valid ? result.total : (canScore ? 'BUST' : '-'))}</span>
         </button>
@@ -406,8 +418,11 @@ const HistoryPanel = ({ history }) => (
 
 const PersonaPortrait = ({ persona, variant = 'lineup' }) => {
     const [failed, setFailed] = useState(false);
-    const src = persona.portraitSrc;
+    // TODO(art): card-counter.png is a duplicate of hustler.png — replace with real Counter art (phase-5-portraits.md).
+    const useCounterPlaceholder = persona.id === 'CARD_COUNTER';
+    const src = useCounterPlaceholder ? 'assets/personas/street-rat.png' : persona.portraitSrc;
     const alt = persona.portraitAlt || persona.name || '';
+    const counterTintClass = useCounterPlaceholder ? ' brightness-90 contrast-125 hue-rotate-[200deg] saturate-150 ' : '';
     if (!src || failed) {
         if (variant === 'lore') {
             return <div className={`w-16 h-20 shrink-0 rounded border border-gray-600 ${persona.color}`} aria-hidden />;
@@ -415,14 +430,14 @@ const PersonaPortrait = ({ persona, variant = 'lineup' }) => {
         if (variant === 'rap') {
             return <div className={`w-24 h-32 rounded-t-full rounded-b-lg border-b-4 border-gray-600 ${persona.color}`} aria-hidden />;
         }
-        return <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${persona.color}`} aria-hidden />;
+        return <div className={`w-24 h-28 rounded-t-[50px] rounded-b-lg ${persona.color}${counterTintClass}`} aria-hidden />;
     }
     if (variant === 'lore') {
         return (
             <img
                 src={src}
                 alt={alt}
-                className="w-16 h-20 shrink-0 rounded border border-gray-600 object-cover object-top bg-[#121113]"
+                className={`w-16 h-20 shrink-0 rounded border border-gray-600 object-cover object-top bg-[#121113]${counterTintClass}`}
                 onError={() => setFailed(true)}
             />
         );
@@ -432,7 +447,7 @@ const PersonaPortrait = ({ persona, variant = 'lineup' }) => {
             <img
                 src={src}
                 alt={alt}
-                className="max-h-[9.25rem] w-auto max-w-[min(100%,11rem)] object-contain object-bottom"
+                className={`max-h-[9.25rem] w-auto max-w-[min(100%,11rem)] object-contain object-bottom${counterTintClass}`}
                 onError={() => setFailed(true)}
             />
         );
@@ -441,7 +456,7 @@ const PersonaPortrait = ({ persona, variant = 'lineup' }) => {
         <img
             src={src}
             alt={alt}
-            className="max-h-[7.75rem] w-auto max-w-[92%] object-contain object-bottom drop-shadow-[0_5px_14px_rgba(0,0,0,0.9)]"
+            className={`max-h-[7.75rem] w-auto max-w-[92%] object-contain object-bottom drop-shadow-[0_5px_14px_rgba(0,0,0,0.9)]${counterTintClass}`}
             onError={() => setFailed(true)}
         />
     );
@@ -495,7 +510,7 @@ const ONBOARDING_STEPS = [
 const ONBOARDING_BADGES = ['STEP 01', 'STEP 02', 'STEP 03', 'STEP 04', 'STEP 05', 'STEP 06', 'STEP 07'];
 const ONBOARDING_KICKERS = ['THROW', 'LOCK', 'SCORE', 'QUOTA', 'PILL', 'BOSS', 'STASH'];
 
-const FirstRunOverlay = ({ onDismiss }) => {
+const FirstRunOverlay = ({ onDismiss, onShowRules }) => {
     const [step, setStep] = useState(0);
     return (
         <div className="absolute inset-0 z-[600] bg-black/85 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
@@ -523,6 +538,9 @@ const FirstRunOverlay = ({ onDismiss }) => {
                     )}
                 </div>
                 <button onClick={onDismiss} className="absolute top-3 right-3 text-gray-600 hover:text-white font-mono text-xs transition-colors">SKIP</button>
+                {onShowRules && (
+                    <button onClick={onShowRules} className="mt-3 w-full py-2 border border-[#0df]/50 text-[#0df] font-mono text-xs hover:bg-[#0df]/10 rounded">SHOW RULES DOSSIER</button>
+                )}
             </div>
         </div>
     );
@@ -586,7 +604,7 @@ const StoryPanelOverlay = ({ beat, reducedMotion, onFinish }) => {
             onClick={finish}
         >
             <div className="relative w-full max-w-3xl mx-auto px-4 flex-1 flex items-center justify-center overflow-hidden">
-                {!imageFailed && (
+                {!imageFailed && beat.src && (
                     <img
                         src={beat.src}
                         alt=""
@@ -1229,6 +1247,9 @@ function App() {
     const intervalIdsRef = useRef(new Set());
     const buildCalloutPrevRef = useRef(null);
     const synergyCalloutAtRef = useRef(0);
+    const rollLockRef = useRef(false);
+    const lastRollStartedAtRef = useRef(0);
+    const pendingPayoutRef = useRef(null);
 
     const scheduleTimeout = (fn, ms) => {
         const id = window.setTimeout(() => {
@@ -1624,9 +1645,13 @@ function App() {
         const runArcId = GutterbonesStory?.pickRandomArcId?.(Math.random()) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness';
         const arcMeta = GutterbonesStory?.getArc?.(runArcId);
         setArcId(runArcId);
+        let openingBase = EARLY_GAME_TUNING.openingTarget;
+        if (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0) {
+            openingBase = FIRST_RUN_TUNING.openingTarget;
+        }
         const openingTargetBase = p.id === 'CARD_COUNTER'
-            ? Math.floor(EARLY_GAME_TUNING.openingTarget * EARLY_GAME_TUNING.counterOpeningMultiplier)
-            : EARLY_GAME_TUNING.openingTarget;
+            ? Math.floor(openingBase * EARLY_GAME_TUNING.counterOpeningMultiplier)
+            : openingBase;
         clearSavedRun();
         setHasSavedRun(false);
         setRunClosed(false);
@@ -1637,7 +1662,10 @@ function App() {
         setScore(0);
         setTarget(insaneContract ? Math.floor(openingTargetBase * INSANE_CONTRACT_MODIFIERS.targetMultiplier) : openingTargetBase);
         setHands(Math.max(1, p.plays - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
-        setDiscards(p.pills);
+        const round1Pills = (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0 && p.id === 'ENFORCER')
+            ? FIRST_RUN_TUNING.enforcerRound1Pills
+            : p.pills;
+        setDiscards(round1Pills);
         setGold(p.cash);
         setDebt(0);
         setStash(0);
@@ -2112,10 +2140,25 @@ function App() {
                     onFinish={() => storyFinishRef.current?.()}
                 />
             )}
-            {showFirstRunOverlay && phase === 'PLAY' && !storyBeat && <FirstRunOverlay onDismiss={() => setShowFirstRunOverlay(false)} />}
+            {showFirstRunOverlay && phase === 'PLAY' && !storyBeat && (
+                <FirstRunOverlay
+                    onDismiss={() => {
+                        setShowFirstRunOverlay(false);
+                        if (!audioSettings.seenHelpDossier) {
+                            setShowHelpOverlay(true);
+                            patchSettings({ seenHelpDossier: true });
+                        }
+                    }}
+                    onShowRules={() => {
+                        setShowFirstRunOverlay(false);
+                        setShowHelpOverlay(true);
+                        patchSettings({ seenHelpDossier: true });
+                    }}
+                />
+            )}
             {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
             {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
-            {scoreResolution && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
+            {scoreResolution && phase === 'PLAY' && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
             {scoreBreakdown && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={() => setScoreBreakdown(null)} />}
             {lossExplanation && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
             {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
@@ -2302,7 +2345,7 @@ function App() {
                                 return (
                                     <div key={upgrade.id} className={`paper-card border-2 p-4 bg-white/50 ${bought ? 'border-green-700' : 'border-black'}`} style={{ '--paper-rot': '-0.8deg' }}>
                                         <div className="flex justify-between gap-3"><div><div className="font-marker text-2xl">{upgrade.name}</div><div className="font-mono text-xs opacity-70 mt-1">{upgrade.desc}</div></div><div className="font-mono font-bold text-lg">${upgrade.cost}</div></div>
-                                        <div className="font-mono text-[10px] mt-3 opacity-60">UNLOCKS: {upgrade.unlocks.join(', ')}</div>
+                                        <div className="font-mono text-[10px] mt-3 opacity-60">Unlocks: {upgrade.unlocks.map(displayNameForUnlockId).join(' · ')}</div>
                                         <button onClick={() => purchaseSafehouseUpgrade(upgrade)} disabled={!canBuy} className={`mt-4 w-full py-2 font-mono font-bold border-2 ${bought ? 'border-green-700 text-green-800 bg-green-100' : canBuy ? 'border-black bg-[#c78b16] text-black hover:bg-yellow-500' : 'border-gray-500 text-gray-500 bg-gray-200'}`}>{bought ? 'CONTACT SECURED' : canBuy ? 'PAY THE BRIBE' : 'NEED MORE CASH'}</button>
                                     </div>
                                 );
@@ -2341,11 +2384,6 @@ function App() {
                                 <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
                                 <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget} · Pills {discards}</div>
                             </div>
-                            {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
-                            <div className="mx-3 md:mx-4 mb-1 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide">
-                                Tap a payout row on the left to score this hand.
-                            </div>
-                        )}
                         <div className="flex gap-3 md:gap-6 text-right">
                                 <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
                                 <div className="relative">
@@ -2413,6 +2451,11 @@ function App() {
                             </div>
                         </div>
                         <button onClick={() => setShowMobileStash(true)} className="md:hidden w-full bg-gray-800 text-gray-300 py-2 border-t border-gray-700 text-[10px] font-mono font-bold tracking-widest">OPEN STASH / HARDWARE</button>
+                        {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
+                            <div className="mx-3 md:mx-4 mb-1 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide">
+                                Tap a payout row on THE PAYOUTS to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.
+                            </div>
+                        )}
                     </div>
                     <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-6 min-h-0 overflow-hidden">
                         <div className="order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-3 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-y-auto max-h-[26vh] md:max-h-full">
@@ -2424,7 +2467,7 @@ function App() {
                                 const rows = Object.values(CATEGORIES).map((cat) => {
                                     if (availableSet.has(cat.id)) {
                                         return (
-                                            <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
+                                            <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} ruleTooltip={CATEGORY_RULE_TOOLTIPS[cat.id] || ''} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
                                         );
                                     }
                                     const gate = lockedById[cat.id];
@@ -2450,6 +2493,18 @@ function App() {
                             </div>
                             {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                             <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
+                            {swapMode && (
+                                <div className="absolute top-14 left-2 right-2 z-40 px-3 py-2 bg-black/80 border border-[#0df]/50 font-mono text-[10px] md:text-xs text-cyan-100 text-center">
+                                    {swapIdx === null
+                                        ? 'SHUFFLE: tap two bones to swap their slots (free). Tap SHUFFLE again to exit.'
+                                        : 'Pick a second bone to complete the swap.'}
+                                </div>
+                            )}
+                            {!hasRolled && !rolling && (
+                                <div className="absolute inset-x-4 top-[38%] z-40 px-3 py-2 bg-black/75 border border-[#ff007f]/40 font-mono text-xs md:text-sm text-[#ff9fcf] text-center pointer-events-none">
+                                    Hit THROW to roll your bones.
+                                </div>
+                            )}
                             <div className={`flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
                                 {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} canPill={discards > 0 && hasRolled && !rolling} pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0} onExplainPill={() => showMechanicPopup('PILL')} onPill={() => popPill(i)} onClick={() => {
                                     if (swapMode) {
@@ -2612,7 +2667,8 @@ function App() {
                     <div className="shop-counting-cash-backdrop" aria-hidden></div>
                     <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0 relative z-10">
                         <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
-                            <div className="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
+                            <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
+                            <p className="text-[10px] font-mono text-amber-200/85 mb-4 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
                                 const isConsumable = item.type === 'consumable';
                                 const isFace = !!item.type && !isConsumable;
@@ -2703,7 +2759,7 @@ function App() {
                         <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                         <div className="border border-black p-4 bg-white/50 mb-4"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
                         <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
-                        {showIncarceratedStamp && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[6px] border-[#d30000] text-[#d30000] font-marker p-4 text-6xl rotate-[-15deg] bg-white/80 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards]">INCARCERATED</div>}
+                        {showIncarceratedStamp && <div className="absolute top-6 right-6 border-[5px] border-[#d30000] text-[#d30000] font-marker px-3 py-2 text-3xl md:text-4xl rotate-[-12deg] bg-white/85 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10">INCARCERATED</div>}
                         <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                     </div>
                 </div>

@@ -158,17 +158,21 @@ export function createGameActions(getScope) {
 
   const getBossAdjustedTarget = (baseTarget, boss, roundNum) => {
         return GutterbonesRoutes.applyBossAdjustedTarget(baseTarget, boss, roundNum);
-    };;
+    };
 
   const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
         handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
         CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus
-    });;
+    });
 
   const rollBones = () => {
-        if (rolling || hands <= 0) return;
+        if (rollLockRef.current || rolling || hands <= 0) return;
         if (hasRolled && discards <= 0) return;
-        const settleMs = 1120;
+        const now = Date.now();
+        if (now - lastRollStartedAtRef.current < 300) return;
+        rollLockRef.current = true;
+        lastRollStartedAtRef.current = now;
+        const settleMs = 800;
         let toll = 0;
         if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
         if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
@@ -202,8 +206,14 @@ export function createGameActions(getScope) {
                 return { ...d, value, faceId: isStandard ? null : face.id, faceLabel: isStandard ? null : face.label, faceStyle: isStandard ? null : face.style, type: isStandard ? 'standard' : face.type };
             }));
             setRolling(false);
+            rollLockRef.current = false;
+            const pending = pendingPayoutRef.current;
+            if (pending) {
+                pendingPayoutRef.current = null;
+                executePayout(pending);
+            }
         }, settleMs);
-    };;
+    };
 
   const popPill = (idx) => {
         showMechanicPopup('PILL');
@@ -245,7 +255,7 @@ export function createGameActions(getScope) {
             scheduleTimeout(() => setPillBursts(prev => prev.filter(p => p.id !== burstId)), 360);
         }
         AudioSystem.playTone(600, 'square', 0.1);
-    };;
+    };
 
   const handleProgram = (p) => {
         showMechanicPopup(`PROGRAM_${p.id}`);
@@ -264,7 +274,7 @@ export function createGameActions(getScope) {
         if (p.id === 'LAUNDER') setDebt(0);
         setActiveMechanicPopup(null);
         setShowMobileStash(false);
-    };;
+    };
 
   const resumeRun = () => {
         const saved = loadSavedRun();
@@ -320,7 +330,7 @@ export function createGameActions(getScope) {
         setRunClosed(false);
         setFixerLine('Back in the game. Pick your spot.');
         setPhase(saved.phase || 'PLAY');
-    };;
+    };
 
   const serializeRun = (phaseOverride = phase) => ({
         version: RUN_SAVE_VERSION,
@@ -358,14 +368,14 @@ export function createGameActions(getScope) {
         swapIdx,
         history,
         runStats
-    });;
+    });
 
   const persistRun = (phaseOverride = phase) => {
         if (runClosed || !RUN_PHASES.includes(phaseOverride)) return;
         const snapshot = serializeRun(phaseOverride);
         saveSavedRun(snapshot);
         setHasSavedRun(true);
-    };;
+    };
 
   const updateMeta = (updater) => {
         setMeta(prev => {
@@ -373,7 +383,7 @@ export function createGameActions(getScope) {
             saveMetaState(next);
             return next;
         });
-    };;
+    };
 
   const awardLaunderedCash = ({ victory, totalHeat, cash }) => {
         const earned = Math.max(0, victory ? Math.floor(totalHeat / 10) + Math.max(0, cash) : Math.floor(totalHeat / 25));
@@ -389,9 +399,13 @@ export function createGameActions(getScope) {
         clearSavedRun();
         setHasSavedRun(false);
         return earned;
-    };;
+    };
 
   const executePayout = (catId) => {
+        if (rolling || rollLockRef.current) {
+            pendingPayoutRef.current = catId;
+            return;
+        }
         patchSettings({ dismissScoreHint: true });
         const result = calculateScore(catId, dice);
         const wager = activeWager;
@@ -434,7 +448,7 @@ export function createGameActions(getScope) {
                     total: result.total
                 };
                 setScoreResolution(resolutionPayload);
-                scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 1200 : 1600);
+                scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 900 : 1100);
             }
             if (result.total >= 250) triggerCameraKick('hard');
             else if (result.total >= 80) triggerCameraKick('soft');
@@ -528,6 +542,9 @@ export function createGameActions(getScope) {
             if (!reducedMotion) setCinematic('bust');
             AudioSystem.bust();
             const goRapSheet = () => {
+                setScoreResolution(null);
+                setPayoutActive(false);
+                setPowBurst(false);
                 setPhase('RAP_SHEET');
                 if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 350);
             };
@@ -536,6 +553,7 @@ export function createGameActions(getScope) {
                 playStoryBeat(GutterbonesStory?.getBustPanel?.(arcId), goRapSheet);
             }, bustDelay);
         } else if (hands <= 1) {
+            const quotaCleared = score + gained >= currentTarget;
             if (round >= 10) {
                 setLossExplanation(null);
                 setGambleStake(0);
@@ -544,6 +562,9 @@ export function createGameActions(getScope) {
                 AudioSystem.paper();
                 if (!reducedMotion) setCinematic('victory');
                 const goVictory = () => {
+                    setScoreResolution(null);
+                    setPayoutActive(false);
+                    setPowBurst(false);
                     setPhase('VICTORY');
                     if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 800);
                 };
@@ -555,15 +576,20 @@ export function createGameActions(getScope) {
                 const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
                 if (allowGamble) {
                     setGambleStake(stake);
-                    setFixerLine(pickLine(FIXER_LINES.gamble));
+                    setFixerLine(quotaCleared
+                        ? `Round ${round} quota cleared. ${pickLine(FIXER_LINES.gamble)}`
+                        : pickLine(FIXER_LINES.gamble));
                     setPhase('GAMBLE');
                 } else {
                     generateShop();
+                    if (quotaCleared) {
+                        setFixerLine(`Round ${round} quota cleared. Pick a route — Pawn/Smuggle pay +$15 bonus cash.`);
+                    }
                     setPhase('SHOP');
                 }
             }
         }
-    };;
+    };
 
   const payDebtFromCash = (amount) => {
         if (phase !== 'SHOP' || debt <= 0 || gold <= 0) return;
@@ -575,7 +601,7 @@ export function createGameActions(getScope) {
         setDebt(d => Math.max(0, d - debtRelief));
         spawnPaperStamp('PAID DOWN', '#0f766e');
         AudioSystem.playTone(420, 'triangle', 0.1);
-    };;
+    };
 
   const registerDebtSpike = (shortage, source = 'shortage') => {
         const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
@@ -584,7 +610,7 @@ export function createGameActions(getScope) {
         spawnHitCallout(`+DEBT (${sourceLabel})`);
         cascadeTriggers([{ name: 'DEBT', value: `+${debtSpike} ${sourceLabel}` }]);
         return debtSpike;
-    };;
+    };
   return {
     getBossAdjustedTarget,
     calculateScore,

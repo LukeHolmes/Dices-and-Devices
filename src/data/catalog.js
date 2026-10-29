@@ -6,7 +6,7 @@ export const PERSONAS = [
     { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
     { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700', portraitSrc: 'assets/personas/hustler.png', portraitAlt: 'The Hustler' },
     { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900', portraitSrc: 'assets/personas/enforcer.png', portraitAlt: 'The Enforcer' },
-    { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 20% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' }
+    { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 15% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' }
 ];
 
 export const FACE_DATABASE = {
@@ -358,8 +358,14 @@ export const SHOP_TUNING = {
     maxAffordableBuffer: 25
 };
 
+export const FIRST_RUN_TUNING = {
+    enabled: true,
+    openingTarget: 70,
+    enforcerRound1Pills: 1
+};
+
 export const EARLY_GAME_TUNING = {
-    openingTarget: 130,
+    openingTarget: 85,
     counterOpeningMultiplier: 1.15,
     debtPenaltyStartsRound: 4,
     bossPathStartsRound: 4
@@ -369,7 +375,7 @@ export const ROUND_CURVE_TUNING = {
     earlyMaxRound: 3,
     midMaxRound: 6,
     early: { pathModWeight: 0.7, flatIncrease: 28 },
-    mid: { pathModWeight: 0.95, flatIncrease: 42 },
+    mid: { pathModWeight: 0.95, flatIncrease: 52 },
     late: { pathModWeight: 1.1, flatIncrease: 58 }
 };
 
@@ -517,6 +523,22 @@ export const describeRouteEffects = (path) => {
     return notes;
 };
 
+export const CATEGORY_RULE_TOOLTIPS = {
+    ONES: 'Sum of all 1s (wilds count as 1).',
+    TWOS: 'Sum of all 2s.',
+    THREES: 'Sum of all 3s.',
+    FOURS: 'Sum of all 4s.',
+    FIVES: 'Sum of all 5s.',
+    SIXES: 'Sum of all 6s.',
+    TOK: 'Three of a kind — 20 chips ×2 mult.',
+    FOK: 'Four of a kind — 35 chips ×3 mult.',
+    FH: 'Full house (3+2) — 30 chips ×3 mult.',
+    SS: 'Small straight (4 in a row) — 30 chips ×2 mult.',
+    LS: 'Large straight (5 in a row) — 40 chips ×3 mult.',
+    Y: 'Five of a kind — 50 chips ×5 mult.',
+    C: 'Slop — sum of all standard face values.'
+};
+
 export const CATEGORIES = {
     ONES: { id: 'ONES', name: 'Aces' },
     TWOS: { id: 'TWOS', name: 'Deuces' },
@@ -569,7 +591,8 @@ export const DEFAULT_SETTINGS = {
     audioVolume: 0.82,
     dismissPillPulse: false,
     dismissScoreHint: false,
-    dismissBossHint: false
+    dismissBossHint: false,
+    seenHelpDossier: false
 };
 
 export const loadSettingsState = () => {
@@ -582,7 +605,8 @@ export const loadSettingsState = () => {
             : DEFAULT_SETTINGS.audioVolume,
         dismissPillPulse: !!stored.dismissPillPulse,
         dismissScoreHint: !!stored.dismissScoreHint,
-        dismissBossHint: !!stored.dismissBossHint
+        dismissBossHint: !!stored.dismissBossHint,
+        seenHelpDossier: !!stored.seenHelpDossier
     };
 };
 
@@ -592,7 +616,8 @@ export const saveSettingsState = (settings) => {
         audioVolume: Math.max(0, Math.min(1, settings.audioVolume)),
         dismissPillPulse: !!settings.dismissPillPulse,
         dismissScoreHint: !!settings.dismissScoreHint,
-        dismissBossHint: !!settings.dismissBossHint
+        dismissBossHint: !!settings.dismissBossHint,
+        seenHelpDossier: !!settings.seenHelpDossier
     });
 };
 
@@ -609,6 +634,14 @@ export const DEFAULT_META_STATE = {
     bestHeat: 0,
     totalRuns: 0,
     completedRuns: 0
+};
+
+export const displayNameForUnlockId = (id) => {
+    const persona = PERSONAS.find((p) => p.id === id);
+    if (persona) return persona.name;
+    if (FACE_DATABASE[id]) return FACE_DATABASE[id].label || id;
+    if (DEVISES[id]) return DEVISES[id].name;
+    return id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 export const SAFEHOUSE_UPGRADES = [

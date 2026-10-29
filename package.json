@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 8080",
-    "test": "node --test tests/rules.test.cjs tests/saves.test.cjs tests/source.test.cjs tests/onboarding.test.cjs tests/story.test.cjs tests/routes.test.cjs tests/gamble.test.cjs tests/regression-defects.test.cjs",
+    "test": "node --test tests/rules.test.cjs tests/saves.test.cjs tests/source.test.cjs tests/onboarding.test.cjs tests/story.test.cjs tests/routes.test.cjs tests/gamble.test.cjs tests/regression-defects.test.cjs tests/balance.test.cjs",
     "audit:known-issues": "node tests/known-issues.cjs",
     "test:known-issues": "node tests/known-issues.cjs --strict",
     "check": "npm test && npm run audit:known-issues",

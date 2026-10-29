@@ -97,6 +97,7 @@ const GutterbonesStory = (() => {
     });
 
     const ARC_IDS = Object.freeze(Object.keys(ARCS));
+    const PANEL_ART_AVAILABLE = new Set(['witness']);
 
     const panelFile = (arcId, key) => `assets/panels/${arcId}/${key === 'prologue' ? 'prologue' : key}.png`;
 
@@ -107,8 +108,9 @@ const GutterbonesStory = (() => {
         const caption = arc.captions[key];
         if (!caption) return null;
         const holdKey = kind === 'prologue' ? 'prologue' : kind === 'bust' ? 'bust' : kind === 'victory' ? 'victory' : 'round';
+        const hasArt = PANEL_ART_AVAILABLE.has(arc.id);
         return {
-            src: panelFile(arc.id, key),
+            src: hasArt ? panelFile(arc.id, key) : null,
             caption,
             holdMs: HOLD_MS[holdKey],
             arcId: arc.id,

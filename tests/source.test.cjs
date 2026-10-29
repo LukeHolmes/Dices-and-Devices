@@ -6,10 +6,10 @@ const path = require("node:path");
 const {
   html,
   sharedSource,
+  storySource,
   actionSource,
   appSource,
   onboardingSource,
-  storySource,
   routesSource,
   gambleSource,
   gameActionsSource,
@@ -125,6 +125,31 @@ test("Phase 7 module layout and production bundle", () => {
     fs.existsSync(path.join(root, "dist/assets/panels/witness/prologue.png")),
     "witness prologue in dist",
   );
+});
+
+test("Phase 6d input UX hooks present", () => {
+  assert.match(appSource, /rollLockRef/);
+  assert.match(appSource, /pendingPayoutRef/);
+  assert.match(appSource, /seenHelpDossier/);
+  assert.match(appSource, /CATEGORY_RULE_TOOLTIPS/);
+  assert.match(sharedSource, /reason: invalidReason/);
+});
+
+test("Phase 6f shop loan and audio settings present", () => {
+  assert.match(appSource, /LOAN appears when cash is short/);
+  assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);
+  assert.match(
+    appSource + gameActionsSource,
+    /Round \$\{round\} quota cleared/,
+  );
+});
+
+test("Phase 6c safehouse and favicon polish", () => {
+  assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
+  assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
+  assert.match(appSource, /displayNameForUnlockId/);
+  assert.match(storySource, /PANEL_ART_AVAILABLE/);
+  assert.match(appSource, /TODO\(art\): card-counter\.png/);
 });
 
 test("Referenced local artwork exists", () => {

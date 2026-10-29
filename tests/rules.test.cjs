@@ -26,6 +26,21 @@ test("Invalid sets do not pay", () => {
   );
   assert.equal(r.valid, false);
   assert.equal(r.total, 0);
+  assert.match(r.reason, /five of a kind/i);
+});
+test("Invalid Triad includes reason", () => {
+  const r = createGame(snapshot()).api.calculateScore(
+    "TOK",
+    dice([1, 2, 3, 4, 5]),
+  );
+  assert.equal(r.valid, false);
+  assert.match(r.reason, /three of a kind/i);
+});
+test("Double rollBones in one tick does not spend extra pill", () => {
+  const g = createGame(snapshot({ discards: 3, hasRolled: true }));
+  g.api.rollBones();
+  g.api.rollBones();
+  assert.equal(g.state("discards"), 2);
 });
 test("Wild fills a missing straight value", () =>
   assert.equal(

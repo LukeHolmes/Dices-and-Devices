@@ -23,3 +23,18 @@
 
 - Replace placeholder story art for arcs A–D under `assets/panels/{setup,debt,inside,borough}/`.
 - Optional: dev “force arc” for QA (not required for ship).
+
+---
+
+## Addendum — Phase 6f QA (Oct 2026, `index.html`)
+
+Re-checked items that were unclear on the stale `gutterbones1977.html` playtest build:
+
+| Item | Result |
+|------|--------|
+| Shop LOAN / debt buys | Confirmed; alley copy explains credit purchases |
+| Round cash / quota clear feedback | Hustle + route bonuses confirmed; fixer line on quota clear |
+| Victory / GB009 settlement | Regression GB009 still green on `npm run check` |
+| Audio mute in settings | Present on canonical `index.html` |
+
+Phases **6c–6f** are **merged to `main`** (PRs **#45–#48**, 28 Oct 2026). See `docs/phase-6c-quick-wins.md` through `docs/phase-6f-qa-pass.md`.

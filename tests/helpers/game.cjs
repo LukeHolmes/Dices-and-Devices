@@ -31,11 +31,16 @@ const storySource = asClassicScript(readSrc("src/systems/story.js"));
 const routesSource = asClassicScript(readSrc("src/systems/routes.js"));
 const gambleSource = asClassicScript(readSrc("src/systems/gamble.js"));
 const catalogSource = asClassicScript(readSrc("src/data/catalog.js"));
-let gameActionsSource = asClassicScript(readSrc("src/app/gameActions.js"));
-gameActionsSource = gameActionsSource.replace(
-  /const \{\s*[\s\S]*?\} = catalog;\s*/,
-  "",
-);
+const gameActionsPath = path.join(root, "src/app/gameActions.js");
+let gameActionsSource = fs.existsSync(gameActionsPath)
+  ? asClassicScript(readSrc("src/app/gameActions.js"))
+  : "";
+if (gameActionsSource) {
+  gameActionsSource = gameActionsSource.replace(
+    /const \{\s*[\s\S]*?\} = catalog;\s*/,
+    "",
+  );
+}
 const appSource = readSrc("src/App.jsx");
 
 const actionNames = [
@@ -54,16 +59,40 @@ const actionNames = [
   "registerDebtSpike",
 ];
 
-/** For source.test.cjs — ensure action implementations live in gameActions module. */
+function extractActionBlock(source, marker, nextLineRe) {
+  const start = source.indexOf(marker);
+  if (start < 0) return null;
+  const slice = source.slice(start);
+  const endMatch = nextLineRe.exec(slice.slice(marker.length));
+  const end = endMatch ? start + marker.length + endMatch.index : start + slice.length;
+  return source.slice(start, end);
+}
+
+/** Prefer App.jsx during migration; fall back to generated gameActions module. */
 function actionSource(name) {
   assert.ok(actionNames.includes(name), `Unknown action: ${name}`);
-  const marker = `const ${name} =`;
-  const start = gameActionsSource.indexOf(marker);
-  assert.ok(start >= 0, `${name} must be defined in src/app/gameActions.js`);
-  const slice = gameActionsSource.slice(start);
-  const endMatch = /\n  const [a-zA-Z]+ =/.exec(slice.slice(marker.length));
-  const end = endMatch ? start + marker.length + endMatch.index : start + 800;
-  return gameActionsSource.slice(start, end);
+  const appMarker = `    const ${name} =`;
+  const appStart = appSource.indexOf(appMarker);
+  if (appStart >= 0) {
+    const tail = appSource.slice(appStart + appMarker.length);
+    const bounds = [
+      /\n    const [a-zA-Z_$][\w$]* =/.exec(tail),
+      /\n    useEffect\s*\(/.exec(tail),
+      /\n    return\s*\(/.exec(tail),
+    ]
+      .filter(Boolean)
+      .map((m) => m.index)
+      .filter((idx) => idx > 0);
+    const endOffset = bounds.length ? Math.min(...bounds) : tail.length;
+    return appSource.slice(appStart, appStart + appMarker.length + endOffset);
+  }
+  const fromActions = extractActionBlock(
+    gameActionsSource,
+    `  const ${name} =`,
+    /\n  const [a-zA-Z_$][\w$]* =/,
+  );
+  assert.ok(fromActions, `${name} must be defined in App.jsx or src/app/gameActions.js`);
+  return fromActions;
 }
 
 const exportedNames = [
@@ -130,6 +159,9 @@ function createGame(snapshot = {}, options = {}) {
     },
     scheduleInterval: () => 1,
     clearScheduledInterval: noOp,
+    rollLockRef: { current: false },
+    lastRollStartedAtRef: { current: 0 },
+    pendingPayoutRef: { current: null },
   };
   for (const setter of new Set(
     (gameActionsSource.match(/\bset[A-Z]\w*/g) || []).concat([

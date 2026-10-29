@@ -143,8 +143,13 @@ const root = path.join(__dirname, "..");
 
 const bodies = actionNames.map((name) => {
   const raw = actionSource(name);
-  const body = raw.replace(new RegExp(`^    const ${name} = `), "");
-  return `  const ${name} = ${body.trim()};`;
+  const body = raw
+    .replace(new RegExp(`^    const ${name} = `), "")
+    .replace(new RegExp(`^  const ${name} = `), "");
+  let trimmed = body.trim().replace(/^const \w+ = /, "");
+  trimmed = trimmed.replace(/;;+\s*$/, ";");
+  if (!trimmed.endsWith(";")) trimmed += ";";
+  return `  const ${name} = ${trimmed}`;
 });
 
 const header = `/**
