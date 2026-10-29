@@ -6,6 +6,7 @@ const path = require("node:path");
 const {
   html,
   sharedSource,
+  storySource,
   actionSource,
   appSource,
 } = require("./helpers/game.cjs");
@@ -44,8 +45,31 @@ test("Bootstrap selects production React and gates dev tools on public hosts", (
 test("Shared inline rules and onboarding precede the app without extra requests", () => {
   const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
+  const storyIdx = html.indexOf('<script id="gutterbones-story">');
+  const routesIdx = html.indexOf('<script id="gutterbones-routes">');
+  const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
   const appIdx = html.indexOf('<script type="text/babel">');
-  assert.ok(rulesIdx >= 0 && onboardingIdx > rulesIdx && appIdx > onboardingIdx);
+  assert.ok(
+    rulesIdx >= 0 &&
+      onboardingIdx > rulesIdx &&
+      storyIdx > onboardingIdx &&
+      routesIdx > storyIdx &&
+      gambleIdx > routesIdx &&
+      appIdx > gambleIdx,
+  );
+  assert.match(appSource, /GutterbonesRoutes\.projectNextRound/);
+  assert.match(appSource, /GutterbonesGamble\.resolveFlip/);
+  assert.match(appSource, /RouteChoiceCard/);
+  assert.match(appSource, /StoryPanelOverlay/);
+  assert.match(appSource, /playStoryBeat/);
+  for (const panel of [
+    "assets/panels/witness/prologue.png",
+    "assets/panels/witness/r2.png",
+    "assets/panels/witness/bust.png",
+    "assets/panels/witness/victory.png",
+  ]) {
+    assert.ok(fs.existsSync(path.join(__dirname, "..", panel)), panel);
+  }
   assert.match(appSource, /GutterbonesOnboarding/);
   assert.match(appSource, /CategoryUnlockFooter/);
   const stepMatches = appSource.match(/ONBOARDING_STEPS\s*=\s*\[/);
@@ -60,6 +84,41 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   );
   assert.doesNotMatch(sharedSource, /localStorage|setTimeout|document\./);
 });
+test("Phase 5 roster portraits wired and on disk", () => {
+  for (const asset of [
+    "assets/personas/card-counter.png",
+    "assets/bosses/bouncer.png",
+    "assets/bosses/crooked-cop.png",
+  ]) {
+    assert.ok(fs.existsSync(path.join(__dirname, "..", asset)), asset);
+  }
+  assert.match(appSource, /card-counter\.png/);
+  assert.match(appSource, /bosses\/bouncer\.png/);
+  assert.match(appSource, /crooked-cop\.png/);
+});
+
+test("Phase 6d input UX hooks present", () => {
+  assert.match(appSource, /rollLockRef/);
+  assert.match(appSource, /pendingPayoutRef/);
+  assert.match(appSource, /seenHelpDossier/);
+  assert.match(appSource, /CATEGORY_RULE_TOOLTIPS/);
+  assert.match(sharedSource, /reason: invalidReason/);
+});
+
+test("Phase 6f shop loan and audio settings present", () => {
+  assert.match(appSource, /LOAN appears when cash is short/);
+  assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);
+  assert.match(appSource, /Round \$\{round\} quota cleared/);
+});
+
+test("Phase 6c safehouse and favicon polish", () => {
+  assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
+  assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
+  assert.match(appSource, /displayNameForUnlockId/);
+  assert.match(storySource, /PANEL_ART_AVAILABLE/);
+  assert.match(appSource, /TODO\(art\): card-counter\.png/);
+});
+
 test("Referenced local artwork exists", () => {
   const refs = [
     ...html.matchAll(/['"`](assets\/[\w/.-]+\.(?:png|jpg|webp|svg))['"`]/g),

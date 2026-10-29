@@ -18,6 +18,9 @@ function block(open) {
 
 const sharedSource = block('<script id="gutterbones-rules">');
 const onboardingSource = block('<script id="gutterbones-onboarding">');
+const storySource = block('<script id="gutterbones-story">');
+const routesSource = block('<script id="gutterbones-routes">');
+const gambleSource = block('<script id="gutterbones-gamble">');
 const appSource = block('<script type="text/babel">');
 const definitionsStart = appSource.indexOf("    const PERSONAS =");
 const definitionsEnd = appSource.indexOf("    const CashRain =");
@@ -124,6 +127,9 @@ function createGame(snapshot = {}, options = {}) {
     },
     scheduleInterval: () => 1,
     clearScheduledInterval: noOp,
+    rollLockRef: { current: false },
+    lastRollStartedAtRef: { current: 0 },
+    pendingPayoutRef: { current: null },
   };
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);
@@ -140,6 +146,12 @@ function createGame(snapshot = {}, options = {}) {
     sharedSource +
       "\n" +
       onboardingSource +
+      "\n" +
+      storySource +
+      "\n" +
+      routesSource +
+      "\n" +
+      gambleSource +
       "\n" +
       definitions +
       "\n" +
@@ -168,6 +180,9 @@ module.exports = {
   html,
   sharedSource,
   onboardingSource,
+  storySource,
+  routesSource,
+  gambleSource,
   appSource,
   actionSource,
 };

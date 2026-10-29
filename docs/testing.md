@@ -51,8 +51,14 @@ Before publishing, check:
 - Start Street Rat; walk through all six onboarding steps (quota, pill, boss); roll, keep a bone, pop a pill without hovering (PILL badge visible on each die), and score.
 - On a fresh profile, confirm locked payout rows show run-count unlock copy in the payout footer; after two completed runs, FOK unlocks.
 - Open Help → QUOTA & PLAYS and HEAT BOSSES; Case Files → ARCHIVE → payout progression blurb.
+- Start a new run: random story arc prologue (caption + image when PNG exists) before round 1; skip with Space; fixer names arc; Case Files → ARCHIVE lists all five arcs; after shop path pick, round-2 beat; bust/victory show arc ending panels before rap sheet / victory ticket.
+- Case Files / lineup: Counter shows `card-counter.png` when unlocked; dev panel force **BOUNCER** or **CROOKED_COP** — boss intro and banner show portrait (not color block fallback).
 - Compare displayed preview and awarded heat; review the payout explanation.
 - Exit/reload and resume a normal save. Exercise CARVING and GAMBLE synthetic fixtures separately; wager/gamble resume defects are currently expected. Generate injectable saves with `npm run dump:save -- [normal|wager|gamble|carving|bust|victory]` (see `docs/phase-b-signoff.md`).
+- **Shop routes:** each NEXT JOB card shows next quota number, modifier bullets, and boss thumbnail on turf war; Run Intel lists three-route compare.
+- **Gamble (round 3+, $5+ cash):** safe cut; three flip tiers (Soft / Fair / Hard) show stake, win %, ± payout; flow streak shows odds bonus.
+- **Side bets:** stake buttons show win payout; after rolling, best preview heat vs threshold.
+- Open Help → **ROUTES & GAMBLE** section.
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 

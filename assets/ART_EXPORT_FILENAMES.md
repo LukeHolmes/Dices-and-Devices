@@ -22,7 +22,7 @@ Use **these exact filenames** (lowercase, hyphens) so you can **overwrite** plac
 | `street-rat.png` | The Street Rat |
 | `hustler.png` | The Hustler |
 | `enforcer.png` | The Enforcer |
-| `card-counter.png` | The Counter *(file optional today — not yet wired in `PERSONAS`; ask to hook `portraitSrc` after you add it)* |
+| `card-counter.png` | The Counter |
 
 Recommended: **~720×480** or similar wide mug, PNG.
 
@@ -37,10 +37,6 @@ Recommended: **~720×480** or similar wide mug, PNG.
 | `junkie.png` | The Junkie |
 | `the-raid.png` | The Raid (final) |
 
-**Optional** (no `portraitSrc` in code yet — add when you have art; then we wire names in `BOSSES`):
-
-| Suggested filename | Boss |
-|--------------------|------|
 | `bouncer.png` | The Bouncer |
 | `crooked-cop.png` | Crooked Cop |
 

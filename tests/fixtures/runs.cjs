@@ -22,12 +22,13 @@ const dice = (values) => values.map((value, slot) => bone(value, slot));
 function run(overrides = {}) {
   return {
     version: 2,
+    arcId: "witness",
     phase: "PLAY",
     personaId: "STREET_RAT",
     personaIdx: 0,
     round: 1,
     score: 0,
-    target: 130,
+    target: 85,
     hands: 4,
     discards: 3,
     gold: 20,
@@ -112,7 +113,7 @@ const bustLastHand = () =>
     hands: 1,
     discards: 0,
     score: 0,
-    target: 130,
+    target: 85,
     hasRolled: true,
     dice: dice([1, 2, 3, 4, 5]),
   });
@@ -123,7 +124,7 @@ const victoryLastHand = () =>
     hands: 1,
     discards: 0,
     score: 125,
-    target: 130,
+    target: 85,
     hasRolled: true,
     dice: dice([6, 6, 6, 6, 6]),
     runStats: {
