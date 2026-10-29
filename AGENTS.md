@@ -34,3 +34,4 @@ Run `npm run check` using Node 22+; no install is needed. Pure rules live in the
 - **Boss intro:** Shared `assets/scenes/boss-turf-pressure.png` as `.boss-intro-backdrop` under the turf-war card (plus dim layer and blinds).
 - **Story panels (Phase 4):** Arc E (Witness) uses `assets/panels/witness/*.png` with captions from `gutterbones-story`; missing images skip silently. Run saves include `arcId` (default `witness`).
 - **Audio:** Procedural Web Audio lives in `assets/audio/gutterbones-audio.js` (`window.GutterbonesAudio`). Settings persist under `gutterbones1977:settings:v1`.
+- **Synergy chains:** Scoring compounding is gated by `SYNERGY_TUNING.enabled` in `index.html` (default off). Implementation phases: [`docs/plans/compounding-synergies-phased-implementation.md`](docs/plans/compounding-synergies-phased-implementation.md).

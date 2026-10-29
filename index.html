@@ -626,9 +626,13 @@ const GutterbonesRules = (() => {
         return { resolved, destroyed };
     };
 
+    const emptySynergyResult = () => ({ synergyEvents: [], chainDepth: 0, retriggerCount: 0 });
+
     const calculateScore = (catId, currentDice, context) => {
         const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus } = context;
+            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
+            synergyTuning = { enabled: false } } = context;
+        const synergyEnabled = Boolean(synergyTuning?.enabled);
         const { resolved, destroyed } = resolveDice(currentDice);
         const standardVals = resolved.filter((d, i) => !destroyed.has(i) && typeof d.value === 'number' && d.value > 0 && d.faceId !== 'GHOST_FACE').map(d => d.value);
         const wilds = resolved.filter((d, i) => !destroyed.has(i) && d.value === 'W').length;
@@ -689,7 +693,7 @@ const GutterbonesRules = (() => {
                 }
             })();
             pushStep('system', 'INVALID PAYOUT', invalidReason, 0);
-            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason };
+            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason, ...emptySynergyResult() };
         }
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
@@ -784,7 +788,9 @@ const GutterbonesRules = (() => {
         pushStep('multiplier', 'FLOW STREAK', `x${flowMult.toFixed(2)} flow multiplier`, `x${flowMult.toFixed(2)}`);
         const total = Math.floor(chips * mult * flowMult);
         pushStep('system', 'FINAL FORMULA', `${chips} x ${mult.toFixed(2)} x ${flowMult.toFixed(2)}`, total);
-        return { valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName };
+        // Phase 1+: resolveSynergyChains runs here when synergyEnabled (see implementation plan).
+        void synergyEnabled;
+        return { valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName, ...emptySynergyResult() };
     };
 
     const normalizeSavedRun = (raw, context) => {
@@ -1802,6 +1808,12 @@ const GutterbonesGamble = (() => {
     const FLOW_TUNING = {
         streakStep: 0.06,
         maxStreak: 6
+    };
+
+    /** Compounding synergy chains (Balatro-style). Off until Phase 1+ is verified; see docs/plans/compounding-synergies-phased-implementation.md */
+    const SYNERGY_TUNING = {
+        enabled: false,
+        maxChainPasses: 8
     };
 
     const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
@@ -3872,7 +3884,8 @@ const GutterbonesGamble = (() => {
 
         const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
             handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus
+            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
+            synergyTuning: SYNERGY_TUNING
         });
 
         const analyzeRunFailure = ({ score, target, debt, hands, history, attempts = 0, roundNumber = round, boss = activeBoss, flowValue = flowStreak }) => {
