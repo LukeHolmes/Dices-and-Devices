@@ -1027,6 +1027,24 @@ const GutterbonesRules = (() => {
         if (!normalized.currentRouteEffect || typeof normalized.currentRouteEffect !== 'object') normalized.currentRouteEffect = null;
         else if (!Array.isArray(normalized.currentRouteEffect.effects)) normalized.currentRouteEffect = { ...normalized.currentRouteEffect, effects: [] };
         if (typeof normalized.arcId !== 'string' || !normalized.arcId) normalized.arcId = 'witness';
+        const shopTags = ['balanced', 'hardware', 'danger', 'rare', 'chaos'];
+        if (!shopTags.includes(normalized.nextShopTag)) normalized.nextShopTag = null;
+        if (!shopTags.includes(normalized.activeShopTag)) normalized.activeShopTag = null;
+        if (!normalized.routeModifiers || typeof normalized.routeModifiers !== 'object' || Array.isArray(normalized.routeModifiers)) {
+            normalized.routeModifiers = {};
+        } else {
+            const rm = normalized.routeModifiers;
+            normalized.routeModifiers = {};
+            if (typeof rm.flowCapDelta === 'number' && !Number.isNaN(rm.flowCapDelta)) {
+                normalized.routeModifiers.flowCapDelta = rm.flowCapDelta;
+            }
+            if (typeof rm.shopDiscount === 'number' && !Number.isNaN(rm.shopDiscount)) {
+                normalized.routeModifiers.shopDiscount = Math.max(0, Math.min(0.5, rm.shopDiscount));
+            }
+            if (typeof rm.informantWeight === 'number' && !Number.isNaN(rm.informantWeight)) {
+                normalized.routeModifiers.informantWeight = rm.informantWeight;
+            }
+        }
         if (!normalized.runStats || typeof normalized.runStats !== 'object') {
             normalized.runStats = { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } };
         } else {
@@ -1336,6 +1354,42 @@ const GutterbonesRoutes = (() => {
         return adjusted;
     };
 
+    const SHOP_OFFER_TAGS = Object.freeze(['balanced', 'hardware', 'danger', 'rare', 'chaos']);
+
+    const pathPickEffects = (path) => {
+        const id = path?.id;
+        let nextShopTag = 'balanced';
+        const routeModifiers = {};
+        switch (id) {
+            case 'LOCAL':
+                nextShopTag = 'balanced';
+                break;
+            case 'HIDEOUT':
+                nextShopTag = 'balanced';
+                routeModifiers.flowCapDelta = -1;
+                break;
+            case 'PAWN':
+                nextShopTag = 'hardware';
+                routeModifiers.shopDiscount = 0.15;
+                break;
+            case 'SMUGGLE':
+                nextShopTag = 'chaos';
+                break;
+            case 'VIP':
+                nextShopTag = 'rare';
+                routeModifiers.informantWeight = 1;
+                break;
+            default:
+                nextShopTag = 'balanced';
+                break;
+        }
+        return { nextShopTag, routeModifiers };
+    };
+
+    const effectiveFlowCap = (baseMaxStreak = 6, routeModifiers = {}) => (
+        Math.max(0, Math.floor(Number(baseMaxStreak) || 0) + (Number(routeModifiers?.flowCapDelta) || 0))
+    );
+
     const describePathModifiers = (path) => {
         if (!path) return [];
         const notes = [];
@@ -1345,6 +1399,19 @@ const GutterbonesRoutes = (() => {
         if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play next round`);
         if (path.discardDelta) notes.push(`${path.discardDelta > 0 ? '+' : ''}${path.discardDelta} pill next round`);
         if (path.grantRandomConsumable) notes.push('Random one-shot on pick');
+        const pick = pathPickEffects(path);
+        if (pick.nextShopTag && pick.nextShopTag !== 'balanced') {
+            notes.push(`Next shop stock skew: ${pick.nextShopTag.toUpperCase()}`);
+        }
+        if (pick.routeModifiers.flowCapDelta) {
+            notes.push(`FLOW streak cap ${pick.routeModifiers.flowCapDelta > 0 ? '+' : ''}${pick.routeModifiers.flowCapDelta} next round`);
+        }
+        if (pick.routeModifiers.shopDiscount) {
+            notes.push(`Next shop prices -${Math.round(pick.routeModifiers.shopDiscount * 100)}%`);
+        }
+        if (pick.routeModifiers.informantWeight) {
+            notes.push('Boss turf: higher Informant chance on next turf war');
+        }
         return notes;
     };
 
@@ -1450,9 +1517,12 @@ const GutterbonesRoutes = (() => {
     return Object.freeze({
         BOSS_TUNING,
         ROUND_CURVE_TUNING,
+        SHOP_OFFER_TAGS,
         projectNextRound,
         applyBossAdjustedTarget,
         describePathModifiers,
+        pathPickEffects,
+        effectiveFlowCap,
         sideBetPayout,
         wagerThresholdForRound
     });
@@ -1727,6 +1797,19 @@ const GutterbonesGamble = (() => {
         return ITEM_ARCHETYPE_TAGS[itemId] ? [...ITEM_ARCHETYPE_TAGS[itemId]] : [];
     };
 
+    const SYNERGY_HINTS = {
+        BLOOD_6: 'Adjacency: blood ripple with blood or destructive neighbors.',
+        SHIV_FACE: 'Destructive — pairs with Blood 6 for ripple mult; destroys right slot on roll.',
+        ECHO_FACE: 'Adjacency: ghost echo when next to Ghost.',
+        GHOST_FACE: 'Ethereal — ghost echo mult with Echo neighbors; lowers scoring bones.',
+        GOLD_FACE: 'Adjacency: wire feed bonus with Wirebag neighbors.',
+        WIREBAG_FACE: 'Parasite cash — wire feed with Gold neighbors.',
+        MULT_FACE: 'Modifier mult — engine link with Hardware: Engine.',
+        ENGINE: 'Hardware: engine link adds mult per modifier face in hand.',
+        CROWBAR: 'Hardware: scales mult with blood/destructive faces on the lane.',
+        BOOKENDS: 'Matching carved ends retrigger face modifiers (bookends chain).'
+    };
+
     const synergyLabelForItem = (itemId, primaryBuild) => {
         const tags = getArchetypeTagsForItemId(itemId);
         if (!tags.length || primaryBuild === BUILD_IDS.UNKNOWN) return null;
@@ -1738,6 +1821,30 @@ const GutterbonesGamble = (() => {
         if (!hit) return null;
         const ui = BUILD_UI[hit];
         return ui ? `Synergy: ${ui.label}` : null;
+    };
+
+    const synergyHintForItem = (itemId) => SYNERGY_HINTS[itemId] || null;
+
+    const carveAdjacencyProfile = (faceId, slotIndex) => {
+        if (faceId == null || slotIndex == null) return null;
+        const slot = Math.max(0, Math.min(4, slotIndex));
+        const neighbors = [slot - 1, slot + 1].filter((i) => i >= 0 && i <= 4);
+        if (faceId === 'BLOOD_6' || faceId === 'SHIV_FACE') {
+            return { kind: 'blood', slot, neighbors, title: 'Blood ripple lane' };
+        }
+        if (faceId === 'ECHO_FACE' || faceId === 'GHOST_FACE') {
+            return { kind: 'echo', slot, neighbors, title: 'Ghost / Echo lane' };
+        }
+        if (faceId === 'GOLD_FACE' || faceId === 'WIREBAG_FACE') {
+            return { kind: 'wire', slot, neighbors, title: 'Wire feed lane' };
+        }
+        return null;
+    };
+
+    const CARVE_ADJacency_COPY = {
+        blood: 'Neighbors can trigger blood ripple (+mult).',
+        echo: 'Adjacent Ghost + Echo faces trigger ghost echo.',
+        wire: 'Gold and Wirebag neighbors trigger wire feed (+cash).'
     };
 
     const itemFitsCurrentBuild = (itemId, primaryBuild) => {
@@ -2136,7 +2243,9 @@ const GutterbonesGamble = (() => {
         return links;
     };
 
-    const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
+    const getFlowMultiplier = (streak = 0, cap = FLOW_TUNING.maxStreak) => (
+        1 + (Math.max(0, Math.min(cap, streak)) * FLOW_TUNING.streakStep)
+    );
 
     const WAGER_TUNING = {
         baseThreshold: 110,
@@ -2229,13 +2338,8 @@ const GutterbonesGamble = (() => {
 
     const describeRouteEffects = (path) => {
         if (!path) return [];
-        const notes = [];
-        if (path.mod && path.mod !== 1) notes.push(`Quota x${path.mod.toFixed(2)}`);
-        if (path.reward) notes.push(`+$${path.reward} cash`);
-        if (path.fillStash) notes.push('Stash to 100');
-        if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play`);
-        if (path.discardDelta) notes.push(`${path.discardDelta > 0 ? '+' : ''}${path.discardDelta} pill`);
-        if (path.grantRandomConsumable) notes.push('Random one-shot');
+        const notes = GutterbonesRoutes.describePathModifiers(path);
+        if (path.boss) notes.push(`Boss turf: ${path.boss.name}`);
         return notes;
     };
 
@@ -3149,11 +3253,16 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const RunIntelPanel = ({ flowMultiplier, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [], inline = false }) => (
+    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [], inline = false }) => (
         <div className={`${inline ? 'relative w-full' : 'absolute top-16 right-4 z-[80] w-[min(88vw,21rem)]'} readable-panel rounded-xl p-4 text-xs font-mono`}>
             <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
             <div className="space-y-2 text-gray-100">
-                <div className="flex justify-between gap-3"><span className="text-gray-400">FLOW</span><span className={flowMultiplier > 1 ? 'text-[#0df] font-bold' : 'text-gray-300'}>x{flowMultiplier.toFixed(2)}</span></div>
+                <div className="flex justify-between gap-3">
+                    <span className="text-gray-400">FLOW</span>
+                    <span className={flowMultiplier > 1 ? 'text-[#0df] font-bold' : 'text-gray-300'}>
+                        x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
+                    </span>
+                </div>
                 <div className="flex justify-between gap-3"><span className="text-gray-400">WAGER</span><span className={activeWager ? 'text-emerald-300 font-bold' : 'text-gray-300'}>{activeWager ? `$${activeWager.stake} @ ${activeWager.threshold}+` : 'NONE'}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-gray-400">CONTRACT</span><span className={insaneContract ? 'text-[#ff9fcf] font-bold' : 'text-gray-300'}>{insaneContract ? 'INSANE' : 'STANDARD'}</span></div>
             </div>
@@ -3540,6 +3649,9 @@ const GutterbonesGamble = (() => {
         const [shopItems, setShopItems] = useState([]);
         const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
+        const [nextShopTag, setNextShopTag] = useState(null);
+        const [activeShopTag, setActiveShopTag] = useState(null);
+        const [routeModifiers, setRouteModifiers] = useState({});
         const [currentRouteEffect, setCurrentRouteEffect] = useState(null);
         const [activeBoss, setActiveBoss] = useState(null);
         const [bossIntro, setBossIntro] = useState(null);
@@ -3618,6 +3730,8 @@ const GutterbonesGamble = (() => {
         const pendingUnlockMessageRef = useRef(null);
         const scoreBreakdownTimeoutRef = useRef(null);
         const scoreResolutionTimeoutRef = useRef(null);
+        const nextShopTagRef = useRef(null);
+        const routeModifiersRef = useRef({});
 
         const dismissScoreOverlays = () => {
             if (scoreBreakdownTimeoutRef.current != null) {
@@ -3688,7 +3802,8 @@ const GutterbonesGamble = (() => {
             : '';
         const inRunPhase = RUN_PHASES.includes(phase);
         const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
-        const flowMultiplier = getFlowMultiplier(flowStreak);
+        const flowStreakCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
+        const flowMultiplier = getFlowMultiplier(flowStreak, flowStreakCap);
         const wagerThreshold = GutterbonesRoutes.wagerThresholdForRound(round, WAGER_TUNING);
         const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
         const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
@@ -3882,6 +3997,9 @@ const GutterbonesGamble = (() => {
             gambleStake,
             activeWager,
             currentRouteEffect,
+            nextShopTag,
+            activeShopTag,
+            routeModifiers,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
             activeBossId: activeBoss?.id || null,
             selectedItem,
@@ -3927,6 +4045,11 @@ const GutterbonesGamble = (() => {
             setGambleStake(saved.gambleStake || 0);
             setActiveWager(saved.activeWager || null);
             setCurrentRouteEffect(saved.currentRouteEffect || null);
+            nextShopTagRef.current = saved.nextShopTag || null;
+            routeModifiersRef.current = saved.routeModifiers || {};
+            setNextShopTag(saved.nextShopTag || null);
+            setActiveShopTag(saved.activeShopTag || null);
+            setRouteModifiers(saved.routeModifiers || {});
             setPaths((saved.paths || []).map(hydratePath));
             setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
             setBossIntro(null);
@@ -4153,7 +4276,7 @@ const GutterbonesGamble = (() => {
         useEffect(() => {
             if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, nextShopTag, activeShopTag, routeModifiers, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
         const startRun = () => {
             const p = PERSONAS[personaIdx];
@@ -4189,6 +4312,11 @@ const GutterbonesGamble = (() => {
             setHandLevels({});
             setFlowStreak(0);
             setShopRefreshes(0);
+            nextShopTagRef.current = null;
+            routeModifiersRef.current = {};
+            setNextShopTag(null);
+            setActiveShopTag(null);
+            setRouteModifiers({});
             setCurrentRouteEffect(null);
             setActiveBoss(null);
             setBossIntro(null);
@@ -4224,11 +4352,16 @@ const GutterbonesGamble = (() => {
             playStoryBeat(prologue, enterPlay);
         };
 
-        const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
-            handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
-            synergyTuning: SYNERGY_TUNING
-        });
+        const calculateScore = (catId, currentDice) => {
+            const flowCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
+            return GutterbonesRules.calculateScore(catId, currentDice, {
+                handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
+                CATEGORIES, HAND_MASTERY_TUNING,
+                getFlowMultiplier: (streak) => getFlowMultiplier(streak, flowCap),
+                getHandMasteryBonus,
+                synergyTuning: SYNERGY_TUNING
+            });
+        };
 
         const analyzeRunFailure = ({ score, target, debt, hands, history, attempts = 0, roundNumber = round, boss = activeBoss, flowValue = flowStreak }) => {
             const shortage = Math.max(0, target - score);
@@ -4739,11 +4872,37 @@ const GutterbonesGamble = (() => {
         };
 
         const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
+            const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
+            setActiveShopTag(offerTag);
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES);
             const consumableOfferChance = round <= 3 ? 0.65 : round <= 6 ? 0.45 : 0.3;
             const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
+            const buildSnap = analyzeBuild({ inventory, dice, history, flowStreak });
+            const primaryBuild = buildSnap.primaryBuild;
+            const isHardwareOffer = (item) => !item.type && !!item.name && !!DEVISES[item.id];
+            const isFaceOffer = (item) => !!item.type && item.type !== 'consumable';
+            const shopTagWeightDelta = (item) => {
+                if (!offerTag || offerTag === 'balanced') return 0;
+                const tags = getArchetypeTagsForItemId(item.id);
+                switch (offerTag) {
+                    case 'hardware':
+                        return isHardwareOffer(item) ? 4 : (isFaceOffer(item) ? -1 : 0);
+                    case 'danger':
+                        return item.rarity === 'danger' ? 4 : (item.rarity === 'common' ? -1 : 0);
+                    case 'rare':
+                        return item.rarity === 'rare' ? 3 : 0;
+                    case 'chaos':
+                        return tags.includes(BUILD_IDS.CHAOS) ? 4 : 0;
+                    default:
+                        return 0;
+                }
+            };
+            const buildFitWeight = (item) => {
+                if (primaryBuild === BUILD_IDS.UNKNOWN) return 0;
+                return itemFitsCurrentBuild(item.id, primaryBuild) ? 2.5 : 0;
+            };
             const baseWeight = (item) => {
                 let weight = 0;
                 if (item.cost <= gold) weight += 4;
@@ -4754,10 +4913,11 @@ const GutterbonesGamble = (() => {
                 if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
                 if (item.type === 'consumable') weight += round <= 4 ? 1 : 0;
                 if (!item.type) weight += 1;
+                weight += shopTagWeightDelta(item);
                 return weight;
             };
-            const weightedSort = (items) => items
-                .map(item => ({ item, weight: baseWeight(item) + (Math.random() * 0.35) }))
+            const weightedSort = (items, extraWeight = () => 0) => items
+                .map(item => ({ item, weight: baseWeight(item) + extraWeight(item) + (Math.random() * 0.35) }))
                 .sort((a, b) => b.weight - a.weight)
                 .map(entry => entry.item);
 
@@ -4765,9 +4925,18 @@ const GutterbonesGamble = (() => {
             const hardwarePool = weightedSort(hardware);
             const consumablePool = weightedSort(consumablePoolSeed);
             const picks = [];
-            if (facePool.length) picks.push(facePool.shift());
-            if (hardwarePool.length) picks.push(hardwarePool.shift());
-            if (consumablePool.length && picks.length < 4 && Math.random() < consumableOfferChance) picks.push(consumablePool.shift());
+            const pushUnique = (item) => {
+                if (!item || picks.some((p) => p.id === item.id)) return;
+                picks.push(item);
+            };
+            const buildPool = weightedSort(
+                [...faces, ...hardware, ...consumablePoolSeed].filter((item) => itemFitsCurrentBuild(item.id, primaryBuild)),
+                buildFitWeight
+            );
+            if (buildPool.length && primaryBuild !== BUILD_IDS.UNKNOWN) pushUnique(buildPool[0]);
+            if (facePool.length) pushUnique(facePool.shift());
+            if (hardwarePool.length) pushUnique(hardwarePool.shift());
+            if (consumablePool.length && picks.length < 4 && Math.random() < consumableOfferChance) pushUnique(consumablePool.shift());
 
             const remainder = weightedSort([...facePool, ...hardwarePool, ...consumablePool]);
             while (picks.length < 4 && remainder.length) {
@@ -4814,7 +4983,16 @@ const GutterbonesGamble = (() => {
             } else {
                 const next = [...PATHS];
                 if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
-                    const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
+                    const bossPool = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT];
+                    let b = bossPool[Math.floor(Math.random() * bossPool.length)];
+                    if (routeModifiers.informantWeight && Math.random() < 0.45) {
+                        b = BOSSES.INFORMANT;
+                        setRouteModifiers((prev) => {
+                            const nextMods = { ...prev };
+                            delete nextMods.informantWeight;
+                            return nextMods;
+                        });
+                    }
                     const bossIdx = Math.max(0, next.length - 1);
                     next[bossIdx] = { ...next[bossIdx], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
@@ -4854,16 +5032,23 @@ const GutterbonesGamble = (() => {
             AudioSystem.playTone(420, 'triangle', 0.1);
         };
 
+        const shopListPrice = (item) => {
+            const discount = routeModifiers.shopDiscount || 0;
+            if (!discount) return item.cost;
+            return Math.max(1, Math.floor(item.cost * (1 - discount)));
+        };
+
         const handlePurchase = (item) => {
             if (soldItems.includes(item.id)) return;
+            const price = shopListPrice(item);
             setSoldItems(prev => [...prev, item.id]);
-            setFixerLine(gold >= item.cost ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
+            setFixerLine(gold >= price ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
             spawnPaperStamp('SOLD');
             scheduleTimeout(() => {
                 setGold(g => {
-                    if (g >= item.cost) return g - item.cost;
-                    const shortage = item.cost - g;
+                    if (g >= price) return g - price;
+                    const shortage = price - g;
                     registerDebtSpike(shortage, 'shop loan');
                     return 0;
                 });
@@ -4932,6 +5117,11 @@ const GutterbonesGamble = (() => {
 
         const handleAdvance = (path) => {
             const projection = projectPath(path);
+            const pickFx = GutterbonesRoutes.pathPickEffects(path);
+            nextShopTagRef.current = pickFx.nextShopTag || 'balanced';
+            routeModifiersRef.current = pickFx.routeModifiers || {};
+            setNextShopTag(nextShopTagRef.current);
+            setRouteModifiers(routeModifiersRef.current);
             const nextRound = projection.nextRound;
             const storyPanel = GutterbonesStory?.getRoundTransitionPanel?.(arcId, nextRound);
             setRound(r => r + 1);
@@ -5143,6 +5333,7 @@ const GutterbonesGamble = (() => {
                         <BuildIndicator analysis={buildAnalysis} />
                         <RunIntelPanel
                             flowMultiplier={flowMultiplier}
+                            flowStreakCap={flowStreakCap}
                             activeWager={activeWager}
                             insaneContract={insaneContract}
                             routeEffect={currentRouteEffect}
@@ -5319,7 +5510,9 @@ const GutterbonesGamble = (() => {
                                 <div className="text-center">
                                     <div className="text-xs opacity-50">STREET HEAT</div>
                                     <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
-                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
+                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
+                                        FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
+                                    </div>
                                     <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget} · Pills {discards}</div>
                                 </div>
                             <div className="flex gap-3 md:gap-6 text-right">
@@ -5517,6 +5710,7 @@ const GutterbonesGamble = (() => {
                                     <BuildIndicator analysis={buildAnalysis} inline />
                                     <RunIntelPanel
                                         flowMultiplier={flowMultiplier}
+                                        flowStreakCap={flowStreakCap}
                                         activeWager={activeWager}
                                         insaneContract={insaneContract}
                                         routeEffect={currentRouteEffect}
@@ -5654,7 +5848,13 @@ const GutterbonesGamble = (() => {
                         <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0 relative z-10">
                             <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
-                                <p className="text-[10px] font-mono text-amber-200/85 mb-4 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
+                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
+                                {(activeShopTag && activeShopTag !== 'balanced') && (
+                                    <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20">
+                                        Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
+                                        {routeModifiers.shopDiscount ? ` · prices -${Math.round(routeModifiers.shopDiscount * 100)}%` : ''}
+                                    </div>
+                                )}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;
@@ -5662,12 +5862,15 @@ const GutterbonesGamble = (() => {
                                     const primaryBuild = buildAnalysis.primaryBuild;
                                     const fits = itemFitsCurrentBuild(item.id, primaryBuild);
                                     const syn = synergyLabelForItem(item.id, primaryBuild);
+                                    const hint = synergyHintForItem(item.id);
+                                    const listPrice = shopListPrice(item);
+                                    const discounted = listPrice < item.cost;
                                     return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
-                                        <div className="price-tag">${item.cost}</div>
+                                        <div className="price-tag">{discounted ? <><span className="line-through opacity-50 text-[10px]">${item.cost}</span> ${listPrice}</> : `$${listPrice}`}</div>
                                         {fits && !sold && <span className="absolute top-2 right-12 z-10 text-[8px] font-mono tracking-[0.2em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60">GOOD FIT</span>}
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-sm font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-sm font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{syn && <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
-                                        <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-sm font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-sm font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{hint && <div className="text-[9px] font-mono text-fuchsia-200/85 mt-1 leading-snug">{hint}</div>}{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
+                                        <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= listPrice ? 'BUY' : 'LOAN'}</span><span className="font-mono">${listPrice}</span></button>
                                     </div>;
                                 })}</div>
                             </div>
@@ -5725,6 +5928,29 @@ const GutterbonesGamble = (() => {
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
+                                {selectedItem?.id === 'SHIV_FACE' && carvingDie === 4 && (
+                                    <div className="text-red-700 font-mono text-xs mt-4 border-2 border-red-600 bg-red-100 p-2">WARNING: Slot 5 is the lane edge — Shiv destroys the right neighbor on roll. Neighbors are scarce here.</div>
+                                )}
+                                {carvingDie !== null && selectedItem && (() => {
+                                    const profile = carveAdjacencyProfile(selectedItem.id, carvingDie);
+                                    if (!profile) return null;
+                                    return (
+                                        <div className="mt-4 border border-black/30 bg-black/5 p-3 font-mono text-[10px]">
+                                            <div className="font-bold uppercase tracking-wider mb-2">{profile.title}</div>
+                                            <div className="flex gap-1 mb-2">
+                                                {[0, 1, 2, 3, 4].map((slot) => {
+                                                    const active = slot === profile.slot || profile.neighbors.includes(slot);
+                                                    return (
+                                                        <div key={slot} className={`flex-1 text-center py-1 rounded border ${active ? 'border-[#0df] bg-cyan-900/20 text-cyan-900 font-bold' : 'border-gray-400 text-gray-500'}`}>
+                                                            {slot + 1}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className="text-gray-700 leading-snug">{CARVE_ADJacency_COPY[profile.kind]}</div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                             <div className="flex-1 bg-[#2b1414] border-[12px] border-[#111] rounded-2xl p-6 md:p-12 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black]">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">

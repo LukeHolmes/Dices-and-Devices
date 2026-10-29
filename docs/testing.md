@@ -62,6 +62,7 @@ Before publishing, check:
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.
 - **Synergy juice (chains enabled):** carve adjacent blood/shiv or ghost+echo; score and confirm breakdown reveals **CHAIN:** steps one at a time, link flash on the dice lane (if motion allowed), chain depth in preview, category stamps on Jackpot / Long Run / Full Ride. Breakdown stays up through the full stagger on deep chains (not only the default ~1.2s). Hover payout rows: contributing bones pick up a colored rim (Slop tints all scored slots; Treys/Sixes tint matching values only).
 - **Dev shortcut (localhost / `?dev=1`):** Ctrl+Shift+D → **LOAD SYNERGY DEMO LANE** on the play screen, then score **Slop** to exercise blood ripple + links without carving.
+- **Phase 3 shop/path:** finish a round, enter shop — confirm **Stock skew** banner when last route was Pawn/Hardware etc.; Pawn route shows discounted list prices next shop; Safehouse cut shows **FLOW · cap 5** in HUD when cap is reduced; carve adjacency strip when placing Blood/Echo/Gold faces; Shiv warning on bone 5.
 - With **prefers-reduced-motion**, confirm chains still score correctly but links/stagger are suppressed.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 

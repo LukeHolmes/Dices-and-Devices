@@ -124,6 +124,9 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /overlayTailMs/);
   assert.match(appSource, /applyDevSynergyDemoDice/);
   assert.match(appSource, /categoryPreviewSlotActive/);
+  assert.match(appSource, /pathPickEffects/);
+  assert.match(appSource, /SYNERGY_HINTS/);
+  assert.match(appSource, /carveAdjacencyProfile/);
   assert.match(appSource, /Side bet: this roll/);
   assert.match(appSource, /pendingUnlockMessageRef/);
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
