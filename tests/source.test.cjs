@@ -113,6 +113,14 @@ test("Phase 6d input UX hooks present", () => {
   assert.match(sharedSource, /reason: invalidReason/);
 });
 
+test("Live playtest polish hooks (Oct 2026)", () => {
+  assert.match(appSource, /openingStashGrant:\s*25/);
+  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1200/);
+  assert.match(appSource, /Side bet: this roll/);
+  assert.match(appSource, /pendingUnlockMessageRef/);
+  assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
+});
+
 test("Phase 6f shop loan and audio settings present", () => {
   assert.match(appSource, /LOAN appears when cash is short/);
   assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);

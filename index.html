@@ -1747,9 +1747,13 @@ const GutterbonesGamble = (() => {
     const EARLY_GAME_TUNING = {
         openingTarget: 85,
         counterOpeningMultiplier: 1.15,
+        /** One free SNIFF (25% stash program) at run start — rescues near-miss R1 without lowering quota. */
+        openingStashGrant: 25,
         debtPenaltyStartsRound: 4,
         bossPathStartsRound: 4
     };
+
+    const SCORE_OVERLAY_LIFETIME_MS = 1200;
 
     const ROUND_CURVE_TUNING = {
         earlyMaxRound: 3,
@@ -3259,6 +3263,22 @@ const GutterbonesGamble = (() => {
         const rollLockRef = useRef(false);
         const lastRollStartedAtRef = useRef(0);
         const pendingPayoutRef = useRef(null);
+        const pendingUnlockMessageRef = useRef(null);
+        const scoreBreakdownTimeoutRef = useRef(null);
+        const scoreResolutionTimeoutRef = useRef(null);
+
+        const dismissScoreOverlays = () => {
+            if (scoreBreakdownTimeoutRef.current != null) {
+                clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
+                scoreBreakdownTimeoutRef.current = null;
+            }
+            if (scoreResolutionTimeoutRef.current != null) {
+                clearScheduledTimeout(scoreResolutionTimeoutRef.current);
+                scoreResolutionTimeoutRef.current = null;
+            }
+            setScoreBreakdown(null);
+            setScoreResolution(null);
+        };
 
         const scheduleTimeout = (fn, ms) => {
             const id = window.setTimeout(() => {
@@ -3453,14 +3473,20 @@ const GutterbonesGamble = (() => {
             const curr = meta.totalRuns;
             prevTotalRunsRef.current = curr;
             if (prev === curr) return;
+            let msg = null;
             if (prev < ONBOARDING_THRESHOLDS.BASIC_COMBOS && curr >= ONBOARDING_THRESHOLDS.BASIC_COMBOS) {
-                setUnlockNotification('Quad (FOK) unlocked on the payout sheet — 2 runs survived.');
+                msg = 'Quad (FOK) unlocked on the payout sheet — 2 runs survived.';
             } else if (prev < ONBOARDING_THRESHOLDS.RARE_FACES && curr >= ONBOARDING_THRESHOLDS.RARE_FACES) {
-                setUnlockNotification('Rare contraband now appears in Back Alley shops (3 runs).');
+                msg = 'Rare contraband now appears in Back Alley shops (3 runs).';
             } else if (prev < ONBOARDING_THRESHOLDS.ALL_CATEGORIES && curr >= ONBOARDING_THRESHOLDS.ALL_CATEGORIES) {
-                setUnlockNotification('Full payout sheet unlocked — Short Run, Long Run, Jackpot (5 runs).');
+                msg = 'Full payout sheet unlocked — Short Run, Long Run, Jackpot (5 runs).';
             }
-        }, [meta.totalRuns]);
+            if (!msg) return;
+            pendingUnlockMessageRef.current = msg;
+            if (phase === 'RAP_SHEET' || (phase === 'PLAY' && bustActive)) return;
+            setUnlockNotification(msg);
+            pendingUnlockMessageRef.current = null;
+        }, [meta.totalRuns, phase, bustActive]);
 
         const playStoryBeat = (panel, onDone) => {
             if (!panel || !panel.src) {
@@ -3763,6 +3789,14 @@ const GutterbonesGamble = (() => {
         }, [phase, reducedMotion]);
 
         useEffect(() => {
+            if (phase !== 'RAP_SHEET' || !showIncarceratedStamp || !pendingUnlockMessageRef.current) return;
+            const msg = pendingUnlockMessageRef.current;
+            pendingUnlockMessageRef.current = null;
+            const toastId = scheduleTimeout(() => setUnlockNotification(msg), 350);
+            return () => clearScheduledTimeout(toastId);
+        }, [phase, showIncarceratedStamp]);
+
+        useEffect(() => {
             if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
         }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
@@ -3796,7 +3830,7 @@ const GutterbonesGamble = (() => {
             setDiscards(round1Pills);
             setGold(p.cash);
             setDebt(0);
-            setStash(0);
+            setStash(EARLY_GAME_TUNING.openingStashGrant || 0);
             setUsedCats([]);
             setHandLevels({});
             setFlowStreak(0);
@@ -3806,8 +3840,7 @@ const GutterbonesGamble = (() => {
             setBossIntro(null);
             setBossKick(false);
             setCinematic(null);
-            setScoreResolution(null);
-            setScoreBreakdown(null);
+            dismissScoreOverlays();
             setLossExplanation(null);
             setGambleStake(0);
             setHasRolled(false);
@@ -4064,8 +4097,14 @@ const GutterbonesGamble = (() => {
                 total: result.total || 0,
                 explanationSteps: result.explanationSteps || []
             };
+            if (scoreBreakdownTimeoutRef.current != null) {
+                clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
+            }
             setScoreBreakdown(breakdownPayload);
-            scheduleTimeout(() => setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current)), reducedMotion ? 4200 : 5600);
+            scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
+                scoreBreakdownTimeoutRef.current = null;
+                setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current));
+            }, SCORE_OVERLAY_LIFETIME_MS);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
@@ -4083,8 +4122,14 @@ const GutterbonesGamble = (() => {
                         flowMult: result.flowMult || 1,
                         total: result.total
                     };
+                    if (scoreResolutionTimeoutRef.current != null) {
+                        clearScheduledTimeout(scoreResolutionTimeoutRef.current);
+                    }
                     setScoreResolution(resolutionPayload);
-                    scheduleTimeout(() => setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current)), reducedMotion ? 900 : 1100);
+                    scoreResolutionTimeoutRef.current = scheduleTimeout(() => {
+                        scoreResolutionTimeoutRef.current = null;
+                        setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current));
+                    }, SCORE_OVERLAY_LIFETIME_MS);
                 }
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
@@ -4172,13 +4217,13 @@ const GutterbonesGamble = (() => {
                 setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
                 setGambleStake(0);
                 setFixerLine('Quota missed. Keep your chin down.');
-                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: settlementCash });
                 setBustActive(true);
+                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: settlementCash });
                 triggerCameraKick('hard');
                 if (!reducedMotion) setCinematic('bust');
                 AudioSystem.bust();
                 const goRapSheet = () => {
-                    setScoreResolution(null);
+                    dismissScoreOverlays();
                     setPayoutActive(false);
                     setPowBurst(false);
                     setPhase('RAP_SHEET');
@@ -4198,7 +4243,7 @@ const GutterbonesGamble = (() => {
                     AudioSystem.paper();
                     if (!reducedMotion) setCinematic('victory');
                     const goVictory = () => {
-                        setScoreResolution(null);
+                        dismissScoreOverlays();
                         setPayoutActive(false);
                         setPowBurst(false);
                         setPhase('VICTORY');
@@ -4636,7 +4681,7 @@ const GutterbonesGamble = (() => {
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
                 {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
                 {scoreResolution && phase === 'PLAY' && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
-                {scoreBreakdown && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={() => setScoreBreakdown(null)} />}
+                {scoreBreakdown && phase === 'PLAY' && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={dismissScoreOverlays} />}
                 {lossExplanation && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
@@ -5260,9 +5305,16 @@ const GutterbonesGamble = (() => {
                         <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
-                            <div className="border border-black p-4 bg-white/50 mb-4"><div className="font-mono text-xs opacity-70 mb-2">Hand History:</div><HistoryPanel history={history} /></div>
+                            <div className="border border-black p-4 bg-white/50 mb-4 relative min-h-[7rem]">
+                                <div className="font-mono text-xs opacity-70 mb-2">Hand History:</div>
+                                <HistoryPanel history={history} />
+                                {showIncarceratedStamp && (
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[5px] border-[#d30000] text-[#d30000] font-marker px-4 py-2 text-2xl md:text-3xl rotate-[-12deg] bg-white/90 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10 whitespace-nowrap">
+                                        INCARCERATED
+                                    </div>
+                                )}
+                            </div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
-                            {showIncarceratedStamp && <div className="absolute top-6 right-6 border-[5px] border-[#d30000] text-[#d30000] font-marker px-3 py-2 text-3xl md:text-4xl rotate-[-12deg] bg-white/85 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10">INCARCERATED</div>}
                             <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                         </div>
                     </div>
