@@ -585,8 +585,13 @@
         transform-origin: left center;
     }
     #root-gutterbones .breakdown-chain-step { animation: chainStepReveal 0.16s ease-out forwards; }
+    #root-gutterbones .bone-preview-tint .bone-die-btn:not(.bone-die-tumble) {
+        outline: 2px solid var(--preview-tint, rgba(0,221,255,.75));
+        outline-offset: 3px;
+        box-shadow: 0 0 20px var(--preview-tint, rgba(0,221,255,.45));
+    }
     #root-gutterbones .bone-preview-tint .bone-die-btn:not(.bone-die-tumble) .bone-die-img {
-        filter: drop-shadow(0 0 14px var(--preview-tint, rgba(0,221,255,.5)));
+        filter: drop-shadow(0 0 18px var(--preview-tint, rgba(0,221,255,.65))) saturate(1.15) brightness(1.06);
     }
     #root-gutterbones .score-row-danger { animation: scoreBustWarn 1.35s ease-in-out infinite; }
     #root-gutterbones .roll-ready-pulse { animation: rollReadyPulse 1.95s ease-in-out infinite; }
@@ -2024,15 +2029,69 @@ const GutterbonesGamble = (() => {
     const SYNERGY_TUNING = {
         enabled: true,
         maxChainPasses: 8,
-        juiceStepMs: 150
+        juiceStepMs: 150,
+        overlayBaseMs: 1200,
+        overlayTailMs: 800,
+        overlayDepthBonusMs: 550
     };
 
+    const CATEGORY_FACE_VALUE = { ONES: 1, TWOS: 2, THREES: 3, FOURS: 4, FIVES: 5, SIXES: 6 };
+
     const CATEGORY_PREVIEW_TINT = {
-        Y: 'rgba(214, 184, 92, 0.72)',
-        LS: 'rgba(0, 221, 255, 0.62)',
-        FH: 'rgba(16, 185, 129, 0.62)',
-        FOK: 'rgba(255, 0, 127, 0.55)',
-        TOK: 'rgba(0, 221, 255, 0.5)'
+        DEFAULT: 'rgba(0, 221, 255, 0.72)',
+        C: 'rgba(255, 176, 96, 0.82)',
+        ONES: 'rgba(230, 230, 230, 0.75)',
+        TWOS: 'rgba(140, 210, 255, 0.78)',
+        THREES: 'rgba(0, 221, 255, 0.78)',
+        FOURS: 'rgba(160, 255, 180, 0.75)',
+        FIVES: 'rgba(255, 160, 220, 0.75)',
+        SIXES: 'rgba(255, 90, 90, 0.82)',
+        Y: 'rgba(214, 184, 92, 0.82)',
+        LS: 'rgba(0, 221, 255, 0.78)',
+        FH: 'rgba(16, 185, 129, 0.78)',
+        FOK: 'rgba(255, 0, 127, 0.72)',
+        TOK: 'rgba(0, 221, 255, 0.72)',
+        SS: 'rgba(180, 140, 255, 0.72)'
+    };
+
+    const categoryPreviewSlotActive = (catId, currentDice, slotIndex) => {
+        if (!catId || !currentDice?.length) return false;
+        if (typeof GutterbonesRules?.resolveDice !== 'function') return true;
+        const { resolved, destroyed } = GutterbonesRules.resolveDice(currentDice);
+        if (destroyed.has(slotIndex)) return false;
+        const d = resolved[slotIndex];
+        if (d.faceId === 'GHOST_FACE') return false;
+        const faceVal = CATEGORY_FACE_VALUE[catId];
+        if (faceVal != null) return d.value === 'W' || d.value === faceVal;
+        if (catId === 'C') return d.value === 'W' || typeof d.value === 'number';
+        return true;
+    };
+
+    const carvedDieFromFace = (die, faceId) => {
+        const face = FACE_DATABASE[faceId];
+        if (!face) return die;
+        return {
+            ...die,
+            id: Math.random(),
+            value: face.value,
+            faceId: face.id,
+            faceLabel: face.label,
+            faceStyle: face.style,
+            type: face.type
+        };
+    };
+
+    /** Breakdown/resolution panel lifetime — extends through synergy stagger + read time. */
+    const getScoreOverlayLifetimeMs = (result, reducedMotion) => {
+        const base = SYNERGY_TUNING.overlayBaseMs ?? SCORE_OVERLAY_LIFETIME_MS;
+        if (reducedMotion || !result) return base;
+        const eventCount = (result.synergyEvents || []).length;
+        const stepMs = SYNERGY_TUNING.juiceStepMs ?? 150;
+        const sequenceMs = eventCount > 0 ? eventCount * stepMs + 90 : 0;
+        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 800;
+        const depthBonus = (result.chainDepth || 0) >= 2 ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 550) : 0;
+        if (eventCount === 0 && depthBonus === 0) return base;
+        return Math.max(base, sequenceMs + tailMs + depthBonus);
     };
 
     const buildSynergyLinks = (events, dice) => {
@@ -4407,7 +4466,7 @@ const GutterbonesGamble = (() => {
                     scoreResolutionTimeoutRef.current = scheduleTimeout(() => {
                         scoreResolutionTimeoutRef.current = null;
                         setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current));
-                    }, SCORE_OVERLAY_LIFETIME_MS);
+                    }, getScoreOverlayLifetimeMs(result, reducedMotion));
                 }
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
@@ -4472,6 +4531,7 @@ const GutterbonesGamble = (() => {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
             }
             const chainEventCount = (result.synergyEvents || []).length;
+            const breakdownLifetimeMs = getScoreOverlayLifetimeMs(result, reducedMotion);
             setChainStepsRevealed(!reducedMotion && chainEventCount > 0 ? 0 : null);
             setScoreBreakdown(breakdownPayload);
             scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
@@ -4479,7 +4539,7 @@ const GutterbonesGamble = (() => {
                 setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current));
                 setChainStepsRevealed(null);
                 setSynergyLinks([]);
-            }, SCORE_OVERLAY_LIFETIME_MS);
+            }, breakdownLifetimeMs);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
@@ -4922,6 +4982,25 @@ const GutterbonesGamble = (() => {
             setFixerLine(`DEV: granted ${drop.name}.`);
         };
 
+        const applyDevSynergyDemoDice = () => {
+            if (phase !== 'PLAY') return;
+            setDice((prev) => {
+                const base = prev.length === 5 ? prev : Array(5).fill(0).map(makeBone);
+                const next = [...base];
+                next[0] = carvedDieFromFace(next[0] || makeBone(), 'BLOOD_6');
+                next[1] = carvedDieFromFace(next[1] || makeBone(), 'SHIV_FACE');
+                next[2] = { ...(next[2] || makeBone()), id: Math.random(), value: 2, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                next[3] = { ...(next[3] || makeBone()), id: Math.random(), value: 3, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                next[4] = { ...(next[4] || makeBone()), id: Math.random(), value: 4, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                return next;
+            });
+            setHasRolled(true);
+            setRollingSlots(Array(5).fill(false));
+            setKept([false, false, false, false, false]);
+            rollLockRef.current = false;
+            setFixerLine('DEV: blood + shiv lane loaded — score Slop for blood ripple chain juice.');
+        };
+
         const forceBoss = (bossId) => {
             const boss = bossById(bossId);
             if (!boss) return;
@@ -5086,6 +5165,9 @@ const GutterbonesGamble = (() => {
                             <button onClick={() => setDebt(0)} className="border border-gray-700 px-1 py-1 text-red-200 hover:bg-red-900/30">CLEAR DEBT</button>
                             <button onClick={grantRandomConsumable} className="border border-gray-700 px-1 py-1 text-emerald-200 hover:bg-emerald-900/30">GRANT ONE-SHOT</button>
                             <button onClick={() => generateShop({ preservePaths: phase === 'SHOP', preserveRefreshes: true })} className="border border-gray-700 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">REROLL SHOP</button>
+                            {phase === 'PLAY' && (
+                                <button onClick={applyDevSynergyDemoDice} className="col-span-3 border border-fuchsia-600 px-1 py-1 text-fuchsia-200 hover:bg-fuchsia-900/30">LOAD SYNERGY DEMO LANE</button>
+                            )}
                         </div>
                         <div className="border-t border-gray-800 pt-2 mt-1">
                             <div className="text-gray-400 mb-1">FORCE BOSS</div>
@@ -5392,7 +5474,11 @@ const GutterbonesGamble = (() => {
                                                 selected={swapIdx === i}
                                                 raidPill={activeBoss?.id === 'THE_RAID'}
                                                 reducedMotion={reducedMotion}
-                                                previewTint={payoutPreviewCatId ? (CATEGORY_PREVIEW_TINT[payoutPreviewCatId] || null) : null}
+                                                previewTint={
+                                                    payoutPreviewCatId && categoryPreviewSlotActive(payoutPreviewCatId, dice, i)
+                                                        ? (CATEGORY_PREVIEW_TINT[payoutPreviewCatId] || CATEGORY_PREVIEW_TINT.DEFAULT)
+                                                        : null
+                                                }
                                                 canPill={discards > 0 && hasRolled && !rolling}
                                                 pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0}
                                                 onExplainPill={() => showMechanicPopup('PILL')}

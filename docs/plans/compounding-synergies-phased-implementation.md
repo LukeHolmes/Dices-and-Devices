@@ -184,6 +184,14 @@ Existing `triggers[]` remains for cascade badges; populate from synergy events w
 
 **Enable default:** Set `SYNERGY_TUNING.enabled = true` after Phase 2 manual sign-off (single commit).
 
+### Phase 2 follow-up (polish)
+
+| # | Task | Detail |
+|---|------|--------|
+| 2.9 | `getScoreOverlayLifetimeMs` | Breakdown/resolution timers cover full chain stagger + tail (`overlayTailMs`, `overlayDepthBonusMs` when `chainDepth >= 2`) |
+| 2.10 | Slot-aware preview tint | `categoryPreviewSlotActive` + stronger bone rim CSS; expanded `CATEGORY_PREVIEW_TINT` |
+| 2.11 | Dev demo lane | Dev panel **LOAD SYNERGY DEMO LANE** (blood + shiv adjacent) for QA without shop carve |
+
 ---
 
 ## Phase 3 — Shop, paths, and carve UX
