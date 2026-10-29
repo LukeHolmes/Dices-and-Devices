@@ -69,3 +69,16 @@ test("unlockRunForCategory returns run index for gated rows", () => {
   assert.equal(ob.unlockRunForCategory("SS"), 5);
   assert.equal(ob.unlockRunForCategory("ONES"), 0);
 });
+
+test("Tier 2 shop faces require run count and Chain manual unlock", () => {
+  const ob = loadOnboarding();
+  const fuse = { id: "FUSE_FACE", rarity: "rare" };
+  const metaLocked = { totalRuns: 5, unlockedFaceIds: ["MULT_FACE"] };
+  const metaOpen = {
+    totalRuns: 5,
+    unlockedFaceIds: ["MULT_FACE", ...ob.TIER2_FACE_IDS],
+  };
+  assert.equal(ob.isShopFaceAvailable(fuse, { totalRuns: 4, unlockedFaceIds: ob.TIER2_FACE_IDS }), false);
+  assert.equal(ob.isShopFaceAvailable(fuse, metaLocked), false);
+  assert.equal(ob.isShopFaceAvailable(fuse, metaOpen), true);
+});

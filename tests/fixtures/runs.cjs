@@ -61,6 +61,8 @@ function run(overrides = {}) {
     nextShopTag: null,
     activeShopTag: null,
     routeModifiers: {},
+    synergyState: { categoryMarks: {} },
+    categoryMarkedThisRound: [],
     paths: [],
     activeBossId: null,
     selectedItem: null,
