@@ -19,6 +19,10 @@ test("Audio module exposes gameplay API", () => {
     "init",
     "clatter",
     "stinger",
+    "chainStep",
+    "categoryStinger",
+    "retrigger",
+    "payout",
     "bossSting",
     "bust",
     "paper",
@@ -116,6 +120,10 @@ test("Phase 6d input UX hooks present", () => {
 test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /openingStashGrant:\s*25/);
   assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1200/);
+  assert.match(appSource, /getScoreOverlayLifetimeMs/);
+  assert.match(appSource, /overlayTailMs/);
+  assert.match(appSource, /applyDevSynergyDemoDice/);
+  assert.match(appSource, /categoryPreviewSlotActive/);
   assert.match(appSource, /Side bet: this roll/);
   assert.match(appSource, /pendingUnlockMessageRef/);
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");

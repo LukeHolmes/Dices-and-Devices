@@ -303,6 +303,24 @@
         0%, 100% { box-shadow: inset 0 0 0 rgba(0,0,0,0); background-color: rgba(0,0,0,.06); }
         50% { box-shadow: inset 0 0 0 1px rgba(0,221,255,.32); background-color: rgba(0,221,255,.08); }
     }
+    @keyframes scoreReadyGlowFast {
+        0%, 100% { box-shadow: inset 0 0 0 rgba(0,0,0,0); background-color: rgba(255,0,127,.04); }
+        50% { box-shadow: inset 0 0 0 1px rgba(255,0,127,.45); background-color: rgba(255,0,127,.12); }
+    }
+    @keyframes synergyLinkPulse {
+        0% { opacity: 0; transform: scaleX(0.2); filter: blur(2px); }
+        35% { opacity: 1; transform: scaleX(1); filter: blur(0); }
+        100% { opacity: 0; transform: scaleX(1.05); filter: blur(1px); }
+    }
+    @keyframes scoreRowSquash {
+        0% { transform: scaleY(1); }
+        40% { transform: scaleY(0.94); }
+        100% { transform: scaleY(1); }
+    }
+    @keyframes chainStepReveal {
+        0% { opacity: 0; transform: translateX(-6px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
     @keyframes scoreBustWarn {
         0%, 100% { background-color: rgba(127,29,29,.04); }
         50% { background-color: rgba(220,38,38,.12); }
@@ -553,6 +571,28 @@
     #root-gutterbones .camera-kick-soft { animation: cameraKickSoft .18s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 46%; }
     #root-gutterbones .camera-kick-hard { animation: cameraKickHard .24s cubic-bezier(.2,.75,.32,1); transform-origin: 50% 46%; }
     #root-gutterbones .score-row-ready { animation: scoreReadyGlow 2.3s ease-in-out infinite; }
+    #root-gutterbones .score-row-ready.score-row-chain-hot { animation: scoreReadyGlowFast 1.05s ease-in-out infinite; }
+    #root-gutterbones .score-row-payout-squash { animation: scoreRowSquash 0.12s ease-out; }
+    #root-gutterbones .synergy-link-layer { position: absolute; inset: 0; pointer-events: none; z-index: 34; }
+    #root-gutterbones .synergy-link {
+        position: absolute;
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(0,221,255,0), rgba(0,221,255,.85) 35%, rgba(255,0,127,.9) 65%, rgba(255,0,127,0));
+        box-shadow: 0 0 10px rgba(0,221,255,.35);
+        animation: synergyLinkPulse 480ms ease-out forwards;
+        top: 58%;
+        transform-origin: left center;
+    }
+    #root-gutterbones .breakdown-chain-step { animation: chainStepReveal 0.16s ease-out forwards; }
+    #root-gutterbones .bone-preview-tint .bone-die-btn:not(.bone-die-tumble) {
+        outline: 2px solid var(--preview-tint, rgba(0,221,255,.75));
+        outline-offset: 3px;
+        box-shadow: 0 0 20px var(--preview-tint, rgba(0,221,255,.45));
+    }
+    #root-gutterbones .bone-preview-tint .bone-die-btn:not(.bone-die-tumble) .bone-die-img {
+        filter: drop-shadow(0 0 18px var(--preview-tint, rgba(0,221,255,.65))) saturate(1.15) brightness(1.06);
+    }
     #root-gutterbones .score-row-danger { animation: scoreBustWarn 1.35s ease-in-out infinite; }
     #root-gutterbones .roll-ready-pulse { animation: rollReadyPulse 1.95s ease-in-out infinite; }
     #root-gutterbones .pressure-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 22; mix-blend-mode: screen; }
@@ -592,6 +632,10 @@
         #root-gutterbones .camera-kick-soft,
         #root-gutterbones .camera-kick-hard,
         #root-gutterbones .score-row-ready,
+        #root-gutterbones .score-row-chain-hot,
+        #root-gutterbones .score-row-payout-squash,
+        #root-gutterbones .synergy-link,
+        #root-gutterbones .breakdown-chain-step,
         #root-gutterbones .score-row-danger,
         #root-gutterbones .roll-ready-pulse,
         #root-gutterbones .pressure-overlay,
@@ -626,9 +670,223 @@ const GutterbonesRules = (() => {
         return { resolved, destroyed };
     };
 
+    const emptySynergyResult = () => ({ synergyEvents: [], chainDepth: 0, retriggerCount: 0 });
+
+    const isBloodOrDestructive = (d) => {
+        if (!d) return false;
+        return d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE';
+    };
+
+    const neighborIndices = (i) => [i - 1, i + 1].filter(j => j >= 0 && j <= 4);
+
+    const applyFaceModifiersForDie = (d, state, { pushStep, triggers, slotLabel = '' }) => {
+        const face = d.faceId;
+        const prefix = slotLabel ? `SLOT ${slotLabel}: ` : '';
+        if (face === 'MULT_FACE') { state.mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); pushStep('multiplier', `${prefix}FACE: +MULT`, '+1x multiplier', '+1x'); }
+        if (face === 'GOLD_FACE') { state.gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); pushStep('modifier', `${prefix}FACE: GOLD`, '+$2 cash', '+$2'); }
+        if (face === 'BLOOD_6') { state.chips += 20; state.gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); pushStep('modifier', `${prefix}FACE: BLOOD 6`, '+20 chips, -$1', '+20 / -$1'); }
+        if (face === 'SHIV_FACE') { state.chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', `${prefix}FACE: SHIV`, '+40 chips', 40); }
+        if (face === 'WIREBAG_FACE') { state.mult -= 1; state.gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); pushStep('penalty', `${prefix}FACE: WIREBAG`, '-1x, +$4', '-1x / +$4'); }
+        if (face === 'GHOST_FACE') { state.mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); pushStep('multiplier', `${prefix}FACE: GHOST`, '+2x multiplier', '+2x'); }
+    };
+
+    const applyAllFaceModifiers = (resolved, destroyed, state, api) => {
+        resolved.forEach((d, i) => {
+            if (destroyed.has(i)) return;
+            applyFaceModifiersForDie(d, state, api);
+        });
+    };
+
+    const pushSynergyEvent = (state, { chainId, kind, label, impact }) => {
+        const chainIndex = state.synergyPass;
+        state.synergyEvents.push({ id: chainId, kind, source: { chainId }, label, impact, chainIndex });
+        state.triggers.push({ name: chainId.replace(/_/g, ' '), value: String(impact) });
+        state.pushStep('modifier', `CHAIN: ${label}`, impact, impact);
+        if (kind === 'retrigger') state.retriggerCount += 1;
+    };
+
+    const resolveSynergyFaceChains = (resolved, destroyed, state, tuning) => {
+        const applied = state.synergyApplied;
+        if (!applied.has('blood_ripple')) {
+            let rippleMult = 0;
+            resolved.forEach((d, i) => {
+                if (destroyed.has(i) || d.faceId !== 'BLOOD_6') return;
+                neighborIndices(i).forEach(j => {
+                    if (destroyed.has(j)) return;
+                    if (isBloodOrDestructive(resolved[j])) rippleMult += 1;
+                });
+            });
+            rippleMult = Math.min(3, rippleMult);
+            if (rippleMult > 0) {
+                state.mult += rippleMult;
+                pushSynergyEvent(state, { chainId: 'blood_ripple', kind: 'mult', label: 'Blood ripple', impact: `+${rippleMult}x` });
+                applied.add('blood_ripple');
+            }
+        }
+        if (!applied.has('ghost_echo')) {
+            let ghostEcho = false;
+            for (let i = 0; i < 5; i++) {
+                if (destroyed.has(i)) continue;
+                const d = resolved[i];
+                if (d.faceId !== 'GHOST_FACE') continue;
+                const hasEchoNeighbor = neighborIndices(i).some(j => !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed));
+                if (hasEchoNeighbor) { ghostEcho = true; break; }
+            }
+            if (ghostEcho) {
+                state.mult += 1;
+                pushSynergyEvent(state, { chainId: 'ghost_echo', kind: 'mult', label: 'Ghost echo', impact: '+1x' });
+                applied.add('ghost_echo');
+            }
+        }
+        if (!applied.has('wire_feed')) {
+            let fed = false;
+            for (let i = 0; i < 5; i++) {
+                if (destroyed.has(i)) continue;
+                const d = resolved[i];
+                if (d.faceId !== 'WIREBAG_FACE') continue;
+                const hasGoldNeighbor = neighborIndices(i).some(j => !destroyed.has(j) && resolved[j].faceId === 'GOLD_FACE');
+                if (hasGoldNeighbor) { fed = true; break; }
+            }
+            if (fed) {
+                state.gDelta += 2;
+                pushSynergyEvent(state, { chainId: 'wire_feed', kind: 'cash', label: 'Wire feed (extra gold)', impact: '+$2' });
+                applied.add('wire_feed');
+            }
+        }
+        void tuning;
+    };
+
+    const resolveSynergyHardwareChains = (resolved, destroyed, state, hwMeta) => {
+        const applied = state.synergyApplied;
+        if (!applied.has('engine_link') && hwMeta.engineBonus >= 2) {
+            const modCount = resolved.filter((d, i) => !destroyed.has(i) && d.type === 'modifier').length;
+            const linkMult = Math.min(4, modCount);
+            if (linkMult > 0) {
+                state.mult += linkMult;
+                pushSynergyEvent(state, { chainId: 'engine_link', kind: 'mult', label: 'Engine link', impact: `+${linkMult}x` });
+                applied.add('engine_link');
+            }
+        }
+        if (!applied.has('bookends_retrigger') && hwMeta.bookendsMatched) {
+            const api = { pushStep: state.pushStep, triggers: state.triggers };
+            [0, 4].forEach(i => {
+                if (!destroyed.has(i)) applyFaceModifiersForDie(resolved[i], state, { ...api, slotLabel: String(i + 1) });
+            });
+            pushSynergyEvent(state, { chainId: 'bookends_retrigger', kind: 'retrigger', label: 'Bookends retrigger', impact: 'faces 1 & 5' });
+            applied.add('bookends_retrigger');
+        }
+        if (!applied.has('crowbar_cascade') && hwMeta.crowbarMultAdded > 0) {
+            let cascadeChips = 0;
+            destroyed.forEach(i => {
+                if (isBloodOrDestructive(resolved[i])) cascadeChips += 5;
+            });
+            cascadeChips = Math.min(25, cascadeChips);
+            if (cascadeChips > 0) {
+                state.chips += cascadeChips;
+                pushSynergyEvent(state, { chainId: 'crowbar_cascade', kind: 'chips', label: 'Crowbar cascade', impact: `+${cascadeChips}` });
+                applied.add('crowbar_cascade');
+            }
+        }
+    };
+
+    const runSynergyPasses = (resolved, destroyed, state, tuning, hwMeta) => {
+        const maxPasses = Math.max(1, tuning.maxChainPasses || 8);
+        for (state.synergyPass = 0; state.synergyPass < maxPasses; state.synergyPass += 1) {
+            const before = state.synergyEvents.length;
+            resolveSynergyFaceChains(resolved, destroyed, state, tuning);
+            if (hwMeta) resolveSynergyHardwareChains(resolved, destroyed, state, hwMeta);
+            if (state.synergyEvents.length === before) break;
+        }
+        const chainDepth = state.synergyEvents.length
+            ? Math.max(...state.synergyEvents.map(e => e.chainIndex)) + 1
+            : 0;
+        return { chainDepth, retriggerCount: state.retriggerCount, synergyEvents: state.synergyEvents };
+    };
+
+    const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state) => {
+        const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false };
+        if (hardwareDisabled) {
+            if (inventory.length > 0) {
+                state.pushStep('penalty', `BOSS: ${activeBoss?.name || 'CROOKED COP'}`, 'Hardware triggers disabled this hand', 'NO HARDWARE');
+            }
+            return meta;
+        }
+        const { pushStep, triggers } = state;
+        inventory.forEach(item => {
+            if (item.id === 'CENTERPIECE') {
+                const center = resolved[2];
+                if (center && !destroyed.has(2)) {
+                    let centerChips = 0;
+                    let centerMult = 0;
+                    if (typeof center.value === 'number') {
+                        state.chips += center.value;
+                        centerChips += center.value;
+                    }
+                    if (center.faceId === 'MULT_FACE') { state.mult += 1; centerMult += 1; }
+                    if (center.faceId === 'GHOST_FACE') { state.mult += 2; centerMult += 2; }
+                    if (center.faceId === 'GOLD_FACE') { state.gDelta += 2; triggers.push({ name: 'CENTER', value: '+$2' }); }
+                    triggers.push({ name: 'CENTER', value: 'slot 3' });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
+                }
+            }
+            if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
+                state.chips += 30;
+                triggers.push({ name: 'BOOKENDS', value: '+30' });
+                state.hardwareTriggerCount += 1;
+                meta.bookendsMatched = true;
+                pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
+            }
+            if (item.id === 'ENGINE') {
+                const anchor = resolved[0].value;
+                if (typeof anchor === 'number' && !destroyed.has(0)) {
+                    const bonus = Math.min(4, resolved.slice(1).filter((d, idx) => !destroyed.has(idx + 1) && typeof d.value === 'number' && d.value > anchor).length);
+                    if (bonus) {
+                        state.mult += bonus;
+                        meta.engineBonus = bonus;
+                        triggers.push({ name: 'ENGINE', value: `+${bonus}x` });
+                        state.hardwareTriggerCount += 1;
+                        pushStep('multiplier', 'HARDWARE: ENGINE', `+${bonus}x multiplier`, `+${bonus}x`);
+                    }
+                }
+            }
+            if (item.id === 'LOADED_DIE' && catId === 'TOK') {
+                state.chips += 10;
+                triggers.push({ name: 'LOADED', value: '+10' });
+                state.hardwareTriggerCount += 1;
+                pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
+            }
+            if (item.id === 'BLOOD_PACT') {
+                state.mult *= 3;
+                triggers.push({ name: 'PACT', value: 'x3' });
+                state.hardwareTriggerCount += 1;
+                pushStep('multiplier', 'HARDWARE: BLOOD PACT', 'Tripled multiplier', 'x3');
+            }
+            if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) {
+                state.mult += 3;
+                triggers.push({ name: 'KNUCKLES', value: '+3x' });
+                state.hardwareTriggerCount += 1;
+                pushStep('multiplier', 'HARDWARE: BRASS KNUCKLES', '+3x on low faces', '+3x');
+            }
+            if (item.id === 'CROWBAR') {
+                const count = Math.min(5, resolved.filter((d,i) => !destroyed.has(i) && isBloodOrDestructive(d)).length);
+                if (count) {
+                    state.mult += count;
+                    meta.crowbarMultAdded = count;
+                    triggers.push({ name: 'CROWBAR', value: `+${count}x` });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('multiplier', 'HARDWARE: CROWBAR', `+${count}x from blood/destructive faces`, `+${count}x`);
+                }
+            }
+        });
+        return meta;
+    };
+
     const calculateScore = (catId, currentDice, context) => {
         const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus } = context;
+            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
+            synergyTuning = { enabled: false } } = context;
+        const synergyEnabled = Boolean(synergyTuning?.enabled);
         const { resolved, destroyed } = resolveDice(currentDice);
         const standardVals = resolved.filter((d, i) => !destroyed.has(i) && typeof d.value === 'number' && d.value > 0 && d.faceId !== 'GHOST_FACE').map(d => d.value);
         const wilds = resolved.filter((d, i) => !destroyed.has(i) && d.value === 'W').length;
@@ -689,7 +947,7 @@ const GutterbonesRules = (() => {
                 }
             })();
             pushStep('system', 'INVALID PAYOUT', invalidReason, 0);
-            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason };
+            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason, ...emptySynergyResult() };
         }
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
@@ -699,92 +957,52 @@ const GutterbonesRules = (() => {
             triggers.push({ name: 'MASTERY', value: `+${masteryBonus}` });
             pushStep('modifier', 'HAND MASTERY', `+${masteryBonus} chips`, masteryBonus);
         }
-        resolved.forEach((d, i) => {
-            if (destroyed.has(i)) return;
-            const face = d.faceId;
-            if (face === 'MULT_FACE') { mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); pushStep('multiplier', 'FACE: +MULT', '+1x multiplier', '+1x'); }
-            if (face === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); pushStep('modifier', 'FACE: GOLD', '+$2 cash', '+$2'); }
-            if (face === 'BLOOD_6') { chips += 20; gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); pushStep('modifier', 'FACE: BLOOD 6', '+20 chips, -$1', '+20 / -$1'); }
-            if (face === 'SHIV_FACE') { chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', 'FACE: SHIV', '+40 chips', 40); }
-            if (face === 'WIREBAG_FACE') { mult -= 1; gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); pushStep('penalty', 'FACE: WIREBAG', '-1x, +$4', '-1x / +$4'); }
-            if (face === 'GHOST_FACE') { mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); pushStep('multiplier', 'FACE: GHOST', '+2x multiplier', '+2x'); }
-        });
-        const unclampedMult = mult;
-        mult = Math.max(0.5, mult);
-        if (mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${mult.toFixed(2)}`);
-        if (!hardwareDisabled) {
-            inventory.forEach(item => {
-                if (item.id === 'CENTERPIECE') {
-                    const center = resolved[2];
-                    if (center && !destroyed.has(2)) {
-                        let centerChips = 0;
-                        let centerMult = 0;
-                        if (typeof center.value === 'number') {
-                            chips += center.value;
-                            centerChips += center.value;
-                        }
-                        if (center.faceId === 'MULT_FACE') { mult += 1; centerMult += 1; }
-                        if (center.faceId === 'GHOST_FACE') { mult += 2; centerMult += 2; }
-                        if (center.faceId === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CENTER', value: '+$2' }); }
-                        triggers.push({ name: 'CENTER', value: 'slot 3' });
-                        hardwareTriggerCount += 1;
-                        pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
-                    }
-                }
-                if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
-                    chips += 30;
-                    triggers.push({ name: 'BOOKENDS', value: '+30' });
-                    hardwareTriggerCount += 1;
-                    pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
-                }
-                if (item.id === 'ENGINE') {
-                    const anchor = resolved[0].value;
-                    if (typeof anchor === 'number' && !destroyed.has(0)) {
-                        const bonus = Math.min(4, resolved.slice(1).filter((d, idx) => !destroyed.has(idx + 1) && typeof d.value === 'number' && d.value > anchor).length);
-                        if (bonus) {
-                            mult += bonus;
-                            triggers.push({ name: 'ENGINE', value: `+${bonus}x` });
-                            hardwareTriggerCount += 1;
-                            pushStep('multiplier', 'HARDWARE: ENGINE', `+${bonus}x multiplier`, `+${bonus}x`);
-                        }
-                    }
-                }
-                if (item.id === 'LOADED_DIE' && catId === 'TOK') {
-                    chips += 10;
-                    triggers.push({ name: 'LOADED', value: '+10' });
-                    hardwareTriggerCount += 1;
-                    pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
-                }
-                if (item.id === 'BLOOD_PACT') {
-                    mult *= 3;
-                    triggers.push({ name: 'PACT', value: 'x3' });
-                    hardwareTriggerCount += 1;
-                    pushStep('multiplier', 'HARDWARE: BLOOD PACT', 'Tripled multiplier', 'x3');
-                }
-                if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) {
-                    mult += 3;
-                    triggers.push({ name: 'KNUCKLES', value: '+3x' });
-                    hardwareTriggerCount += 1;
-                    pushStep('multiplier', 'HARDWARE: BRASS KNUCKLES', '+3x on low faces', '+3x');
-                }
-                if (item.id === 'CROWBAR') {
-                    const count = Math.min(5, resolved.filter((d,i) => !destroyed.has(i) && (d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE')).length);
-                    if (count) {
-                        mult += count;
-                        triggers.push({ name: 'CROWBAR', value: `+${count}x` });
-                        hardwareTriggerCount += 1;
-                        pushStep('multiplier', 'HARDWARE: CROWBAR', `+${count}x from blood/destructive faces`, `+${count}x`);
-                    }
-                }
-            });
-        } else if (inventory.length > 0) {
-            pushStep('penalty', `BOSS: ${activeBoss?.name || 'CROOKED COP'}`, 'Hardware triggers disabled this hand', 'NO HARDWARE');
+        const scoreState = {
+            chips, mult, gDelta, triggers, pushStep, hardwareTriggerCount,
+            synergyEvents: [], synergyApplied: new Set(), retriggerCount: 0, synergyPass: 0
+        };
+        const faceApi = { pushStep, triggers };
+        applyAllFaceModifiers(resolved, destroyed, scoreState, faceApi);
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+
+        let synergyResult = emptySynergyResult();
+        if (synergyEnabled) {
+            runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, null);
         }
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+
+        const unclampedMult = scoreState.mult;
+        scoreState.mult = Math.max(0.5, scoreState.mult);
+        if (scoreState.mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${scoreState.mult.toFixed(2)}`);
+
+        const hwMeta = applyHardware(resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, scoreState);
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+        hardwareTriggerCount = scoreState.hardwareTriggerCount;
+
+        if (synergyEnabled) {
+            const postHw = runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, hwMeta);
+            chips = scoreState.chips;
+            mult = scoreState.mult;
+            gDelta = scoreState.gDelta;
+            synergyResult = postHw;
+        }
+
         if (flowMult > 1) triggers.push({ name: 'FLOW', value: `x${flowMult.toFixed(2)}` });
         pushStep('multiplier', 'FLOW STREAK', `x${flowMult.toFixed(2)} flow multiplier`, `x${flowMult.toFixed(2)}`);
         const total = Math.floor(chips * mult * flowMult);
         pushStep('system', 'FINAL FORMULA', `${chips} x ${mult.toFixed(2)} x ${flowMult.toFixed(2)}`, total);
-        return { valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName };
+        return {
+            valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName,
+            synergyEvents: synergyResult.synergyEvents,
+            chainDepth: synergyResult.chainDepth,
+            retriggerCount: synergyResult.retriggerCount
+        };
     };
 
     const normalizeSavedRun = (raw, context) => {
@@ -1367,6 +1585,9 @@ const GutterbonesGamble = (() => {
         playTone() {},
         clatter() {},
         payout() {},
+        retrigger() {},
+        chainStep() {},
+        categoryStinger() {},
         stinger() {},
         bossSting() {},
         bust() {},
@@ -1804,6 +2025,117 @@ const GutterbonesGamble = (() => {
         maxStreak: 6
     };
 
+    /** Compounding synergy chains (Balatro-style). See docs/plans/compounding-synergies-phased-implementation.md */
+    const SYNERGY_TUNING = {
+        enabled: true,
+        maxChainPasses: 8,
+        juiceStepMs: 150,
+        overlayBaseMs: 1200,
+        overlayTailMs: 800,
+        overlayDepthBonusMs: 550
+    };
+
+    const CATEGORY_FACE_VALUE = { ONES: 1, TWOS: 2, THREES: 3, FOURS: 4, FIVES: 5, SIXES: 6 };
+
+    const CATEGORY_PREVIEW_TINT = {
+        DEFAULT: 'rgba(0, 221, 255, 0.72)',
+        C: 'rgba(255, 176, 96, 0.82)',
+        ONES: 'rgba(230, 230, 230, 0.75)',
+        TWOS: 'rgba(140, 210, 255, 0.78)',
+        THREES: 'rgba(0, 221, 255, 0.78)',
+        FOURS: 'rgba(160, 255, 180, 0.75)',
+        FIVES: 'rgba(255, 160, 220, 0.75)',
+        SIXES: 'rgba(255, 90, 90, 0.82)',
+        Y: 'rgba(214, 184, 92, 0.82)',
+        LS: 'rgba(0, 221, 255, 0.78)',
+        FH: 'rgba(16, 185, 129, 0.78)',
+        FOK: 'rgba(255, 0, 127, 0.72)',
+        TOK: 'rgba(0, 221, 255, 0.72)',
+        SS: 'rgba(180, 140, 255, 0.72)'
+    };
+
+    const categoryPreviewSlotActive = (catId, currentDice, slotIndex) => {
+        if (!catId || !currentDice?.length) return false;
+        if (typeof GutterbonesRules?.resolveDice !== 'function') return true;
+        const { resolved, destroyed } = GutterbonesRules.resolveDice(currentDice);
+        if (destroyed.has(slotIndex)) return false;
+        const d = resolved[slotIndex];
+        if (d.faceId === 'GHOST_FACE') return false;
+        const faceVal = CATEGORY_FACE_VALUE[catId];
+        if (faceVal != null) return d.value === 'W' || d.value === faceVal;
+        if (catId === 'C') return d.value === 'W' || typeof d.value === 'number';
+        return true;
+    };
+
+    const carvedDieFromFace = (die, faceId) => {
+        const face = FACE_DATABASE[faceId];
+        if (!face) return die;
+        return {
+            ...die,
+            id: Math.random(),
+            value: face.value,
+            faceId: face.id,
+            faceLabel: face.label,
+            faceStyle: face.style,
+            type: face.type
+        };
+    };
+
+    /** Breakdown/resolution panel lifetime — extends through synergy stagger + read time. */
+    const getScoreOverlayLifetimeMs = (result, reducedMotion) => {
+        const base = SYNERGY_TUNING.overlayBaseMs ?? SCORE_OVERLAY_LIFETIME_MS;
+        if (reducedMotion || !result) return base;
+        const eventCount = (result.synergyEvents || []).length;
+        const stepMs = SYNERGY_TUNING.juiceStepMs ?? 150;
+        const sequenceMs = eventCount > 0 ? eventCount * stepMs + 90 : 0;
+        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 800;
+        const depthBonus = (result.chainDepth || 0) >= 2 ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 550) : 0;
+        if (eventCount === 0 && depthBonus === 0) return base;
+        return Math.max(base, sequenceMs + tailMs + depthBonus);
+    };
+
+    const buildSynergyLinks = (events, dice) => {
+        if (!events?.length || typeof GutterbonesRules?.resolveDice !== 'function') return [];
+        const { resolved, destroyed } = GutterbonesRules.resolveDice(dice);
+        const bloodLike = (d) => d && (d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE');
+        const links = [];
+        const seen = new Set();
+        const add = (a, b, id) => {
+            const key = `${Math.min(a, b)}-${Math.max(a, b)}-${id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            links.push({ from: a, to: b, id });
+        };
+        if (events.some((e) => e.id === 'blood_ripple')) {
+            resolved.forEach((d, i) => {
+                if (destroyed.has(i) || d.faceId !== 'BLOOD_6') return;
+                [i - 1, i + 1].forEach((j) => {
+                    if (j < 0 || j > 4 || destroyed.has(j)) return;
+                    if (bloodLike(resolved[j])) add(i, j, 'blood_ripple');
+                });
+            });
+        }
+        if (events.some((e) => e.id === 'ghost_echo')) {
+            for (let i = 0; i < 5; i += 1) {
+                if (destroyed.has(i) || resolved[i].faceId !== 'GHOST_FACE') continue;
+                [i - 1, i + 1].forEach((j) => {
+                    if (j < 0 || j > 4 || destroyed.has(j)) return;
+                    if (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed) add(i, j, 'ghost_echo');
+                });
+            }
+        }
+        if (events.some((e) => e.id === 'wire_feed')) {
+            for (let i = 0; i < 5; i += 1) {
+                if (destroyed.has(i) || resolved[i].faceId !== 'WIREBAG_FACE') continue;
+                [i - 1, i + 1].forEach((j) => {
+                    if (j < 0 || j > 4 || destroyed.has(j)) return;
+                    if (resolved[j].faceId === 'GOLD_FACE') add(i, j, 'wire_feed');
+                });
+            }
+        }
+        return links;
+    };
+
     const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
 
     const WAGER_TUNING = {
@@ -2172,7 +2504,7 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion, canPill = true, pillPulse = false }) => {
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null }) => {
         const rollStyleRef = useRef({
             '--roll-delay': `${Math.min(240, slot * 52 + Math.floor(Math.random() * 12))}ms`,
             '--roll-tilt': `${(Math.random() - 0.5) * 18}deg`,
@@ -2215,7 +2547,7 @@ const GutterbonesGamble = (() => {
             };
         }, [rolling, data.faceId, data.type, data.id, reducedMotion]);
         return (
-            <div className="relative bone-slot-inner">
+            <div className={`relative bone-slot-inner ${previewTint ? 'bone-preview-tint' : ''}`} style={previewTint ? { '--preview-tint': previewTint } : undefined}>
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
                 <div className="bone-die-perspective flex items-center justify-center">
                     <button
@@ -2262,6 +2594,7 @@ const GutterbonesGamble = (() => {
                 <div>CHIPS: {result.chips}</div>
                 <div>MULT: x{result.mult.toFixed(2)}</div>
                 {result.gDelta !== 0 && <div>CASH: {result.gDelta > 0 ? '+' : ''}{result.gDelta}</div>}
+                {result.chainDepth > 0 && <div className="text-fuchsia-300">CHAIN DEPTH: {result.chainDepth}</div>}
                 {result.triggers.length > 0 && (
                     <div className="mt-1 border-t border-gray-600 pt-1">
                         {result.triggers.map((t, i) => (
@@ -2313,23 +2646,27 @@ const GutterbonesGamble = (() => {
         </div>
     );
 
-    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '' }) => {
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false }) => {
         const [hover, setHover] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
         const masteryBonus = getHandMasteryBonus(handLevel);
         const showTriggers = canScore && result.valid && triggers.length > 0;
+        const chainHot = canScore && result.valid && (result.chainDepth || 0) >= 2;
         const titleParts = [ruleTooltip, canScore && !result.valid && result.reason ? result.reason : ''].filter(Boolean);
+        const setPreview = (active) => {
+            if (onPreviewChange) onPreviewChange(active ? id : null);
+        };
         return (
             <button
                 onClick={() => onScore(id)}
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-                onFocus={() => setHover(true)}
-                onBlur={() => setHover(false)}
+                onMouseEnter={() => { setHover(true); setPreview(true); }}
+                onMouseLeave={() => { setHover(false); setPreview(false); }}
+                onFocus={() => { setHover(true); setPreview(true); }}
+                onBlur={() => { setHover(false); setPreview(false); }}
                 disabled={!canScore}
                 title={titleParts.join(' — ')}
                 aria-label={titleParts.length ? `${cat.name}. ${titleParts.join(' ')}` : cat.name}
-                className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? 'bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready' : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}`}
+                className={`score-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : canScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : canScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}`}
             >
                 {hover && canScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex flex-col items-start">
@@ -2669,8 +3006,16 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const ScoreBreakdownOverlay = ({ result, reducedMotion, onDismiss }) => {
+    const ScoreBreakdownOverlay = ({ result, reducedMotion, onDismiss, chainStepsRevealed = null }) => {
         if (!result) return null;
+        const chainReveal = typeof chainStepsRevealed === 'number' ? chainStepsRevealed : null;
+        let chainSeen = 0;
+        const visibleSteps = (result.explanationSteps || []).filter((step) => {
+            if (!String(step.label || '').startsWith('CHAIN:')) return true;
+            if (chainReveal == null || reducedMotion) return true;
+            chainSeen += 1;
+            return chainSeen <= chainReveal;
+        });
         const stepTone = (type) => {
             if (type === 'base') return 'border-[#d6b85c] text-[#f9e7b0]';
             if (type === 'multiplier') return 'border-cyan-400/40 text-cyan-200';
@@ -2696,6 +3041,9 @@ const GutterbonesGamble = (() => {
                         <div>
                             <div className="font-mono text-xs tracking-[.32em] text-[#ff9fcf]">SCORE EXPLANATION</div>
                             <div className="font-mono text-sm text-gray-200 mt-1">{result.categoryName || 'HAND'} - tap to dismiss</div>
+                            {(result.chainDepth || 0) > 0 && (
+                                <div className="font-mono text-[10px] text-fuchsia-300 mt-1 tracking-wider">CHAIN DEPTH {result.chainDepth}</div>
+                            )}
                         </div>
                         <div className="font-marker text-5xl text-[#ff007f] leading-none">{result.total}</div>
                     </div>
@@ -2706,8 +3054,8 @@ const GutterbonesGamble = (() => {
                         <div className="border border-[#ff007f]/70 bg-[#ff007f]/25 rounded px-3 py-2 text-[#ffd1e8]">TOTAL <span className="block text-xl leading-none mt-1">{result.total}</span></div>
                     </div>
                     <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                        {(result.explanationSteps || []).map((step, idx) => (
-                            <div key={`${step.label}-${idx}`} className={`border rounded-lg px-3 py-2 text-sm font-mono bg-black/80 ${stepTone(step.type)}`}>
+                        {visibleSteps.map((step, idx) => (
+                            <div key={`${step.label}-${idx}`} className={`border rounded-lg px-3 py-2 text-sm font-mono bg-black/80 ${stepTone(step.type)} ${String(step.label || '').startsWith('CHAIN:') && !reducedMotion ? 'breakdown-chain-step' : ''}`}>
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="tracking-wide">{step.label}</span>
                                     <span className="font-bold">{impactText(step.impact)}</span>
@@ -3238,6 +3586,10 @@ const GutterbonesGamble = (() => {
         const [mechanicPopup, setMechanicPopup] = useState(null);
         const [scoreResolution, setScoreResolution] = useState(null);
         const [scoreBreakdown, setScoreBreakdown] = useState(null);
+        const [chainStepsRevealed, setChainStepsRevealed] = useState(null);
+        const [synergyLinks, setSynergyLinks] = useState([]);
+        const [payoutPreviewCatId, setPayoutPreviewCatId] = useState(null);
+        const [payoutSquashCatId, setPayoutSquashCatId] = useState(null);
         const [lossExplanation, setLossExplanation] = useState(null);
         const [showSystemMenu, setShowSystemMenu] = useState(false);
         const [showHelpOverlay, setShowHelpOverlay] = useState(false);
@@ -3278,6 +3630,8 @@ const GutterbonesGamble = (() => {
             }
             setScoreBreakdown(null);
             setScoreResolution(null);
+            setChainStepsRevealed(null);
+            setSynergyLinks([]);
         };
 
         const scheduleTimeout = (fn, ms) => {
@@ -3872,7 +4226,8 @@ const GutterbonesGamble = (() => {
 
         const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
             handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus
+            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
+            synergyTuning: SYNERGY_TUNING
         });
 
         const analyzeRunFailure = ({ score, target, debt, hands, history, attempts = 0, roundNumber = round, boss = activeBoss, flowValue = flowStreak }) => {
@@ -4071,11 +4426,84 @@ const GutterbonesGamble = (() => {
         };
 
         const executePayout = (catId) => {
+            const playSynergySequence = (result, onDone) => {
+                const events = result.synergyEvents || [];
+                const stepMs = reducedMotion ? 0 : (SYNERGY_TUNING.juiceStepMs || 150);
+                if (!events.length || reducedMotion) {
+                    if (reducedMotion) setChainStepsRevealed(null);
+                    onDone();
+                    return;
+                }
+                setSynergyLinks(buildSynergyLinks(events, dice));
+                events.forEach((ev, i) => {
+                    scheduleTimeout(() => {
+                        AudioSystem.chainStep(i, ev.id);
+                        if (ev.kind === 'retrigger') AudioSystem.retrigger();
+                        setChainStepsRevealed(i + 1);
+                    }, i * stepMs);
+                });
+                scheduleTimeout(() => {
+                    setSynergyLinks([]);
+                    setChainStepsRevealed(null);
+                    onDone();
+                }, events.length * stepMs + 90);
+            };
+            const runValidHandJuice = (result, payoutCatId) => {
+                if (['Y', 'LS', 'FH'].includes(payoutCatId)) AudioSystem.categoryStinger(payoutCatId);
+                else if ((result.chainDepth || 0) >= 2) AudioSystem.chainStep(0, 'multi');
+                if (result.total >= 120) {
+                    const resolutionPayload = {
+                        id: Math.random(),
+                        chips: result.chips,
+                        mult: result.mult,
+                        flowMult: result.flowMult || 1,
+                        total: result.total
+                    };
+                    if (scoreResolutionTimeoutRef.current != null) {
+                        clearScheduledTimeout(scoreResolutionTimeoutRef.current);
+                    }
+                    setScoreResolution(resolutionPayload);
+                    scoreResolutionTimeoutRef.current = scheduleTimeout(() => {
+                        scoreResolutionTimeoutRef.current = null;
+                        setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current));
+                    }, getScoreOverlayLifetimeMs(result, reducedMotion));
+                }
+                if (result.total >= 250) triggerCameraKick('hard');
+                else if (result.total >= 80) triggerCameraKick('soft');
+                if (result.total >= 150 && !reducedMotion) {
+                    setHitFlashActive(true);
+                    scheduleTimeout(() => setHitFlashActive(false), 120);
+                }
+                setScorePulse(true);
+                scheduleTimeout(() => setScorePulse(false), 420);
+                spawnFlying(result.total);
+                if (result.total >= 400) spawnHitCallout('MONSTER HIT');
+                else if (result.total >= 250) spawnHitCallout('BIG HIT');
+                if (result.hardwareTriggerCount > 0) spawnHitCallout(`HARDWARE x${result.hardwareTriggerCount}`);
+                cascadeTriggers(result.triggers);
+                if (payoutCatId === 'Y') spawnPaperStamp('JACKPOT', '#d6b85c');
+                else if (payoutCatId === 'LS') spawnPaperStamp('LONG RUN', '#0df');
+                else if (payoutCatId === 'FH') spawnPaperStamp('FULL RIDE', '#059669');
+                spawnPaperStamp('FILED');
+                const tier = result.total >= 250 ? 'max' : result.total >= 100 ? 'big' : result.total >= 30 ? 'mid' : 'small';
+                AudioSystem.stinger(tier);
+                if (result.total >= 30) {
+                    setPayoutCount(reducedMotion ? 4 : (result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8));
+                    setPayoutActive(true);
+                    scheduleTimeout(() => setPayoutActive(false), reducedMotion ? 900 : 1800);
+                }
+                if (result.total >= 250 && !reducedMotion) {
+                    setPowBurst(true);
+                    scheduleTimeout(() => setPowBurst(false), 700);
+                }
+            };
             if (rolling || rollLockRef.current) {
                 pendingPayoutRef.current = catId;
                 return;
             }
             patchSettings({ dismissScoreHint: true });
+            setPayoutSquashCatId(catId);
+            scheduleTimeout(() => setPayoutSquashCatId(null), 160);
             const result = calculateScore(catId, dice);
             const wager = activeWager;
             let wagerNet = 0;
@@ -4095,16 +4523,23 @@ const GutterbonesGamble = (() => {
                 mult: result.mult || 0,
                 flowMult: result.flowMult || 1,
                 total: result.total || 0,
-                explanationSteps: result.explanationSteps || []
+                explanationSteps: result.explanationSteps || [],
+                chainDepth: result.chainDepth || 0,
+                synergyEvents: result.synergyEvents || []
             };
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
             }
+            const chainEventCount = (result.synergyEvents || []).length;
+            const breakdownLifetimeMs = getScoreOverlayLifetimeMs(result, reducedMotion);
+            setChainStepsRevealed(!reducedMotion && chainEventCount > 0 ? 0 : null);
             setScoreBreakdown(breakdownPayload);
             scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
                 scoreBreakdownTimeoutRef.current = null;
                 setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current));
-            }, SCORE_OVERLAY_LIFETIME_MS);
+                setChainStepsRevealed(null);
+                setSynergyLinks([]);
+            }, breakdownLifetimeMs);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
@@ -4114,36 +4549,6 @@ const GutterbonesGamble = (() => {
                 }));
                 const nextScore = score + result.total;
                 setScore(nextScore);
-                if (result.total >= 120) {
-                    const resolutionPayload = {
-                        id: Math.random(),
-                        chips: result.chips,
-                        mult: result.mult,
-                        flowMult: result.flowMult || 1,
-                        total: result.total
-                    };
-                    if (scoreResolutionTimeoutRef.current != null) {
-                        clearScheduledTimeout(scoreResolutionTimeoutRef.current);
-                    }
-                    setScoreResolution(resolutionPayload);
-                    scoreResolutionTimeoutRef.current = scheduleTimeout(() => {
-                        scoreResolutionTimeoutRef.current = null;
-                        setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current));
-                    }, SCORE_OVERLAY_LIFETIME_MS);
-                }
-                if (result.total >= 250) triggerCameraKick('hard');
-                else if (result.total >= 80) triggerCameraKick('soft');
-                if (result.total >= 150 && !reducedMotion) {
-                    setHitFlashActive(true);
-                    scheduleTimeout(() => setHitFlashActive(false), 120);
-                }
-                setScorePulse(true);
-                scheduleTimeout(() => setScorePulse(false), 420);
-                spawnFlying(result.total);
-                if (result.total >= 400) spawnHitCallout('MONSTER HIT');
-                else if (result.total >= 250) spawnHitCallout('BIG HIT');
-                if (result.hardwareTriggerCount > 0) spawnHitCallout(`HARDWARE x${result.hardwareTriggerCount}`);
-                cascadeTriggers(result.triggers);
                 setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
                 const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
@@ -4163,18 +4568,7 @@ const GutterbonesGamble = (() => {
                     spawnHitCallout('BOSS: STASH FROZEN');
                 }
                 setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
-                spawnPaperStamp('FILED');
-                const tier = result.total >= 250 ? 'max' : result.total >= 100 ? 'big' : result.total >= 30 ? 'mid' : 'small';
-                AudioSystem.stinger(tier);
-                if (result.total >= 30) {
-                    setPayoutCount(reducedMotion ? 4 : (result.total >= 250 ? 30 : result.total >= 100 ? 18 : 8));
-                    setPayoutActive(true);
-                    scheduleTimeout(() => setPayoutActive(false), reducedMotion ? 900 : 1800);
-                }
-                if (result.total >= 250 && !reducedMotion) {
-                    setPowBurst(true);
-                    scheduleTimeout(() => setPowBurst(false), 700);
-                }
+                playSynergySequence(result, () => runValidHandJuice(result, catId));
             } else {
                 setFixerLine(pickLine(FIXER_LINES.bust));
                 setFlowStreak(0);
@@ -4588,6 +4982,25 @@ const GutterbonesGamble = (() => {
             setFixerLine(`DEV: granted ${drop.name}.`);
         };
 
+        const applyDevSynergyDemoDice = () => {
+            if (phase !== 'PLAY') return;
+            setDice((prev) => {
+                const base = prev.length === 5 ? prev : Array(5).fill(0).map(makeBone);
+                const next = [...base];
+                next[0] = carvedDieFromFace(next[0] || makeBone(), 'BLOOD_6');
+                next[1] = carvedDieFromFace(next[1] || makeBone(), 'SHIV_FACE');
+                next[2] = { ...(next[2] || makeBone()), id: Math.random(), value: 2, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                next[3] = { ...(next[3] || makeBone()), id: Math.random(), value: 3, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                next[4] = { ...(next[4] || makeBone()), id: Math.random(), value: 4, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                return next;
+            });
+            setHasRolled(true);
+            setRollingSlots(Array(5).fill(false));
+            setKept([false, false, false, false, false]);
+            rollLockRef.current = false;
+            setFixerLine('DEV: blood + shiv lane loaded — score Slop for blood ripple chain juice.');
+        };
+
         const forceBoss = (bossId) => {
             const boss = bossById(bossId);
             if (!boss) return;
@@ -4681,7 +5094,7 @@ const GutterbonesGamble = (() => {
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
                 {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
                 {scoreResolution && phase === 'PLAY' && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
-                {scoreBreakdown && phase === 'PLAY' && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={dismissScoreOverlays} />}
+                {scoreBreakdown && phase === 'PLAY' && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={dismissScoreOverlays} chainStepsRevealed={chainStepsRevealed} />}
                 {lossExplanation && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
@@ -4752,6 +5165,9 @@ const GutterbonesGamble = (() => {
                             <button onClick={() => setDebt(0)} className="border border-gray-700 px-1 py-1 text-red-200 hover:bg-red-900/30">CLEAR DEBT</button>
                             <button onClick={grantRandomConsumable} className="border border-gray-700 px-1 py-1 text-emerald-200 hover:bg-emerald-900/30">GRANT ONE-SHOT</button>
                             <button onClick={() => generateShop({ preservePaths: phase === 'SHOP', preserveRefreshes: true })} className="border border-gray-700 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">REROLL SHOP</button>
+                            {phase === 'PLAY' && (
+                                <button onClick={applyDevSynergyDemoDice} className="col-span-3 border border-fuchsia-600 px-1 py-1 text-fuchsia-200 hover:bg-fuchsia-900/30">LOAD SYNERGY DEMO LANE</button>
+                            )}
                         </div>
                         <div className="border-t border-gray-800 pt-2 mt-1">
                             <div className="text-gray-400 mb-1">FORCE BOSS</div>
@@ -4987,7 +5403,7 @@ const GutterbonesGamble = (() => {
                                     const rows = Object.values(CATEGORIES).map((cat) => {
                                         if (availableSet.has(cat.id)) {
                                             return (
-                                                <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} ruleTooltip={CATEGORY_RULE_TOOLTIPS[cat.id] || ''} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} />
+                                                <ScoreRow key={cat.id} id={cat.id} cat={cat} handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel} ruleTooltip={CATEGORY_RULE_TOOLTIPS[cat.id] || ''} result={calculateScore(cat.id, dice)} used={usedCats.includes(cat.id)} canScore={hasRolled && !usedCats.includes(cat.id) && !rolling} onScore={executePayout} onPreviewChange={setPayoutPreviewCatId} payoutSquash={payoutSquashCatId === cat.id} />
                                             );
                                         }
                                         const gate = lockedById[cat.id];
@@ -5025,7 +5441,24 @@ const GutterbonesGamble = (() => {
                                         Hit THROW to roll your bones.
                                     </div>
                                 )}
-                                <div className={`flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
+                                <div className={`relative flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
+                                    {synergyLinks.length > 0 && !reducedMotion && (
+                                        <div className="synergy-link-layer" aria-hidden="true">
+                                            {synergyLinks.map((link) => {
+                                                const from = Math.min(link.from, link.to);
+                                                const to = Math.max(link.from, link.to);
+                                                const leftPct = (from / 5) * 100 + 10;
+                                                const widthPct = Math.max(8, ((to - from + 1) / 5) * 100 - 4);
+                                                return (
+                                                    <div
+                                                        key={`${link.from}-${link.to}-${link.id}`}
+                                                        className="synergy-link"
+                                                        style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                     {dice.map((d, i) => (
                                         <div
                                             key={d.id}
@@ -5041,6 +5474,11 @@ const GutterbonesGamble = (() => {
                                                 selected={swapIdx === i}
                                                 raidPill={activeBoss?.id === 'THE_RAID'}
                                                 reducedMotion={reducedMotion}
+                                                previewTint={
+                                                    payoutPreviewCatId && categoryPreviewSlotActive(payoutPreviewCatId, dice, i)
+                                                        ? (CATEGORY_PREVIEW_TINT[payoutPreviewCatId] || CATEGORY_PREVIEW_TINT.DEFAULT)
+                                                        : null
+                                                }
                                                 canPill={discards > 0 && hasRolled && !rolling}
                                                 pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0}
                                                 onExplainPill={() => showMechanicPopup('PILL')}
