@@ -130,6 +130,10 @@ function createGame(snapshot = {}, options = {}) {
     rollLockRef: { current: false },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
+    scoreBreakdownTimeoutRef: { current: null },
+    scoreResolutionTimeoutRef: { current: null },
+    pendingUnlockMessageRef: { current: null },
+    dismissScoreOverlays: () => {},
   };
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);
