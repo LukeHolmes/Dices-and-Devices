@@ -9,14 +9,12 @@ const fs = require("node:fs");
 const { createGame, sharedSource } = require("../tests/helpers/game.cjs");
 const { dice, bone } = require("../tests/fixtures/runs.cjs");
 
-const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
-function block(open) {
-  const start = html.indexOf(open) + open.length;
-  const end = html.indexOf("</script>", start);
-  return html.slice(start, end);
-}
-const onboardingSource = block('<script id="gutterbones-onboarding">');
-const routesSource = block('<script id="gutterbones-routes">');
+const {
+  onboardingSource: onboardingSourceRaw,
+  routesSource: routesSourceRaw,
+} = require("../tests/helpers/game.cjs");
+const onboardingSource = onboardingSourceRaw;
+const routesSource = routesSourceRaw;
 
 function loadRulesApi() {
   const g = createGame({

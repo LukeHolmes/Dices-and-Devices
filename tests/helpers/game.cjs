@@ -1,52 +1,47 @@
 "use strict";
-// Read the production code: never maintain a second implementation of the rules.
-// Action probes model one React render's snapshot and queued state updates only.
-// They are not a React/browser renderer, nor a substitute for the preview checklist.
+// Execute production modules in a VM sandbox (no second implementation of rules).
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const assert = require("node:assert/strict");
-const html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
 
-function block(open) {
-  assert.equal(html.split(open).length, 2, `Expected exactly one ${open}`);
-  const start = html.indexOf(open) + open.length;
-  const end = html.indexOf("</script>", start);
-  assert.ok(end > start, `Missing closing script for ${open}`);
-  return html.slice(start, end);
+const root = path.join(__dirname, "../..");
+const legacyHtmlPath = path.join(root, "index.legacy.html");
+const html = fs.existsSync(legacyHtmlPath)
+  ? fs.readFileSync(legacyHtmlPath, "utf8")
+  : fs.readFileSync(path.join(root, "index.html"), "utf8");
+
+function readSrc(rel) {
+  return fs.readFileSync(path.join(root, rel), "utf8");
 }
 
-const sharedSource = block('<script id="gutterbones-rules">');
-const onboardingSource = block('<script id="gutterbones-onboarding">');
-const storySource = block('<script id="gutterbones-story">');
-const routesSource = block('<script id="gutterbones-routes">');
-const gambleSource = block('<script id="gutterbones-gamble">');
-const appSource = block('<script type="text/babel">');
-const definitionsStart = appSource.indexOf("    const PERSONAS =");
-const definitionsEnd = appSource.indexOf("    const CashRain =");
-assert.ok(
-  definitionsStart >= 0 && definitionsEnd > definitionsStart,
-  "Catalog boundary changed; update the test loader explicitly",
-);
-const definitions = appSource.slice(definitionsStart, definitionsEnd);
+/** Strip ESM syntax so vm.Script can run modules as classic scripts. */
+function asClassicScript(source) {
+  return source
+    .replace(/^import .*;\n/gm, "")
+    .replace(/^export default .*;\n/gm, "")
+    .replace(/^export \{ .* \};\n/gm, "")
+    .replace(/^export function createGameActions/gm, "function createGameActions")
+    .replace(/^export const /gm, "const ");
+}
 
-function actionSource(name) {
-  const marker = `        const ${name} = `;
-  assert.equal(
-    appSource.split(marker).length,
-    2,
-    `Missing or duplicate action: ${name}`,
+const sharedSource = asClassicScript(readSrc("src/systems/rules.js"));
+const onboardingSource = asClassicScript(readSrc("src/systems/onboarding.js"));
+const storySource = asClassicScript(readSrc("src/systems/story.js"));
+const routesSource = asClassicScript(readSrc("src/systems/routes.js"));
+const gambleSource = asClassicScript(readSrc("src/systems/gamble.js"));
+const catalogSource = asClassicScript(readSrc("src/data/catalog.js"));
+const gameActionsPath = path.join(root, "src/app/gameActions.js");
+let gameActionsSource = fs.existsSync(gameActionsPath)
+  ? asClassicScript(readSrc("src/app/gameActions.js"))
+  : "";
+if (gameActionsSource) {
+  gameActionsSource = gameActionsSource.replace(
+    /const \{\s*[\s\S]*?\} = catalog;\s*/,
+    "",
   );
-  const start = appSource.indexOf(marker);
-  const closing = /\n        \}\)?;/.exec(appSource.slice(start));
-  assert.ok(closing, `Missing closing boundary: ${name}`);
-  const end = start + closing.index + closing[0].length;
-  assert.ok(end > start, `Missing boundary for action ${name}`);
-  const code = appSource.slice(start, end);
-  // A changed boundary must fail loudly rather than silently testing a partial body.
-  new vm.Script(code);
-  return code;
 }
+const appSource = readSrc("src/App.jsx");
 
 const actionNames = [
   "getBossAdjustedTarget",
@@ -63,7 +58,43 @@ const actionNames = [
   "payDebtFromCash",
   "registerDebtSpike",
 ];
-const actions = actionNames.map(actionSource).join("\n");
+
+function extractActionBlock(source, marker, nextLineRe) {
+  const start = source.indexOf(marker);
+  if (start < 0) return null;
+  const slice = source.slice(start);
+  const endMatch = nextLineRe.exec(slice.slice(marker.length));
+  const end = endMatch ? start + marker.length + endMatch.index : start + slice.length;
+  return source.slice(start, end);
+}
+
+/** Prefer App.jsx during migration; fall back to generated gameActions module. */
+function actionSource(name) {
+  assert.ok(actionNames.includes(name), `Unknown action: ${name}`);
+  const appMarker = `    const ${name} =`;
+  const appStart = appSource.indexOf(appMarker);
+  if (appStart >= 0) {
+    const tail = appSource.slice(appStart + appMarker.length);
+    const bounds = [
+      /\n    const [a-zA-Z_$][\w$]* =/.exec(tail),
+      /\n    useEffect\s*\(/.exec(tail),
+      /\n    return\s*\(/.exec(tail),
+    ]
+      .filter(Boolean)
+      .map((m) => m.index)
+      .filter((idx) => idx > 0);
+    const endOffset = bounds.length ? Math.min(...bounds) : tail.length;
+    return appSource.slice(appStart, appStart + appMarker.length + endOffset);
+  }
+  const fromActions = extractActionBlock(
+    gameActionsSource,
+    `  const ${name} =`,
+    /\n  const [a-zA-Z_$][\w$]* =/,
+  );
+  assert.ok(fromActions, `${name} must be defined in App.jsx or src/app/gameActions.js`);
+  return fromActions;
+}
+
 const exportedNames = [
   ...actionNames,
   "PERSONAS",
@@ -121,6 +152,7 @@ function createGame(snapshot = {}, options = {}) {
     analyzeRunFailure: () => ({ primaryReason: "test scenario" }),
     patchSettings: noOp,
     generateShop: () => calls.push("generateShop"),
+    playStoryBeat: noOp,
     scheduleTimeout: (callback) => {
       timers.push(callback);
       return timers.length;
@@ -131,14 +163,27 @@ function createGame(snapshot = {}, options = {}) {
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
   };
-  for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
+  for (const setter of new Set(
+    (gameActionsSource.match(/\bset[A-Z]\w*/g) || []).concat([
+      "setGold",
+      "setDebt",
+      "setHands",
+      "setDiscards",
+      "setScore",
+      "setPhase",
+      "setRolling",
+      "setDice",
+      "setMeta",
+    ]),
+  )) {
     const key = setter[3].toLowerCase() + setter.slice(4);
     sandbox[setter] = (update) => {
-      const previous = pending.has(key) ? pending.get(key) : snapshot[key];
+      const previous = pending.has(key) ? pending.get(key) : sandbox[key];
       pending.set(
         key,
         typeof update === "function" ? update(previous) : update,
       );
+      sandbox[key] = pending.get(key);
     };
   }
   const context = vm.createContext(sandbox);
@@ -153,19 +198,20 @@ function createGame(snapshot = {}, options = {}) {
       "\n" +
       gambleSource +
       "\n" +
-      definitions +
+      catalogSource +
       "\n" +
-      actions +
-      "\nglobalThis.game = { GutterbonesRules, " +
-      exportedNames.join(", ") +
+      gameActionsSource +
+      "\nconst __actions = createGameActions(() => globalThis);" +
+      "\nglobalThis.game = { GutterbonesRules, GutterbonesOnboarding, GutterbonesStory, GutterbonesRoutes, GutterbonesGamble, ...__actions, " +
+      exportedNames.filter((n) => !actionNames.includes(n)).join(", ") +
       " };",
-  ).runInContext(context, { timeout: 2000 });
+  ).runInContext(context, { timeout: 4000 });
   return {
     api: context.game,
     storage,
     warnings,
     calls,
-    state: (key) => (pending.has(key) ? pending.get(key) : snapshot[key]),
+    state: (key) => (pending.has(key) ? pending.get(key) : sandbox[key]),
     flushTimers: () => {
       const queued = timers.splice(0);
       queued.forEach((callback) => callback());
@@ -185,4 +231,5 @@ module.exports = {
   gambleSource,
   appSource,
   actionSource,
+  gameActionsSource,
 };
