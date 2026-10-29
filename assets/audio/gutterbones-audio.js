@@ -133,9 +133,45 @@
             }
         },
 
+        /** Short scoring blip; used for face retriggers and synergy impacts. */
         payout() {
             scheduleTone(660, "sine", 0.07, 0.06);
             scheduleTone(990, "sine", 0.09, 0.05, 0.05);
+        },
+
+        retrigger() {
+            GutterbonesAudio.payout();
+        },
+
+        chainStep(index = 0, tag = "") {
+            const bump = tag === "blood_ripple" ? 40 : tag === "ghost_echo" ? 20 : 0;
+            scheduleTone(320 + index * 48 + bump, "triangle", 0.055, 0.045, index * 0.035);
+            scheduleTone(480 + index * 52 + bump, "square", 0.04, 0.032, index * 0.035 + 0.04);
+        },
+
+        categoryStinger(catId) {
+            const seq = {
+                Y: [
+                    [392, "square", 0.07, 0.06],
+                    [784, "sine", 0.12, 0.07],
+                    [1175, "triangle", 0.16, 0.08],
+                ],
+                LS: [
+                    [440, "triangle", 0.08, 0.055],
+                    [880, "sine", 0.14, 0.075],
+                ],
+                FH: [
+                    [370, "sawtooth", 0.06, 0.05],
+                    [740, "square", 0.1, 0.065],
+                    [988, "sine", 0.12, 0.07],
+                ],
+            }[catId];
+            if (!seq) return;
+            let offset = 0;
+            seq.forEach(([freq, type, dur, gain]) => {
+                scheduleTone(freq, type, dur, gain, offset);
+                offset += dur * 0.5;
+            });
         },
 
         stinger(tier) {

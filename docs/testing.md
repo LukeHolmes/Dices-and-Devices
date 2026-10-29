@@ -60,6 +60,8 @@ Before publishing, check:
 - **Side bets:** stake buttons show win payout; after rolling, best preview heat vs threshold.
 - Open Help → **ROUTES & GAMBLE** section.
 - Inspect desktop and narrow mobile layouts, keyboard focus, reduced motion, shop and boss intro.
+- **Synergy juice (chains enabled):** carve adjacent blood/shiv or ghost+echo; score and confirm breakdown reveals **CHAIN:** steps one at a time, link flash on the dice lane (if motion allowed), chain depth in preview, category stamps on Jackpot / Long Run / Full Ride.
+- With **prefers-reduced-motion**, confirm chains still score correctly but links/stagger are suppressed.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 
 CI runs `npm run check` with read-only repository permissions. It neither deploys nor modifies saves. A successful local check is not evidence that remote CI has run.
