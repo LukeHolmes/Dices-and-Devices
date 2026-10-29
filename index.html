@@ -2243,8 +2243,9 @@ const GutterbonesGamble = (() => {
         maxChainPasses: 8,
         juiceStepMs: 150,
         overlayBaseMs: 1200,
-        overlayTailMs: 800,
-        overlayDepthBonusMs: 550
+        overlayTailMs: 900,
+        overlayDepthBonusMs: 650,
+        overlayPerChainStepMs: 200
     };
 
     const CATEGORY_FACE_VALUE = { ONES: 1, TWOS: 2, THREES: 3, FOURS: 4, FIVES: 5, SIXES: 6 };
@@ -2298,12 +2299,21 @@ const GutterbonesGamble = (() => {
         const base = SYNERGY_TUNING.overlayBaseMs ?? SCORE_OVERLAY_LIFETIME_MS;
         if (reducedMotion || !result) return base;
         const eventCount = (result.synergyEvents || []).length;
+        const chainStepCount = (result.explanationSteps || []).filter(
+            (step) => String(step.label || '').startsWith('CHAIN:')
+        ).length;
+        const staggerSteps = Math.max(eventCount, chainStepCount);
         const stepMs = SYNERGY_TUNING.juiceStepMs ?? 150;
-        const sequenceMs = eventCount > 0 ? eventCount * stepMs + 90 : 0;
-        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 800;
-        const depthBonus = (result.chainDepth || 0) >= 2 ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 550) : 0;
-        if (eventCount === 0 && depthBonus === 0) return base;
-        return Math.max(base, sequenceMs + tailMs + depthBonus);
+        const sequenceMs = staggerSteps > 0 ? staggerSteps * stepMs + 120 : 0;
+        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 900;
+        const depth = result.chainDepth || 0;
+        const deepChain = depth >= 2 || eventCount >= 2 || chainStepCount >= 2;
+        const depthBonus = deepChain ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 650) : 0;
+        const perStepBonus = staggerSteps > 1
+            ? (staggerSteps - 1) * (SYNERGY_TUNING.overlayPerChainStepMs ?? 200)
+            : 0;
+        if (staggerSteps === 0 && !deepChain) return base;
+        return Math.max(base, sequenceMs + tailMs + depthBonus + perStepBonus);
     };
 
     const buildSynergyLinks = (events, dice) => {
@@ -5316,6 +5326,25 @@ const GutterbonesGamble = (() => {
             setFixerLine('DEV: blood + shiv lane loaded — score Slop for blood ripple chain juice.');
         };
 
+        const applyDevMultiChainDemoDice = () => {
+            if (phase !== 'PLAY') return;
+            setDice((prev) => {
+                const base = prev.length === 5 ? prev : Array(5).fill(0).map(makeBone);
+                const next = [...base];
+                next[0] = carvedDieFromFace(next[0] || makeBone(), 'GHOST_FACE');
+                next[1] = carvedDieFromFace(next[1] || makeBone(), 'ECHO_FACE');
+                next[2] = carvedDieFromFace(next[2] || makeBone(), 'GOLD_FACE');
+                next[3] = carvedDieFromFace(next[3] || makeBone(), 'WIREBAG_FACE');
+                next[4] = { ...(next[4] || makeBone()), id: Math.random(), value: 5, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                return next;
+            });
+            setHasRolled(true);
+            setRollingSlots(Array(5).fill(false));
+            setKept([false, false, false, false, false]);
+            rollLockRef.current = false;
+            setFixerLine('DEV: ghost echo + wire feed lane — score Slop for multi-chain stagger QA.');
+        };
+
         const forceBoss = (bossId) => {
             const boss = bossById(bossId);
             if (!boss) return;
@@ -5482,7 +5511,10 @@ const GutterbonesGamble = (() => {
                             <button onClick={grantRandomConsumable} className="border border-gray-700 px-1 py-1 text-emerald-200 hover:bg-emerald-900/30">GRANT ONE-SHOT</button>
                             <button onClick={() => generateShop({ preservePaths: phase === 'SHOP', preserveRefreshes: true })} className="border border-gray-700 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">REROLL SHOP</button>
                             {phase === 'PLAY' && (
-                                <button onClick={applyDevSynergyDemoDice} className="col-span-3 border border-fuchsia-600 px-1 py-1 text-fuchsia-200 hover:bg-fuchsia-900/30">LOAD SYNERGY DEMO LANE</button>
+                                <>
+                                    <button onClick={applyDevSynergyDemoDice} className="col-span-3 border border-fuchsia-600 px-1 py-1 text-fuchsia-200 hover:bg-fuchsia-900/30">LOAD SYNERGY DEMO LANE</button>
+                                    <button onClick={applyDevMultiChainDemoDice} className="col-span-3 border border-cyan-600 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">LOAD MULTI-CHAIN DEMO</button>
+                                </>
                             )}
                         </div>
                         <div className="border-t border-gray-800 pt-2 mt-1">

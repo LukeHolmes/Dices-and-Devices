@@ -123,6 +123,8 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /getScoreOverlayLifetimeMs/);
   assert.match(appSource, /overlayTailMs/);
   assert.match(appSource, /applyDevSynergyDemoDice/);
+  assert.match(appSource, /applyDevMultiChainDemoDice/);
+  assert.match(appSource, /overlayPerChainStepMs/);
   assert.match(appSource, /categoryPreviewSlotActive/);
   assert.match(appSource, /pathPickEffects/);
   assert.match(appSource, /SYNERGY_HINTS/);
