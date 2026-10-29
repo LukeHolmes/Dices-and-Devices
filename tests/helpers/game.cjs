@@ -52,6 +52,7 @@ const actionNames = [
   "getBossAdjustedTarget",
   "calculateScore",
   "rollBones",
+  "rerollBoneSlot",
   "popPill",
   "handleProgram",
   "resumeRun",

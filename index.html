@@ -3,7 +3,8 @@
 </div>
 
 <meta charset="UTF-8">
-<link rel="icon" href="gutterbones-card.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="gutterbones-card.png">
 <link rel="preload" as="image" href="assets/dice/die-1.png">
 <link rel="preload" as="image" href="assets/dice/die-2.png">
 <link rel="preload" as="image" href="assets/dice/die-3.png">
@@ -494,9 +495,20 @@
       width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none;
       transform: translateZ(0); backface-visibility: hidden;
     }
+    #root-gutterbones .bone-die-btn.bone-die-kept {
+      transform: translate3d(0, -6px, 0);
+    }
     #root-gutterbones .bone-die-btn.bone-die-kept .bone-die-img {
-      transform: translate3d(0, -4px, 0);
-      filter: drop-shadow(0 0 10px rgba(198, 139, 22, 0.85)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+      filter: drop-shadow(0 0 16px rgba(255, 184, 92, 0.95)) drop-shadow(0 0 28px rgba(198, 139, 22, 0.55)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45));
+    }
+    #root-gutterbones .bone-die-btn.bone-die-kept::after {
+      content: "";
+      position: absolute;
+      inset: -6%;
+      border-radius: 0.65rem;
+      border: 2px solid rgba(255, 196, 120, 0.75);
+      box-shadow: 0 0 18px rgba(255, 184, 92, 0.45);
+      pointer-events: none;
     }
     #root-gutterbones .bone-slot-wrap.bone-hover-ready:hover .bone-die-btn:not(.bone-die-tumble) .bone-die-img {
       transform: scale(1.04);
@@ -1288,11 +1300,11 @@ const GutterbonesRoutes = (() => {
     });
 
     const ROUND_CURVE_TUNING = Object.freeze({
-        earlyMaxRound: 3,
-        midMaxRound: 6,
-        early: { pathModWeight: 0.7, flatIncrease: 28 },
-        mid: { pathModWeight: 0.95, flatIncrease: 52 },
-        late: { pathModWeight: 1.1, flatIncrease: 58 }
+        earlyMaxRound: 4,
+        midMaxRound: 7,
+        early: { pathModWeight: 0.72, flatIncrease: 22 },
+        mid: { pathModWeight: 0.92, flatIncrease: 44 },
+        late: { pathModWeight: 1.08, flatIncrease: 52 }
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
@@ -1648,7 +1660,7 @@ const GutterbonesGamble = (() => {
         },
         PROGRAM_SNIFF: {
             title: 'SNIFF (25% STASH)',
-            body: 'Rerolls one random free (unkept) bone. It uses the same reroll rules as pills.'
+            body: 'Spends stash (not Pills) to reroll one random unkept bone. Your opening 25% stash is one free SNIFF charge.'
         },
         PROGRAM_BRIBE: {
             title: 'BRIBE (60% STASH)',
@@ -1936,11 +1948,14 @@ const GutterbonesGamble = (() => {
     ];
 
     const ECONOMY_TUNING = {
-        shortageToDebtRatio: 0.75,
-        hustleCashDivisor: 140,
-        hustleCashCap: 4,
-        debtReliefThreshold: 180,
-        debtReliefPerBigHand: 1
+        shortageToDebtRatio: 0.82,
+        hustleCashDivisor: 175,
+        hustleCashCap: 3,
+        debtReliefThreshold: 195,
+        debtReliefPerBigHand: 1,
+        /** Stash % gained per scored hand (lower = tighter programs economy). */
+        stashFillRate: 1.55,
+        stashFillCap: 46
     };
 
     const BOSS_TUNING = {
@@ -1966,9 +1981,9 @@ const GutterbonesGamble = (() => {
     };
 
     const EARLY_GAME_TUNING = {
-        openingTarget: 85,
+        openingTarget: 90,
         counterOpeningMultiplier: 1.15,
-        /** One free SNIFF (25% stash program) at run start — rescues near-miss R1 without lowering quota. */
+        /** Stash % shown at run start after the free opening reroll (one SNIFF worth). */
         openingStashGrant: 25,
         debtPenaltyStartsRound: 4,
         bossPathStartsRound: 4
@@ -1977,11 +1992,11 @@ const GutterbonesGamble = (() => {
     const SCORE_OVERLAY_LIFETIME_MS = 1200;
 
     const ROUND_CURVE_TUNING = {
-        earlyMaxRound: 3,
-        midMaxRound: 6,
-        early: { pathModWeight: 0.7, flatIncrease: 28 },
-        mid: { pathModWeight: 0.95, flatIncrease: 52 },
-        late: { pathModWeight: 1.1, flatIncrease: 58 }
+        earlyMaxRound: 4,
+        midMaxRound: 7,
+        early: { pathModWeight: 0.72, flatIncrease: 22 },
+        mid: { pathModWeight: 0.92, flatIncrease: 44 },
+        late: { pathModWeight: 1.08, flatIncrease: 52 }
     };
 
     const PROGRESSION_GUARDRAILS = {
@@ -2587,6 +2602,30 @@ const GutterbonesGamble = (() => {
         );
     };
 
+    const CarvingDieTile = ({ die, face, onClick, slotLabel, className = '' }) => {
+        const isFacePick = face != null;
+        const isModifier = isFacePick && face.id && face.type !== 'standard';
+        const pipValue = isFacePick ? face.value : die.value;
+        const showCarvedOverlay = !isFacePick && die.faceId && die.faceId !== 'standard';
+        const faceSrc = (isModifier || showCarvedOverlay) ? DICE_ART.faces.blank : diceStandardFaceSrc(pipValue);
+        const overlayItem = isFacePick ? (isModifier ? face : null) : (showCarvedOverlay ? die : null);
+        return (
+            <button
+                type="button"
+                onClick={onClick}
+                className={`carving-die-tile w-20 h-20 md:w-32 md:h-32 rounded-lg border-2 border-[#8c8880] flex flex-col items-center justify-center shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative bg-black/20 ${className}`}
+            >
+                <img className="w-[88%] h-[88%] object-contain pointer-events-none" src={faceSrc} alt="" draggable={false} decoding="async" />
+                {overlayItem && (
+                    <div className={`absolute inset-[10%] rounded flex flex-col items-center justify-center border pointer-events-none ${overlayItem.faceStyle || overlayItem.style}`}>
+                        <div className="font-serif text-3xl md:text-4xl leading-none text-white drop-shadow">{(overlayItem.faceLabel || overlayItem.label || '?').charAt(0)}</div>
+                    </div>
+                )}
+                {slotLabel && <div className="absolute top-1.5 left-1.5 text-[10px] text-gray-300 font-mono tracking-wide">{slotLabel}</div>}
+            </button>
+        );
+    };
+
     const ScorePreview = ({ result }) => {
         if (!result.valid) return null;
         return (
@@ -3031,7 +3070,7 @@ const GutterbonesGamble = (() => {
             return impact;
         };
         return (
-            <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(94vw,42rem)]">
+            <div className="absolute bottom-[11.5rem] md:bottom-[10rem] left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(94vw,42rem)]">
                 <button
                     type="button"
                     onClick={onDismiss}
@@ -3545,6 +3584,8 @@ const GutterbonesGamble = (() => {
         const [bossIntro, setBossIntro] = useState(null);
         const [selectedItem, setSelectedItem] = useState(null);
         const [carvingDie, setCarvingDie] = useState(null);
+        const [openingSniffBanner, setOpeningSniffBanner] = useState(null);
+        const [pillCurrencyHint, setPillCurrencyHint] = useState(false);
         const [swapMode, setSwapMode] = useState(false);
         const [swapIdx, setSwapIdx] = useState(null);
         const [payoutActive, setPayoutActive] = useState(false);
@@ -3613,6 +3654,7 @@ const GutterbonesGamble = (() => {
         const buildCalloutPrevRef = useRef(null);
         const synergyCalloutAtRef = useRef(0);
         const rollLockRef = useRef(false);
+        const openingSniffPendingRef = useRef(false);
         const lastRollStartedAtRef = useRef(0);
         const pendingPayoutRef = useRef(null);
         const pendingUnlockMessageRef = useRef(null);
@@ -4216,9 +4258,14 @@ const GutterbonesGamble = (() => {
             setDice(bones);
             setShowSystemMenu(false);
             setShowHelpOverlay(false);
+            openingSniffPendingRef.current = !!(EARLY_GAME_TUNING.openingStashGrant);
             const enterPlay = () => {
                 setPhase('PLAY');
                 if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
+                if (!audioSettings.dismissPillPulse) {
+                    setPillCurrencyHint(true);
+                    scheduleTimeout(() => setPillCurrencyHint(false), reducedMotion ? 4500 : 6200);
+                }
             };
             const prologue = GutterbonesStory?.getProloguePanel?.(runArcId);
             playStoryBeat(prologue, enterPlay);
@@ -4374,30 +4421,33 @@ const GutterbonesGamble = (() => {
             }, settleMs);
         };
 
-        const popPill = (idx) => {
-            showMechanicPopup('PILL');
-            if (discards <= 0 || rolling || rollLockRef.current) return;
-            rollLockRef.current = true;
-            patchSettings({ dismissPillPulse: true });
-            if (activeBoss?.id === 'THE_RAID') {
-                spawnHitCallout('BOSS: RAID PILL TOLL');
-                setGold(g => {
-                    if (g >= 2) return g - 2;
-                    const shortage = 2 - g;
-                    registerDebtSpike(shortage, 'pill toll');
-                    return 0;
-                });
+        const rerollBoneSlot = (idx, { consumePill = true, silent = false } = {}) => {
+            if (rolling || rollLockRef.current) return false;
+            if (consumePill) {
+                if (discards <= 0) return false;
+                if (!silent) showMechanicPopup('PILL');
+                patchSettings({ dismissPillPulse: true });
+                if (activeBoss?.id === 'THE_RAID') {
+                    spawnHitCallout('BOSS: RAID PILL TOLL');
+                    setGold(g => {
+                        if (g >= 2) return g - 2;
+                        const shortage = 2 - g;
+                        registerDebtSpike(shortage, 'pill toll');
+                        return 0;
+                    });
+                }
+                if (inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled) setGold(g => g + 1);
+                setDiscards(d => d - 1);
+                setActiveMechanicPopup(null);
             }
-            if (inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled) setGold(g => g + 1);
-            setDiscards(d => d - 1);
-            setActiveMechanicPopup(null);
-            const activeMask = Array.from({ length: 5 }, (_, i) => i === idx);
+            rollLockRef.current = true;
             setRollingSlots(prev => prev.map((_, i) => i === idx));
             const settleMs = reducedMotion ? 0 : DICE_ROLL_SETTLE_MS + 120;
             scheduleTimeout(() => {
                 setDice(prev => {
                     const next = [...prev];
                     const die = next[idx];
+                    if (!die) return prev;
                     const face = die.faces[Math.floor(Math.random() * die.faces.length)];
                     const isStandard = face.type === 'standard';
                     let value = face.value;
@@ -4417,13 +4467,31 @@ const GutterbonesGamble = (() => {
                 rollLockRef.current = false;
                 if (!reducedMotion) AudioSystem.clatter();
             }, settleMs);
-            if (!reducedMotion) {
+            if (consumePill && !reducedMotion) {
                 const burstId = Math.random();
                 setPillBursts(prev => [...prev, { id: burstId, idx }]);
                 scheduleTimeout(() => setPillBursts(prev => prev.filter(p => p.id !== burstId)), 360);
             }
-            AudioSystem.playTone(600, 'square', 0.1);
+            if (consumePill) AudioSystem.playTone(600, 'square', 0.1);
+            return true;
         };
+
+        const popPill = (idx) => {
+            rerollBoneSlot(idx, { consumePill: true });
+        };
+
+        useEffect(() => {
+            if (phase !== 'PLAY' || storyBeat || !openingSniffPendingRef.current || dice.length !== 5) return;
+            openingSniffPendingRef.current = false;
+            const grant = EARLY_GAME_TUNING.openingStashGrant || 0;
+            if (grant <= 0) return;
+            setStash(grant);
+            const slot = Math.floor(Math.random() * 5);
+            rerollBoneSlot(slot, { consumePill: false, silent: true });
+            setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
+            spawnPaperStamp('FREE SNIFF', '#0f766e');
+            scheduleTimeout(() => setOpeningSniffBanner(null), reducedMotion ? 5200 : 6800);
+        }, [phase, storyBeat, dice.length, reducedMotion]);
 
         const executePayout = (catId) => {
             const playSynergySequence = (result, onDone) => {
@@ -4559,7 +4627,10 @@ const GutterbonesGamble = (() => {
                     setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
                 }
                 if (activeBoss?.id !== 'INFORMANT') {
-                    let gain = Math.min(60, (result.total / currentTarget) * 100 * 2);
+                    let gain = Math.min(
+                        ECONOMY_TUNING.stashFillCap,
+                        (result.total / currentTarget) * 100 * ECONOMY_TUNING.stashFillRate
+                    );
                     if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
                     if (persona.id === 'HUSTLER') gain *= 0.5;
                     if (insaneContract) gain *= INSANE_CONTRACT_MODIFIERS.stashGainMultiplier;
@@ -4618,6 +4689,7 @@ const GutterbonesGamble = (() => {
                 AudioSystem.bust();
                 const goRapSheet = () => {
                     dismissScoreOverlays();
+                    setLossExplanation(null);
                     setPayoutActive(false);
                     setPowBurst(false);
                     setPhase('RAP_SHEET');
@@ -4710,12 +4782,12 @@ const GutterbonesGamble = (() => {
             if (stash < p.cost || activeBoss?.id === 'INFORMANT') return;
             if (p.id === 'SNIFF') {
                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
-                if (discards <= 0 || !free.length) return;
+                if (!free.length || rolling) return;
             }
             setStash(s => s - p.cost);
             if (p.id === 'SNIFF') {
                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
-                popPill(free[Math.floor(Math.random() * free.length)]);
+                rerollBoneSlot(free[Math.floor(Math.random() * free.length)], { consumePill: false, silent: true });
             }
             if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
             if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
@@ -5095,7 +5167,7 @@ const GutterbonesGamble = (() => {
                 {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
                 {scoreResolution && phase === 'PLAY' && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
                 {scoreBreakdown && phase === 'PLAY' && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={dismissScoreOverlays} chainStepsRevealed={chainStepsRevealed} />}
-                {lossExplanation && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
+                {lossExplanation && phase === 'PLAY' && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
@@ -5302,6 +5374,14 @@ const GutterbonesGamble = (() => {
                     </div>
                 )}
 
+                {openingSniffBanner && phase === 'PLAY' && (
+                    <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[560] pointer-events-none w-[min(94vw,40rem)] px-4">
+                        <div className="readable-panel border-emerald-500/70 rounded-xl px-4 py-3 text-center font-mono text-xs md:text-sm text-emerald-100 leading-relaxed animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]">
+                            {openingSniffBanner}
+                        </div>
+                    </div>
+                )}
+
                 {phase === 'PLAY' && (
                     <div className={`h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
@@ -5336,6 +5416,11 @@ const GutterbonesGamble = (() => {
                                             </button>
                                         </div>
                                         <div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div>
+                                        {pillCurrencyHint && !hasRolled && (
+                                            <div className="absolute right-0 top-full mt-1 w-56 pointer-events-none z-[145] font-mono text-[9px] text-cyan-200/95 leading-snug border border-cyan-500/40 bg-black/90 rounded px-2 py-1.5">
+                                                Pills = reroll currency. After THROW, tap PILL on a bone to reroll that slot.
+                                            </div>
+                                        )}
                                         {activeMechanicPopup === 'pills' && (
                                             <div className="mechanic-popover absolute right-0 top-full mt-2 w-72 text-left z-[140]">
                                                 <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
@@ -5360,9 +5445,9 @@ const GutterbonesGamble = (() => {
                                                 </div>
                                             )}
                                         </>
-                                    ) : (
+                                    ) : !hasRolled ? (
                                         <div>SIDE BET: choose stake before first roll — need {wagerThreshold}+ heat this round</div>
-                                    )}
+                                    ) : null}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {WAGER_TUNING.stakeOptions.map((stake) => {
@@ -5728,7 +5813,11 @@ const GutterbonesGamble = (() => {
                             </div>
                             <div className="flex-1 bg-[#2b1414] border-[12px] border-[#111] rounded-2xl p-6 md:p-12 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black]">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">
-                                    {carvingDie === null ? dice.map((d,i) => <button key={i} onClick={() => setCarvingDie(i)} className="w-20 h-20 md:w-32 md:h-32 rounded-lg bg-[#d4cfc5] border-2 border-[#8c8880] flex flex-col items-center justify-center text-5xl font-serif text-black shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative"><div>{d.value}</div><div className="absolute top-2 text-xs text-gray-500 font-mono">BONE {i+1}</div></button>) : dice[carvingDie].faces.map((f, faceIdx) => <button key={faceIdx} onClick={() => executeCarve(carvingDie, faceIdx)} className="w-20 h-20 md:w-32 md:h-32 rounded-lg bg-[#d4cfc5] border-2 border-[#8c8880] flex items-center justify-center text-5xl font-serif text-black shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative">{f.id && f.type !== 'standard' ? <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${f.style}`}><div className="font-serif text-4xl leading-none">{f.label.charAt(0)}</div></div> : <div>{f.value}</div>}</button>)}
+                                    {carvingDie === null ? dice.map((d, i) => (
+                                        <CarvingDieTile key={d.id} die={d} onClick={() => setCarvingDie(i)} slotLabel={`BONE ${i + 1}`} />
+                                    )) : dice[carvingDie].faces.map((f, faceIdx) => (
+                                        <CarvingDieTile key={faceIdx} die={dice[carvingDie]} face={f} onClick={() => executeCarve(carvingDie, faceIdx)} slotLabel={`FACE ${faceIdx + 1}`} />
+                                    ))}
                                 </div>
                                 {carveSparks.map(s => <div key={s.id} className="carve-spark" style={{ left: s.x, top: s.y, '--sx': s.sx, '--sy': s.sy }}></div>)}
                                 {carvingDie !== null && <button onClick={() => setCarvingDie(null)} className="absolute bottom-4 font-mono text-white underline text-sm">BACK TO BONES</button>}
@@ -5740,14 +5829,14 @@ const GutterbonesGamble = (() => {
                 {phase === 'RAP_SHEET' && (
                     <div className="h-full flex items-center justify-center z-[500] relative overflow-y-auto overflow-x-hidden p-4">
                         <div className="rap-busted-backdrop" aria-hidden></div>
-                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl max-h-[min(92vh,760px)] overflow-y-auto p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
                             <div className="border border-black p-4 bg-white/50 mb-4 relative min-h-[7rem]">
                                 <div className="font-mono text-xs opacity-70 mb-2">Hand History:</div>
                                 <HistoryPanel history={history} />
                                 {showIncarceratedStamp && (
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-[5px] border-[#d30000] text-[#d30000] font-marker px-4 py-2 text-2xl md:text-3xl rotate-[-12deg] bg-white/90 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10 whitespace-nowrap">
+                                    <div className="absolute top-2 right-2 border-[4px] border-[#d30000] text-[#d30000] font-marker px-3 py-1.5 text-lg md:text-xl rotate-[-10deg] bg-white/92 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10 whitespace-nowrap max-w-[85%]">
                                         INCARCERATED
                                     </div>
                                 )}
