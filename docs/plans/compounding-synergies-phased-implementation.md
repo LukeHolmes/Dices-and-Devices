@@ -419,4 +419,5 @@ Consume flags in `executePayout` / rules context; show chips in HUD near consuma
 - [x] Phase 4 complete + Tier 2 content
 - [x] Phase 5 complete + Tier 3 hardware
 - [x] Phase 6 complete + blueprints/gamble
-- [ ] Phase 7 complete + merge to main
+- [x] Phase 7 complete + merge readiness (build intel, docs; tip-dealer / reface swap deferred)
+- [ ] Merged to `main`

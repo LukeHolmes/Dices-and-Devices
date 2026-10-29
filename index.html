@@ -2044,12 +2044,12 @@ const GutterbonesGamble = (() => {
     };
 
     const BUILD_TIPS = {
-        [BUILD_IDS.UNKNOWN]: ['Keep rolling to reveal your angle.', 'Contraband faces and hardware define the story.'],
-        [BUILD_IDS.MULT_ENGINE]: ['Stack multipliers early.', 'Prioritize scaling over raw chip totals when flow is warm.'],
-        [BUILD_IDS.BLOOD_RISK]: ['Manage risk vs reward on toll faces.', 'Pair burst chips with mult when you can clear quota.'],
-        [BUILD_IDS.CASH_CONTROL]: ['Convert heat into cash upgrades.', 'Black Book rewards disciplined pill timing.'],
-        [BUILD_IDS.SET_CONSISTENCY]: ['Lean on reliable categories while variance stays low.', 'Avoid overloading exotic faces if you want clean lines.'],
-        [BUILD_IDS.CHAOS]: ['Expect swingy hands - plan spare plays.', 'Destructive faces trade stability for spikes.']
+        [BUILD_IDS.UNKNOWN]: ['Keep rolling to reveal your angle.', 'Contraband faces and hardware define the story.', 'Carve adjacency pairs (Blood, Echo, Fuse) to unlock chain depth.'],
+        [BUILD_IDS.MULT_ENGINE]: ['Stack multipliers early.', 'Prioritize scaling over raw chip totals when flow is warm.', 'Chain depth 2+ — Fuse, Echo, and Hot Streak Coil multiply retriggers.'],
+        [BUILD_IDS.BLOOD_RISK]: ['Manage risk vs reward on toll faces.', 'Pair burst chips with mult when you can clear quota.', 'Blood ripple chains spike when Shiv and Blood 6 sit adjacent.'],
+        [BUILD_IDS.CASH_CONTROL]: ['Convert heat into cash upgrades.', 'Black Book rewards disciplined pill timing.', 'Wire feed chains add cash without needing deep mult stacks.'],
+        [BUILD_IDS.SET_CONSISTENCY]: ['Lean on reliable categories while variance stays low.', 'Avoid overloading exotic faces if you want clean lines.', 'Bookends and Magnet faces reward stable lanes over volatile chains.'],
+        [BUILD_IDS.CHAOS]: ['Expect swingy hands - plan spare plays.', 'Destructive faces trade stability for spikes.', 'Fuse Box turns mixed face types into extra chain passes.']
     };
 
     const BUILD_STYLE_BLURBS = {
@@ -2070,6 +2070,9 @@ const GutterbonesGamble = (() => {
         MIRROR_RIG: [BUILD_IDS.SET_CONSISTENCY, BUILD_IDS.MULT_ENGINE],
         DEBT_COLLECTOR: [BUILD_IDS.BLOOD_RISK, BUILD_IDS.MULT_ENGINE],
         HOT_STREAK_COIL: [BUILD_IDS.MULT_ENGINE],
+        MULT_ENGINE_START: [BUILD_IDS.MULT_ENGINE],
+        BLOOD_DEBT_START: [BUILD_IDS.BLOOD_RISK, BUILD_IDS.MULT_ENGINE],
+        FLOW_SAVE_ONCE: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.SET_CONSISTENCY],
         CENTERPIECE: [BUILD_IDS.MULT_ENGINE],
         BLOOD_6: [BUILD_IDS.BLOOD_RISK],
         BLOOD_PACT: [BUILD_IDS.BLOOD_RISK],
@@ -2198,6 +2201,41 @@ const GutterbonesGamble = (() => {
         return parts.join(' | ');
     };
 
+    const aggregateChainStats = (history, maxHands = 12) => {
+        const slice = (history || []).slice(-maxHands);
+        const depths = slice.map((h) => (typeof h.chainDepth === 'number' && !Number.isNaN(h.chainDepth) ? h.chainDepth : 0));
+        if (!depths.length) return { avg: 0, max: 0, chainHands: 0, samples: 0 };
+        const sum = depths.reduce((a, b) => a + b, 0);
+        const chainHands = depths.filter((d) => d >= 1).length;
+        return { avg: sum / depths.length, max: Math.max(...depths), chainHands, samples: depths.length };
+    };
+
+    const inventoryArchetypeWeights = (inventory, dice) => {
+        const weights = {
+            [BUILD_IDS.MULT_ENGINE]: 0,
+            [BUILD_IDS.BLOOD_RISK]: 0,
+            [BUILD_IDS.CASH_CONTROL]: 0,
+            [BUILD_IDS.SET_CONSISTENCY]: 0,
+            [BUILD_IDS.CHAOS]: 0
+        };
+        const seen = new Set();
+        const tagItem = (id) => {
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            getArchetypeTagsForItemId(id).forEach((tag) => {
+                if (weights[tag] != null) weights[tag] += 0.45;
+            });
+        };
+        (inventory || []).forEach((i) => tagItem(i.id));
+        (dice || []).forEach((die) => {
+            if (die.faceId && die.faceId !== 'standard') tagItem(die.faceId);
+            (die.faces || []).forEach((f) => {
+                if (f && f.id && f.id !== 'standard') tagItem(f.id);
+            });
+        });
+        return weights;
+    };
+
     const deriveKeyItems = (primaryBuild, inventory, dice, flowStreak = 0) => {
         const out = [];
         const push = (id) => {
@@ -2217,6 +2255,15 @@ const GutterbonesGamble = (() => {
         return out;
     };
 
+    const deriveKeyItemsWithHistory = (primaryBuild, inventory, dice, flowStreak, history) => {
+        const out = deriveKeyItems(primaryBuild, inventory, dice, flowStreak);
+        const chainStats = aggregateChainStats(history, 12);
+        if (chainStats.max >= 2 && primaryBuild === BUILD_IDS.MULT_ENGINE && out.length < 6 && !out.includes('SYNERGY_CHAINS')) {
+            out.push('SYNERGY_CHAINS');
+        }
+        return out;
+    };
+
     const analyzeBuild = ({ inventory, dice, history, flowStreak }) => {
         const inv = new Set((inventory || []).map((i) => i.id));
         const multCount = countCarvedFace(dice, 'MULT_FACE');
@@ -2224,8 +2271,10 @@ const GutterbonesGamble = (() => {
         const hasBlood6 = diceShowsFace(dice, 'BLOOD_6');
         const chaosCount = ['SHIV_FACE', 'WIREBAG_FACE', 'GHOST_FACE'].filter((fid) => diceShowsFace(dice, fid)).length;
         const histText = aggregateHistoryTriggers(history, 12);
-        const multHits = (histText.match(/\+MULT|ENGINE|CROWBAR|GHOST/g) || []).length;
-        const bloodHits = (histText.match(/BLOOD|PACT|SHIV/g) || []).length;
+        const chainStats = aggregateChainStats(history, 12);
+        const tagWeights = inventoryArchetypeWeights(inventory, dice);
+        const multHits = (histText.match(/\+MULT|ENGINE|CROWBAR|GHOST|CHAIN|FUSE/g) || []).length;
+        const bloodHits = (histText.match(/BLOOD|PACT|SHIV|RIPPLE/g) || []).length;
         const cashHits = (histText.match(/CASH|WIRE/g) || []).length;
         const totals = (history || []).map((h) => h.total).filter((t) => typeof t === 'number' && !Number.isNaN(t));
         const weights = {
@@ -2251,6 +2300,12 @@ const GutterbonesGamble = (() => {
         if (multHits >= 4) { w += 2.4; sig[BUILD_IDS.MULT_ENGINE].push('hist:mult_heavy'); }
         else if (multHits >= 1) { w += 0.9; sig[BUILD_IDS.MULT_ENGINE].push('hist:mult_light'); }
         if (flowStreak >= 2 && (multCount >= 1 || inv.has('ENGINE'))) { w += 0.6; sig[BUILD_IDS.MULT_ENGINE].push('flow:mult'); }
+        if (chainStats.avg >= 1.25) { w += 1.8; sig[BUILD_IDS.MULT_ENGINE].push('hist:chain_avg'); }
+        else if (chainStats.chainHands >= 2) { w += 0.9; sig[BUILD_IDS.MULT_ENGINE].push('hist:chain_light'); }
+        if (chainStats.max >= 3) { w += 1.4; sig[BUILD_IDS.MULT_ENGINE].push('hist:chain_peak'); }
+        if (inv.has('FUSE_BOX') || inv.has('HOT_STREAK_COIL')) { w += 0.7; sig[BUILD_IDS.MULT_ENGINE].push('inv:chain_hardware'); }
+        w += tagWeights[BUILD_IDS.MULT_ENGINE];
+        if (tagWeights[BUILD_IDS.MULT_ENGINE] >= 1.2) sig[BUILD_IDS.MULT_ENGINE].push('tags:mult_stack');
         weights[BUILD_IDS.MULT_ENGINE] = w;
 
         w = 0;
@@ -2260,6 +2315,8 @@ const GutterbonesGamble = (() => {
         if (bloodHits >= 4) { w += 2.2; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_pressure'); }
         else if (bloodHits >= 1) { w += 0.8; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_trace'); }
         if (diceShowsFace(dice, 'SHIV_FACE')) { w += 0.9; sig[BUILD_IDS.BLOOD_RISK].push('board:SHIV'); }
+        if (chainStats.max >= 2 && (hasBlood6 || bloodHits >= 2)) { w += 0.8; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_chains'); }
+        w += tagWeights[BUILD_IDS.BLOOD_RISK];
         weights[BUILD_IDS.BLOOD_RISK] = w;
 
         w = 0;
@@ -2268,6 +2325,7 @@ const GutterbonesGamble = (() => {
         if (inv.has('BLACK_BOOK')) { w += 2.2; sig[BUILD_IDS.CASH_CONTROL].push('inv:BLACK_BOOK'); }
         if (cashHits >= 3) { w += 2; sig[BUILD_IDS.CASH_CONTROL].push('hist:cash_triggers'); }
         else if (cashHits >= 1) { w += 0.7; sig[BUILD_IDS.CASH_CONTROL].push('hist:cash_light'); }
+        w += tagWeights[BUILD_IDS.CASH_CONTROL];
         weights[BUILD_IDS.CASH_CONTROL] = w;
 
         w = 0;
@@ -2281,6 +2339,8 @@ const GutterbonesGamble = (() => {
         }
         const specials = countSpecialFaceSlots(dice);
         if (specials <= 4 && totals.length >= 3) { w += 1.2; sig[BUILD_IDS.SET_CONSISTENCY].push('board:clean_loadout'); }
+        if (chainStats.avg > 0 && chainStats.avg < 1.1 && totals.length >= 4) { w += 0.6; sig[BUILD_IDS.SET_CONSISTENCY].push('hist:steady_chains'); }
+        w += tagWeights[BUILD_IDS.SET_CONSISTENCY];
         weights[BUILD_IDS.SET_CONSISTENCY] = w;
 
         w = chaosCount * 1.4;
@@ -2288,6 +2348,8 @@ const GutterbonesGamble = (() => {
         if (diceShowsFace(dice, 'GHOST_FACE')) { w += 0.7; sig[BUILD_IDS.CHAOS].push('board:GHOST'); }
         if (diceShowsFace(dice, 'WILD_FACE')) { w += 0.5; sig[BUILD_IDS.CHAOS].push('board:WILD'); }
         if ((histText.match(/WIRE|SHIV|GHOST|PACT/g) || []).length >= 5) { w += 1.2; sig[BUILD_IDS.CHAOS].push('hist:volatile'); }
+        if (inv.has('FUSE_BOX') && chainStats.chainHands >= 1) { w += 0.9; sig[BUILD_IDS.CHAOS].push('hist:fuse_chains'); }
+        w += tagWeights[BUILD_IDS.CHAOS];
         weights[BUILD_IDS.CHAOS] = w;
 
         let primaryBuild = BUILD_IDS.UNKNOWN;
@@ -2318,7 +2380,14 @@ const GutterbonesGamble = (() => {
             ? ['run:still_open']
             : (sig[primaryBuild] || []).slice(0, 8);
 
-        return { primaryBuild, secondaryTag, confidence, signals };
+        return {
+            primaryBuild,
+            secondaryTag,
+            confidence,
+            signals,
+            chainAvg: Math.round(chainStats.avg * 10) / 10,
+            chainMax: chainStats.max
+        };
     };
 
     const BUILD_SYNERGY_CALLOUT = {
@@ -3712,6 +3781,9 @@ const GutterbonesGamble = (() => {
                 <div className={`${ui.accent} font-bold leading-tight tracking-wide text-sm`}>BUILD: {ui.label}</div>
                 {analysis.secondaryTag && <div className="text-gray-300 mt-1 truncate">TAG: {analysis.secondaryTag}</div>}
                 <div className="text-gray-300 mt-1">CONF: <span className={tier === 'HIGH' ? 'text-[#0df] font-bold' : 'text-gray-100'}>{tier}</span></div>
+                {(analysis.chainMax || 0) > 0 && (
+                    <div className="text-fuchsia-300/90 mt-1 text-[10px]">CHAIN AVG {analysis.chainAvg} · PEAK {analysis.chainMax}</div>
+                )}
             </div>
         );
     };
@@ -3724,6 +3796,7 @@ const GutterbonesGamble = (() => {
         const keys = (runBuild?.keyItems || []).filter(Boolean);
         const formatKey = (k) => {
             if (k === 'FLOW_STREAK') return 'FLOW STREAK';
+            if (k === 'SYNERGY_CHAINS') return 'SYNERGY CHAINS';
             const meta = itemById(k);
             return meta?.name || meta?.label || k;
         };
@@ -4533,7 +4606,7 @@ const GutterbonesGamble = (() => {
                         build: {
                             primary: buildAnalysis.primaryBuild,
                             peakConfidence: buildAnalysis.confidence,
-                            keyItems: deriveKeyItems(buildAnalysis.primaryBuild, inventory, dice, flowStreak)
+                            keyItems: deriveKeyItemsWithHistory(buildAnalysis.primaryBuild, inventory, dice, flowStreak, history)
                         }
                     };
                 }
@@ -5103,7 +5176,15 @@ const GutterbonesGamble = (() => {
                     }));
                     setCategoryMarkedThisRound((prev) => (prev.includes(catId) ? prev : [...prev, catId]));
                 }
-                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
+                setHistory(h => [...h, {
+                    id: Math.random(),
+                    round,
+                    category: catId,
+                    total: result.total,
+                    values: dice.map(d => d.value),
+                    triggers: result.triggers,
+                    chainDepth: result.chainDepth || 0
+                }]);
                 playSynergySequence(result, () => runValidHandJuice(result, catId));
             } else {
                 setFixerLine(pickLine(FIXER_LINES.bust));

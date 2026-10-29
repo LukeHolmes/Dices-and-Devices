@@ -65,6 +65,8 @@ Before publishing, check:
 - **Phase 3 shop/path:** finish a round, enter shop — confirm **Stock skew** banner when last route was Pawn/Hardware etc.; Pawn route shows discounted list prices next shop; Safehouse cut shows **FLOW · cap 5** in HUD when cap is reduced; carve adjacency strip when placing Blood/Echo/Gold faces; Shiv warning on bone 5.
 - **Phase 4 tier-2 faces:** Safehouse **Fixer's Chain Manual** (5+ meta runs) unlocks Fuse/Magnet/Mark/Double Down in shops; `tests/synergy-tier2.test.cjs` covers magnet copy, fuse spark, marks, double down, and save normalization for `categoryMarks`.
 - With **prefers-reduced-motion**, confirm chains still score correctly but links/stagger are suppressed.
+- **Phase 6 blueprints:** gamble **Blueprint flip**; Safehouse **Fixer's Network** starts a run with a blueprint chip; combo meter in Run Intel; `tests/synergy-phase6.test.cjs`.
+- **Phase 7 build intel:** after several scoring hands with chain depth ≥1, **BUILD INTEL** shows CHAIN AVG / PEAK; shop still biases one slot toward `analyzeBuild().primaryBuild`; rap sheet **RUN ARCHETYPE** tips mention chains when relevant; `tests/synergy-phase7-build.test.cjs`.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 
 CI runs `npm run check` with read-only repository permissions. It neither deploys nor modifies saves. A successful local check is not evidence that remote CI has run.
