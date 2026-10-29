@@ -1,8 +1,10 @@
 # Phase 7 — Vite build & module split
 
-**Status:** Planned (not started)  
-**Depends on:** Phases 1–6b and 4b on `main` (Oct 2026)  
-**Goal:** Move from a **~5k-line `index.html` + CDN Babel** to a **maintainable Vite app** with the same player-facing behavior, **green `npm run check`**, and a **static deploy artifact** for Vercel/GitHub Pages.
+**Status:** In progress on branch `cursor/phase-7-vite-split-048e` ([PR #44](https://github.com/LukeHolmes/Dices-and-Devices/pull/44)) — **do not merge to `main` yet.**  
+**Blocker:** [coldforge.tech](https://coldforge.tech/Dices-and-Devices/) uses **GitHub Pages** (static files from `main`). Phase 7 needs a **Pages deploy workflow** (`vite build` → publish `dist/`) before merge, or production breaks.  
+**Production:** Keep shipping the monolith `index.html` on `main` until that workflow lands.  
+**Depends on:** Phases 1–6f and 4b on `main` (Oct 2026)  
+**Goal:** Move from a **~5k-line `index.html` + CDN Babel** to a **maintainable Vite app** with the same player-facing behavior, **green `npm run check`**, and a **static deploy artifact** for GitHub Pages / Vercel.
 
 **Roadmap context:** Extracted logic already lives in inline scripts (`gutterbones-rules`, `onboarding`, `story`, `routes`, `gamble`, `audio`). Phase 7 **lifts** those into real modules instead of adding features.
 
