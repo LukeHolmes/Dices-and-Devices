@@ -2,7 +2,7 @@
 
 ## Cursor Cloud specific instructions
 
-This is a single-file browser game (`index.html`) with no build step or runtime package dependencies. `package.json` provides dependency-free Node test commands. React 18, Babel, and Tailwind CSS are loaded from CDNs at runtime.
+This is a single-file browser game (`index.html`) with no build step or runtime package dependencies. **Phase 7 (Vite split)** lives on branch `cursor/phase-7-vite-split-048e` / PR #44 only — do not merge until a GitHub Pages `vite build` deploy workflow exists (`docs/phase-7-module-split.md`). `package.json` provides dependency-free Node test commands. React 18, Babel, and Tailwind CSS are loaded from CDNs at runtime.
 
 ### Running the app
 
