@@ -16,6 +16,7 @@ test("GB002: Pill reroll keeps carved face", () => {
   d[0].faces = [{ id: "GOLD_FACE", type: "modifier", value: 0, label: "+$2", style: "" }];
   const g = createGame(f.snapshot({ dice: d }));
   g.api.popPill(0);
+  g.flushTimers();
   assert.equal(g.state("dice")[0].faceId, "GOLD_FACE");
 });
 

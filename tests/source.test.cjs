@@ -97,6 +97,14 @@ test("Phase 5 roster portraits wired and on disk", () => {
   assert.match(appSource, /crooked-cop\.png/);
 });
 
+test("Dice face PNG art wired", () => {
+  assert.match(appSource, /DICE_ART/);
+  assert.match(appSource, /assets\/dice\/die-1\.png/);
+  for (const face of ["die-1", "die-2", "die-3", "die-4", "die-5", "die-6", "die-blank", "die-held"]) {
+    assert.ok(fs.existsSync(path.join(__dirname, "..", "assets/dice", `${face}.png`)), face);
+  }
+});
+
 test("Phase 6d input UX hooks present", () => {
   assert.match(appSource, /rollLockRef/);
   assert.match(appSource, /pendingPayoutRef/);

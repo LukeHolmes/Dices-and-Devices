@@ -12,5 +12,6 @@
 | `assets/scenes/gamble-double-or-nothing.png` | GAMBLE side action (backdrop behind flip panel) |
 | `assets/scenes/the-mod-bench.png` | CARVING / The Mod (backdrop behind workbench UI) |
 | `assets/scenes/boss-turf-pressure.png` | Boss intro overlay (shared alley / heat backdrop) |
+| `assets/dice/die-1.png` … `die-6.png`, `die-blank.png`, `die-held.png` | PLAY lane standard bone faces (PNG dice art) |
 
 Replace any generated placeholder with your own exports using the **same filename**.
