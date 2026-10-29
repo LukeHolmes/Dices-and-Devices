@@ -655,10 +655,56 @@
 <!-- Shared pure rules. The game and Node tests execute this exact block.
      Keep JSX, browser state, storage and timers outside this boundary.
 
-     Resolve order: resolveDice (ECHO → SHIV → MAGNET copy) → category validation →
-     face modifiers → synergy chains → hardware → synergy chains (hardware) → FLOW. -->
+     Resolve order: MIRROR_RIG swap (scoring copy) → resolveDice (ECHO → SHIV → MAGNET copy) →
+     category validation → face modifiers → synergy chains → hardware → synergy chains (hardware) → FLOW. -->
 <script id="gutterbones-rules">
 const GutterbonesRules = (() => {
+    const prepScoringDice = (currentDice, inventory, hardwareDisabled) => {
+        const useMirror = !hardwareDisabled && inventory.some((item) => item.id === 'MIRROR_RIG');
+        if (!useMirror) return { scoringDice: currentDice, mirrorMatched: false };
+        const scoringDice = currentDice.map((d) => ({ ...d }));
+        const slot2 = 1;
+        const slot4 = 3;
+        const tmp = scoringDice[slot2];
+        scoringDice[slot2] = scoringDice[slot4];
+        scoringDice[slot4] = tmp;
+        const mirrorMatched = scoringDice[slot2].value === scoringDice[slot4].value;
+        return { scoringDice, mirrorMatched };
+    };
+
+    const faceMultContribution = (faceId) => {
+        if (faceId === 'GHOST_FACE') return 2;
+        if (faceId === 'MULT_FACE') return 1;
+        return 0;
+    };
+
+    const findBestMultRetriggerIndex = (resolved, destroyed) => {
+        let bestIdx = -1;
+        let best = 0;
+        resolved.forEach((d, i) => {
+            if (destroyed.has(i) || !d.faceId) return;
+            const contribution = faceMultContribution(d.faceId);
+            if (contribution > best) {
+                best = contribution;
+                bestIdx = i;
+            }
+        });
+        return bestIdx >= 0 ? bestIdx : null;
+    };
+
+    const synergyTuningForHand = (baseTuning, inventory, hardwareDisabled, resolved, destroyed, synergyEnabled) => {
+        if (!synergyEnabled) return baseTuning;
+        const basePasses = Math.max(1, baseTuning?.maxChainPasses || 8);
+        if (hardwareDisabled || !inventory.some((item) => item.id === 'FUSE_BOX')) return baseTuning;
+        const types = new Set();
+        resolved.forEach((d, i) => {
+            if (destroyed.has(i)) return;
+            types.add(d.type || 'standard');
+        });
+        if (types.size < 2) return baseTuning;
+        return { ...baseTuning, maxChainPasses: basePasses + 1 };
+    };
+
     const resolveDice = (currentDice) => {
         let resolved = currentDice.map(d => ({...d}));
         for (let i = 0; i < 5; i++) {
@@ -841,7 +887,13 @@ const GutterbonesRules = (() => {
         return { chainDepth, retriggerCount: state.retriggerCount, synergyEvents: state.synergyEvents };
     };
 
-    const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state) => {
+    const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state, handContext = {}) => {
+        const {
+            debt = 0,
+            flowStreak = 0,
+            mirrorMatched = false,
+            synergyEnabled = false
+        } = handContext;
         const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false };
         if (hardwareDisabled) {
             if (inventory.length > 0) {
@@ -889,10 +941,39 @@ const GutterbonesRules = (() => {
                 }
             }
             if (item.id === 'LOADED_DIE' && catId === 'TOK') {
-                state.chips += 10;
-                triggers.push({ name: 'LOADED', value: '+10' });
+                const triadBonus = synergyEnabled ? 20 : 10;
+                state.chips += triadBonus;
+                triggers.push({ name: 'LOADED', value: `+${triadBonus}` });
                 state.hardwareTriggerCount += 1;
-                pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
+                pushStep(
+                    'modifier',
+                    'HARDWARE: WEIGHTED CORE',
+                    synergyEnabled ? '+20 chips on Triad (chains active)' : '+10 chips on Triad',
+                    triadBonus
+                );
+            }
+            if (item.id === 'MIRROR_RIG' && mirrorMatched) {
+                state.mult += 1;
+                triggers.push({ name: 'MIRROR', value: '+1x' });
+                state.hardwareTriggerCount += 1;
+                pushStep('multiplier', 'HARDWARE: MIRROR RIG', 'Slots 2 & 4 matched after swap — +1x', '+1x');
+            }
+            if (item.id === 'DEBT_COLLECTOR') {
+                const debtMult = Math.max(0, Math.floor(Number(debt) || 0)) * 0.5;
+                if (debtMult > 0) {
+                    state.mult += debtMult;
+                    triggers.push({ name: 'DEBT COIL', value: `+${debtMult}x` });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('multiplier', 'HARDWARE: DEBT COLLECTOR', `+$${debt} debt — +${debtMult}x`, `+${debtMult}x`);
+                }
+            }
+            if (item.id === 'HOT_STREAK_COIL' && flowStreak >= 1) {
+                const idx = findBestMultRetriggerIndex(resolved, destroyed);
+                if (idx != null) {
+                    applyFaceModifiersForDie(resolved[idx], state, { pushStep, triggers, slotLabel: String(idx + 1) });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('multiplier', 'HARDWARE: HOT STREAK COIL', 'Retrigger best mult face (flow warm)', 'RETRIGGER');
+                }
             }
             if (item.id === 'BLOOD_PACT') {
                 state.mult *= 3;
@@ -921,11 +1002,16 @@ const GutterbonesRules = (() => {
     };
 
     const calculateScore = (catId, currentDice, context) => {
-        const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
+        const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss, debt = 0,
             CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
             synergyTuning = { enabled: false }, synergyState = {}, roundFirstCategories = [] } = context;
         const synergyEnabled = Boolean(synergyTuning?.enabled);
-        const { resolved, destroyed } = resolveDice(currentDice);
+        const { scoringDice, mirrorMatched } = prepScoringDice(currentDice, inventory, hardwareDisabled);
+        const { resolved, destroyed } = resolveDice(scoringDice);
+        const synergyTuningHand = synergyTuningForHand(
+            synergyTuning, inventory, hardwareDisabled, resolved, destroyed, synergyEnabled
+        );
+        const handHardwareContext = { debt, flowStreak, mirrorMatched, synergyEnabled };
         const standardVals = resolved.filter((d, i) => !destroyed.has(i) && typeof d.value === 'number' && d.value > 0 && d.faceId !== 'GHOST_FACE').map(d => d.value);
         const wilds = resolved.filter((d, i) => !destroyed.has(i) && d.value === 'W').length;
         const sum = standardVals.reduce((a,b)=>a+b,0) + wilds * 6;
@@ -1021,9 +1107,15 @@ const GutterbonesRules = (() => {
             pushStep('multiplier', 'FACE: DOUBLE DOWN', 'Category mult ≥ 3 — ×1.25', 'x1.25');
         }
 
+        const baseChainPasses = Math.max(1, synergyTuning.maxChainPasses || 8);
+        const handChainPasses = Math.max(1, synergyTuningHand.maxChainPasses || 8);
+        if (synergyEnabled && handChainPasses > baseChainPasses) {
+            pushStep('modifier', 'HARDWARE: FUSE BOX', '≥2 face types — +1 synergy chain pass', '+1 pass');
+        }
+
         let synergyResult = emptySynergyResult();
         if (synergyEnabled) {
-            runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, null);
+            runSynergyPasses(resolved, destroyed, scoreState, synergyTuningHand, null);
         }
         chips = scoreState.chips;
         mult = scoreState.mult;
@@ -1033,14 +1125,16 @@ const GutterbonesRules = (() => {
         scoreState.mult = Math.max(0.5, scoreState.mult);
         if (scoreState.mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${scoreState.mult.toFixed(2)}`);
 
-        const hwMeta = applyHardware(resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, scoreState);
+        const hwMeta = applyHardware(
+            resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, scoreState, handHardwareContext
+        );
         chips = scoreState.chips;
         mult = scoreState.mult;
         gDelta = scoreState.gDelta;
         hardwareTriggerCount = scoreState.hardwareTriggerCount;
 
         if (synergyEnabled) {
-            const postHw = runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, hwMeta);
+            const postHw = runSynergyPasses(resolved, destroyed, scoreState, synergyTuningHand, hwMeta);
             chips = scoreState.chips;
             mult = scoreState.mult;
             gDelta = scoreState.gDelta;
@@ -1135,7 +1229,7 @@ const GutterbonesRules = (() => {
         return normalized;
     };
 
-    return Object.freeze({ resolveDice, calculateScore, normalizeSavedRun });
+    return Object.freeze({ resolveDice, prepScoringDice, calculateScore, normalizeSavedRun });
 })();
 </script>
 
@@ -1794,8 +1888,14 @@ const GutterbonesGamble = (() => {
         BLACK_BOOK: { id: 'BLACK_BOOK', name: 'The Black Book', desc: 'Gain $1 when you pop a pill.', cost: 20, rarity: 'rare' },
         BURNER_PHONE: { id: 'BURNER_PHONE', name: 'Burner Phone', desc: 'The Stash fills 50% faster.', cost: 25, rarity: 'rare' },
         SHADY_LEDGER: { id: 'SHADY_LEDGER', name: 'Shady Ledger', desc: 'Debt no longer spikes quota. Lose 1 Play while in debt.', cost: 28, rarity: 'danger' },
-        CROWBAR: { id: 'CROWBAR', name: 'The Crowbar', desc: '+1 mult for each Blood or Destructive face showing. Max +5.', cost: 22, rarity: 'common' }
+        CROWBAR: { id: 'CROWBAR', name: 'The Crowbar', desc: '+1 mult for each Blood or Destructive face showing. Max +5.', cost: 22, rarity: 'common' },
+        FUSE_BOX: { id: 'FUSE_BOX', name: 'Fuse Box', desc: '≥2 face types on the table grant +1 synergy chain pass.', cost: 26, rarity: 'rare' },
+        MIRROR_RIG: { id: 'MIRROR_RIG', name: 'Mirror Rig', desc: 'Swaps slots 2 & 4 before scoring; +1 mult if they match after swap.', cost: 24, rarity: 'rare' },
+        DEBT_COLLECTOR: { id: 'DEBT_COLLECTOR', name: 'Debt Collector', desc: '+0.5 mult per $1 debt on this hand.', cost: 22, rarity: 'danger' },
+        HOT_STREAK_COIL: { id: 'HOT_STREAK_COIL', name: 'Hot Streak Coil', desc: 'With flow ≥1, retrigger the best mult face once.', cost: 28, rarity: 'rare' }
     };
+
+    const TIER3_HARDWARE_IDS = Object.freeze(['FUSE_BOX', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL']);
 
     const PROGRAMS = [
         { id: 'SNIFF', name: 'SNIFF', desc: 'Reroll one random free bone.', cost: 25 },
@@ -1870,6 +1970,10 @@ const GutterbonesGamble = (() => {
         ECHO_FACE: [BUILD_IDS.MULT_ENGINE],
         ENGINE: [BUILD_IDS.MULT_ENGINE],
         CROWBAR: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.BLOOD_RISK],
+        FUSE_BOX: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.CHAOS],
+        MIRROR_RIG: [BUILD_IDS.SET_CONSISTENCY, BUILD_IDS.MULT_ENGINE],
+        DEBT_COLLECTOR: [BUILD_IDS.BLOOD_RISK, BUILD_IDS.MULT_ENGINE],
+        HOT_STREAK_COIL: [BUILD_IDS.MULT_ENGINE],
         CENTERPIECE: [BUILD_IDS.MULT_ENGINE],
         BLOOD_6: [BUILD_IDS.BLOOD_RISK],
         BLOOD_PACT: [BUILD_IDS.BLOOD_RISK],
@@ -1908,7 +2012,12 @@ const GutterbonesGamble = (() => {
         FUSE_FACE: 'Adjacent modifier faces trigger +10 chips (fuse spark chain).',
         MAGNET_FACE: 'Copies the left face for scoring (after Echo).',
         MARK_FACE: 'First score per category each round marks +1 mult on that category for the run.',
-        DOUBLE_DOWN_FACE: 'If category mult is 3+, multiply total mult by 1.25 once.'
+        DOUBLE_DOWN_FACE: 'If category mult is 3+, multiply total mult by 1.25 once.',
+        FUSE_BOX: 'Hardware: +1 synergy chain pass when ≥2 face types show.',
+        MIRROR_RIG: 'Hardware: swaps slots 2 & 4 before score; +1 mult on match.',
+        DEBT_COLLECTOR: 'Hardware: +0.5 mult per $1 debt while you owe.',
+        HOT_STREAK_COIL: 'Hardware: with flow warm, retrigger best mult face once.',
+        LOADED_DIE: 'Triad bonus chips; doubles with synergy chains enabled.'
     };
 
     const synergyLabelForItem = (itemId, primaryBuild) => {
@@ -2584,7 +2693,8 @@ const GutterbonesGamble = (() => {
         { id: 'rare-faces', name: 'Bribe the Bone Carver', desc: 'Adds Wild, Echo, and Ghost faces to future shops.', cost: 220, type: 'faces', unlocks: ['WILD_FACE', 'ECHO_FACE', 'GHOST_FACE'] },
         { id: 'danger-faces', name: 'Meet the Knife Man', desc: 'Adds Shiv and Wirebag faces to future shops.', cost: 260, type: 'faces', unlocks: ['SHIV_FACE', 'WIREBAG_FACE'] },
         { id: 'high-end-hardware', name: 'Call the Fence', desc: 'Adds Centerpiece, Engine, and Shady Ledger hardware.', cost: 300, type: 'hardware', unlocks: ['CENTERPIECE', 'ENGINE', 'SHADY_LEDGER'] },
-        { id: 'chain-manual', name: "Fixer's Chain Manual", desc: 'Adds Fuse, Magnet, Mark, and Double Down faces to shops (5+ runs).', cost: 280, type: 'faces', unlocks: TIER2_FACE_IDS }
+        { id: 'chain-manual', name: "Fixer's Chain Manual", desc: 'Adds Fuse, Magnet, Mark, and Double Down faces to shops (5+ runs).', cost: 280, type: 'faces', unlocks: TIER2_FACE_IDS },
+        { id: 'rig-shop', name: 'Backroom Rig Shop', desc: 'Adds Fuse Box, Mirror Rig, Debt Collector, and Hot Streak Coil hardware.', cost: 320, type: 'hardware', unlocks: TIER3_HARDWARE_IDS }
     ];
 
     const mergeMetaState = (stored = {}) => ({
@@ -4478,7 +4588,7 @@ const GutterbonesGamble = (() => {
         const calculateScore = (catId, currentDice) => {
             const flowCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
             return GutterbonesRules.calculateScore(catId, currentDice, {
-                handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
+                handLevels, flowStreak, debt, inventory, hardwareDisabled, activeBoss,
                 CATEGORIES, HAND_MASTERY_TUNING,
                 getFlowMultiplier: (streak) => getFlowMultiplier(streak, flowCap),
                 getHandMasteryBonus,

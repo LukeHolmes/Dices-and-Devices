@@ -417,6 +417,6 @@ Consume flags in `executePayout` / rules context; show chips in HUD near consuma
 - [x] Phase 2 complete + enable flag (`SYNERGY_TUNING.enabled` true)
 - [x] Phase 3 complete + routes/saves tests
 - [x] Phase 4 complete + Tier 2 content
-- [ ] Phase 5 complete + Tier 3 hardware
+- [x] Phase 5 complete + Tier 3 hardware
 - [ ] Phase 6 complete + blueprints/gamble
 - [ ] Phase 7 complete + merge to main
