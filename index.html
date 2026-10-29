@@ -628,6 +628,216 @@ const GutterbonesRules = (() => {
 
     const emptySynergyResult = () => ({ synergyEvents: [], chainDepth: 0, retriggerCount: 0 });
 
+    const isBloodOrDestructive = (d) => {
+        if (!d) return false;
+        return d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE';
+    };
+
+    const neighborIndices = (i) => [i - 1, i + 1].filter(j => j >= 0 && j <= 4);
+
+    const applyFaceModifiersForDie = (d, state, { pushStep, triggers, slotLabel = '' }) => {
+        const face = d.faceId;
+        const prefix = slotLabel ? `SLOT ${slotLabel}: ` : '';
+        if (face === 'MULT_FACE') { state.mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); pushStep('multiplier', `${prefix}FACE: +MULT`, '+1x multiplier', '+1x'); }
+        if (face === 'GOLD_FACE') { state.gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); pushStep('modifier', `${prefix}FACE: GOLD`, '+$2 cash', '+$2'); }
+        if (face === 'BLOOD_6') { state.chips += 20; state.gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); pushStep('modifier', `${prefix}FACE: BLOOD 6`, '+20 chips, -$1', '+20 / -$1'); }
+        if (face === 'SHIV_FACE') { state.chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', `${prefix}FACE: SHIV`, '+40 chips', 40); }
+        if (face === 'WIREBAG_FACE') { state.mult -= 1; state.gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); pushStep('penalty', `${prefix}FACE: WIREBAG`, '-1x, +$4', '-1x / +$4'); }
+        if (face === 'GHOST_FACE') { state.mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); pushStep('multiplier', `${prefix}FACE: GHOST`, '+2x multiplier', '+2x'); }
+    };
+
+    const applyAllFaceModifiers = (resolved, destroyed, state, api) => {
+        resolved.forEach((d, i) => {
+            if (destroyed.has(i)) return;
+            applyFaceModifiersForDie(d, state, api);
+        });
+    };
+
+    const pushSynergyEvent = (state, { chainId, kind, label, impact }) => {
+        const chainIndex = state.synergyPass;
+        state.synergyEvents.push({ id: chainId, kind, source: { chainId }, label, impact, chainIndex });
+        state.triggers.push({ name: chainId.replace(/_/g, ' '), value: String(impact) });
+        state.pushStep('modifier', `CHAIN: ${label}`, impact, impact);
+        if (kind === 'retrigger') state.retriggerCount += 1;
+    };
+
+    const resolveSynergyFaceChains = (resolved, destroyed, state, tuning) => {
+        const applied = state.synergyApplied;
+        if (!applied.has('blood_ripple')) {
+            let rippleMult = 0;
+            resolved.forEach((d, i) => {
+                if (destroyed.has(i) || d.faceId !== 'BLOOD_6') return;
+                neighborIndices(i).forEach(j => {
+                    if (destroyed.has(j)) return;
+                    if (isBloodOrDestructive(resolved[j])) rippleMult += 1;
+                });
+            });
+            rippleMult = Math.min(3, rippleMult);
+            if (rippleMult > 0) {
+                state.mult += rippleMult;
+                pushSynergyEvent(state, { chainId: 'blood_ripple', kind: 'mult', label: 'Blood ripple', impact: `+${rippleMult}x` });
+                applied.add('blood_ripple');
+            }
+        }
+        if (!applied.has('ghost_echo')) {
+            let ghostEcho = false;
+            for (let i = 0; i < 5; i++) {
+                if (destroyed.has(i)) continue;
+                const d = resolved[i];
+                if (d.faceId !== 'GHOST_FACE') continue;
+                const hasEchoNeighbor = neighborIndices(i).some(j => !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed));
+                if (hasEchoNeighbor) { ghostEcho = true; break; }
+            }
+            if (ghostEcho) {
+                state.mult += 1;
+                pushSynergyEvent(state, { chainId: 'ghost_echo', kind: 'mult', label: 'Ghost echo', impact: '+1x' });
+                applied.add('ghost_echo');
+            }
+        }
+        if (!applied.has('wire_feed')) {
+            let fed = false;
+            for (let i = 0; i < 5; i++) {
+                if (destroyed.has(i)) continue;
+                const d = resolved[i];
+                if (d.faceId !== 'WIREBAG_FACE') continue;
+                const hasGoldNeighbor = neighborIndices(i).some(j => !destroyed.has(j) && resolved[j].faceId === 'GOLD_FACE');
+                if (hasGoldNeighbor) { fed = true; break; }
+            }
+            if (fed) {
+                state.gDelta += 2;
+                pushSynergyEvent(state, { chainId: 'wire_feed', kind: 'cash', label: 'Wire feed (extra gold)', impact: '+$2' });
+                applied.add('wire_feed');
+            }
+        }
+        void tuning;
+    };
+
+    const resolveSynergyHardwareChains = (resolved, destroyed, state, hwMeta) => {
+        const applied = state.synergyApplied;
+        if (!applied.has('engine_link') && hwMeta.engineBonus >= 2) {
+            const modCount = resolved.filter((d, i) => !destroyed.has(i) && d.type === 'modifier').length;
+            const linkMult = Math.min(4, modCount);
+            if (linkMult > 0) {
+                state.mult += linkMult;
+                pushSynergyEvent(state, { chainId: 'engine_link', kind: 'mult', label: 'Engine link', impact: `+${linkMult}x` });
+                applied.add('engine_link');
+            }
+        }
+        if (!applied.has('bookends_retrigger') && hwMeta.bookendsMatched) {
+            const api = { pushStep: state.pushStep, triggers: state.triggers };
+            [0, 4].forEach(i => {
+                if (!destroyed.has(i)) applyFaceModifiersForDie(resolved[i], state, { ...api, slotLabel: String(i + 1) });
+            });
+            pushSynergyEvent(state, { chainId: 'bookends_retrigger', kind: 'retrigger', label: 'Bookends retrigger', impact: 'faces 1 & 5' });
+            applied.add('bookends_retrigger');
+        }
+        if (!applied.has('crowbar_cascade') && hwMeta.crowbarMultAdded > 0) {
+            let cascadeChips = 0;
+            destroyed.forEach(i => {
+                if (isBloodOrDestructive(resolved[i])) cascadeChips += 5;
+            });
+            cascadeChips = Math.min(25, cascadeChips);
+            if (cascadeChips > 0) {
+                state.chips += cascadeChips;
+                pushSynergyEvent(state, { chainId: 'crowbar_cascade', kind: 'chips', label: 'Crowbar cascade', impact: `+${cascadeChips}` });
+                applied.add('crowbar_cascade');
+            }
+        }
+    };
+
+    const runSynergyPasses = (resolved, destroyed, state, tuning, hwMeta) => {
+        const maxPasses = Math.max(1, tuning.maxChainPasses || 8);
+        for (state.synergyPass = 0; state.synergyPass < maxPasses; state.synergyPass += 1) {
+            const before = state.synergyEvents.length;
+            resolveSynergyFaceChains(resolved, destroyed, state, tuning);
+            if (hwMeta) resolveSynergyHardwareChains(resolved, destroyed, state, hwMeta);
+            if (state.synergyEvents.length === before) break;
+        }
+        const chainDepth = state.synergyEvents.length
+            ? Math.max(...state.synergyEvents.map(e => e.chainIndex)) + 1
+            : 0;
+        return { chainDepth, retriggerCount: state.retriggerCount, synergyEvents: state.synergyEvents };
+    };
+
+    const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state) => {
+        const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false };
+        if (hardwareDisabled) {
+            if (inventory.length > 0) {
+                state.pushStep('penalty', `BOSS: ${activeBoss?.name || 'CROOKED COP'}`, 'Hardware triggers disabled this hand', 'NO HARDWARE');
+            }
+            return meta;
+        }
+        const { pushStep, triggers } = state;
+        inventory.forEach(item => {
+            if (item.id === 'CENTERPIECE') {
+                const center = resolved[2];
+                if (center && !destroyed.has(2)) {
+                    let centerChips = 0;
+                    let centerMult = 0;
+                    if (typeof center.value === 'number') {
+                        state.chips += center.value;
+                        centerChips += center.value;
+                    }
+                    if (center.faceId === 'MULT_FACE') { state.mult += 1; centerMult += 1; }
+                    if (center.faceId === 'GHOST_FACE') { state.mult += 2; centerMult += 2; }
+                    if (center.faceId === 'GOLD_FACE') { state.gDelta += 2; triggers.push({ name: 'CENTER', value: '+$2' }); }
+                    triggers.push({ name: 'CENTER', value: 'slot 3' });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
+                }
+            }
+            if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
+                state.chips += 30;
+                triggers.push({ name: 'BOOKENDS', value: '+30' });
+                state.hardwareTriggerCount += 1;
+                meta.bookendsMatched = true;
+                pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
+            }
+            if (item.id === 'ENGINE') {
+                const anchor = resolved[0].value;
+                if (typeof anchor === 'number' && !destroyed.has(0)) {
+                    const bonus = Math.min(4, resolved.slice(1).filter((d, idx) => !destroyed.has(idx + 1) && typeof d.value === 'number' && d.value > anchor).length);
+                    if (bonus) {
+                        state.mult += bonus;
+                        meta.engineBonus = bonus;
+                        triggers.push({ name: 'ENGINE', value: `+${bonus}x` });
+                        state.hardwareTriggerCount += 1;
+                        pushStep('multiplier', 'HARDWARE: ENGINE', `+${bonus}x multiplier`, `+${bonus}x`);
+                    }
+                }
+            }
+            if (item.id === 'LOADED_DIE' && catId === 'TOK') {
+                state.chips += 10;
+                triggers.push({ name: 'LOADED', value: '+10' });
+                state.hardwareTriggerCount += 1;
+                pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
+            }
+            if (item.id === 'BLOOD_PACT') {
+                state.mult *= 3;
+                triggers.push({ name: 'PACT', value: 'x3' });
+                state.hardwareTriggerCount += 1;
+                pushStep('multiplier', 'HARDWARE: BLOOD PACT', 'Tripled multiplier', 'x3');
+            }
+            if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) {
+                state.mult += 3;
+                triggers.push({ name: 'KNUCKLES', value: '+3x' });
+                state.hardwareTriggerCount += 1;
+                pushStep('multiplier', 'HARDWARE: BRASS KNUCKLES', '+3x on low faces', '+3x');
+            }
+            if (item.id === 'CROWBAR') {
+                const count = Math.min(5, resolved.filter((d,i) => !destroyed.has(i) && isBloodOrDestructive(d)).length);
+                if (count) {
+                    state.mult += count;
+                    meta.crowbarMultAdded = count;
+                    triggers.push({ name: 'CROWBAR', value: `+${count}x` });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('multiplier', 'HARDWARE: CROWBAR', `+${count}x from blood/destructive faces`, `+${count}x`);
+                }
+            }
+        });
+        return meta;
+    };
+
     const calculateScore = (catId, currentDice, context) => {
         const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
             CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
@@ -703,94 +913,52 @@ const GutterbonesRules = (() => {
             triggers.push({ name: 'MASTERY', value: `+${masteryBonus}` });
             pushStep('modifier', 'HAND MASTERY', `+${masteryBonus} chips`, masteryBonus);
         }
-        resolved.forEach((d, i) => {
-            if (destroyed.has(i)) return;
-            const face = d.faceId;
-            if (face === 'MULT_FACE') { mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); pushStep('multiplier', 'FACE: +MULT', '+1x multiplier', '+1x'); }
-            if (face === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); pushStep('modifier', 'FACE: GOLD', '+$2 cash', '+$2'); }
-            if (face === 'BLOOD_6') { chips += 20; gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); pushStep('modifier', 'FACE: BLOOD 6', '+20 chips, -$1', '+20 / -$1'); }
-            if (face === 'SHIV_FACE') { chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', 'FACE: SHIV', '+40 chips', 40); }
-            if (face === 'WIREBAG_FACE') { mult -= 1; gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); pushStep('penalty', 'FACE: WIREBAG', '-1x, +$4', '-1x / +$4'); }
-            if (face === 'GHOST_FACE') { mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); pushStep('multiplier', 'FACE: GHOST', '+2x multiplier', '+2x'); }
-        });
-        const unclampedMult = mult;
-        mult = Math.max(0.5, mult);
-        if (mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${mult.toFixed(2)}`);
-        if (!hardwareDisabled) {
-            inventory.forEach(item => {
-                if (item.id === 'CENTERPIECE') {
-                    const center = resolved[2];
-                    if (center && !destroyed.has(2)) {
-                        let centerChips = 0;
-                        let centerMult = 0;
-                        if (typeof center.value === 'number') {
-                            chips += center.value;
-                            centerChips += center.value;
-                        }
-                        if (center.faceId === 'MULT_FACE') { mult += 1; centerMult += 1; }
-                        if (center.faceId === 'GHOST_FACE') { mult += 2; centerMult += 2; }
-                        if (center.faceId === 'GOLD_FACE') { gDelta += 2; triggers.push({ name: 'CENTER', value: '+$2' }); }
-                        triggers.push({ name: 'CENTER', value: 'slot 3' });
-                        hardwareTriggerCount += 1;
-                        pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
-                    }
-                }
-                if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
-                    chips += 30;
-                    triggers.push({ name: 'BOOKENDS', value: '+30' });
-                    hardwareTriggerCount += 1;
-                    pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
-                }
-                if (item.id === 'ENGINE') {
-                    const anchor = resolved[0].value;
-                    if (typeof anchor === 'number' && !destroyed.has(0)) {
-                        const bonus = Math.min(4, resolved.slice(1).filter((d, idx) => !destroyed.has(idx + 1) && typeof d.value === 'number' && d.value > anchor).length);
-                        if (bonus) {
-                            mult += bonus;
-                            triggers.push({ name: 'ENGINE', value: `+${bonus}x` });
-                            hardwareTriggerCount += 1;
-                            pushStep('multiplier', 'HARDWARE: ENGINE', `+${bonus}x multiplier`, `+${bonus}x`);
-                        }
-                    }
-                }
-                if (item.id === 'LOADED_DIE' && catId === 'TOK') {
-                    chips += 10;
-                    triggers.push({ name: 'LOADED', value: '+10' });
-                    hardwareTriggerCount += 1;
-                    pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
-                }
-                if (item.id === 'BLOOD_PACT') {
-                    mult *= 3;
-                    triggers.push({ name: 'PACT', value: 'x3' });
-                    hardwareTriggerCount += 1;
-                    pushStep('multiplier', 'HARDWARE: BLOOD PACT', 'Tripled multiplier', 'x3');
-                }
-                if (item.id === 'BRASS_KNUCKLES' && standardVals.length > 0 && standardVals.every(v => v <= 3)) {
-                    mult += 3;
-                    triggers.push({ name: 'KNUCKLES', value: '+3x' });
-                    hardwareTriggerCount += 1;
-                    pushStep('multiplier', 'HARDWARE: BRASS KNUCKLES', '+3x on low faces', '+3x');
-                }
-                if (item.id === 'CROWBAR') {
-                    const count = Math.min(5, resolved.filter((d,i) => !destroyed.has(i) && (d.type === 'blood' || d.type === 'destructive' || d.faceId === 'BLOOD_6' || d.faceId === 'SHIV_FACE')).length);
-                    if (count) {
-                        mult += count;
-                        triggers.push({ name: 'CROWBAR', value: `+${count}x` });
-                        hardwareTriggerCount += 1;
-                        pushStep('multiplier', 'HARDWARE: CROWBAR', `+${count}x from blood/destructive faces`, `+${count}x`);
-                    }
-                }
-            });
-        } else if (inventory.length > 0) {
-            pushStep('penalty', `BOSS: ${activeBoss?.name || 'CROOKED COP'}`, 'Hardware triggers disabled this hand', 'NO HARDWARE');
+        const scoreState = {
+            chips, mult, gDelta, triggers, pushStep, hardwareTriggerCount,
+            synergyEvents: [], synergyApplied: new Set(), retriggerCount: 0, synergyPass: 0
+        };
+        const faceApi = { pushStep, triggers };
+        applyAllFaceModifiers(resolved, destroyed, scoreState, faceApi);
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+
+        let synergyResult = emptySynergyResult();
+        if (synergyEnabled) {
+            runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, null);
         }
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+
+        const unclampedMult = scoreState.mult;
+        scoreState.mult = Math.max(0.5, scoreState.mult);
+        if (scoreState.mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${scoreState.mult.toFixed(2)}`);
+
+        const hwMeta = applyHardware(resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, scoreState);
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+        hardwareTriggerCount = scoreState.hardwareTriggerCount;
+
+        if (synergyEnabled) {
+            const postHw = runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, hwMeta);
+            chips = scoreState.chips;
+            mult = scoreState.mult;
+            gDelta = scoreState.gDelta;
+            synergyResult = postHw;
+        }
+
         if (flowMult > 1) triggers.push({ name: 'FLOW', value: `x${flowMult.toFixed(2)}` });
         pushStep('multiplier', 'FLOW STREAK', `x${flowMult.toFixed(2)} flow multiplier`, `x${flowMult.toFixed(2)}`);
         const total = Math.floor(chips * mult * flowMult);
         pushStep('system', 'FINAL FORMULA', `${chips} x ${mult.toFixed(2)} x ${flowMult.toFixed(2)}`, total);
-        // Phase 1+: resolveSynergyChains runs here when synergyEnabled (see implementation plan).
-        void synergyEnabled;
-        return { valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName, ...emptySynergyResult() };
+        return {
+            valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName,
+            synergyEvents: synergyResult.synergyEvents,
+            chainDepth: synergyResult.chainDepth,
+            retriggerCount: synergyResult.retriggerCount
+        };
     };
 
     const normalizeSavedRun = (raw, context) => {
@@ -2274,6 +2442,7 @@ const GutterbonesGamble = (() => {
                 <div>CHIPS: {result.chips}</div>
                 <div>MULT: x{result.mult.toFixed(2)}</div>
                 {result.gDelta !== 0 && <div>CASH: {result.gDelta > 0 ? '+' : ''}{result.gDelta}</div>}
+                {result.chainDepth > 0 && <div className="text-fuchsia-300">CHAIN DEPTH: {result.chainDepth}</div>}
                 {result.triggers.length > 0 && (
                     <div className="mt-1 border-t border-gray-600 pt-1">
                         {result.triggers.map((t, i) => (
@@ -4108,7 +4277,9 @@ const GutterbonesGamble = (() => {
                 mult: result.mult || 0,
                 flowMult: result.flowMult || 1,
                 total: result.total || 0,
-                explanationSteps: result.explanationSteps || []
+                explanationSteps: result.explanationSteps || [],
+                chainDepth: result.chainDepth || 0,
+                synergyEvents: result.synergyEvents || []
             };
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);

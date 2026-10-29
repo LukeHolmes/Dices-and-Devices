@@ -19,6 +19,16 @@ function bone(value, slot = 0, extra = {}) {
   };
 }
 const dice = (values) => values.map((value, slot) => bone(value, slot));
+/** @param {Array<{ value?: number, faceId?: string, type?: string, extra?: object }>} specs */
+function diceWithFaces(specs) {
+  return specs.map((spec, slot) =>
+    bone(spec.value ?? 1, slot, {
+      ...(spec.faceId ? { faceId: spec.faceId } : {}),
+      ...(spec.type ? { type: spec.type } : {}),
+      ...(spec.extra || {}),
+    }),
+  );
+}
 function run(overrides = {}) {
   return {
     version: 2,
@@ -146,6 +156,7 @@ const bossCases = [
 module.exports = {
   bone,
   dice,
+  diceWithFaces,
   run,
   snapshot,
   wager,

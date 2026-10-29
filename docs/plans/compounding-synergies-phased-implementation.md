@@ -405,7 +405,7 @@ Consume flags in `executePayout` / rules context; show chips in HUD near consuma
 ## Implementation checklist (track in PR)
 
 - [x] Phase 0 complete (scaffold on branch; chains not implemented yet)
-- [ ] Phase 1 complete + Tier 1 tests
+- [x] Phase 1 complete + Tier 1 tests (`SYNERGY_TUNING.enabled` still false until Phase 2 QA)
 - [ ] Phase 2 complete + enable flag
 - [ ] Phase 3 complete + routes/saves tests
 - [ ] Phase 4 complete + Tier 2 content
