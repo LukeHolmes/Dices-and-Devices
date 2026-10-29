@@ -43,6 +43,20 @@ test("Optional fields receive defaults", () => {
   assert.equal(r.activeShopTag, null);
   assert.equal(Object.keys(r.routeModifiers).length, 0);
 });
+test("Blueprints and combo meter normalize safely", () => {
+  const g = createGame();
+  const r = g.api.normalizeSavedRun(
+    f.run({
+      blueprints: [{ id: "MULT_ENGINE_START", consumed: true }],
+      synergyState: { categoryMarks: {}, comboMeter: -3, heatSpikeNextHand: -1 },
+    }),
+  );
+  assert.equal(r.blueprints.length, 1);
+  assert.equal(r.blueprints[0].consumed, true);
+  assert.equal(r.synergyState.comboMeter, 0);
+  assert.equal(r.synergyState.heatSpikeNextHand, 0);
+});
+
 test("Shop tag and route modifiers normalize safely", () => {
   const g = createGame();
   const r = g.api.normalizeSavedRun(

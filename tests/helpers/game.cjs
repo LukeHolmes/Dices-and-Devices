@@ -96,6 +96,10 @@ function createGame(snapshot = {}, options = {}) {
   const noOp = () => {};
   const audio = new Proxy({}, { get: () => noOp });
   const sandbox = {
+    blueprints: [],
+    blueprintRoundFlags: { multEngineUsed: false, flowSaveUsed: false },
+    synergyState: { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 },
+    categoryMarkedThisRound: [],
     ...snapshot,
     Math: Object.assign(Object.create(Math), {
       random: options.random || (() => 0.99),
