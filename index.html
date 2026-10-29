@@ -4,6 +4,14 @@
 
 <meta charset="UTF-8">
 <link rel="icon" href="gutterbones-card.png">
+<link rel="preload" as="image" href="assets/dice/die-1.png">
+<link rel="preload" as="image" href="assets/dice/die-2.png">
+<link rel="preload" as="image" href="assets/dice/die-3.png">
+<link rel="preload" as="image" href="assets/dice/die-4.png">
+<link rel="preload" as="image" href="assets/dice/die-5.png">
+<link rel="preload" as="image" href="assets/dice/die-6.png">
+<link rel="preload" as="image" href="assets/dice/die-blank.png">
+<link rel="preload" as="image" href="assets/dice/die-held.png">
 <script>
 (function gutterbonesBootstrap() {
     var branding = Object.freeze({
@@ -451,7 +459,49 @@
     #root-gutterbones .felt-smoke-wisp { position: absolute; width: 45%; aspect-ratio: 1/1; border-radius: 999px; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.15) 0%, rgba(255,255,255,0) 68%); filter: blur(14px); animation: smokeDrift var(--dur, 48s) linear infinite; opacity: .08; }
     #root-gutterbones .bone-rolling { animation-name: boneRoll; animation-duration: var(--roll-dur, .9s); animation-delay: var(--roll-delay, 0ms); animation-fill-mode: forwards; animation-timing-function: cubic-bezier(.25,1,.5,1); will-change: transform, filter; }
     #root-gutterbones .bone-idle { animation: boneIdle 6.4s ease-in-out var(--idle-delay, 0s) infinite; }
-    #root-gutterbones .bone-kept { animation: keptBob 2.4s ease-in-out infinite; transform: translate3d(0, -8px, 0) rotate(var(--rest-rotate, 0deg)); box-shadow: 0 0 14px rgba(255,0,127,.7); border-color: #ff007f; }
+    #root-gutterbones .bone-kept { animation: none; }
+    #root-gutterbones .bone-slot-wrap { will-change: transform; }
+    #root-gutterbones .bone-die-perspective { perspective: 720px; perspective-origin: 50% 50%; }
+    #root-gutterbones .bone-die-btn {
+      width: 4rem; height: 4rem;
+      transform-style: preserve-3d;
+      transform: translateZ(0) rotate(var(--rest-tilt, 0deg));
+      transition: filter 180ms ease, opacity 180ms ease;
+      background: transparent; border: none; padding: 0;
+      box-shadow: none;
+    }
+    @media (min-width: 640px) { #root-gutterbones .bone-die-btn { width: 5rem; height: 5rem; } }
+    @media (min-width: 768px) { #root-gutterbones .bone-die-btn { width: 6rem; height: 6rem; } }
+    #root-gutterbones .bone-die-img {
+      width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none;
+      transform: translateZ(0); backface-visibility: hidden;
+    }
+    #root-gutterbones .bone-die-btn.bone-die-kept .bone-die-img {
+      transform: translate3d(0, -4px, 0);
+      filter: drop-shadow(0 0 10px rgba(198, 139, 22, 0.85)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+    }
+    #root-gutterbones .bone-slot-wrap.bone-hover-ready:hover .bone-die-btn:not(.bone-die-tumble) .bone-die-img {
+      transform: scale(1.04);
+      filter: drop-shadow(0 0 12px rgba(255, 184, 125, 0.42));
+    }
+    #root-gutterbones .bone-slot-wrap.bone-hover-ready:hover .bone-die-btn.bone-die-kept .bone-die-img {
+      transform: translate3d(0, -4px, 0) scale(1.04);
+    }
+    #root-gutterbones .bone-die-tumble .bone-die-img {
+      animation: dieTumble 720ms cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+      animation-delay: var(--roll-delay, 0ms);
+    }
+    @keyframes dieTumble {
+      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1); opacity: 0.95; }
+      70% { transform: rotateX(520deg) rotateY(680deg) rotateZ(var(--roll-tilt, 12deg)) scale(1.05); opacity: 0.88; }
+      88% { transform: rotateX(680deg) rotateY(860deg) rotateZ(var(--roll-tilt, 12deg)) scale(0.97); }
+      100% { transform: rotateX(720deg) rotateY(900deg) rotateZ(var(--rest-tilt, 6deg)) scale(1); opacity: 1; }
+    }
+    #root-gutterbones .bone-carve-overlay {
+      position: absolute; inset: 8%; border-radius: 0.45rem;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
     #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
     #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
@@ -514,7 +564,7 @@
         #root-gutterbones .ambient-leak,
         #root-gutterbones .felt-smoke-wisp,
         #root-gutterbones .bone-idle,
-        #root-gutterbones .bone-kept,
+        #root-gutterbones .bone-die-tumble .bone-die-img,
         #root-gutterbones .bone-rolling,
         #root-gutterbones .bone-verdict-glow,
         #root-gutterbones .bone-settle-jolt,
@@ -2032,6 +2082,31 @@ const GutterbonesGamble = (() => {
     const hydratePath = (path) => path ? { ...path, boss: path.bossId ? bossById(path.bossId) : (path.boss?.id ? bossById(path.boss.id) : path.boss) } : path;
 
     const standardFaces = () => [1,2,3,4,5,6].map(v => ({ id: 'standard', value: v, type: 'standard', label: String(v), style: '' }));
+    const DICE_ART = Object.freeze({
+        base: 'assets/dice',
+        faces: {
+            1: 'assets/dice/die-1.png',
+            2: 'assets/dice/die-2.png',
+            3: 'assets/dice/die-3.png',
+            4: 'assets/dice/die-4.png',
+            5: 'assets/dice/die-5.png',
+            6: 'assets/dice/die-6.png',
+            blank: 'assets/dice/die-blank.png',
+            held: 'assets/dice/die-held.png'
+        }
+    });
+    const DICE_ROLL_SETTLE_MS = 760;
+    const diceStandardFaceSrc = (value) => {
+        if (typeof value === 'number' && value >= 1 && value <= 6) return DICE_ART.faces[value];
+        return DICE_ART.faces.blank;
+    };
+    const preloadDiceArt = () => {
+        Object.values(DICE_ART.faces).forEach((src) => {
+            const img = new Image();
+            img.src = src;
+        });
+    };
+
     const makeBone = () => ({ id: Math.random(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
     const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'danger' ? 'glow-danger' : '';
     const riskNotes = item => {
@@ -2098,85 +2173,69 @@ const GutterbonesGamble = (() => {
     };
 
     const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion, canPill = true, pillPulse = false }) => {
-        const ref = useRef({
-            locked: false,
-            vars: {
-                '--idle-delay': `${(slot * 0.18) + (Math.random() * 1.2)}s`,
-                '--roll-dur': '0.86s',
-                '--roll-delay': '0ms',
-                '--rf': '0deg'
-            }
+        const rollStyleRef = useRef({
+            '--roll-delay': `${Math.min(240, slot * 52 + Math.floor(Math.random() * 12))}ms`,
+            '--roll-tilt': `${(Math.random() - 0.5) * 18}deg`,
+            '--rest-tilt': `${(Math.random() - 0.5) * 10}deg`
         });
         const [verdictColor, setVerdictColor] = useState(null);
-        const [settleJolt, setSettleJolt] = useState(false);
         const [impactParticles, setImpactParticles] = useState([]);
-        if (rolling && !ref.current.locked) {
-            ref.current = {
-                locked: true,
-                vars: {
-                    '--idle-delay': ref.current.vars['--idle-delay'],
-                    '--tx1': `${(Math.random()-.5)*240}px`,
-                    '--ty1': `${(Math.random()-.5)*150-80}px`,
-                    '--tx2': `${(Math.random()-.5)*80}px`,
-                    '--ty2': `${(Math.random()-.5)*40}px`,
-                    '--r1': `${Math.random()*900}deg`,
-                    '--r2': `${Math.random()*1200}deg`,
-                    '--rf': `${(Math.random()-.5)*45}deg`,
-                    '--roll-dur': `${(0.72 + Math.random() * 0.33).toFixed(2)}s`,
-                    '--roll-delay': `${Math.floor(Math.random() * 80)}ms`
-                }
-            };
-        }
-        if (!rolling && ref.current.locked) ref.current = { locked: false, vars: ref.current.vars };
+        const isCarved = !!(data.faceId && data.faceId !== 'standard');
+        const showTumble = rolling && !reducedMotion;
+        const faceSrc = rolling
+            ? DICE_ART.faces.blank
+            : (isCarved ? DICE_ART.faces.blank : diceStandardFaceSrc(data.value));
         useEffect(() => {
             if (rolling) return;
             const glow = verdictGlowForFace(data.faceId, data.type);
             const profile = impactProfileForFace(data.faceId, data.type);
             let glowId = null;
-            let joltId = null;
             let particleId = null;
             if (glow) {
                 setVerdictColor(glow);
                 glowId = setTimeout(() => setVerdictColor(null), 420);
             }
-            if (profile) {
-                setSettleJolt(true);
-                joltId = setTimeout(() => setSettleJolt(false), reducedMotion ? 80 : 150);
-                if (!reducedMotion) {
-                    const particles = Array.from({ length: profile.count }, (_, idx) => ({
-                        id: `${data.id}-${idx}`,
-                        color: profile.colors[idx % profile.colors.length],
-                        px: `${(Math.random() - .5) * 44}px`,
-                        py: `${(Math.random() - 1.05) * 38}px`,
-                        left: `${42 + ((Math.random() - .5) * 22)}%`,
-                        top: `${48 + ((Math.random() - .5) * 16)}%`
-                    }));
-                    setImpactParticles(particles);
-                    particleId = setTimeout(() => setImpactParticles([]), 360);
-                }
+            if (profile && !reducedMotion) {
+                const particles = Array.from({ length: profile.count }, (_, idx) => ({
+                    id: `${data.id}-${idx}`,
+                    color: profile.colors[idx % profile.colors.length],
+                    px: `${(Math.random() - .5) * 44}px`,
+                    py: `${(Math.random() - 1.05) * 38}px`,
+                    left: `${42 + ((Math.random() - .5) * 22)}%`,
+                    top: `${48 + ((Math.random() - .5) * 16)}%`
+                }));
+                setImpactParticles(particles);
+                particleId = setTimeout(() => setImpactParticles([]), 360);
             } else {
-                setSettleJolt(false);
                 setImpactParticles([]);
             }
             return () => {
                 if (glowId) clearTimeout(glowId);
-                if (joltId) clearTimeout(joltId);
                 if (particleId) clearTimeout(particleId);
             };
         }, [rolling, data.faceId, data.type, data.id, reducedMotion]);
         return (
-            <div className="relative group">
+            <div className="relative bone-slot-inner">
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <button onClick={onClick} className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg bg-[#d4cfc5] border border-[#8c8880] shadow-2xl relative transition-all duration-300 flex items-center justify-center overflow-hidden ${rolling ? 'bone-rolling bone-depth-roll' : 'bone-depth-idle'} ${!rolling && !kept && !selected ? 'bone-idle' : ''} ${kept ? 'bone-kept' : ''} ${settleJolt ? 'bone-settle-jolt' : ''} ${selected ? 'ring-4 ring-[#0df] z-50' : ''}`} style={{ ...ref.current.vars, '--rest-rotate': ref.current.vars['--rf'] || '0deg' }}>
-                    {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
-                    {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
-                    {rolling ? <span className="font-serif italic text-3xl opacity-30">?</span> : data.faceId && data.faceId !== 'standard' ? (
-                        <div className={`absolute inset-1 rounded flex flex-col items-center justify-center border ${data.faceStyle}`}>
-                            <div className="font-serif text-3xl leading-none">{data.faceLabel.charAt(0)}</div>
-                            <div className="text-[8px] uppercase tracking-tighter text-center leading-none mt-1 hidden sm:block">{data.faceLabel}</div>
-                        </div>
-                    ) : <span className="font-serif text-5xl text-gray-900 opacity-80">{data.value}</span>}
-                </button>
+                <div className="bone-die-perspective flex items-center justify-center">
+                    <button
+                        type="button"
+                        onClick={onClick}
+                        className={`bone-die-btn relative flex items-center justify-center ${showTumble ? 'bone-die-tumble' : ''} ${kept ? 'bone-die-kept' : ''} ${selected ? 'ring-4 ring-[#0df] z-50 rounded-lg' : ''}`}
+                        style={rollStyleRef.current}
+                        aria-label={`Bone slot ${slot + 1}`}
+                    >
+                        {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
+                        {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
+                        <img className="bone-die-img" src={faceSrc} alt="" draggable={false} decoding="async" />
+                        {!rolling && isCarved && (
+                            <div className={`bone-carve-overlay border ${data.faceStyle}`}>
+                                <div className="font-serif text-2xl md:text-3xl leading-none text-white drop-shadow">{data.faceLabel.charAt(0)}</div>
+                                <div className="text-[8px] uppercase tracking-tighter text-center leading-none mt-1 hidden sm:block text-white/90">{data.faceLabel}</div>
+                            </div>
+                        )}
+                    </button>
+                </div>
                 {!rolling && (
                     <button
                         type="button"
@@ -3122,7 +3181,10 @@ const GutterbonesGamble = (() => {
         const [consumables, setConsumables] = useState([]);
         const [dice, setDice] = useState([]);
         const [kept, setKept] = useState([false,false,false,false,false]);
-        const [rolling, setRolling] = useState(false);
+        const [rollingSlots, setRollingSlots] = useState(() => Array(5).fill(false));
+        const rolling = rollingSlots.some(Boolean);
+        const boneSlotRefs = useRef([]);
+        const [boneSlotStyles, setBoneSlotStyles] = useState({});
         const [hasRolled, setHasRolled] = useState(false);
         const [usedCats, setUsedCats] = useState([]);
         const [handLevels, setHandLevels] = useState({});
@@ -3400,6 +3462,10 @@ const GutterbonesGamble = (() => {
             timeoutIdsRef.current.clear();
             intervalIdsRef.current.clear();
             AudioSystem.stopAmbient();
+        }, []);
+
+        useEffect(() => {
+            preloadDiceArt();
         }, []);
 
         useEffect(() => {
@@ -3778,6 +3844,7 @@ const GutterbonesGamble = (() => {
             setLossExplanation(null);
             setGambleStake(0);
             setHasRolled(false);
+            setRollingSlots(Array(5).fill(false));
             setKept([false,false,false,false,false]);
             setHistory([]);
             setFixerLine(arcMeta?.title ? `Story arc: ${arcMeta.title}. ${pickLine(FIXER_LINES.start)}` : pickLine(FIXER_LINES.start));
@@ -3857,6 +3924,41 @@ const GutterbonesGamble = (() => {
             };
         };
 
+        const animateBoneSwap = (fromIdx, toIdx, onDone) => {
+            if (reducedMotion) {
+                onDone();
+                return;
+            }
+            const elFrom = boneSlotRefs.current[fromIdx];
+            const elTo = boneSlotRefs.current[toIdx];
+            if (!elFrom || !elTo) {
+                onDone();
+                return;
+            }
+            const firstFrom = elFrom.getBoundingClientRect();
+            const firstTo = elTo.getBoundingClientRect();
+            onDone();
+            requestAnimationFrame(() => {
+                const lastFrom = elFrom.getBoundingClientRect();
+                const lastTo = elTo.getBoundingClientRect();
+                const fromDx = firstFrom.left - lastFrom.left;
+                const fromDy = firstFrom.top - lastFrom.top;
+                const toDx = firstTo.left - lastTo.left;
+                const toDy = firstTo.top - lastTo.top;
+                setBoneSlotStyles({
+                    [fromIdx]: { transform: `translate3d(${fromDx}px, ${fromDy}px, 0)`, transition: 'none' },
+                    [toIdx]: { transform: `translate3d(${toDx}px, ${toDy}px, 0)`, transition: 'none' }
+                });
+                requestAnimationFrame(() => {
+                    setBoneSlotStyles({
+                        [fromIdx]: { transform: 'translate3d(0, 0, 0)', transition: 'transform 250ms ease' },
+                        [toIdx]: { transform: 'translate3d(0, 0, 0)', transition: 'transform 250ms ease' }
+                    });
+                    scheduleTimeout(() => setBoneSlotStyles({}), 260);
+                });
+            });
+        };
+
         const rollBones = () => {
             if (rollLockRef.current || rolling || hands <= 0) return;
             if (hasRolled && discards <= 0) return;
@@ -3864,7 +3966,8 @@ const GutterbonesGamble = (() => {
             if (now - lastRollStartedAtRef.current < 300) return;
             rollLockRef.current = true;
             lastRollStartedAtRef.current = now;
-            const settleMs = 800;
+            const activeMask = kept.map((k) => !k);
+            const settleMs = DICE_ROLL_SETTLE_MS + (reducedMotion ? 0 : 180);
             let toll = 0;
             if (activeBoss?.id === 'LOAN_SHARK') toll += debt > 0 ? BOSS_TUNING.loanSharkDebtToll : BOSS_TUNING.loanSharkToll;
             if (inventory.some(i => i.id === 'BLOOD_PACT')) toll += 1;
@@ -3879,37 +3982,47 @@ const GutterbonesGamble = (() => {
                     return 0;
                 });
             }
-            AudioSystem.clatter();
-            setRolling(true);
+            setRollingSlots(activeMask);
             setFeltPulse(true);
             triggerCameraKick('soft');
             scheduleTimeout(() => setFeltPulse(false), 650);
             if (hasRolled) setDiscards(d => d - 1);
             setHasRolled(true);
-            const interval = scheduleInterval(() => setDice(prev => prev.map((d,i) => kept[i] ? d : { ...d, value: Math.ceil(Math.random()*6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' })), 70);
+            const interval = reducedMotion
+                ? null
+                : scheduleInterval(() => setDice(prev => prev.map((d, i) => (activeMask[i] ? { ...d, value: Math.ceil(Math.random() * 6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' } : d))), 70);
             scheduleTimeout(() => {
-                clearScheduledInterval(interval);
-                setDice(prev => prev.map((d,i) => {
-                    if (kept[i]) return d;
+                if (interval != null) clearScheduledInterval(interval);
+                setDice(prev => prev.map((d, i) => {
+                    if (!activeMask[i]) return d;
                     const face = d.faces[Math.floor(Math.random() * d.faces.length)];
                     const isStandard = face.type === 'standard';
                     let value = face.value;
                     if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
-                    return { ...d, value, faceId: isStandard ? null : face.id, faceLabel: isStandard ? null : face.label, faceStyle: isStandard ? null : face.style, type: isStandard ? 'standard' : face.type };
+                    return {
+                        ...d,
+                        value,
+                        faceId: isStandard ? null : face.id,
+                        faceLabel: isStandard ? null : face.label,
+                        faceStyle: isStandard ? null : face.style,
+                        type: isStandard ? 'standard' : face.type
+                    };
                 }));
-                setRolling(false);
+                setRollingSlots(prev => prev.map((active, i) => (activeMask[i] ? false : active)));
                 rollLockRef.current = false;
                 const pending = pendingPayoutRef.current;
                 if (pending) {
                     pendingPayoutRef.current = null;
                     executePayout(pending);
                 }
+                if (!reducedMotion) AudioSystem.clatter();
             }, settleMs);
         };
 
         const popPill = (idx) => {
             showMechanicPopup('PILL');
-            if (discards <= 0 || rolling) return;
+            if (discards <= 0 || rolling || rollLockRef.current) return;
+            rollLockRef.current = true;
             patchSettings({ dismissPillPulse: true });
             if (activeBoss?.id === 'THE_RAID') {
                 spawnHitCallout('BOSS: RAID PILL TOLL');
@@ -3923,24 +4036,32 @@ const GutterbonesGamble = (() => {
             if (inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled) setGold(g => g + 1);
             setDiscards(d => d - 1);
             setActiveMechanicPopup(null);
-            setDice(prev => {
-                const next = [...prev];
-                const die = next[idx];
-                const face = die.faces[Math.floor(Math.random() * die.faces.length)];
-                const isStandard = face.type === 'standard';
-                let value = face.value;
-                if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
-                next[idx] = {
-                    ...die,
-                    value,
-                    faceId: isStandard ? null : face.id,
-                    faceLabel: isStandard ? null : face.label,
-                    faceStyle: isStandard ? null : face.style,
-                    type: isStandard ? 'standard' : face.type,
-                    id: Math.random()
-                };
-                return next;
-            });
+            const activeMask = Array.from({ length: 5 }, (_, i) => i === idx);
+            setRollingSlots(prev => prev.map((_, i) => i === idx));
+            const settleMs = reducedMotion ? 0 : DICE_ROLL_SETTLE_MS + 120;
+            scheduleTimeout(() => {
+                setDice(prev => {
+                    const next = [...prev];
+                    const die = next[idx];
+                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
+                    const isStandard = face.type === 'standard';
+                    let value = face.value;
+                    if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
+                    next[idx] = {
+                        ...die,
+                        value,
+                        faceId: isStandard ? null : face.id,
+                        faceLabel: isStandard ? null : face.label,
+                        faceStyle: isStandard ? null : face.style,
+                        type: isStandard ? 'standard' : face.type,
+                        id: Math.random()
+                    };
+                    return next;
+                });
+                setRollingSlots(prev => prev.map(() => false));
+                rollLockRef.current = false;
+                if (!reducedMotion) AudioSystem.clatter();
+            }, settleMs);
             if (!reducedMotion) {
                 const burstId = Math.random();
                 setPillBursts(prev => [...prev, { id: burstId, idx }]);
@@ -4905,19 +5026,47 @@ const GutterbonesGamble = (() => {
                                     </div>
                                 )}
                                 <div className={`flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
-                                    {dice.map((d, i) => <Bone key={d.id} data={d} slot={i} rolling={rolling && !kept[i]} kept={kept[i]} selected={swapIdx === i} raidPill={activeBoss?.id === 'THE_RAID'} reducedMotion={reducedMotion} canPill={discards > 0 && hasRolled && !rolling} pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0} onExplainPill={() => showMechanicPopup('PILL')} onPill={() => popPill(i)} onClick={() => {
-                                        if (swapMode) {
-                                            if (swapIdx === null) setSwapIdx(i);
-                                            else {
-                                                setDice(prev => { const n = [...prev]; [n[swapIdx], n[i]] = [n[i], n[swapIdx]]; return n; });
-                                                setKept(prev => { const n = [...prev]; [n[swapIdx], n[i]] = [n[i], n[swapIdx]]; return n; });
-                                                setSwapIdx(null); setSwapMode(false); AudioSystem.playTone(400, 'triangle', .1);
-                                            }
-                                        } else if (!rolling && hasRolled) {
-                                            setKept(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
-                                            AudioSystem.playTone(800, 'sine', .1);
-                                        }
-                                    }} />)}
+                                    {dice.map((d, i) => (
+                                        <div
+                                            key={d.id}
+                                            ref={(el) => { boneSlotRefs.current[i] = el; }}
+                                            className="bone-slot-wrap bone-hover-ready relative"
+                                            style={boneSlotStyles[i] || undefined}
+                                        >
+                                            <Bone
+                                                data={d}
+                                                slot={i}
+                                                rolling={rollingSlots[i]}
+                                                kept={kept[i]}
+                                                selected={swapIdx === i}
+                                                raidPill={activeBoss?.id === 'THE_RAID'}
+                                                reducedMotion={reducedMotion}
+                                                canPill={discards > 0 && hasRolled && !rolling}
+                                                pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0}
+                                                onExplainPill={() => showMechanicPopup('PILL')}
+                                                onPill={() => popPill(i)}
+                                                onClick={() => {
+                                                    if (swapMode) {
+                                                        if (swapIdx === null) setSwapIdx(i);
+                                                        else {
+                                                            const from = swapIdx;
+                                                            const to = i;
+                                                            animateBoneSwap(from, to, () => {
+                                                                setDice(prev => { const n = [...prev]; [n[from], n[to]] = [n[to], n[from]]; return n; });
+                                                                setKept(prev => { const n = [...prev]; [n[from], n[to]] = [n[to], n[from]]; return n; });
+                                                            });
+                                                            setSwapIdx(null);
+                                                            setSwapMode(false);
+                                                            AudioSystem.playTone(400, 'triangle', .1);
+                                                        }
+                                                    } else if (!rolling && hasRolled) {
+                                                        setKept(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
+                                                        AudioSystem.playTone(800, 'sine', .1);
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>

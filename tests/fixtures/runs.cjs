@@ -73,6 +73,7 @@ function snapshot(overrides = {}) {
     hardwareDisabled: false,
     currentTarget: base.target,
     rolling: false,
+    rollingSlots: [false, false, false, false, false],
     reducedMotion: true,
     runClosed: false,
     meta: { launderedCash: 0, bestHeat: 0, totalRuns: 0, completedRuns: 0 },

@@ -130,6 +130,7 @@ function createGame(snapshot = {}, options = {}) {
     rollLockRef: { current: false },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
+    rollingSlots: [false, false, false, false, false],
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
