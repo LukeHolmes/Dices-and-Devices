@@ -34,6 +34,7 @@ const SCENARIOS = [
   { id: "lineup", label: "Operator lineup", resume: null, action: "lineup" },
   { id: "settings", label: "Settings panel", resume: null, action: "settings" },
   { id: "play", label: "Alley / PLAY", resume: "normal", action: null },
+  { id: "play_heavy_hardware", label: "PLAY heavy hardware stash", resume: "playHeavyHardware", action: null },
   { id: "shop", label: "Back Alley shop", resume: "shop", action: null },
   { id: "carving", label: "The Mod", resume: "carving", action: null },
   { id: "gamble", label: "Double or Nothing", resume: "gamble", action: null },
@@ -52,6 +53,7 @@ const SCENARIOS = [
 function normalizeFixture(name) {
   const builders = {
     normal: () => fixtures.run(),
+    playHeavyHardware: fixtures.playHeavyHardware,
     shop: fixtures.shop,
     carving: fixtures.carving,
     gamble: fixtures.gamble,

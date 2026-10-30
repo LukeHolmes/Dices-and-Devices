@@ -47,8 +47,8 @@ test("projectNextRound — early BACK ALLEY from round 1 target 75", () => {
     personaPills: 3,
   });
   assert.equal(out.nextRound, 2);
-  assert.equal(out.nextTarget, 93);
-  assert.equal(out.nextTargetDisplay, 93);
+  assert.equal(out.nextTarget, 91);
+  assert.equal(out.nextTargetDisplay, 91);
   assert.equal(out.nextHands, 4);
   assert.equal(out.nextDiscards, 3);
 });

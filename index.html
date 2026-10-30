@@ -246,8 +246,54 @@
     #root-gutterbones .gb-screen-transition-out {
         animation: gbScreenOut 260ms ease-in forwards;
     }
+    #root-gutterbones .gb-screen-transition-out.gb-screen-transition-fast {
+        animation: gbScreenOut 90ms ease-in forwards;
+    }
     #root-gutterbones .gb-screen-transition-in {
         animation: gbScreenIn 320ms ease-out forwards;
+    }
+    #root-gutterbones .gb-screen-transition-in.gb-screen-transition-fast {
+        animation: gbScreenIn 120ms ease-out forwards;
+    }
+    #root-gutterbones .play-stash-column {
+        max-height: 100%;
+        overflow: hidden;
+    }
+    #root-gutterbones .run-intel-compact {
+        max-height: 6.75rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    #root-gutterbones .stash-programs-pinned {
+        flex-shrink: 0;
+    }
+    #root-gutterbones .play-stash-column .stash-intel-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    #root-gutterbones .synergy-chain-banner {
+        position: absolute;
+        top: 3.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 45;
+        pointer-events: none;
+        font-family: ui-monospace, monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.28em;
+        color: #f0abfc;
+        background: rgba(0, 0, 0, 0.82);
+        border: 2px solid rgba(255, 0, 127, 0.65);
+        border-radius: 9999px;
+        padding: 0.35rem 0.85rem;
+        animation: badgePop 0.35s ease-out forwards;
+    }
+    #root-gutterbones .play-hud-mods-slot {
+        min-width: 4.5rem;
+        flex-shrink: 0;
     }
     @keyframes gbScreenOut {
         from { opacity: 1; transform: translateY(0); }
@@ -1320,7 +1366,14 @@ const GutterbonesRules = (() => {
 
     const resolveSynergyHardwareChains = (resolved, destroyed, state, hwMeta) => {
         const applied = state.synergyApplied;
-        if (!applied.has('engine_link') && hwMeta.engineBonus >= 2) {
+        if (!applied.has('build_tag_link') && (hwMeta.multEngineTagCount || 0) >= 2) {
+            state.mult += 1;
+            pushSynergyEvent(state, { chainId: 'build_tag_link', kind: 'mult', label: 'Build link (matched hardware)', impact: '+1x' });
+            applied.add('build_tag_link');
+        }
+        const engineLinkReady = hwMeta.engineBonus >= 2
+            || (hwMeta.engineBonus >= 1 && (hwMeta.multEngineTagCount || 0) >= 2);
+        if (!applied.has('engine_link') && engineLinkReady) {
             const modCount = resolved.filter((d, i) => !destroyed.has(i) && d.type === 'modifier').length;
             const linkMult = Math.min(4, modCount);
             if (linkMult > 0) {
@@ -1372,7 +1425,11 @@ const GutterbonesRules = (() => {
             mirrorMatched = false,
             synergyEnabled = false
         } = handContext;
-        const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false };
+        const MULT_ENGINE_HARDWARE = new Set([
+            'ENGINE', 'CROWBAR', 'FUSE_BOX', 'HOT_STREAK_COIL', 'CENTERPIECE', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'COPY_LAST'
+        ]);
+        const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false, multEngineTagCount: 0 };
+        meta.multEngineTagCount = inventory.filter((item) => MULT_ENGINE_HARDWARE.has(item.id)).length;
         if (hardwareDisabled) {
             if (inventory.length > 0) {
                 state.pushStep('penalty', `BOSS: ${activeBoss?.name || 'CROOKED COP'}`, 'Hardware triggers disabled this hand', 'NO HARDWARE');
@@ -1538,15 +1595,15 @@ const GutterbonesRules = (() => {
             case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
             case 'C': valid = true; chips = sum + 10; mult *= 1.5; break;
         }
-        if (['ONES', 'TWOS', 'THREES'].includes(catId)) mult *= 2;
-        if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 3;
+        if (['ONES', 'TWOS', 'THREES'].includes(catId)) mult *= 1.5;
+        if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 2;
         const runUpperHeat = Math.max(0, Number(context.runUpperHeat) || 0);
         const upperBonusActive = runUpperHeat >= 63;
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
             mult += 0.5;
         }
         if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult = Math.min(mult, 3.5);
+            mult = Math.min(mult, 2.5);
         }
         if (!valid) {
             const invalidReason = (() => {
@@ -2371,18 +2428,18 @@ const GutterbonesRoutes = (() => {
     });
 
     const ROUND_CURVE_TUNING = Object.freeze({
-        earlyMaxRound: 4,
+        earlyMaxRound: 2,
         midMaxRound: 7,
-        early: { pathModWeight: 0.82, flatIncrease: 26 },
-        mid: { pathModWeight: 0.92, flatIncrease: 32 },
-        late: { pathModWeight: 1.02, flatIncrease: 38 }
+        early: { pathModWeight: 0.82, flatIncrease: 22 },
+        mid: { pathModWeight: 0.96, flatIncrease: 36 },
+        late: { pathModWeight: 1.04, flatIncrease: 42 }
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
-        minGrowthRate: 1.08,
-        earlyMaxGrowthRate: 1.24,
-        midMaxGrowthRate: 1.26,
-        lateMaxGrowthRate: 1.28
+        minGrowthRate: 1.1,
+        earlyMaxGrowthRate: 1.22,
+        midMaxGrowthRate: 1.34,
+        lateMaxGrowthRate: 1.36
     });
 
     const INSANE_CONTRACT_MODIFIERS = Object.freeze({
@@ -3367,7 +3424,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         hustleCashDivisor: 60,
         hustleCashCap: 6,
         roundClearBaseCash: 8,
-        roundClearPerUnusedPlay: 1,
+        roundClearPerUnusedPlay: 3,
         roundClearInterestPerFive: 1,
         roundClearInterestCap: 5,
         debtReliefThreshold: 195,
@@ -4622,14 +4679,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout }) => (
+    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout, jobRound }) => (
         <button
             type="button"
-            onClick={() => { if (canContinue) onSkip(); }}
+            onClick={onSkip}
             className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto p-4"
         >
             <div data-layout-key="round-clear-card" className={`round-clear-card font-marker text-4xl md:text-5xl text-[#0df] italic tracking-tight px-6 py-5 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl max-w-md w-full ${reducedMotion ? '' : ''}`}>
-                ROUND CLEARED
+                ROUND {jobRound || '?'} CLEARED
                 {payout && payout.total > 0 && (
                     <div className="font-mono text-[11px] not-italic text-left mt-4 space-y-1 text-gray-200 tracking-normal">
                         <div className="flex justify-between gap-3"><span>Round bonus</span><span>${payout.base}</span></div>
@@ -4887,7 +4944,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
         const flowDisplay = (Math.round((result.flowMult || 1) * 100) / 100).toFixed(2);
         return (
-            <div className="absolute bottom-[11.5rem] md:bottom-[10rem] left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(94vw,42rem)]">
+            <div className="absolute top-[max(5.5rem,14vh)] md:top-[max(6rem,12vh)] left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(94vw,42rem)] max-h-[min(38vh,16rem)] overflow-y-auto overscroll-contain">
                 <button
                     type="button"
                     onClick={() => { if (canDismiss) onDismiss?.(); }}
@@ -4965,7 +5022,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
 
-    const ActiveModifiers = ({ inventory, boss, insaneContract, runModifierIds = [] }) => {
+    const ActiveModifiers = ({ inventory, boss, insaneContract, runModifierIds = [], inline = false }) => {
         const [open, setOpen] = useState(false);
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
@@ -4974,7 +5031,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const count = (hasContract ? 1 : 0) + (hasBoss ? 1 : 0) + inventory.length + runMods.length;
         if (!count) return null;
         return (
-            <div data-layout-key="active-modifiers-panel" className="absolute bottom-[4.5rem] left-3 z-[75] font-mono text-xs max-w-[min(92vw,16rem)] pointer-events-auto">
+            <div data-layout-key="active-modifiers-panel" className={`${inline ? 'relative play-hud-mods-slot' : 'absolute bottom-[4.5rem] left-3 z-[75] max-w-[min(92vw,16rem)]'} font-mono text-xs pointer-events-auto`}>
                 <button
                     type="button"
                     onClick={() => setOpen((v) => !v)}
@@ -5085,7 +5142,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <div className="text-gray-300">None active.</div>
                 )}
             </div>
-            <div className="mt-2 pt-2 border-t border-gray-800">
+            <div className={`${inline ? 'run-intel-compact mt-2 pt-2 border-t border-gray-800' : 'mt-2 pt-2 border-t border-gray-800'}`}>
                 <div className="text-gray-400 mb-1 tracking-[.12em]">HARDWARE</div>
                 {inventory?.length ? (
                     <div className="text-cyan-200 space-y-0.5 leading-snug">
@@ -5096,29 +5153,29 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 ) : (
                     <div className="text-gray-300">None equipped.</div>
                 )}
-            </div>
-            <div className="mt-2 pt-2 border-t border-gray-800">
-                <div className="text-gray-400 mb-1 tracking-[.12em]">POCKETED ONE-SHOTS</div>
-                {consumables.length ? (
-                    <div className="text-emerald-300">{consumables.map(item => item.name).join(', ')}</div>
-                ) : (
-                    <div className="text-gray-300">None</div>
-                )}
-            </div>
-            <div className="mt-2 pt-2 border-t border-gray-800">
-                <div className="text-gray-400 mb-1 tracking-[.12em]">BLUEPRINTS</div>
-                {blueprints.length ? (
-                    <div className="space-y-1 text-fuchsia-200/90">
-                        {blueprints.filter((bp) => !bp.consumed).map((bp) => (
-                            <div key={bp.id} className="leading-snug">
-                                <span className="font-bold">{BLUEPRINT_CATALOG[bp.id]?.name || bp.id}</span>
-                                <span className="text-gray-400 text-[10px] block">{BLUEPRINT_CATALOG[bp.id]?.desc}</span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-gray-300">None</div>
-                )}
+                <div className="mt-2 pt-2 border-t border-gray-800/80">
+                    <div className="text-gray-400 mb-1 tracking-[.12em]">POCKETED ONE-SHOTS</div>
+                    {consumables.length ? (
+                        <div className="text-emerald-300">{consumables.map(item => item.name).join(', ')}</div>
+                    ) : (
+                        <div className="text-gray-300">None</div>
+                    )}
+                </div>
+                <div className="mt-2 pt-2 border-t border-gray-800/80">
+                    <div className="text-gray-400 mb-1 tracking-[.12em]">BLUEPRINTS</div>
+                    {blueprints.length ? (
+                        <div className="space-y-1 text-fuchsia-200/90">
+                            {blueprints.filter((bp) => !bp.consumed).map((bp) => (
+                                <div key={bp.id} className="leading-snug">
+                                    <span className="font-bold">{BLUEPRINT_CATALOG[bp.id]?.name || bp.id}</span>
+                                    <span className="text-gray-400 text-[10px] block">{BLUEPRINT_CATALOG[bp.id]?.desc}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-gray-300">None</div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -5607,6 +5664,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [paths, setPaths] = useState([]);
         const [selectedShopPathId, setSelectedShopPathId] = useState(null);
         const shopAdvanceLockRef = useRef(false);
+        const [shopAdvancing, setShopAdvancing] = useState(false);
+        const scoreOverlayDismissQueuedRef = useRef(false);
+        const roundClearContinueQueuedRef = useRef(false);
+        const [screenTransitionFast, setScreenTransitionFast] = useState(false);
+        const [synergyChainBanner, setSynergyChainBanner] = useState(null);
         const shopRewardGrantedRef = useRef(null);
         const e2ePendingDiceRef = useRef(null);
         const [nextShopTag, setNextShopTag] = useState(null);
@@ -5761,6 +5823,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const dismissScoreOverlays = () => {
+            if (!scoreOverlayCanDismiss && (scoreBreakdown || scoreResolution)) {
+                scoreOverlayDismissQueuedRef.current = true;
+                return;
+            }
+            scoreOverlayDismissQueuedRef.current = false;
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
                 scoreBreakdownTimeoutRef.current = null;
@@ -5773,6 +5840,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setScoreResolution(null);
             setChainStepsRevealed(null);
             setSynergyLinks([]);
+            setSynergyChainBanner(null);
             setScoreOverlayCanDismiss(false);
         };
 
@@ -5799,20 +5867,32 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             return { base, unused, interest, total: base + unused + interest };
         };
 
-        const runPhaseTransition = (nextPhase, { waitHeatMs = 0 } = {}) => {
-            const outMs = reducedMotion ? 150 : 260;
-            const inMs = reducedMotion ? 150 : 320;
+        const runPhaseTransition = (nextPhase, { waitHeatMs = 0, fast = false } = {}) => {
+            const outMs = fast || screenTransitionFast ? (reducedMotion ? 80 : 90) : (reducedMotion ? 150 : 260);
+            const inMs = fast || screenTransitionFast ? (reducedMotion ? 90 : 120) : (reducedMotion ? 150 : 320);
+            if (fast) setScreenTransitionFast(true);
             setScreenTransition('out');
             scheduleTimeout(() => {
                 clearTransientJuice();
                 setPhase(nextPhase);
                 setScreenTransition('in');
-                scheduleTimeout(() => setScreenTransition(null), inMs);
+                scheduleTimeout(() => {
+                    setScreenTransition(null);
+                    setScreenTransitionFast(false);
+                }, inMs);
             }, outMs + (waitHeatMs || 0));
         };
 
-        const finishRoundClearCard = () => {
-            if (!roundClearCanContinue) return;
+        const displayJobRound = (phaseName, roundNum) => (
+            phaseName === 'SHOP' ? Math.max(1, (Number(roundNum) || 1) + 1) : Math.max(1, Number(roundNum) || 1)
+        );
+
+        const finishRoundClearCard = (force = false) => {
+            if (!force && !roundClearCanContinue) {
+                roundClearContinueQueuedRef.current = true;
+                return;
+            }
+            roundClearContinueQueuedRef.current = false;
             setRoundClearCardActive(false);
             setRoundClearCanContinue(false);
             const pending = roundClearPendingRef.current;
@@ -5825,7 +5905,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setRoundClearCardActive(true);
             setRoundClearCanContinue(false);
             scheduleTimeout(
-                () => setRoundClearCanContinue(true),
+                () => {
+                    setRoundClearCanContinue(true);
+                    if (roundClearContinueQueuedRef.current) finishRoundClearCard(true);
+                },
                 GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion)
             );
         };
@@ -6125,7 +6208,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const wantsFirstRunTutorialChoice = () => (
-            !hasSavedRun && meta.totalRuns === 0 && !audioSettings.tutorialCompleted
+            !hasSavedRun && meta.totalRuns === 0 && !audioSettings.tutorialCompleted && !audioSettings.skippedAlleyIntro
         );
 
         const handleOfferContract = () => {
@@ -6274,7 +6357,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             setScoreOverlayCanDismiss(false);
             const minHold = GutterbonesPresentation.gateMinMs('scoreOverlay', presentationPacing(), reducedMotion);
-            const minId = scheduleTimeout(() => setScoreOverlayCanDismiss(true), minHold);
+            const minId = scheduleTimeout(() => {
+                setScoreOverlayCanDismiss(true);
+                if (scoreOverlayDismissQueuedRef.current) {
+                    scoreOverlayDismissQueuedRef.current = false;
+                    dismissScoreOverlays();
+                }
+            }, minHold);
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
                 scoreBreakdownTimeoutRef.current = null;
@@ -6638,6 +6727,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         }, [score, reducedMotion]);
 
         useEffect(() => {
+            if (phase === 'SHOP') {
+                setDisplayGold(gold);
+                prevGoldRef.current = gold;
+                return undefined;
+            }
             cancelAnimationFrame(goldAnimRef.current);
             const from = displayGold;
             const to = gold;
@@ -6656,7 +6750,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             prevGoldRef.current = gold;
             return () => cancelAnimationFrame(goldAnimRef.current);
-        }, [gold]);
+        }, [gold, phase]);
 
         useEffect(() => {
             const prev = prevStashRef.current;
@@ -7153,9 +7247,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 const stepMs = reducedMotion ? 0 : (SYNERGY_TUNING.juiceStepMs || 150);
                 if (!events.length || reducedMotion) {
                     if (reducedMotion) setChainStepsRevealed(null);
+                    setSynergyChainBanner(null);
                     onDone();
                     return;
                 }
+                setSynergyChainBanner({
+                    depth: result.chainDepth || events.length,
+                    steps: events.length,
+                    label: events[0]?.label || 'CHAIN'
+                });
                 setSynergyLinks(buildSynergyLinks(events, dice));
                 events.forEach((ev, i) => {
                     scheduleTimeout(() => {
@@ -7173,6 +7273,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 scheduleTimeout(() => {
                     setSynergyLinks([]);
                     setChainStepsRevealed(null);
+                    setSynergyChainBanner(null);
                     onDone();
                 }, sequenceMs);
             };
@@ -7760,30 +7861,28 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setFixerLine(gold >= price ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
             spawnPaperStamp('SOLD');
-            scheduleTimeout(() => {
-                setGold(g => {
-                    if (g >= price) return g - price;
-                    const shortage = price - g;
-                    registerDebtSpike(shortage, 'shop loan');
-                    return 0;
-                });
-                if (item.type === 'runModifier' && item.modifierId) {
-                    setRunModifierIds(prev => [...new Set([...prev, item.modifierId])]);
-                    setShopItems(prev => prev.filter(i => i.id !== item.id));
-                    setFixerLine(`Run modifier wired: ${item.name}.`);
-                } else if (item.type === 'consumable') {
-                    setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
-                    setShopItems(prev => prev.filter(i => i.id !== item.id));
-                } else if (item.type) {
-                    setSelectedItem(item);
-                    setCarvingDie(null);
-                    transitionToPhase('CARVING');
-                } else {
-                    setInventory(prev => [...prev, item]);
-                    setShopItems(prev => prev.filter(i => i.id !== item.id));
-                }
-                setSoldItems(prev => prev.filter(id => id !== item.id));
-            }, 220);
+            setGold(g => {
+                if (g >= price) return g - price;
+                const shortage = price - g;
+                registerDebtSpike(shortage, 'shop loan');
+                return 0;
+            });
+            if (item.type === 'runModifier' && item.modifierId) {
+                setRunModifierIds(prev => [...new Set([...prev, item.modifierId])]);
+                setShopItems(prev => prev.filter(i => i.id !== item.id));
+                setFixerLine(`Run modifier wired: ${item.name}.`);
+            } else if (item.type === 'consumable') {
+                setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
+                setShopItems(prev => prev.filter(i => i.id !== item.id));
+            } else if (item.type) {
+                setSelectedItem(item);
+                setCarvingDie(null);
+                transitionToPhase('CARVING');
+            } else {
+                setInventory(prev => [...prev, item]);
+                setShopItems(prev => prev.filter(i => i.id !== item.id));
+            }
+            setSoldItems(prev => prev.filter(id => id !== item.id));
         };
 
         const executeCarve = (dieIdx, faceIdx) => {
@@ -7848,6 +7947,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 return;
             }
             shopAdvanceLockRef.current = true;
+            setShopAdvancing(true);
             handleAdvanceCore(path);
         };
 
@@ -7909,8 +8009,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             setSelectedShopPathId(null);
             setRunClosed(false);
-            const commitAdvance = () => transitionToPhase('PLAY');
-            playStoryBeat(storyPanel, commitAdvance);
+            runPhaseTransition('PLAY', { fast: true, waitHeatMs: 0 });
+            playStoryBeat(storyPanel, () => {});
+            scheduleTimeout(() => {
+                shopAdvanceLockRef.current = false;
+                setShopAdvancing(false);
+            }, reducedMotion ? 120 : 160);
         };
 
         const grantRandomConsumable = () => {
@@ -8059,6 +8163,24 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         }
                         return true;
                     },
+                    grantHardware: (ids = []) => {
+                        setInventory((prev) => [
+                            ...prev,
+                            ...ids.map((id, idx) => ({
+                                id,
+                                name: id.replace(/_/g, ' '),
+                                instanceId: `e2e-${id}-${idx}-${Math.random()}`
+                            }))
+                        ]);
+                    },
+                    debugLastScore: (catId, values) => {
+                        const next = values.map((val, i) => {
+                            const base = dice[i] || makeBone();
+                            return { ...base, value: val, faceId: null, faceLabel: null, faceStyle: null, type: 'standard', id: Math.random() };
+                        });
+                        const result = calculateScore(catId, next);
+                        return { total: result.total, chainEvents: (result.synergyEvents || []).length, ids: (result.synergyEvents || []).map((e) => e.id) };
+                    },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
                         const next = values.map((val, i) => {
@@ -8132,7 +8254,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setShowIncarceratedStamp(true);
                 }
             };
-        }, [phase, round, target, score, gold, hands, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, dice]);
+        }, [phase, round, target, score, gold, hands, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
@@ -8234,6 +8356,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         onSkip={finishRoundClearCard}
                         canContinue={roundClearCanContinue}
                         payout={roundClearPayout}
+                        jobRound={round}
                     />
                 )}
                 {tutorialActive && (phase === 'PLAY' || phase === 'SHOP') && !storyBeat && (
@@ -8398,7 +8521,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {cinematic && <div className="cinematic-iris"></div>}
                 {cinematic === 'bust' && <div className="cinematic-siren"></div>}
 
-                <div className={`gb-app-shell${screenTransition === 'out' ? ' gb-screen-transition-out' : screenTransition === 'in' ? ' gb-screen-transition-in' : ''}`}>
+                <div className={`gb-app-shell${screenTransition === 'out' ? ` gb-screen-transition-out${screenTransitionFast ? ' gb-screen-transition-fast' : ''}` : screenTransition === 'in' ? ` gb-screen-transition-in${screenTransitionFast ? ' gb-screen-transition-fast' : ''}` : ''}`}>
                 {phase === 'LINEUP' && (
                     <div className="gb-screen relative z-20 p-[var(--gb-pad)] min-h-0">
                         <div className="shrink-0 text-center pt-0.5">
@@ -8543,7 +8666,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} />
                         <div data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
                             <div className="flex justify-between items-center p-2 md:p-4 gb-hud-compact-tight">
@@ -8559,9 +8681,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
                                         FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
                                     </div>
-                                    <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget}{meta.totalRuns === 0 && round === 1 && !tutorialActive ? ' · First contract quota' : ''} · Pills {discards}</div>
+                                    <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Round {displayJobRound('PLAY', round)} · Plays {hands} · Quota {currentTarget}{meta.totalRuns === 0 && round === 1 && !tutorialActive ? ' · First contract quota' : ''} · Pills {discards}</div>
                                 </div>
-                            <div className="flex gap-3 md:gap-6 text-right">
+                            <div className="flex gap-3 md:gap-6 text-right items-start">
+                                    <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
                                     <div className="relative" onMouseLeave={dismissMechanicPopup}>
                                         <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
@@ -8718,6 +8841,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 </div>
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
+                                {synergyChainBanner && (
+                                    <div data-layout-key="synergy-chain-overlay" className="synergy-chain-banner">
+                                        CHAIN · {synergyChainBanner.steps} LINK{synergyChainBanner.steps === 1 ? '' : 'S'}
+                                    </div>
+                                )}
                                 {swapMode && (
                                     <div className="absolute top-14 left-2 right-2 z-40 px-3 py-2 bg-black/80 border border-[#0df]/50 font-mono text-[10px] md:text-xs text-cyan-100 text-center">
                                         {swapIdx === null
@@ -8814,9 +8942,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </button>
                                 </div>
                             </div>
-                            <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-2 min-h-0 overflow-y-auto overscroll-contain pr-1 md:!flex play-stash-column`}>
+                            <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-2 min-h-0 overflow-hidden pr-1 md:!flex play-stash-column`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
-                                <div className="hidden md:flex flex-col gap-3">
+                                <div className="hidden md:flex flex-col gap-2 stash-intel-scroll min-h-0">
                                     <BuildIndicator analysis={buildAnalysis} inline />
                                     <RunIntelPanel
                                         flowMultiplier={flowMultiplier}
@@ -8833,7 +8961,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         inline
                                     />
                                 </div>
-                                <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl">
+                                <div className="stash-programs-pinned bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl shrink-0 min-h-0 flex flex-col">
                                     <div className={`flex items-center justify-center gap-2 border-b pb-2 ${activeBoss?.id === 'INFORMANT' ? 'border-yellow-500' : 'border-[#0df]'}`}>
                                         <h3 className={`text-center font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500' : 'text-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
                                         <button
@@ -9006,7 +9134,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 })}</div>
                             </div>
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-y-auto overscroll-contain">
-                                <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
+                                <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {displayJobRound('SHOP', round)}</div></div>
                                 <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
@@ -9057,11 +9185,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <div className="shrink-0 mt-2 pt-2 border-t border-gray-800">
                                 <button
                                     type="button"
-                                    disabled={!selectedShopPathId}
+                                    disabled={!selectedShopPathId || shopAdvancing}
                                     onClick={commitShopAdvance}
-                                    className="w-full py-2.5 min-h-[44px] border-4 border-[#0df] bg-cyan-950/40 text-[#0df] font-marker text-lg italic tracking-wide hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className={`w-full py-2.5 min-h-[44px] border-4 border-[#0df] bg-cyan-950/40 text-[#0df] font-marker text-lg italic tracking-wide hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed ${shopAdvancing ? 'scale-[0.98] opacity-70' : ''}`}
                                 >
-                                    HIT THE STREETS
+                                    {shopAdvancing ? 'HITTING THE STREETS…' : 'HIT THE STREETS'}
                                 </button>
                                 </div>
                             </div>

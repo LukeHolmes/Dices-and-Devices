@@ -127,12 +127,13 @@ test("synergy — tagged pair can produce chain events on Slop", () => {
   const { createGame } = require("./helpers/game.cjs");
   const g = createGame(require("./fixtures/runs.cjs").snapshot());
   const d = dice([2, 2, 3, 4, 5]);
-  d[0] = require("./fixtures/runs.cjs").bone(2, 0, { faceId: "BLOOD_6", type: "modifier" });
-  d[1] = require("./fixtures/runs.cjs").bone(2, 1, { faceId: "SHIV_FACE", type: "adjacent" });
   const r = g.api.GutterbonesRules.calculateScore("C", d, {
     handLevels: {},
     flowStreak: 0,
-    inventory: [{ id: "ENGINE", name: "Engine" }],
+    inventory: [
+      { id: "ENGINE", name: "Engine" },
+      { id: "FUSE_BOX", name: "Fuse Box" },
+    ],
     hardwareDisabled: false,
     activeBoss: null,
     CATEGORIES: g.api.CATEGORIES,
@@ -147,9 +148,9 @@ test("synergy — tagged pair can produce chain events on Slop", () => {
   assert.ok((r.synergyEvents || []).length >= 1, "expected at least one synergy chain event");
 });
 
-test("upper row scoring — five sixes reach 90 heat", () => {
+test("upper row scoring — five sixes capped at x2 mult (60 heat)", () => {
   const { dice } = require("./fixtures/runs.cjs");
   const api = loadRulesApi();
   const r = api.calculateScore("SIXES", dice([6, 6, 6, 6, 6]));
-  assert.equal(r.total, 90);
+  assert.equal(r.total, 60);
 });

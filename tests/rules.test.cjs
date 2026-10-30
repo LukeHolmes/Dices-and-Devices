@@ -11,7 +11,7 @@ for (const [cat, values, total] of [
   ["SS", [1, 2, 3, 4, 6], 60],
   ["LS", [1, 2, 3, 4, 5], 120],
   ["Y", [6, 6, 6, 6, 6], 250],
-  ["SIXES", [6, 6, 1, 2, 3], 36],
+  ["SIXES", [6, 6, 1, 2, 3], 24],
 ]) {
   test(`${cat}: standard payout ${total}`, () =>
     assert.equal(

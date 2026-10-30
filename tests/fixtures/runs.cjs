@@ -101,6 +101,26 @@ const wager = () =>
   run({ gold: 15, activeWager: { stake: 5, threshold: 110 } });
 const gamble = () =>
   run({ phase: "GAMBLE", round: 3, gold: 25, gambleStake: 5 });
+const playHeavyHardware = () =>
+  run({
+    phase: "PLAY",
+    round: 5,
+    score: 40,
+    target: 178,
+    hands: 3,
+    stash: 55,
+    inventory: [
+      { id: "ENGINE", name: "The Engine", instanceId: "hw-1" },
+      { id: "FUSE_BOX", name: "Fuse Box", instanceId: "hw-2" },
+      { id: "CROWBAR", name: "Crowbar", instanceId: "hw-3" },
+      { id: "HOT_STREAK_COIL", name: "Hot Streak Coil", instanceId: "hw-4" },
+      { id: "MIRROR_RIG", name: "Mirror Rig", instanceId: "hw-5" },
+      { id: "CENTERPIECE", name: "Centerpiece", instanceId: "hw-6" },
+    ],
+    hasRolled: true,
+    dice: dice([3, 4, 5, 2, 6]),
+  });
+
 const shop = () =>
   run({
     phase: "SHOP",
@@ -236,6 +256,7 @@ module.exports = {
   gamble,
   carving,
   shop,
+  playHeavyHardware,
   rapSheet,
   terminal,
   bustLastHand,

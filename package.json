@@ -10,7 +10,7 @@
     "playwright": "^1.49.1"
   },
   "scripts": {
-    "test": "node --test tests/rules.test.cjs tests/synergy-baseline.test.cjs tests/synergy-chains.test.cjs tests/synergy-tier2.test.cjs tests/synergy-tier3-hardware.test.cjs tests/synergy-phase6.test.cjs tests/synergy-phase7-build.cjs tests/saves.test.cjs tests/source.test.cjs tests/onboarding.test.cjs tests/tutorial.test.cjs tests/replay-value.test.cjs tests/story.test.cjs tests/routes.test.cjs tests/gamble.test.cjs tests/regression-defects.test.cjs tests/balance.test.cjs tests/playtest5-balance-bot.test.cjs tests/playtest5-economy-sim.test.cjs tests/playtest7-run-flow.test.cjs tests/presentation-timing.test.cjs",
+    "test": "node --test tests/rules.test.cjs tests/synergy-baseline.test.cjs tests/synergy-chains.test.cjs tests/synergy-tier2.test.cjs tests/synergy-tier3-hardware.test.cjs tests/synergy-phase6.test.cjs tests/synergy-phase7-build.cjs tests/saves.test.cjs tests/source.test.cjs tests/onboarding.test.cjs tests/tutorial.test.cjs tests/replay-value.test.cjs tests/story.test.cjs tests/routes.test.cjs tests/gamble.test.cjs tests/regression-defects.test.cjs tests/balance.test.cjs tests/playtest5-balance-bot.test.cjs tests/playtest5-economy-sim.test.cjs tests/playtest7-run-flow.test.cjs tests/playtest8-synergy-chain.test.cjs tests/presentation-timing.test.cjs",
     "test:presentation": "node --test tests/presentation-timing.test.cjs",
     "audit:known-issues": "node tests/known-issues.cjs",
     "test:known-issues": "node tests/known-issues.cjs --strict",
