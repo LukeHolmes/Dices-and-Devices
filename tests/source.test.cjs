@@ -177,6 +177,8 @@ test("Phase 6f shop loan and audio settings present", () => {
 
 test("Phase 6c safehouse and favicon polish", () => {
   assert.match(html, /rel="icon"[^>]+favicon\.ico/);
+  assert.match(html, /\/Dices-and-Devices\//);
+  assert.match(html, /withAssetBase/);
   assert.match(html, /apple-touch-icon[^>]+gutterbones-card\.png/);
   assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
   assert.match(appSource, /displayNameForUnlockId/);

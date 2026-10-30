@@ -46,6 +46,19 @@
     var isDev = isDevHost || params.get('dev') === '1';
     window.__GUTTERBONES_DEV__ = isDev;
 
+    var pathname = window.location.pathname || '/';
+    var assetBase = pathname.indexOf('/Dices-and-Devices') === 0 ? '/Dices-and-Devices/' : '';
+    window.__GUTTERBONES_ASSET_BASE__ = assetBase;
+    var withAssetBase = function (href) {
+        if (!href || /^https?:/i.test(href) || href.indexOf('//') === 0) return href;
+        var clean = href.replace(/^\//, '');
+        return assetBase ? assetBase + clean : href;
+    };
+    document.querySelectorAll('link[rel="icon"], link[rel="manifest"], link[rel="apple-touch-icon"]').forEach(function (el) {
+        var href = el.getAttribute('href');
+        if (href) el.setAttribute('href', withAssetBase(href));
+    });
+
     var reactFile = isDev ? 'react.development.js' : 'react.production.min.js';
     var reactDomFile = isDev ? 'react-dom.development.js' : 'react-dom.production.min.js';
     document.write('<script crossorigin src="https://unpkg.com/react@18/umd/' + reactFile + '"><\/script>');
