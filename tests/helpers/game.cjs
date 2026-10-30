@@ -132,6 +132,8 @@ function createGame(snapshot = {}, options = {}) {
     clearScheduledInterval: noOp,
     dailyRunActive: false,
     runModifierIds: [],
+    audioSettings: { diceSpeed: "normal" },
+    reducedMotion: false,
     rollLockRef: { current: false },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
@@ -142,6 +144,7 @@ function createGame(snapshot = {}, options = {}) {
     sacrificePlayPenaltyRef: { current: 0 },
     sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],
+    pillBursts: [],
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
@@ -150,7 +153,11 @@ function createGame(snapshot = {}, options = {}) {
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);
     sandbox[setter] = (update) => {
-      const previous = pending.has(key) ? pending.get(key) : snapshot[key];
+      const previous = pending.has(key)
+        ? pending.get(key)
+        : snapshot[key] !== undefined
+          ? snapshot[key]
+          : sandbox[key];
       const next =
         typeof update === "function" ? update(previous) : update;
       pending.set(key, next);
