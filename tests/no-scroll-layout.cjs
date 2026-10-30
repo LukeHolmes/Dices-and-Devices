@@ -38,6 +38,8 @@ const SCENARIOS = [
   { id: "system_menu", label: "System menu", resume: "normal", action: "system" },
   { id: "case_files", label: "Case files", resume: null, action: "lore" },
   { id: "first_run", label: "First-run overlay", resume: "normal", action: "firstRun" },
+  { id: "tutorial_choice", label: "Tutorial choice", resume: null, action: "tutorialChoice" },
+  { id: "tutorial_coach", label: "Tutorial coach", resume: "normal", action: "tutorialCoach" },
   { id: "mechanic_toast", label: "Mechanic toast", resume: "normal", action: "toast" },
 ];
 
@@ -117,6 +119,8 @@ async function runScenarioAction(page, action) {
   if (action === "system") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSystemMenu());
   if (action === "lore") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLore());
   if (action === "firstRun") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openFirstRun());
+  if (action === "tutorialChoice") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialChoice());
+  if (action === "tutorialCoach") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialCoach());
   if (action === "toast") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openMechanicToast());
   if (action === "safehouse") {
     await page.getByRole("button", { name: "SAFEHOUSE", exact: true }).click();

@@ -18,6 +18,7 @@ function block(open) {
 
 const sharedSource = block('<script id="gutterbones-rules">');
 const onboardingSource = block('<script id="gutterbones-onboarding">');
+const tutorialSource = block('<script id="gutterbones-tutorial">');
 const storySource = block('<script id="gutterbones-story">');
 const routesSource = block('<script id="gutterbones-routes">');
 const gambleSource = block('<script id="gutterbones-gamble">');
@@ -186,6 +187,7 @@ module.exports = {
   html,
   sharedSource,
   onboardingSource,
+  tutorialSource,
   storySource,
   routesSource,
   gambleSource,

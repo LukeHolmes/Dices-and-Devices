@@ -127,6 +127,24 @@
         display: flex;
         flex-direction: column;
     }
+    #root-gutterbones .tutorial-coach-root {
+        position: fixed;
+        inset: 0;
+        z-index: 650;
+        pointer-events: none;
+    }
+    #root-gutterbones .tutorial-coach-dim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        pointer-events: none;
+    }
+    #root-gutterbones .tutorial-coach-card {
+        pointer-events: auto;
+    }
+    #root-gutterbones .tutorial-coach-skip {
+        pointer-events: auto;
+    }
     #root-gutterbones .gb-modal-body {
         flex: 1 1 auto;
         min-height: 0;
@@ -1204,6 +1222,123 @@ const GutterbonesOnboarding = (() => {
 })();
 </script>
 
+<script id="gutterbones-tutorial">
+const GutterbonesTutorial = (() => {
+    /** Standard pip values per tutorial roll (only unkept slots apply on rerolls). */
+    const ROLL_TABLE = Object.freeze([
+        [2, 2, 3, 4, 5],
+        [2, 2, 3, 5, 6],
+        [2, 2, 3, 3, 6]
+    ]);
+
+    const STEPS = Object.freeze([
+        {
+            id: 'opening_sniff',
+            advance: 'ack',
+            focus: 'dice-lane',
+            caption: 'The fixer slipped you a free SNIFF — one bone rerolled on the house. That 25% stash bar? Programs, not Pills. Remember it.'
+        },
+        {
+            id: 'roll',
+            advance: 'roll_settled',
+            focus: 'roll-btn',
+            caption: 'Throw the bones. Hit ROLL and let the alley decide what sticks.'
+        },
+        {
+            id: 'hold',
+            advance: 'hold_toggle',
+            focus: 'dice-lane',
+            caption: 'Tap a die to lock it. Kept faces ride along on the next throw.'
+        },
+        {
+            id: 'roll_again',
+            advance: 'roll_settled',
+            focus: 'roll-btn',
+            caption: 'Again. Only the loose bones spin — your locks stay put.'
+        },
+        {
+            id: 'payout',
+            advance: 'payout',
+            focus: 'payout-sheet',
+            caption: 'Pick a row on THE PAYOUTS sheet. That hand is your hustle — one play gone either way.'
+        },
+        {
+            id: 'quota',
+            advance: 'ack',
+            focus: 'heat-quota',
+            caption: 'Heat climbs toward the quota. Burn through your plays before the street goes cold.'
+        },
+        {
+            id: 'pill',
+            advance: 'pill',
+            focus: 'dice-lane',
+            caption: 'Pills reroll a single bone. Tap the PILL badge on one die — stash stays out of it.'
+        },
+        {
+            id: 'clear_round',
+            advance: 'round_clear',
+            focus: 'payout-sheet',
+            caption: 'One more score clears the round. Same drill — lock, roll, cash a row.'
+        },
+        {
+            id: 'shop',
+            advance: 'ack',
+            focus: 'shop-panel',
+            caption: 'Back Alley shop: grab hardware, carve faces, or pocket cash. When you are set, pick a route and keep climbing.'
+        }
+    ]);
+
+    const TUNING = Object.freeze({
+        roundTarget: 28,
+        openingStash: 25,
+        plays: 5,
+        pills: 2,
+        openingSniffSlot: 3
+    });
+
+    let rollCounter = 0;
+
+    const resetRollCounter = () => { rollCounter = 0; };
+
+    const nextRollIndex = () => {
+        const idx = rollCounter;
+        rollCounter += 1;
+        return idx;
+    };
+
+    const valueForSlot = (rollIndex, slotIndex) => {
+        const row = ROLL_TABLE[Math.min(rollIndex, ROLL_TABLE.length - 1)];
+        return row[slotIndex % row.length];
+    };
+
+    const resolveSettledValues = (rollIndex, activeMask) => {
+        const row = ROLL_TABLE[Math.min(rollIndex, ROLL_TABLE.length - 1)];
+        return activeMask.map((active, i) => (active ? row[i] : null));
+    };
+
+    const stepByIndex = (i) => STEPS[Math.max(0, Math.min(i, STEPS.length - 1))];
+
+    const advanceForAction = (step, action) => {
+        if (!step) return false;
+        if (step.advance === action) return true;
+        if (action === 'roll_settled' && step.advance === 'roll_settled') return true;
+        return false;
+    };
+
+    return Object.freeze({
+        STEPS,
+        ROLL_TABLE,
+        TUNING,
+        resetRollCounter,
+        nextRollIndex,
+        valueForSlot,
+        resolveSettledValues,
+        stepByIndex,
+        advanceForAction
+    });
+})();
+</script>
+
 <script id="gutterbones-story">
 const GutterbonesStory = (() => {
     const DEFAULT_ARC_ID = 'witness';
@@ -1750,6 +1885,26 @@ const GutterbonesGamble = (() => {
         PROGRAM_LAUNDER: {
             title: 'LAUNDER (100% STASH)',
             body: 'Clears current debt immediately.'
+        },
+        TIP_FIRST_SHOP: {
+            title: 'BACK ALLEY SHOP',
+            body: 'Spend cash on hardware and contraband faces. Refresh if the fixer\'s stock looks thin — routes wait after you leave.'
+        },
+        TIP_FIRST_CARVE: {
+            title: 'THE MOD',
+            body: 'Carve a face onto a blank bone. Mods persist for the rest of the run — pick what matches your hustle.'
+        },
+        TIP_FIRST_ROUTE: {
+            title: 'PICK A ROUTE',
+            body: 'Each path twists quota, pills, or shop odds. Read the projection before you commit.'
+        },
+        TIP_FIRST_GAMBLE: {
+            title: 'DOUBLE OR NOTHING',
+            body: 'Flip for extra cash between rounds. Hard tiers pay bigger but sting harder on a miss.'
+        },
+        TIP_FIRST_SIDE_BET: {
+            title: 'SIDE WAGER',
+            body: 'Optional stake before you roll — hit the quota line and the house pays a bonus multiplier.'
         }
     };
 
@@ -2400,7 +2555,13 @@ const GutterbonesGamble = (() => {
         dismissPillPulse: false,
         dismissScoreHint: false,
         dismissBossHint: false,
-        seenHelpDossier: false
+        seenHelpDossier: false,
+        tutorialCompleted: false,
+        tipSeenShop: false,
+        tipSeenCarving: false,
+        tipSeenRoute: false,
+        tipSeenGamble: false,
+        tipSeenSideBet: false
     };
 
     const loadSettingsState = () => {
@@ -2414,7 +2575,13 @@ const GutterbonesGamble = (() => {
             dismissPillPulse: !!stored.dismissPillPulse,
             dismissScoreHint: !!stored.dismissScoreHint,
             dismissBossHint: !!stored.dismissBossHint,
-            seenHelpDossier: !!stored.seenHelpDossier
+            seenHelpDossier: !!stored.seenHelpDossier,
+            tutorialCompleted: !!stored.tutorialCompleted,
+            tipSeenShop: !!stored.tipSeenShop,
+            tipSeenCarving: !!stored.tipSeenCarving,
+            tipSeenRoute: !!stored.tipSeenRoute,
+            tipSeenGamble: !!stored.tipSeenGamble,
+            tipSeenSideBet: !!stored.tipSeenSideBet
         };
     };
 
@@ -2425,7 +2592,13 @@ const GutterbonesGamble = (() => {
             dismissPillPulse: !!settings.dismissPillPulse,
             dismissScoreHint: !!settings.dismissScoreHint,
             dismissBossHint: !!settings.dismissBossHint,
-            seenHelpDossier: !!settings.seenHelpDossier
+            seenHelpDossier: !!settings.seenHelpDossier,
+            tutorialCompleted: !!settings.tutorialCompleted,
+            tipSeenShop: !!settings.tipSeenShop,
+            tipSeenCarving: !!settings.tipSeenCarving,
+            tipSeenRoute: !!settings.tipSeenRoute,
+            tipSeenGamble: !!settings.tipSeenGamble,
+            tipSeenSideBet: !!settings.tipSeenSideBet
         });
     };
 
@@ -3009,6 +3182,68 @@ const GutterbonesGamble = (() => {
         );
     };
 
+    const FirstRunTutorialChoice = ({ onLearn, onSkip }) => (
+        <div className="absolute inset-0 z-[680] bg-black/88 flex items-center justify-center p-[var(--gb-pad)]" onClick={(e) => e.stopPropagation()}>
+            <div data-layout-key="tutorial-choice" className="gb-modal-fit w-full max-w-md bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-6 shadow-2xl text-center">
+                <div className="font-mono text-[10px] text-[#0df] tracking-[.4em] mb-3">FIRST NIGHT ON THE BLOCK</div>
+                <h3 className="font-marker text-3xl text-[#ff007f] italic mb-3">Learn the hustle?</h3>
+                <p className="font-mono text-sm text-gray-300 leading-relaxed mb-6">Walk the alley with a fixer whispering in your ear — rolls, payouts, pills, stash. Or skip straight to the contract.</p>
+                <div className="flex flex-col gap-2">
+                    <button onClick={onLearn} className="py-3 bg-[#ff007f] text-white font-marker text-xl italic shadow-[0_4px_0_#7a003d] active:translate-y-1 rounded">LEARN THE HUSTLE</button>
+                    <button onClick={onSkip} className="py-3 border-2 border-gray-600 text-gray-300 font-mono text-sm hover:border-[#0df] hover:text-[#0df] rounded">SKIP — STRAIGHT TO THE ALLEY</button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const TutorialCoachMark = ({ step, onAck, onSkip, reducedMotion }) => {
+        const [spot, setSpot] = useState(null);
+        useEffect(() => {
+            if (!step) return undefined;
+            const sel = {
+                'roll-btn': '[data-tutorial="roll-btn"]',
+                'dice-lane': '[data-tutorial="dice-lane"]',
+                'payout-sheet': '[data-tutorial="payout-sheet"]',
+                'heat-quota': '[data-tutorial="heat-quota"]',
+                'shop-panel': '[data-tutorial="shop-panel"]'
+            }[step.focus];
+            const measure = () => {
+                const el = sel ? document.querySelector(sel) : null;
+                if (!el) {
+                    setSpot(null);
+                    return;
+                }
+                const r = el.getBoundingClientRect();
+                setSpot({ top: r.top, left: r.left, width: r.width, height: r.height });
+            };
+            measure();
+            window.addEventListener('resize', measure);
+            const id = window.setInterval(measure, reducedMotion ? 800 : 400);
+            return () => {
+                window.removeEventListener('resize', measure);
+                window.clearInterval(id);
+            };
+        }, [step, reducedMotion]);
+        if (!step) return null;
+        const needsAck = step.advance === 'ack';
+        const hole = spot && spot.width > 0 && spot.height > 0
+            ? `radial-gradient(circle at ${spot.left + spot.width / 2}px ${spot.top + spot.height / 2}px, transparent ${Math.max(spot.width, spot.height) * 0.55}px, rgba(0,0,0,0.72) ${Math.max(spot.width, spot.height) * 0.85}px)`
+            : null;
+        return (
+            <div className="tutorial-coach-root" aria-live="polite">
+                <div className="tutorial-coach-dim" style={hole ? { background: hole } : undefined} />
+                <button type="button" onClick={onSkip} className="tutorial-coach-skip absolute top-3 left-3 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#ff007f] hover:text-white">SKIP TUTORIAL</button>
+                <div data-layout-key="tutorial-coach" className="tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md z-[660] bg-[#121113]/95 border-2 border-[#c78b16] rounded-lg p-4 shadow-2xl">
+                    <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2">FIXER ON THE WIRE</div>
+                    <p className="font-mono text-sm text-gray-100 leading-relaxed">{step.caption}</p>
+                    {needsAck && (
+                        <button type="button" onClick={onAck} className="mt-3 w-full py-2 bg-[#c78b16] text-black font-mono text-xs font-bold tracking-wider rounded hover:bg-[#d6b85c]">COPY THAT</button>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const StoryPanelOverlay = ({ beat, reducedMotion, onFinish }) => {
         const [exiting, setExiting] = useState(false);
         const [charIdx, setCharIdx] = useState(0);
@@ -3408,13 +3643,18 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const HelpOverlay = ({ onClose }) => (
+    const HelpOverlay = ({ onClose, onReplayTutorial }) => (
         <div className="absolute inset-0 z-[760] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
             <div data-layout-key="help-dossier" className="gb-modal-fit w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-3 border-b border-gray-700 pb-3 shrink-0">
                     <h3 className="font-marker text-2xl md:text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
                     <button onClick={onClose} className="font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
                 </div>
+                {onReplayTutorial && (
+                    <button type="button" onClick={onReplayTutorial} className="mb-3 w-full py-2 border border-[#0df]/60 text-[#0df] font-mono text-xs tracking-wider hover:bg-[#0df]/10 rounded shrink-0">
+                        REPLAY — LEARN THE HUSTLE
+                    </button>
+                )}
                 <div className="gb-modal-body grid md:grid-cols-2 gap-3 md:gap-4 text-sm font-mono">
                     <div className="bg-black/50 border border-gray-700 rounded p-3">
                         <div className="text-[#0df] mb-2 tracking-wider">CORE LOOP</div>
@@ -3487,6 +3727,7 @@ const GutterbonesGamble = (() => {
         onResume,
         onRestart,
         onOpenHelp,
+        onReplayTutorial,
         onExitToLineup,
         reducedMotion,
         onToggleReducedMotion,
@@ -3502,6 +3743,9 @@ const GutterbonesGamble = (() => {
                     <button onClick={onResume} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">RESUME HUSTLE</button>
                     <button onClick={onRestart} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">RESTART RUN</button>
                     <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
+                    {onReplayTutorial && (
+                        <button onClick={onReplayTutorial} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">LEARN THE HUSTLE (TUTORIAL)</button>
+                    )}
                     <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                         ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
                     </button>
@@ -3698,6 +3942,12 @@ const GutterbonesGamble = (() => {
         const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
         const [audioSettings, setAudioSettings] = useState(() => loadSettingsState());
         const [showFirstRunOverlay, setShowFirstRunOverlay] = useState(false);
+        const [showFirstRunTutorialChoice, setShowFirstRunTutorialChoice] = useState(false);
+        const [tutorialActive, setTutorialActive] = useState(false);
+        const [tutorialStepIndex, setTutorialStepIndex] = useState(0);
+        const tutorialActiveRef = useRef(false);
+        const tutorialStepRef = useRef(0);
+        const tutorialPayoutCountRef = useRef(0);
         const [arcId, setArcId] = useState(GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
         const [storyBeat, setStoryBeat] = useState(null);
         const storyFinishRef = useRef(null);
@@ -3844,6 +4094,96 @@ const GutterbonesGamble = (() => {
                 saveSettingsState(next);
                 return next;
             });
+        };
+
+        useEffect(() => {
+            tutorialActiveRef.current = tutorialActive;
+        }, [tutorialActive]);
+
+        useEffect(() => {
+            tutorialStepRef.current = tutorialStepIndex;
+        }, [tutorialStepIndex]);
+
+        const tutorialStepDef = () => (
+            tutorialActive && GutterbonesTutorial
+                ? GutterbonesTutorial.stepByIndex(tutorialStepIndex)
+                : null
+        );
+
+        const bumpTutorialStep = () => {
+            setTutorialStepIndex((i) => Math.min(i + 1, (GutterbonesTutorial?.STEPS?.length || 1) - 1));
+        };
+
+        const completeTutorial = () => {
+            setTutorialActive(false);
+            setTutorialStepIndex(0);
+            tutorialPayoutCountRef.current = 0;
+            patchSettings({ tutorialCompleted: true });
+        };
+
+        const exitTutorial = () => {
+            setTutorialActive(false);
+            setTutorialStepIndex(0);
+            tutorialPayoutCountRef.current = 0;
+        };
+
+        const notifyTutorial = (action) => {
+            if (!tutorialActiveRef.current || !GutterbonesTutorial) return;
+            const step = GutterbonesTutorial.stepByIndex(tutorialStepRef.current);
+            if (!step || !GutterbonesTutorial.advanceForAction(step, action)) return;
+            bumpTutorialStep();
+        };
+
+        const maybeShowContextTip = (key, settingsKey) => {
+            if (tutorialActiveRef.current) return;
+            setAudioSettings((prev) => {
+                if (prev[settingsKey]) return prev;
+                const hint = MECHANIC_HINTS[key];
+                if (!hint) return prev;
+                scheduleTimeout(() => setMechanicPopup(hint), 0);
+                const next = { ...prev, [settingsKey]: true };
+                saveSettingsState(next);
+                return next;
+            });
+        };
+
+        useEffect(() => {
+            if (tutorialActive) return;
+            if (phase === 'SHOP') maybeShowContextTip('TIP_FIRST_SHOP', 'tipSeenShop');
+            if (phase === 'CARVING') maybeShowContextTip('TIP_FIRST_CARVE', 'tipSeenCarving');
+            if (phase === 'GAMBLE') maybeShowContextTip('TIP_FIRST_GAMBLE', 'tipSeenGamble');
+        }, [phase, tutorialActive]);
+
+        useEffect(() => {
+            if (paths.length > 0 && phase === 'SHOP' && shopItems.length === 0) {
+                maybeShowContextTip('TIP_FIRST_ROUTE', 'tipSeenRoute');
+            }
+        }, [paths.length, phase, shopItems.length]);
+
+        useEffect(() => {
+            if (!tutorialActive || phase !== 'SHOP' || !GutterbonesTutorial) return;
+            const shopIdx = GutterbonesTutorial.STEPS.findIndex((s) => s.id === 'shop');
+            if (shopIdx >= 0) setTutorialStepIndex(shopIdx);
+        }, [tutorialActive, phase]);
+
+        const replayTutorialRun = () => {
+            setShowHelpOverlay(false);
+            setShowSystemMenu(false);
+            setShowFirstRunTutorialChoice(false);
+            beginContract({ tutorial: true });
+        };
+
+        const wantsFirstRunTutorialChoice = () => (
+            !hasSavedRun && meta.totalRuns === 0 && !audioSettings.tutorialCompleted
+        );
+
+        const handleOfferContract = () => {
+            if (!selectedPersonaUnlocked) return;
+            if (wantsFirstRunTutorialChoice()) {
+                setShowFirstRunTutorialChoice(true);
+                return;
+            }
+            beginContract({ tutorial: false });
         };
 
         useEffect(() => {
@@ -4275,14 +4615,21 @@ const GutterbonesGamble = (() => {
             persistRun(phase);
         }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
-        const startRun = () => {
+        const beginContract = ({ tutorial = false } = {}) => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
-            const runArcId = GutterbonesStory?.pickRandomArcId?.(Math.random()) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness';
+            setShowFirstRunTutorialChoice(false);
+            setTutorialActive(tutorial);
+            setTutorialStepIndex(0);
+            tutorialPayoutCountRef.current = 0;
+            if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
+            const runArcId = tutorial
+                ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
+                : (GutterbonesStory?.pickRandomArcId?.(Math.random()) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
             const arcMeta = GutterbonesStory?.getArc?.(runArcId);
             setArcId(runArcId);
             let openingBase = EARLY_GAME_TUNING.openingTarget;
-            if (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0) {
+            if (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0 && !tutorial) {
                 openingBase = FIRST_RUN_TUNING.openingTarget;
             }
             const openingTargetBase = p.id === 'CARD_COUNTER'
@@ -4296,15 +4643,22 @@ const GutterbonesGamble = (() => {
             setPersona(p);
             setRound(1);
             setScore(0);
-            setTarget(insaneContract ? Math.floor(openingTargetBase * INSANE_CONTRACT_MODIFIERS.targetMultiplier) : openingTargetBase);
-            setHands(Math.max(1, p.plays - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
-            const round1Pills = (FIRST_RUN_TUNING.enabled && meta.totalRuns === 0 && p.id === 'ENFORCER')
-                ? FIRST_RUN_TUNING.enforcerRound1Pills
-                : p.pills;
+            const tut = tutorial && GutterbonesTutorial ? GutterbonesTutorial.TUNING : null;
+            setTarget(
+                tut
+                    ? tut.roundTarget
+                    : (insaneContract ? Math.floor(openingTargetBase * INSANE_CONTRACT_MODIFIERS.targetMultiplier) : openingTargetBase)
+            );
+            setHands(tut ? tut.plays : Math.max(1, p.plays - (insaneContract ? INSANE_CONTRACT_MODIFIERS.playPenalty : 0)));
+            const round1Pills = tut
+                ? tut.pills
+                : ((FIRST_RUN_TUNING.enabled && meta.totalRuns === 0 && p.id === 'ENFORCER')
+                    ? FIRST_RUN_TUNING.enforcerRound1Pills
+                    : p.pills);
             setDiscards(round1Pills);
             setGold(p.cash);
             setDebt(0);
-            setStash(EARLY_GAME_TUNING.openingStashGrant || 0);
+            setStash(tut ? tut.openingStash : (EARLY_GAME_TUNING.openingStashGrant || 0));
             setUsedCats([]);
             setHandLevels({});
             setFlowStreak(0);
@@ -4321,7 +4675,7 @@ const GutterbonesGamble = (() => {
             setRollingSlots(Array(5).fill(false));
             setKept([false,false,false,false,false]);
             setHistory([]);
-            setFixerLine(arcMeta?.title ? `Story arc: ${arcMeta.title}. ${pickLine(FIXER_LINES.start)}` : pickLine(FIXER_LINES.start));
+            setFixerLine(tutorial ? 'Tutorial round — listen to the fixer, then move.' : (arcMeta?.title ? `Story arc: ${arcMeta.title}. ${pickLine(FIXER_LINES.start)}` : pickLine(FIXER_LINES.start)));
             setSoldItems([]);
             setCarveSparks([]);
             setPillBursts([]);
@@ -4329,25 +4683,32 @@ const GutterbonesGamble = (() => {
             setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
             buildCalloutPrevRef.current = null;
             synergyCalloutAtRef.current = 0;
-            setInventory(p.id === 'CARD_COUNTER' ? [DEVISES.BLACK_BOOK] : []);
+            setInventory(p.id === 'CARD_COUNTER' && !tutorial ? [DEVISES.BLACK_BOOK] : []);
             setConsumables([]);
             const bones = Array(5).fill(0).map(makeBone);
-            if (p.id === 'ENFORCER') bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
+            if (p.id === 'ENFORCER' && !tutorial) bones[0].faces[5] = FACE_DATABASE.BLOOD_6;
             setDice(bones);
             setShowSystemMenu(false);
             setShowHelpOverlay(false);
-            openingSniffPendingRef.current = !!(EARLY_GAME_TUNING.openingStashGrant);
+            setShowFirstRunOverlay(false);
+            openingSniffPendingRef.current = tut ? tut.openingStash > 0 : !!(EARLY_GAME_TUNING.openingStashGrant);
             const enterPlay = () => {
                 setPhase('PLAY');
-                if (meta.totalRuns === 0) setShowFirstRunOverlay(true);
-                if (!audioSettings.dismissPillPulse) {
+                if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted) setShowFirstRunOverlay(true);
+                if (!tutorial && !audioSettings.dismissPillPulse) {
                     setPillCurrencyHint(true);
                     scheduleTimeout(() => setPillCurrencyHint(false), reducedMotion ? 4500 : 6200);
                 }
             };
+            if (tutorial) {
+                enterPlay();
+                return;
+            }
             const prologue = GutterbonesStory?.getProloguePanel?.(runArcId);
             playStoryBeat(prologue, enterPlay);
         };
+
+        const startRun = () => beginContract({ tutorial: false });
 
         const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
             handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
@@ -4471,10 +4832,24 @@ const GutterbonesGamble = (() => {
             const interval = reducedMotion
                 ? null
                 : scheduleInterval(() => setDice(prev => prev.map((d, i) => (activeMask[i] ? { ...d, value: Math.ceil(Math.random() * 6), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' } : d))), 70);
+            const tutRollIdx = (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current && GutterbonesTutorial)
+                ? GutterbonesTutorial.nextRollIndex()
+                : null;
             scheduleTimeout(() => {
                 if (interval != null) clearScheduledInterval(interval);
                 setDice(prev => prev.map((d, i) => {
                     if (!activeMask[i]) return d;
+                    if (tutRollIdx != null) {
+                        const value = GutterbonesTutorial.valueForSlot(tutRollIdx, i);
+                        return {
+                            ...d,
+                            value,
+                            faceId: null,
+                            faceLabel: null,
+                            faceStyle: null,
+                            type: 'standard'
+                        };
+                    }
                     const face = d.faces[Math.floor(Math.random() * d.faces.length)];
                     const isStandard = face.type === 'standard';
                     let value = face.value;
@@ -4490,6 +4865,7 @@ const GutterbonesGamble = (() => {
                 }));
                 setRollingSlots(prev => prev.map((active, i) => (activeMask[i] ? false : active)));
                 rollLockRef.current = false;
+                if (typeof notifyTutorial === 'function') notifyTutorial('roll_settled');
                 const pending = pendingPayoutRef.current;
                 if (pending) {
                     pendingPayoutRef.current = null;
@@ -4550,7 +4926,10 @@ const GutterbonesGamble = (() => {
                 setPillBursts(prev => [...prev, { id: burstId, idx }]);
                 scheduleTimeout(() => setPillBursts(prev => prev.filter(p => p.id !== burstId)), 360);
             }
-            if (consumePill) AudioSystem.playTone(600, 'square', 0.1);
+            if (consumePill) {
+                AudioSystem.playTone(600, 'square', 0.1);
+                if (typeof notifyTutorial === 'function') notifyTutorial('pill');
+            }
             return true;
         };
 
@@ -4561,17 +4940,25 @@ const GutterbonesGamble = (() => {
         useEffect(() => {
             if (phase !== 'PLAY' || storyBeat || !openingSniffPendingRef.current || dice.length !== 5) return;
             openingSniffPendingRef.current = false;
-            const grant = EARLY_GAME_TUNING.openingStashGrant || 0;
+            const tutGrant = tutorialActiveRef.current && GutterbonesTutorial
+                ? GutterbonesTutorial.TUNING.openingStash
+                : 0;
+            const grant = tutGrant || EARLY_GAME_TUNING.openingStashGrant || 0;
             if (grant <= 0) return;
             setStash(grant);
-            const slot = Math.floor(Math.random() * 5);
+            const slot = tutorialActiveRef.current && GutterbonesTutorial
+                ? GutterbonesTutorial.TUNING.openingSniffSlot
+                : Math.floor(Math.random() * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
             scheduleTimeout(() => setOpeningSniffBanner(null), reducedMotion ? 5200 : 6800);
+            if (tutorialActiveRef.current) setTutorialStepIndex(0);
         }, [phase, storyBeat, dice.length, reducedMotion]);
 
         const executePayout = (catId) => {
+            if (typeof notifyTutorial === 'function') notifyTutorial('payout');
+            if (typeof tutorialPayoutCountRef !== 'undefined') tutorialPayoutCountRef.current += 1;
             const playSynergySequence = (result, onDone) => {
                 const events = result.synergyEvents || [];
                 const stepMs = reducedMotion ? 0 : (SYNERGY_TUNING.juiceStepMs || 150);
@@ -4797,6 +5184,13 @@ const GutterbonesGamble = (() => {
                         playStoryBeat(GutterbonesStory?.getVictoryPanel?.(arcId), goVictory);
                     }, reducedMotion ? 120 : 480);
                 } else {
+                    if (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current && quotaCleared) {
+                        generateShop();
+                        setFixerLine('Tutorial round cleared. Welcome to the Back Alley.');
+                        setPhase('SHOP');
+                        if (typeof notifyTutorial === 'function') notifyTutorial('round_clear');
+                        return;
+                    }
                     const stake = GutterbonesGamble.baseStake(projectedCash);
                     const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
                     if (allowGamble) {
@@ -4848,6 +5242,7 @@ const GutterbonesGamble = (() => {
         const placeSideWager = (stake) => {
             if (!canPlaceWager) return;
             if (stake <= 0 || gold < stake) return;
+            maybeShowContextTip('TIP_FIRST_SIDE_BET', 'tipSeenSideBet');
             setGold(g => g - stake);
             setActiveWager({ stake, threshold: wagerThreshold });
             setFixerLine(`Side bet locked: $${stake} on ${wagerThreshold}+ heat.`);
@@ -5213,6 +5608,12 @@ const GutterbonesGamble = (() => {
                 openSystemMenu: () => setShowSystemMenu(true),
                 openLore: () => setShowLorePanel(true),
                 openFirstRun: () => setShowFirstRunOverlay(true),
+                openTutorialChoice: () => setShowFirstRunTutorialChoice(true),
+                openTutorialCoach: () => {
+                    setTutorialActive(true);
+                    setTutorialStepIndex(1);
+                    setPhase('PLAY');
+                },
                 openMechanicToast: () => setMechanicPopup(MECHANIC_HINTS.PILL),
                 getPhase: () => phase
             };
@@ -5240,11 +5641,17 @@ const GutterbonesGamble = (() => {
                         onFinish={() => storyFinishRef.current?.()}
                     />
                 )}
-                {showFirstRunOverlay && phase === 'PLAY' && !storyBeat && (
+                {showFirstRunTutorialChoice && phase === 'LINEUP' && (
+                    <FirstRunTutorialChoice
+                        onLearn={() => beginContract({ tutorial: true })}
+                        onSkip={() => beginContract({ tutorial: false })}
+                    />
+                )}
+                {showFirstRunOverlay && phase === 'PLAY' && !storyBeat && !tutorialActive && (
                     <FirstRunOverlay
                         onDismiss={() => {
                             setShowFirstRunOverlay(false);
-                            if (!audioSettings.seenHelpDossier) {
+                            if (!audioSettings.seenHelpDossier && !audioSettings.tutorialCompleted) {
                                 setShowHelpOverlay(true);
                                 patchSettings({ seenHelpDossier: true });
                             }
@@ -5254,6 +5661,18 @@ const GutterbonesGamble = (() => {
                             setShowHelpOverlay(true);
                             patchSettings({ seenHelpDossier: true });
                         }}
+                    />
+                )}
+                {tutorialActive && (phase === 'PLAY' || phase === 'SHOP') && !storyBeat && (
+                    <TutorialCoachMark
+                        step={tutorialStepDef()}
+                        reducedMotion={reducedMotion}
+                        onAck={() => {
+                            notifyTutorial('ack');
+                            const step = tutorialStepDef();
+                            if (step?.id === 'shop') completeTutorial();
+                        }}
+                        onSkip={exitTutorial}
                     />
                 )}
                 {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
@@ -5274,6 +5693,7 @@ const GutterbonesGamble = (() => {
                             setShowSystemMenu(false);
                             setShowHelpOverlay(true);
                         }}
+                        onReplayTutorial={replayTutorialRun}
                         onExitToLineup={() => {
                             persistRun(phase);
                             setShowSystemMenu(false);
@@ -5302,7 +5722,9 @@ const GutterbonesGamble = (() => {
                         }}
                     />
                 )}
-                {showHelpOverlay && inRunPhase && <HelpOverlay onClose={() => setShowHelpOverlay(false)} />}
+                {showHelpOverlay && inRunPhase && (
+                    <HelpOverlay onClose={() => setShowHelpOverlay(false)} onReplayTutorial={replayTutorialRun} />
+                )}
                 {inRunPhase && phase !== 'PLAY' && (
                     <>
                         <BuildIndicator analysis={buildAnalysis} />
@@ -5429,7 +5851,10 @@ const GutterbonesGamble = (() => {
                         <div className="shrink-0 w-full max-w-6xl mx-auto pt-2 pb-1">
                         <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center">
                             {hasSavedRun && <button data-layout-key="lineup-resume" onClick={resumeRun} className="px-4 py-2 md:px-8 md:py-4 bg-[#0df] border-4 border-[#064b52] text-black text-sm md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
-                            <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-6 py-2 md:px-12 md:py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-sm md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            <button onClick={handleOfferContract} disabled={!selectedPersonaUnlocked} className="px-6 py-2 md:px-12 md:py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-sm md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            {(audioSettings.tutorialCompleted || meta.totalRuns > 0) && (
+                                <button onClick={() => beginContract({ tutorial: true })} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">LEARN THE HUSTLE</button>
+                            )}
                             <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
                             <button onClick={() => setPhase('SAFEHOUSE')} className="px-4 py-2 md:px-8 md:py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
                         </div>
@@ -5498,7 +5923,7 @@ const GutterbonesGamble = (() => {
                                     {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
                                     <div className="mt-1 max-w-[15rem] text-[10px] font-mono text-gray-300 leading-tight">{fixerLine}</div>
                                 </div>
-                                <div className="text-center">
+                                <div className="text-center" data-tutorial="heat-quota">
                                     <div className="text-xs opacity-50">STREET HEAT</div>
                                     <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
                                     <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
@@ -5599,7 +6024,7 @@ const GutterbonesGamble = (() => {
                             )}
                         </div>
                         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 overflow-hidden">
-                            <div className={`order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
                                 <div className="gb-panel-scroll min-h-0">
                                 {(() => {
@@ -5627,7 +6052,7 @@ const GutterbonesGamble = (() => {
                                 })()}
                                 </div>
                             </div>
-                            <div data-layout-key="play-alley" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
@@ -5706,6 +6131,7 @@ const GutterbonesGamble = (() => {
                                                         }
                                                     } else if (!rolling && hasRolled) {
                                                         setKept(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
+                                                        if (typeof notifyTutorial === 'function') notifyTutorial('hold_toggle');
                                                         AudioSystem.playTone(800, 'sine', .1);
                                                     }
                                                 }}
@@ -5715,7 +6141,7 @@ const GutterbonesGamble = (() => {
                                 </div>
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
-                                    <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
+                                    <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
                                 </div>
                             </div>
                             <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-4 min-h-0 overflow-hidden pr-1 ${playDock === 'stash' ? '' : ''} md:!flex`}>
@@ -5861,7 +6287,7 @@ const GutterbonesGamble = (() => {
                     <div className="gb-screen p-[var(--gb-pad)] z-[300] relative">
                         <div className="shop-counting-cash-backdrop" aria-hidden></div>
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
-                            <div className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
+                            <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
                                 <p className="text-[10px] font-mono text-amber-200/85 mb-4 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
                                 <div className="gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 content-start">{shopItems.map(item => {

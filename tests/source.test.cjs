@@ -49,6 +49,7 @@ test("Bootstrap selects production React and gates dev tools on public hosts", (
 test("Shared inline rules and onboarding precede the app without extra requests", () => {
   const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
+  const tutorialIdx = html.indexOf('<script id="gutterbones-tutorial">');
   const storyIdx = html.indexOf('<script id="gutterbones-story">');
   const routesIdx = html.indexOf('<script id="gutterbones-routes">');
   const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
@@ -56,7 +57,8 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   assert.ok(
     rulesIdx >= 0 &&
       onboardingIdx > rulesIdx &&
-      storyIdx > onboardingIdx &&
+      tutorialIdx > onboardingIdx &&
+      storyIdx > tutorialIdx &&
       routesIdx > storyIdx &&
       gambleIdx > routesIdx &&
       appIdx > gambleIdx,
