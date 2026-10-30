@@ -17,3 +17,17 @@
 
 - `npm run check`
 - Manual: start run → stash bar shows 25%; lose run → stamp not on header; score popup brief
+
+## Synergy compounding (branch `cursor/compounding-synergies-phased-d315`, Oct 2026)
+
+Full phased plan: [`docs/plans/compounding-synergies-phased-implementation.md`](plans/compounding-synergies-phased-implementation.md).
+
+| Area | Playtest focus |
+|------|----------------|
+| Chains | Adjacency hands; breakdown stagger on depth ≥2; dev **LOAD MULTI-CHAIN DEMO** |
+| Shop/path | Route tags skew stock; build-biased offer after Phase 7 chain history |
+| Tier 2–3 | Chain manual faces; Backroom Rig Shop hardware |
+| Phase 6 | Blueprint flip gamble; combo meter heat spikes |
+| Phase 7 | BUILD INTEL chain avg/peak after chained hands; rap sheet archetype tips |
+
+Automated: `tests/synergy-*.test.cjs` through Phase 7 build tests in `npm run check`.

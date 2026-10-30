@@ -39,6 +39,39 @@ test("Optional fields receive defaults", () => {
   assert.deepEqual(plain(r.consumables), []);
   assert.equal(r.flowStreak, 0);
   assert.equal(r.activeWager, null);
+  assert.equal(r.nextShopTag, null);
+  assert.equal(r.activeShopTag, null);
+  assert.equal(Object.keys(r.routeModifiers).length, 0);
+});
+test("Blueprints and combo meter normalize safely", () => {
+  const g = createGame();
+  const r = g.api.normalizeSavedRun(
+    f.run({
+      blueprints: [{ id: "MULT_ENGINE_START", consumed: true }],
+      synergyState: { categoryMarks: {}, comboMeter: -3, heatSpikeNextHand: -1 },
+    }),
+  );
+  assert.equal(r.blueprints.length, 1);
+  assert.equal(r.blueprints[0].consumed, true);
+  assert.equal(r.synergyState.comboMeter, 0);
+  assert.equal(r.synergyState.heatSpikeNextHand, 0);
+});
+
+test("Shop tag and route modifiers normalize safely", () => {
+  const g = createGame();
+  const r = g.api.normalizeSavedRun(
+    f.run({
+      nextShopTag: "hardware",
+      activeShopTag: "rare",
+      routeModifiers: { flowCapDelta: -1, shopDiscount: 0.99, informantWeight: 2, junk: true },
+    }),
+  );
+  assert.equal(r.nextShopTag, "hardware");
+  assert.equal(r.activeShopTag, "rare");
+  assert.equal(r.routeModifiers.flowCapDelta, -1);
+  assert.equal(r.routeModifiers.shopDiscount, 0.5);
+  assert.equal(r.routeModifiers.informantWeight, 2);
+  assert.equal(r.routeModifiers.junk, undefined);
 });
 test("Corrupt JSON is handled", () => {
   const g = createGame();

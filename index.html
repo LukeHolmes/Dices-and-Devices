@@ -1025,9 +1025,58 @@
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
-     Keep JSX, browser state, storage and timers outside this boundary. -->
+     Keep JSX, browser state, storage and timers outside this boundary.
+
+     Resolve order: MIRROR_RIG swap (scoring copy) → resolveDice (ECHO → SHIV → MAGNET copy) →
+     category validation → face modifiers → synergy chains → hardware → synergy chains (hardware) → FLOW. -->
 <script id="gutterbones-rules">
 const GutterbonesRules = (() => {
+    const prepScoringDice = (currentDice, inventory, hardwareDisabled) => {
+        const useMirror = !hardwareDisabled && inventory.some((item) => item.id === 'MIRROR_RIG');
+        if (!useMirror) return { scoringDice: currentDice, mirrorMatched: false };
+        const scoringDice = currentDice.map((d) => ({ ...d }));
+        const slot2 = 1;
+        const slot4 = 3;
+        const tmp = scoringDice[slot2];
+        scoringDice[slot2] = scoringDice[slot4];
+        scoringDice[slot4] = tmp;
+        const mirrorMatched = scoringDice[slot2].value === scoringDice[slot4].value;
+        return { scoringDice, mirrorMatched };
+    };
+
+    const faceMultContribution = (faceId) => {
+        if (faceId === 'GHOST_FACE') return 2;
+        if (faceId === 'MULT_FACE') return 1;
+        return 0;
+    };
+
+    const findBestMultRetriggerIndex = (resolved, destroyed) => {
+        let bestIdx = -1;
+        let best = 0;
+        resolved.forEach((d, i) => {
+            if (destroyed.has(i) || !d.faceId) return;
+            const contribution = faceMultContribution(d.faceId);
+            if (contribution > best) {
+                best = contribution;
+                bestIdx = i;
+            }
+        });
+        return bestIdx >= 0 ? bestIdx : null;
+    };
+
+    const synergyTuningForHand = (baseTuning, inventory, hardwareDisabled, resolved, destroyed, synergyEnabled) => {
+        if (!synergyEnabled) return baseTuning;
+        const basePasses = Math.max(1, baseTuning?.maxChainPasses || 8);
+        if (hardwareDisabled || !inventory.some((item) => item.id === 'FUSE_BOX')) return baseTuning;
+        const types = new Set();
+        resolved.forEach((d, i) => {
+            if (destroyed.has(i)) return;
+            types.add(d.type || 'standard');
+        });
+        if (types.size < 2) return baseTuning;
+        return { ...baseTuning, maxChainPasses: basePasses + 1 };
+    };
+
     const resolveDice = (currentDice) => {
         let resolved = currentDice.map(d => ({...d}));
         for (let i = 0; i < 5; i++) {
@@ -1039,10 +1088,61 @@ const GutterbonesRules = (() => {
                 if (i < 4) destroyed.add(i + 1);
             }
         });
+        for (let i = 0; i < 5; i++) {
+            if (destroyed.has(i) || resolved[i].faceId !== 'MAGNET_FACE' || i === 0) continue;
+            const left = resolved[i - 1];
+            if (destroyed.has(i - 1)) continue;
+            resolved[i] = {
+                ...resolved[i],
+                value: left.value,
+                faceId: left.faceId,
+                faceLabel: left.faceLabel || left.faceId,
+                faceStyle: left.faceStyle,
+                type: left.type,
+                isMagnetCopied: true,
+                magnetSourceSlot: i - 1
+            };
+        }
         return { resolved, destroyed };
     };
 
     const emptySynergyResult = () => ({ synergyEvents: [], chainDepth: 0, retriggerCount: 0 });
+
+    const BLUEPRINT_IDS = Object.freeze(['MULT_ENGINE_START', 'BLOOD_DEBT_START', 'FLOW_SAVE_ONCE']);
+
+    const activeBlueprintIds = (blueprints) => (
+        (Array.isArray(blueprints) ? blueprints : [])
+            .filter((entry) => entry && typeof entry.id === 'string' && !entry.consumed)
+            .map((entry) => entry.id)
+    );
+
+    const bloodRippleCap = (blueprintIds) => (
+        3 + (blueprintIds.includes('BLOOD_DEBT_START') ? 1 : 0)
+    );
+
+    const advanceComboMeter = (synergyState, valid, tuning = {}) => {
+        const base = synergyState && typeof synergyState === 'object' ? synergyState : {};
+        const delta = valid
+            ? (tuning.comboMeterValidDelta ?? 1)
+            : (tuning.comboMeterInvalidDelta ?? -2);
+        const comboMeter = Math.max(0, Math.floor(Number(base.comboMeter) || 0) + delta);
+        const thresholds = tuning.comboMeterSpikeThresholds || [3, 6, 9];
+        const spikeMult = tuning.heatSpikeMult ?? 0.25;
+        let heatSpikeNextHand = Math.max(0, Number(base.heatSpikeNextHand) || 0);
+        if (thresholds.includes(comboMeter)) heatSpikeNextHand = spikeMult;
+        return {
+            categoryMarks: base.categoryMarks && typeof base.categoryMarks === 'object' ? base.categoryMarks : {},
+            comboMeter,
+            heatSpikeNextHand
+        };
+    };
+
+    const normalizeBlueprints = (raw) => {
+        if (!Array.isArray(raw)) return [];
+        return raw
+            .filter((entry) => entry && typeof entry.id === 'string' && BLUEPRINT_IDS.includes(entry.id))
+            .map((entry) => ({ id: entry.id, consumed: !!entry.consumed }));
+    };
 
     const isBloodOrDestructive = (d) => {
         if (!d) return false;
@@ -1060,6 +1160,9 @@ const GutterbonesRules = (() => {
         if (face === 'SHIV_FACE') { state.chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', `${prefix}FACE: SHIV`, '+40 chips', 40); }
         if (face === 'WIREBAG_FACE') { state.mult -= 1; state.gDelta += 4; triggers.push({ name: 'WIRE', value: '-1x/+$4' }); pushStep('penalty', `${prefix}FACE: WIREBAG`, '-1x, +$4', '-1x / +$4'); }
         if (face === 'GHOST_FACE') { state.mult += 2; triggers.push({ name: 'GHOST', value: '+2x' }); pushStep('multiplier', `${prefix}FACE: GHOST`, '+2x multiplier', '+2x'); }
+        if (face === 'MAGNET_FACE' && !d.isMagnetCopied) {
+            pushStep('modifier', `${prefix}FACE: MAGNET`, 'No left face to copy', '—');
+        }
     };
 
     const applyAllFaceModifiers = (resolved, destroyed, state, api) => {
@@ -1077,7 +1180,7 @@ const GutterbonesRules = (() => {
         if (kind === 'retrigger') state.retriggerCount += 1;
     };
 
-    const resolveSynergyFaceChains = (resolved, destroyed, state, tuning) => {
+    const resolveSynergyFaceChains = (resolved, destroyed, state, tuning, blueprintIds = []) => {
         const applied = state.synergyApplied;
         if (!applied.has('blood_ripple')) {
             let rippleMult = 0;
@@ -1088,7 +1191,7 @@ const GutterbonesRules = (() => {
                     if (isBloodOrDestructive(resolved[j])) rippleMult += 1;
                 });
             });
-            rippleMult = Math.min(3, rippleMult);
+            rippleMult = Math.min(bloodRippleCap(blueprintIds), rippleMult);
             if (rippleMult > 0) {
                 state.mult += rippleMult;
                 pushSynergyEvent(state, { chainId: 'blood_ripple', kind: 'mult', label: 'Blood ripple', impact: `+${rippleMult}x` });
@@ -1108,6 +1211,23 @@ const GutterbonesRules = (() => {
                 state.mult += 1;
                 pushSynergyEvent(state, { chainId: 'ghost_echo', kind: 'mult', label: 'Ghost echo', impact: '+1x' });
                 applied.add('ghost_echo');
+            }
+        }
+        if (!applied.has('fuse_spark')) {
+            let fuseChips = 0;
+            for (let i = 0; i < 5; i++) {
+                if (destroyed.has(i) || resolved[i].faceId !== 'FUSE_FACE') continue;
+                const neighborMult = neighborIndices(i).some((j) => {
+                    if (destroyed.has(j)) return false;
+                    const n = resolved[j];
+                    return n.faceId === 'MULT_FACE' || n.type === 'modifier';
+                });
+                if (neighborMult) fuseChips += 10;
+            }
+            if (fuseChips > 0) {
+                state.chips += fuseChips;
+                pushSynergyEvent(state, { chainId: 'fuse_spark', kind: 'chips', label: 'Fuse spark', impact: `+${fuseChips}` });
+                applied.add('fuse_spark');
             }
         }
         if (!applied.has('wire_feed')) {
@@ -1161,11 +1281,11 @@ const GutterbonesRules = (() => {
         }
     };
 
-    const runSynergyPasses = (resolved, destroyed, state, tuning, hwMeta) => {
+    const runSynergyPasses = (resolved, destroyed, state, tuning, hwMeta, blueprintIds = []) => {
         const maxPasses = Math.max(1, tuning.maxChainPasses || 8);
         for (state.synergyPass = 0; state.synergyPass < maxPasses; state.synergyPass += 1) {
             const before = state.synergyEvents.length;
-            resolveSynergyFaceChains(resolved, destroyed, state, tuning);
+            resolveSynergyFaceChains(resolved, destroyed, state, tuning, blueprintIds);
             if (hwMeta) resolveSynergyHardwareChains(resolved, destroyed, state, hwMeta);
             if (state.synergyEvents.length === before) break;
         }
@@ -1175,7 +1295,13 @@ const GutterbonesRules = (() => {
         return { chainDepth, retriggerCount: state.retriggerCount, synergyEvents: state.synergyEvents };
     };
 
-    const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state) => {
+    const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state, handContext = {}) => {
+        const {
+            debt = 0,
+            flowStreak = 0,
+            mirrorMatched = false,
+            synergyEnabled = false
+        } = handContext;
         const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false };
         if (hardwareDisabled) {
             if (inventory.length > 0) {
@@ -1223,10 +1349,39 @@ const GutterbonesRules = (() => {
                 }
             }
             if (item.id === 'LOADED_DIE' && catId === 'TOK') {
-                state.chips += 10;
-                triggers.push({ name: 'LOADED', value: '+10' });
+                const triadBonus = synergyEnabled ? 20 : 10;
+                state.chips += triadBonus;
+                triggers.push({ name: 'LOADED', value: `+${triadBonus}` });
                 state.hardwareTriggerCount += 1;
-                pushStep('modifier', 'HARDWARE: WEIGHTED CORE', '+10 chips on Triad', 10);
+                pushStep(
+                    'modifier',
+                    'HARDWARE: WEIGHTED CORE',
+                    synergyEnabled ? '+20 chips on Triad (chains active)' : '+10 chips on Triad',
+                    triadBonus
+                );
+            }
+            if (item.id === 'MIRROR_RIG' && mirrorMatched) {
+                state.mult += 1;
+                triggers.push({ name: 'MIRROR', value: '+1x' });
+                state.hardwareTriggerCount += 1;
+                pushStep('multiplier', 'HARDWARE: MIRROR RIG', 'Slots 2 & 4 matched after swap — +1x', '+1x');
+            }
+            if (item.id === 'DEBT_COLLECTOR') {
+                const debtMult = Math.max(0, Math.floor(Number(debt) || 0)) * 0.5;
+                if (debtMult > 0) {
+                    state.mult += debtMult;
+                    triggers.push({ name: 'DEBT COIL', value: `+${debtMult}x` });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('multiplier', 'HARDWARE: DEBT COLLECTOR', `+$${debt} debt — +${debtMult}x`, `+${debtMult}x`);
+                }
+            }
+            if (item.id === 'HOT_STREAK_COIL' && flowStreak >= 1) {
+                const idx = findBestMultRetriggerIndex(resolved, destroyed);
+                if (idx != null) {
+                    applyFaceModifiersForDie(resolved[idx], state, { pushStep, triggers, slotLabel: String(idx + 1) });
+                    state.hardwareTriggerCount += 1;
+                    pushStep('multiplier', 'HARDWARE: HOT STREAK COIL', 'Retrigger best mult face (flow warm)', 'RETRIGGER');
+                }
             }
             if (item.id === 'BLOOD_PACT') {
                 state.mult *= 3;
@@ -1255,11 +1410,18 @@ const GutterbonesRules = (() => {
     };
 
     const calculateScore = (catId, currentDice, context) => {
-        const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
+        const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss, debt = 0,
             CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
-            synergyTuning = { enabled: false } } = context;
+            synergyTuning = { enabled: false }, synergyState = {}, roundFirstCategories = [],
+            blueprintIds = [], blueprintRound = {} } = context;
         const synergyEnabled = Boolean(synergyTuning?.enabled);
-        const { resolved, destroyed } = resolveDice(currentDice);
+        let heatSpikeApplied = false;
+        const { scoringDice, mirrorMatched } = prepScoringDice(currentDice, inventory, hardwareDisabled);
+        const { resolved, destroyed } = resolveDice(scoringDice);
+        const synergyTuningHand = synergyTuningForHand(
+            synergyTuning, inventory, hardwareDisabled, resolved, destroyed, synergyEnabled
+        );
+        const handHardwareContext = { debt, flowStreak, mirrorMatched, synergyEnabled };
         const standardVals = resolved.filter((d, i) => !destroyed.has(i) && typeof d.value === 'number' && d.value > 0 && d.faceId !== 'GHOST_FACE').map(d => d.value);
         const wilds = resolved.filter((d, i) => !destroyed.has(i) && d.value === 'W').length;
         const sum = standardVals.reduce((a,b)=>a+b,0) + wilds * 6;
@@ -1322,7 +1484,23 @@ const GutterbonesRules = (() => {
             return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason, ...emptySynergyResult() };
         }
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
+        const categoryMult = mult;
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
+        const markBonus = Math.max(0, Math.floor(Number(synergyState?.categoryMarks?.[catId]) || 0));
+        if (markBonus > 0) {
+            mult += markBonus;
+            triggers.push({ name: 'MARK', value: `+${markBonus}x` });
+            pushStep('multiplier', 'CATEGORY MARKS', `+${markBonus}x from prior round first scores`, `+${markBonus}x`);
+        }
+        const heatSpike = Math.max(0, Number(synergyState?.heatSpikeNextHand) || 0);
+        if (heatSpike > 0) {
+            mult += heatSpike;
+            heatSpikeApplied = true;
+            triggers.push({ name: 'HEAT SPIKE', value: `+${heatSpike}x` });
+            pushStep('multiplier', 'COMBO HEAT SPIKE', `+${heatSpike}x on this hand`, `+${heatSpike}x`);
+        }
+        const hasMarkFace = resolved.some((d, i) => !destroyed.has(i) && d.faceId === 'MARK_FACE');
+        const categoryMarkEarned = hasMarkFace && !(roundFirstCategories || []).includes(catId);
         const masteryBonus = getHandMasteryBonus(handLevel);
         if (masteryBonus > 0) {
             chips += masteryBonus;
@@ -1339,9 +1517,37 @@ const GutterbonesRules = (() => {
         mult = scoreState.mult;
         gDelta = scoreState.gDelta;
 
+        let blueprintMultEngineTriggered = false;
+        if (blueprintIds.includes('MULT_ENGINE_START') && !blueprintRound?.multEngineUsed) {
+            for (let i = 0; i < 5; i += 1) {
+                if (destroyed.has(i) || resolved[i].faceId !== 'MULT_FACE') continue;
+                applyFaceModifiersForDie(resolved[i], scoreState, { ...faceApi, slotLabel: String(i + 1) });
+                triggers.push({ name: 'BLUEPRINT', value: 'MULT+' });
+                pushStep('multiplier', 'BLUEPRINT: MULT ENGINE', 'First MULT this round retriggers', '+1x');
+                blueprintMultEngineTriggered = true;
+                break;
+            }
+        }
+        chips = scoreState.chips;
+        mult = scoreState.mult;
+        gDelta = scoreState.gDelta;
+
+        if (categoryMult >= 3 && resolved.some((d, i) => !destroyed.has(i) && d.faceId === 'DOUBLE_DOWN_FACE')) {
+            scoreState.mult *= 1.25;
+            mult = scoreState.mult;
+            triggers.push({ name: 'DOUBLE DOWN', value: 'x1.25' });
+            pushStep('multiplier', 'FACE: DOUBLE DOWN', 'Category mult ≥ 3 — ×1.25', 'x1.25');
+        }
+
+        const baseChainPasses = Math.max(1, synergyTuning.maxChainPasses || 8);
+        const handChainPasses = Math.max(1, synergyTuningHand.maxChainPasses || 8);
+        if (synergyEnabled && handChainPasses > baseChainPasses) {
+            pushStep('modifier', 'HARDWARE: FUSE BOX', '≥2 face types — +1 synergy chain pass', '+1 pass');
+        }
+
         let synergyResult = emptySynergyResult();
         if (synergyEnabled) {
-            runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, null);
+            runSynergyPasses(resolved, destroyed, scoreState, synergyTuningHand, null, blueprintIds);
         }
         chips = scoreState.chips;
         mult = scoreState.mult;
@@ -1351,14 +1557,16 @@ const GutterbonesRules = (() => {
         scoreState.mult = Math.max(0.5, scoreState.mult);
         if (scoreState.mult !== unclampedMult) pushStep('system', 'MULTIPLIER FLOOR', 'Multiplier cannot drop below x0.50', `x${scoreState.mult.toFixed(2)}`);
 
-        const hwMeta = applyHardware(resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, scoreState);
+        const hwMeta = applyHardware(
+            resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, scoreState, handHardwareContext
+        );
         chips = scoreState.chips;
         mult = scoreState.mult;
         gDelta = scoreState.gDelta;
         hardwareTriggerCount = scoreState.hardwareTriggerCount;
 
         if (synergyEnabled) {
-            const postHw = runSynergyPasses(resolved, destroyed, scoreState, synergyTuning, hwMeta);
+            const postHw = runSynergyPasses(resolved, destroyed, scoreState, synergyTuningHand, hwMeta, blueprintIds);
             chips = scoreState.chips;
             mult = scoreState.mult;
             gDelta = scoreState.gDelta;
@@ -1373,7 +1581,10 @@ const GutterbonesRules = (() => {
             valid: true, chips, mult, total, flowMult, gDelta, triggers, explanationSteps, hardwareTriggerCount, categoryName,
             synergyEvents: synergyResult.synergyEvents,
             chainDepth: synergyResult.chainDepth,
-            retriggerCount: synergyResult.retriggerCount
+            retriggerCount: synergyResult.retriggerCount,
+            categoryMarkEarned,
+            heatSpikeApplied,
+            blueprintMultEngineTriggered
         };
     };
 
@@ -1399,6 +1610,46 @@ const GutterbonesRules = (() => {
         if (!normalized.currentRouteEffect || typeof normalized.currentRouteEffect !== 'object') normalized.currentRouteEffect = null;
         else if (!Array.isArray(normalized.currentRouteEffect.effects)) normalized.currentRouteEffect = { ...normalized.currentRouteEffect, effects: [] };
         if (typeof normalized.arcId !== 'string' || !normalized.arcId) normalized.arcId = 'witness';
+        const shopTags = ['balanced', 'hardware', 'danger', 'rare', 'chaos'];
+        if (!shopTags.includes(normalized.nextShopTag)) normalized.nextShopTag = null;
+        if (!shopTags.includes(normalized.activeShopTag)) normalized.activeShopTag = null;
+        if (!normalized.synergyState || typeof normalized.synergyState !== 'object' || Array.isArray(normalized.synergyState)) {
+            normalized.synergyState = { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 };
+        } else {
+            const ss = normalized.synergyState;
+            const cm = ss.categoryMarks && typeof ss.categoryMarks === 'object' && !Array.isArray(ss.categoryMarks)
+                ? ss.categoryMarks
+                : {};
+            normalized.synergyState = {
+                categoryMarks: Object.fromEntries(
+                    Object.entries(cm).filter(([k, v]) => typeof k === 'string' && typeof v === 'number' && !Number.isNaN(v) && v > 0)
+                ),
+                comboMeter: typeof ss.comboMeter === 'number' && !Number.isNaN(ss.comboMeter) ? Math.max(0, Math.floor(ss.comboMeter)) : 0,
+                heatSpikeNextHand: typeof ss.heatSpikeNextHand === 'number' && !Number.isNaN(ss.heatSpikeNextHand)
+                    ? Math.max(0, ss.heatSpikeNextHand)
+                    : 0
+            };
+        }
+        normalized.blueprints = normalizeBlueprints(normalized.blueprints);
+        if (!Array.isArray(normalized.categoryMarkedThisRound)) normalized.categoryMarkedThisRound = [];
+        else {
+            normalized.categoryMarkedThisRound = normalized.categoryMarkedThisRound.filter((id) => typeof id === 'string');
+        }
+        if (!normalized.routeModifiers || typeof normalized.routeModifiers !== 'object' || Array.isArray(normalized.routeModifiers)) {
+            normalized.routeModifiers = {};
+        } else {
+            const rm = normalized.routeModifiers;
+            normalized.routeModifiers = {};
+            if (typeof rm.flowCapDelta === 'number' && !Number.isNaN(rm.flowCapDelta)) {
+                normalized.routeModifiers.flowCapDelta = rm.flowCapDelta;
+            }
+            if (typeof rm.shopDiscount === 'number' && !Number.isNaN(rm.shopDiscount)) {
+                normalized.routeModifiers.shopDiscount = Math.max(0, Math.min(0.5, rm.shopDiscount));
+            }
+            if (typeof rm.informantWeight === 'number' && !Number.isNaN(rm.informantWeight)) {
+                normalized.routeModifiers.informantWeight = rm.informantWeight;
+            }
+        }
         if (!normalized.runStats || typeof normalized.runStats !== 'object') {
             normalized.runStats = { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } };
         } else {
@@ -1418,7 +1669,17 @@ const GutterbonesRules = (() => {
         return normalized;
     };
 
-    return Object.freeze({ resolveDice, calculateScore, normalizeSavedRun });
+    return Object.freeze({
+        resolveDice,
+        prepScoringDice,
+        calculateScore,
+        normalizeSavedRun,
+        BLUEPRINT_IDS,
+        activeBlueprintIds,
+        bloodRippleCap,
+        advanceComboMeter,
+        normalizeBlueprints
+    });
 })();
 </script>
 
@@ -1427,8 +1688,22 @@ const GutterbonesOnboarding = (() => {
     const THRESHOLDS = Object.freeze({
         BASIC_COMBOS: 2,
         ALL_CATEGORIES: 5,
-        RARE_FACES: 3
+        RARE_FACES: 3,
+        TIER2_FACES: 5
     });
+
+    const TIER2_FACE_IDS = Object.freeze(['FUSE_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE']);
+
+    const isShopFaceAvailable = (face, meta) => {
+        if (!face?.id) return false;
+        const runs = Math.max(0, Math.floor(Number(meta?.totalRuns) || 0));
+        if (runs < THRESHOLDS.RARE_FACES && face.rarity !== 'common') return false;
+        if (TIER2_FACE_IDS.includes(face.id)) {
+            if (runs < THRESHOLDS.TIER2_FACES) return false;
+            if (!Array.isArray(meta?.unlockedFaceIds) || !meta.unlockedFaceIds.includes(face.id)) return false;
+        }
+        return true;
+    };
 
     const getAvailableCategoryIds = (totalRuns = 0) => {
         const runs = Math.max(0, Math.floor(Number(totalRuns) || 0));
@@ -1480,9 +1755,11 @@ const GutterbonesOnboarding = (() => {
 
     return Object.freeze({
         THRESHOLDS,
+        TIER2_FACE_IDS,
         getAvailableCategoryIds,
         getCategoryUnlockInfo,
-        unlockRunForCategory
+        unlockRunForCategory,
+        isShopFaceAvailable
     });
 })();
 </script>
@@ -2059,6 +2336,42 @@ const GutterbonesRoutes = (() => {
         return adjusted;
     };
 
+    const SHOP_OFFER_TAGS = Object.freeze(['balanced', 'hardware', 'danger', 'rare', 'chaos']);
+
+    const pathPickEffects = (path) => {
+        const id = path?.id;
+        let nextShopTag = 'balanced';
+        const routeModifiers = {};
+        switch (id) {
+            case 'LOCAL':
+                nextShopTag = 'balanced';
+                break;
+            case 'HIDEOUT':
+                nextShopTag = 'balanced';
+                routeModifiers.flowCapDelta = -1;
+                break;
+            case 'PAWN':
+                nextShopTag = 'hardware';
+                routeModifiers.shopDiscount = 0.15;
+                break;
+            case 'SMUGGLE':
+                nextShopTag = 'chaos';
+                break;
+            case 'VIP':
+                nextShopTag = 'rare';
+                routeModifiers.informantWeight = 1;
+                break;
+            default:
+                nextShopTag = 'balanced';
+                break;
+        }
+        return { nextShopTag, routeModifiers };
+    };
+
+    const effectiveFlowCap = (baseMaxStreak = 6, routeModifiers = {}) => (
+        Math.max(0, Math.floor(Number(baseMaxStreak) || 0) + (Number(routeModifiers?.flowCapDelta) || 0))
+    );
+
     const describePathModifiers = (path) => {
         if (!path) return [];
         const notes = [];
@@ -2068,6 +2381,19 @@ const GutterbonesRoutes = (() => {
         if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play next round`);
         if (path.discardDelta) notes.push(`${path.discardDelta > 0 ? '+' : ''}${path.discardDelta} pill next round`);
         if (path.grantRandomConsumable) notes.push('Random one-shot on pick');
+        const pick = pathPickEffects(path);
+        if (pick.nextShopTag && pick.nextShopTag !== 'balanced') {
+            notes.push(`Next shop stock skew: ${pick.nextShopTag.toUpperCase()}`);
+        }
+        if (pick.routeModifiers.flowCapDelta) {
+            notes.push(`FLOW streak cap ${pick.routeModifiers.flowCapDelta > 0 ? '+' : ''}${pick.routeModifiers.flowCapDelta} next round`);
+        }
+        if (pick.routeModifiers.shopDiscount) {
+            notes.push(`Next shop prices -${Math.round(pick.routeModifiers.shopDiscount * 100)}%`);
+        }
+        if (pick.routeModifiers.informantWeight) {
+            notes.push('Boss turf: higher Informant chance on next turf war');
+        }
         return notes;
     };
 
@@ -2173,9 +2499,12 @@ const GutterbonesRoutes = (() => {
     return Object.freeze({
         BOSS_TUNING,
         ROUND_CURVE_TUNING,
+        SHOP_OFFER_TAGS,
         projectNextRound,
         applyBossAdjustedTarget,
         describePathModifiers,
+        pathPickEffects,
+        effectiveFlowCap,
         sideBetPayout,
         wagerThresholdForRound
     });
@@ -2270,12 +2599,19 @@ const GutterbonesGamble = (() => {
 
     const formatWinPercent = (p) => `${Math.round(p * 100)}%`;
 
+    const resolveBlueprintFlip = ({ flowStreak = 0, gold = 0, random = Math.random(), pickBlueprintId }) => {
+        const outcome = resolveFlip({ tierId: 'FAIR', flowStreak, gold, random });
+        const blueprintId = outcome.won && typeof pickBlueprintId === 'function' ? pickBlueprintId(random) : null;
+        return { ...outcome, blueprintId };
+    };
+
     return Object.freeze({
         TUNING,
         tierById,
         baseStake,
         stakeForTier,
         flowWinBonus,
+        resolveBlueprintFlip,
         winProbability,
         resolveFlip,
         allTiers,
@@ -2349,8 +2685,14 @@ const GutterbonesGamble = (() => {
         ECHO_FACE: { id: 'ECHO_FACE', value: 0, label: 'ECHO', style: 'bg-[#111] text-[#0df] border-[#0df]', type: 'adjacent', cost: 16, rarity: 'rare' },
         SHIV_FACE: { id: 'SHIV_FACE', value: 0, label: 'THE SHIV', style: 'bg-[#1a0000] text-[#ff1111] border-[#ff1111]', type: 'destructive', cost: 22, rarity: 'danger' },
         WIREBAG_FACE: { id: 'WIREBAG_FACE', value: 0, label: 'WIREBAG', style: 'bg-[#001111] text-[#0df] border-[#0df] border-dashed', type: 'parasite', cost: 14, rarity: 'danger' },
-        GHOST_FACE: { id: 'GHOST_FACE', value: 0, label: 'GHOST', style: 'bg-transparent text-white border-white border-dashed opacity-70', type: 'ethereal', cost: 20, rarity: 'rare' }
+        GHOST_FACE: { id: 'GHOST_FACE', value: 0, label: 'GHOST', style: 'bg-transparent text-white border-white border-dashed opacity-70', type: 'ethereal', cost: 20, rarity: 'rare' },
+        FUSE_FACE: { id: 'FUSE_FACE', value: 0, label: 'FUSE', style: 'bg-[#1a1200] text-[#ffb347] border-[#ffb347]', type: 'modifier', cost: 18, rarity: 'rare' },
+        MAGNET_FACE: { id: 'MAGNET_FACE', value: 0, label: 'MAGNET', style: 'bg-[#101828] text-[#94a3b8] border-[#64748b]', type: 'adjacent', cost: 20, rarity: 'rare' },
+        MARK_FACE: { id: 'MARK_FACE', value: 0, label: 'MARK', style: 'bg-[#1a1028] text-[#c084fc] border-[#a855f7]', type: 'modifier', cost: 19, rarity: 'rare' },
+        DOUBLE_DOWN_FACE: { id: 'DOUBLE_DOWN_FACE', value: 0, label: 'DOUBLE DOWN', style: 'bg-[#0f172a] text-[#38bdf8] border-[#0284c7]', type: 'modifier', cost: 21, rarity: 'rare' }
     };
+
+    const TIER2_FACE_IDS = ['FUSE_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'];
 
     const DEVISES = {
         CENTERPIECE: { id: 'CENTERPIECE', name: 'The Centerpiece', desc: 'Slot 3 bone triggers base value and face bonuses twice.', cost: 20, rarity: 'rare' },
@@ -2362,7 +2704,24 @@ const GutterbonesGamble = (() => {
         BLACK_BOOK: { id: 'BLACK_BOOK', name: 'The Black Book', desc: 'Gain $1 when you pop a pill.', cost: 20, rarity: 'rare' },
         BURNER_PHONE: { id: 'BURNER_PHONE', name: 'Burner Phone', desc: 'The Stash fills 50% faster.', cost: 25, rarity: 'rare' },
         SHADY_LEDGER: { id: 'SHADY_LEDGER', name: 'Shady Ledger', desc: 'Debt no longer spikes quota. Lose 1 Play while in debt.', cost: 28, rarity: 'danger' },
-        CROWBAR: { id: 'CROWBAR', name: 'The Crowbar', desc: '+1 mult for each Blood or Destructive face showing. Max +5.', cost: 22, rarity: 'common' }
+        CROWBAR: { id: 'CROWBAR', name: 'The Crowbar', desc: '+1 mult for each Blood or Destructive face showing. Max +5.', cost: 22, rarity: 'common' },
+        FUSE_BOX: { id: 'FUSE_BOX', name: 'Fuse Box', desc: '≥2 face types on the table grant +1 synergy chain pass.', cost: 26, rarity: 'rare' },
+        MIRROR_RIG: { id: 'MIRROR_RIG', name: 'Mirror Rig', desc: 'Swaps slots 2 & 4 before scoring; +1 mult if they match after swap.', cost: 24, rarity: 'rare' },
+        DEBT_COLLECTOR: { id: 'DEBT_COLLECTOR', name: 'Debt Collector', desc: '+0.5 mult per $1 debt on this hand.', cost: 22, rarity: 'danger' },
+        HOT_STREAK_COIL: { id: 'HOT_STREAK_COIL', name: 'Hot Streak Coil', desc: 'With flow ≥1, retrigger the best mult face once.', cost: 28, rarity: 'rare' }
+    };
+
+    const TIER3_HARDWARE_IDS = Object.freeze(['FUSE_BOX', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL']);
+
+    const BLUEPRINT_CATALOG = Object.freeze({
+        MULT_ENGINE_START: { id: 'MULT_ENGINE_START', name: 'Mult Engine Start', desc: 'First MULT face each round retriggers once.' },
+        BLOOD_DEBT_START: { id: 'BLOOD_DEBT_START', name: 'Blood Debt Start', desc: '+1 debt when acquired; blood ripple cap +1.' },
+        FLOW_SAVE_ONCE: { id: 'FLOW_SAVE_ONCE', name: 'Flow Save', desc: 'First whiff each round does not reset FLOW.' }
+    });
+
+    const pickRandomBlueprintId = (random = Math.random()) => {
+        const ids = Object.keys(BLUEPRINT_CATALOG);
+        return ids[Math.floor(Math.max(0, Math.min(0.999999, random)) * ids.length)] || ids[0];
     };
 
     const PROGRAMS = [
@@ -2436,12 +2795,12 @@ const GutterbonesGamble = (() => {
     };
 
     const BUILD_TIPS = {
-        [BUILD_IDS.UNKNOWN]: ['Keep rolling to reveal your angle.', 'Contraband faces and hardware define the story.'],
-        [BUILD_IDS.MULT_ENGINE]: ['Stack multipliers early.', 'Prioritize scaling over raw chip totals when flow is warm.'],
-        [BUILD_IDS.BLOOD_RISK]: ['Manage risk vs reward on toll faces.', 'Pair burst chips with mult when you can clear quota.'],
-        [BUILD_IDS.CASH_CONTROL]: ['Convert heat into cash upgrades.', 'Black Book rewards disciplined pill timing.'],
-        [BUILD_IDS.SET_CONSISTENCY]: ['Lean on reliable categories while variance stays low.', 'Avoid overloading exotic faces if you want clean lines.'],
-        [BUILD_IDS.CHAOS]: ['Expect swingy hands - plan spare plays.', 'Destructive faces trade stability for spikes.']
+        [BUILD_IDS.UNKNOWN]: ['Keep rolling to reveal your angle.', 'Contraband faces and hardware define the story.', 'Carve adjacency pairs (Blood, Echo, Fuse) to unlock chain depth.'],
+        [BUILD_IDS.MULT_ENGINE]: ['Stack multipliers early.', 'Prioritize scaling over raw chip totals when flow is warm.', 'Chain depth 2+ — Fuse, Echo, and Hot Streak Coil multiply retriggers.'],
+        [BUILD_IDS.BLOOD_RISK]: ['Manage risk vs reward on toll faces.', 'Pair burst chips with mult when you can clear quota.', 'Blood ripple chains spike when Shiv and Blood 6 sit adjacent.'],
+        [BUILD_IDS.CASH_CONTROL]: ['Convert heat into cash upgrades.', 'Black Book rewards disciplined pill timing.', 'Wire feed chains add cash without needing deep mult stacks.'],
+        [BUILD_IDS.SET_CONSISTENCY]: ['Lean on reliable categories while variance stays low.', 'Avoid overloading exotic faces if you want clean lines.', 'Bookends and Magnet faces reward stable lanes over volatile chains.'],
+        [BUILD_IDS.CHAOS]: ['Expect swingy hands - plan spare plays.', 'Destructive faces trade stability for spikes.', 'Fuse Box turns mixed face types into extra chain passes.']
     };
 
     const BUILD_STYLE_BLURBS = {
@@ -2458,6 +2817,13 @@ const GutterbonesGamble = (() => {
         ECHO_FACE: [BUILD_IDS.MULT_ENGINE],
         ENGINE: [BUILD_IDS.MULT_ENGINE],
         CROWBAR: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.BLOOD_RISK],
+        FUSE_BOX: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.CHAOS],
+        MIRROR_RIG: [BUILD_IDS.SET_CONSISTENCY, BUILD_IDS.MULT_ENGINE],
+        DEBT_COLLECTOR: [BUILD_IDS.BLOOD_RISK, BUILD_IDS.MULT_ENGINE],
+        HOT_STREAK_COIL: [BUILD_IDS.MULT_ENGINE],
+        MULT_ENGINE_START: [BUILD_IDS.MULT_ENGINE],
+        BLOOD_DEBT_START: [BUILD_IDS.BLOOD_RISK, BUILD_IDS.MULT_ENGINE],
+        FLOW_SAVE_ONCE: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.SET_CONSISTENCY],
         CENTERPIECE: [BUILD_IDS.MULT_ENGINE],
         BLOOD_6: [BUILD_IDS.BLOOD_RISK],
         BLOOD_PACT: [BUILD_IDS.BLOOD_RISK],
@@ -2467,15 +2833,49 @@ const GutterbonesGamble = (() => {
         WIREBAG_FACE: [BUILD_IDS.CASH_CONTROL, BUILD_IDS.CHAOS],
         GHOST_FACE: [BUILD_IDS.CHAOS, BUILD_IDS.MULT_ENGINE],
         WILD_FACE: [BUILD_IDS.CHAOS, BUILD_IDS.SET_CONSISTENCY],
+        FUSE_FACE: [BUILD_IDS.MULT_ENGINE],
+        MAGNET_FACE: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.SET_CONSISTENCY],
+        MARK_FACE: [BUILD_IDS.SET_CONSISTENCY, BUILD_IDS.MULT_ENGINE],
+        DOUBLE_DOWN_FACE: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.BLOOD_RISK],
         BOOKENDS: [BUILD_IDS.SET_CONSISTENCY],
         BRASS_KNUCKLES: [BUILD_IDS.SET_CONSISTENCY],
         LOADED_DIE: [BUILD_IDS.SET_CONSISTENCY],
-        DIRTY_WAD: [BUILD_IDS.CASH_CONTROL]
+        DIRTY_WAD: [BUILD_IDS.CASH_CONTROL],
+        ODD_EVEN_SPLIT: [BUILD_IDS.SET_CONSISTENCY],
+        STRAIGHT_FOCUS: [BUILD_IDS.SET_CONSISTENCY],
+        HOLD_CHARGE: [BUILD_IDS.SET_CONSISTENCY],
+        COPY_LAST: [BUILD_IDS.MULT_ENGINE, BUILD_IDS.SET_CONSISTENCY],
+        PIP_SUM: [BUILD_IDS.SET_CONSISTENCY],
+        RISK_BONE: [BUILD_IDS.CHAOS, BUILD_IDS.BLOOD_RISK],
+        SACRIFICE_SLOT: [BUILD_IDS.BLOOD_RISK],
+        STASH_INTEREST: [BUILD_IDS.CASH_CONTROL]
     };
 
     const getArchetypeTagsForItemId = (itemId) => {
         if (!itemId) return [];
         return ITEM_ARCHETYPE_TAGS[itemId] ? [...ITEM_ARCHETYPE_TAGS[itemId]] : [];
+    };
+
+    const SYNERGY_HINTS = {
+        BLOOD_6: 'Adjacency: blood ripple with blood or destructive neighbors.',
+        SHIV_FACE: 'Destructive — pairs with Blood 6 for ripple mult; destroys right slot on roll.',
+        ECHO_FACE: 'Adjacency: ghost echo when next to Ghost.',
+        GHOST_FACE: 'Ethereal — ghost echo mult with Echo neighbors; lowers scoring bones.',
+        GOLD_FACE: 'Adjacency: wire feed bonus with Wirebag neighbors.',
+        WIREBAG_FACE: 'Parasite cash — wire feed with Gold neighbors.',
+        MULT_FACE: 'Modifier mult — engine link with Hardware: Engine.',
+        ENGINE: 'Hardware: engine link adds mult per modifier face in hand.',
+        CROWBAR: 'Hardware: scales mult with blood/destructive faces on the lane.',
+        BOOKENDS: 'Matching carved ends retrigger face modifiers (bookends chain).',
+        FUSE_FACE: 'Adjacent modifier faces trigger +10 chips (fuse spark chain).',
+        MAGNET_FACE: 'Copies the left face for scoring (after Echo).',
+        MARK_FACE: 'First score per category each round marks +1 mult on that category for the run.',
+        DOUBLE_DOWN_FACE: 'If category mult is 3+, multiply total mult by 1.25 once.',
+        FUSE_BOX: 'Hardware: +1 synergy chain pass when ≥2 face types show.',
+        MIRROR_RIG: 'Hardware: swaps slots 2 & 4 before score; +1 mult on match.',
+        DEBT_COLLECTOR: 'Hardware: +0.5 mult per $1 debt while you owe.',
+        HOT_STREAK_COIL: 'Hardware: with flow warm, retrigger best mult face once.',
+        LOADED_DIE: 'Triad bonus chips; doubles with synergy chains enabled.'
     };
 
     const synergyLabelForItem = (itemId, primaryBuild) => {
@@ -2489,6 +2889,34 @@ const GutterbonesGamble = (() => {
         if (!hit) return null;
         const ui = BUILD_UI[hit];
         return ui ? `Synergy: ${ui.label}` : null;
+    };
+
+    const synergyHintForItem = (itemId) => SYNERGY_HINTS[itemId] || null;
+
+    const carveAdjacencyProfile = (faceId, slotIndex) => {
+        if (faceId == null || slotIndex == null) return null;
+        const slot = Math.max(0, Math.min(4, slotIndex));
+        const neighbors = [slot - 1, slot + 1].filter((i) => i >= 0 && i <= 4);
+        if (faceId === 'BLOOD_6' || faceId === 'SHIV_FACE') {
+            return { kind: 'blood', slot, neighbors, title: 'Blood ripple lane' };
+        }
+        if (faceId === 'ECHO_FACE' || faceId === 'GHOST_FACE') {
+            return { kind: 'echo', slot, neighbors, title: 'Ghost / Echo lane' };
+        }
+        if (faceId === 'GOLD_FACE' || faceId === 'WIREBAG_FACE') {
+            return { kind: 'wire', slot, neighbors, title: 'Wire feed lane' };
+        }
+        if (faceId === 'FUSE_FACE') {
+            return { kind: 'fuse', slot, neighbors, title: 'Fuse spark lane' };
+        }
+        return null;
+    };
+
+    const CARVE_ADJacency_COPY = {
+        blood: 'Neighbors can trigger blood ripple (+mult).',
+        echo: 'Adjacent Ghost + Echo faces trigger ghost echo.',
+        wire: 'Gold and Wirebag neighbors trigger wire feed (+cash).',
+        fuse: 'Adjacent modifier faces trigger fuse spark (+10 chips).'
     };
 
     const itemFitsCurrentBuild = (itemId, primaryBuild) => {
@@ -2532,6 +2960,41 @@ const GutterbonesGamble = (() => {
         return parts.join(' | ');
     };
 
+    const aggregateChainStats = (history, maxHands = 12) => {
+        const slice = (history || []).slice(-maxHands);
+        const depths = slice.map((h) => (typeof h.chainDepth === 'number' && !Number.isNaN(h.chainDepth) ? h.chainDepth : 0));
+        if (!depths.length) return { avg: 0, max: 0, chainHands: 0, samples: 0 };
+        const sum = depths.reduce((a, b) => a + b, 0);
+        const chainHands = depths.filter((d) => d >= 1).length;
+        return { avg: sum / depths.length, max: Math.max(...depths), chainHands, samples: depths.length };
+    };
+
+    const inventoryArchetypeWeights = (inventory, dice) => {
+        const weights = {
+            [BUILD_IDS.MULT_ENGINE]: 0,
+            [BUILD_IDS.BLOOD_RISK]: 0,
+            [BUILD_IDS.CASH_CONTROL]: 0,
+            [BUILD_IDS.SET_CONSISTENCY]: 0,
+            [BUILD_IDS.CHAOS]: 0
+        };
+        const seen = new Set();
+        const tagItem = (id) => {
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            getArchetypeTagsForItemId(id).forEach((tag) => {
+                if (weights[tag] != null) weights[tag] += 0.45;
+            });
+        };
+        (inventory || []).forEach((i) => tagItem(i.id));
+        (dice || []).forEach((die) => {
+            if (die.faceId && die.faceId !== 'standard') tagItem(die.faceId);
+            (die.faces || []).forEach((f) => {
+                if (f && f.id && f.id !== 'standard') tagItem(f.id);
+            });
+        });
+        return weights;
+    };
+
     const deriveKeyItems = (primaryBuild, inventory, dice, flowStreak = 0) => {
         const out = [];
         const push = (id) => {
@@ -2551,6 +3014,15 @@ const GutterbonesGamble = (() => {
         return out;
     };
 
+    const deriveKeyItemsWithHistory = (primaryBuild, inventory, dice, flowStreak, history) => {
+        const out = deriveKeyItems(primaryBuild, inventory, dice, flowStreak);
+        const chainStats = aggregateChainStats(history, 12);
+        if (chainStats.max >= 2 && primaryBuild === BUILD_IDS.MULT_ENGINE && out.length < 6 && !out.includes('SYNERGY_CHAINS')) {
+            out.push('SYNERGY_CHAINS');
+        }
+        return out;
+    };
+
     const analyzeBuild = ({ inventory, dice, history, flowStreak }) => {
         const inv = new Set((inventory || []).map((i) => i.id));
         const multCount = countCarvedFace(dice, 'MULT_FACE');
@@ -2558,8 +3030,10 @@ const GutterbonesGamble = (() => {
         const hasBlood6 = diceShowsFace(dice, 'BLOOD_6');
         const chaosCount = ['SHIV_FACE', 'WIREBAG_FACE', 'GHOST_FACE'].filter((fid) => diceShowsFace(dice, fid)).length;
         const histText = aggregateHistoryTriggers(history, 12);
-        const multHits = (histText.match(/\+MULT|ENGINE|CROWBAR|GHOST/g) || []).length;
-        const bloodHits = (histText.match(/BLOOD|PACT|SHIV/g) || []).length;
+        const chainStats = aggregateChainStats(history, 12);
+        const tagWeights = inventoryArchetypeWeights(inventory, dice);
+        const multHits = (histText.match(/\+MULT|ENGINE|CROWBAR|GHOST|CHAIN|FUSE/g) || []).length;
+        const bloodHits = (histText.match(/BLOOD|PACT|SHIV|RIPPLE/g) || []).length;
         const cashHits = (histText.match(/CASH|WIRE/g) || []).length;
         const totals = (history || []).map((h) => h.total).filter((t) => typeof t === 'number' && !Number.isNaN(t));
         const weights = {
@@ -2585,6 +3059,12 @@ const GutterbonesGamble = (() => {
         if (multHits >= 4) { w += 2.4; sig[BUILD_IDS.MULT_ENGINE].push('hist:mult_heavy'); }
         else if (multHits >= 1) { w += 0.9; sig[BUILD_IDS.MULT_ENGINE].push('hist:mult_light'); }
         if (flowStreak >= 2 && (multCount >= 1 || inv.has('ENGINE'))) { w += 0.6; sig[BUILD_IDS.MULT_ENGINE].push('flow:mult'); }
+        if (chainStats.avg >= 1.25) { w += 1.8; sig[BUILD_IDS.MULT_ENGINE].push('hist:chain_avg'); }
+        else if (chainStats.chainHands >= 2) { w += 0.9; sig[BUILD_IDS.MULT_ENGINE].push('hist:chain_light'); }
+        if (chainStats.max >= 3) { w += 1.4; sig[BUILD_IDS.MULT_ENGINE].push('hist:chain_peak'); }
+        if (inv.has('FUSE_BOX') || inv.has('HOT_STREAK_COIL')) { w += 0.7; sig[BUILD_IDS.MULT_ENGINE].push('inv:chain_hardware'); }
+        w += tagWeights[BUILD_IDS.MULT_ENGINE];
+        if (tagWeights[BUILD_IDS.MULT_ENGINE] >= 1.2) sig[BUILD_IDS.MULT_ENGINE].push('tags:mult_stack');
         weights[BUILD_IDS.MULT_ENGINE] = w;
 
         w = 0;
@@ -2594,6 +3074,8 @@ const GutterbonesGamble = (() => {
         if (bloodHits >= 4) { w += 2.2; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_pressure'); }
         else if (bloodHits >= 1) { w += 0.8; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_trace'); }
         if (diceShowsFace(dice, 'SHIV_FACE')) { w += 0.9; sig[BUILD_IDS.BLOOD_RISK].push('board:SHIV'); }
+        if (chainStats.max >= 2 && (hasBlood6 || bloodHits >= 2)) { w += 0.8; sig[BUILD_IDS.BLOOD_RISK].push('hist:blood_chains'); }
+        w += tagWeights[BUILD_IDS.BLOOD_RISK];
         weights[BUILD_IDS.BLOOD_RISK] = w;
 
         w = 0;
@@ -2602,6 +3084,7 @@ const GutterbonesGamble = (() => {
         if (inv.has('BLACK_BOOK')) { w += 2.2; sig[BUILD_IDS.CASH_CONTROL].push('inv:BLACK_BOOK'); }
         if (cashHits >= 3) { w += 2; sig[BUILD_IDS.CASH_CONTROL].push('hist:cash_triggers'); }
         else if (cashHits >= 1) { w += 0.7; sig[BUILD_IDS.CASH_CONTROL].push('hist:cash_light'); }
+        w += tagWeights[BUILD_IDS.CASH_CONTROL];
         weights[BUILD_IDS.CASH_CONTROL] = w;
 
         w = 0;
@@ -2615,6 +3098,8 @@ const GutterbonesGamble = (() => {
         }
         const specials = countSpecialFaceSlots(dice);
         if (specials <= 4 && totals.length >= 3) { w += 1.2; sig[BUILD_IDS.SET_CONSISTENCY].push('board:clean_loadout'); }
+        if (chainStats.avg > 0 && chainStats.avg < 1.1 && totals.length >= 4) { w += 0.6; sig[BUILD_IDS.SET_CONSISTENCY].push('hist:steady_chains'); }
+        w += tagWeights[BUILD_IDS.SET_CONSISTENCY];
         weights[BUILD_IDS.SET_CONSISTENCY] = w;
 
         w = chaosCount * 1.4;
@@ -2622,6 +3107,8 @@ const GutterbonesGamble = (() => {
         if (diceShowsFace(dice, 'GHOST_FACE')) { w += 0.7; sig[BUILD_IDS.CHAOS].push('board:GHOST'); }
         if (diceShowsFace(dice, 'WILD_FACE')) { w += 0.5; sig[BUILD_IDS.CHAOS].push('board:WILD'); }
         if ((histText.match(/WIRE|SHIV|GHOST|PACT/g) || []).length >= 5) { w += 1.2; sig[BUILD_IDS.CHAOS].push('hist:volatile'); }
+        if (inv.has('FUSE_BOX') && chainStats.chainHands >= 1) { w += 0.9; sig[BUILD_IDS.CHAOS].push('hist:fuse_chains'); }
+        w += tagWeights[BUILD_IDS.CHAOS];
         weights[BUILD_IDS.CHAOS] = w;
 
         let primaryBuild = BUILD_IDS.UNKNOWN;
@@ -2652,7 +3139,14 @@ const GutterbonesGamble = (() => {
             ? ['run:still_open']
             : (sig[primaryBuild] || []).slice(0, 8);
 
-        return { primaryBuild, secondaryTag, confidence, signals };
+        return {
+            primaryBuild,
+            secondaryTag,
+            confidence,
+            signals,
+            chainAvg: Math.round(chainStats.avg * 10) / 10,
+            chainMax: chainStats.max
+        };
     };
 
     const BUILD_SYNERGY_CALLOUT = {
@@ -2785,9 +3279,14 @@ const GutterbonesGamble = (() => {
         enabled: true,
         maxChainPasses: 8,
         juiceStepMs: 150,
-        overlayBaseMs: 1200,
-        overlayTailMs: 800,
-        overlayDepthBonusMs: 550
+        overlayBaseMs: 1400,
+        overlayTailMs: 900,
+        overlayDepthBonusMs: 650,
+        overlayPerChainStepMs: 200,
+        comboMeterValidDelta: 1,
+        comboMeterInvalidDelta: -2,
+        comboMeterSpikeThresholds: [3, 6, 9],
+        heatSpikeMult: 0.25
     };
 
     const CATEGORY_FACE_VALUE = { ONES: 1, TWOS: 2, THREES: 3, FOURS: 4, FIVES: 5, SIXES: 6 };
@@ -2841,12 +3340,21 @@ const GutterbonesGamble = (() => {
         const base = SYNERGY_TUNING.overlayBaseMs ?? SCORE_OVERLAY_LIFETIME_MS;
         if (reducedMotion || !result) return base;
         const eventCount = (result.synergyEvents || []).length;
+        const chainStepCount = (result.explanationSteps || []).filter(
+            (step) => String(step.label || '').startsWith('CHAIN:')
+        ).length;
+        const staggerSteps = Math.max(eventCount, chainStepCount);
         const stepMs = SYNERGY_TUNING.juiceStepMs ?? 150;
-        const sequenceMs = eventCount > 0 ? eventCount * stepMs + 90 : 0;
-        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 800;
-        const depthBonus = (result.chainDepth || 0) >= 2 ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 550) : 0;
-        if (eventCount === 0 && depthBonus === 0) return base;
-        return Math.max(base, sequenceMs + tailMs + depthBonus);
+        const sequenceMs = staggerSteps > 0 ? staggerSteps * stepMs + 120 : 0;
+        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 900;
+        const depth = result.chainDepth || 0;
+        const deepChain = depth >= 2 || eventCount >= 2 || chainStepCount >= 2;
+        const depthBonus = deepChain ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 650) : 0;
+        const perStepBonus = staggerSteps > 1
+            ? (staggerSteps - 1) * (SYNERGY_TUNING.overlayPerChainStepMs ?? 200)
+            : 0;
+        if (staggerSteps === 0 && !deepChain) return base;
+        return Math.max(base, sequenceMs + tailMs + depthBonus + perStepBonus);
     };
 
     const buildSynergyLinks = (events, dice) => {
@@ -2891,7 +3399,9 @@ const GutterbonesGamble = (() => {
         return links;
     };
 
-    const getFlowMultiplier = (streak = 0) => 1 + (Math.max(0, Math.min(FLOW_TUNING.maxStreak, streak)) * FLOW_TUNING.streakStep);
+    const getFlowMultiplier = (streak = 0, cap = FLOW_TUNING.maxStreak) => (
+        1 + (Math.max(0, Math.min(cap, streak)) * FLOW_TUNING.streakStep)
+    );
 
     const WAGER_TUNING = {
         baseThreshold: 110,
@@ -2984,13 +3494,8 @@ const GutterbonesGamble = (() => {
 
     const describeRouteEffects = (path) => {
         if (!path) return [];
-        const notes = [];
-        if (path.mod && path.mod !== 1) notes.push(`Quota x${path.mod.toFixed(2)}`);
-        if (path.reward) notes.push(`+$${path.reward} cash`);
-        if (path.fillStash) notes.push('Stash to 100');
-        if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play`);
-        if (path.discardDelta) notes.push(`${path.discardDelta > 0 ? '+' : ''}${path.discardDelta} pill`);
-        if (path.grantRandomConsumable) notes.push('Random one-shot');
+        const notes = GutterbonesRoutes.describePathModifiers(path);
+        if (path.boss) notes.push(`Boss turf: ${path.boss.name}`);
         return notes;
     };
 
@@ -3045,11 +3550,10 @@ const GutterbonesGamble = (() => {
         || { totalRuns: 0, available: Object.keys(CATEGORIES), locked: [], lockedDetails: [], nextThreshold: null, runsUntilNext: 0 }
     );
 
-    const isShopFaceAvailable = (face, meta) => {
-        const runs = meta?.totalRuns || 0;
-        if (runs < ONBOARDING_THRESHOLDS.RARE_FACES && face.rarity !== 'common') return false;
-        return true;
-    };
+    const isShopFaceAvailable = (face, meta) => (
+        GutterbonesOnboarding?.isShopFaceAvailable?.(face, meta)
+        ?? ((meta?.totalRuns || 0) >= ONBOARDING_THRESHOLDS.RARE_FACES || face.rarity === 'common')
+    );
 
     const STORAGE_KEYS = {
         run: 'gutterbones1977:run:v1',
@@ -3168,7 +3672,10 @@ const GutterbonesGamble = (() => {
         { id: 'unlock-counter', name: 'Hire The Counter', desc: 'Adds The Counter and his Black Book start.', cost: 180, type: 'persona', unlocks: ['CARD_COUNTER'] },
         { id: 'rare-faces', name: 'Bribe the Bone Carver', desc: 'Adds Wild, Echo, and Ghost faces to future shops.', cost: 220, type: 'faces', unlocks: ['WILD_FACE', 'ECHO_FACE', 'GHOST_FACE'] },
         { id: 'danger-faces', name: 'Meet the Knife Man', desc: 'Adds Shiv and Wirebag faces to future shops.', cost: 260, type: 'faces', unlocks: ['SHIV_FACE', 'WIREBAG_FACE'] },
-        { id: 'high-end-hardware', name: 'Call the Fence', desc: 'Adds Centerpiece, Engine, and Shady Ledger hardware.', cost: 300, type: 'hardware', unlocks: ['CENTERPIECE', 'ENGINE', 'SHADY_LEDGER'] }
+        { id: 'high-end-hardware', name: 'Call the Fence', desc: 'Adds Centerpiece, Engine, and Shady Ledger hardware.', cost: 300, type: 'hardware', unlocks: ['CENTERPIECE', 'ENGINE', 'SHADY_LEDGER'] },
+        { id: 'chain-manual', name: "Fixer's Chain Manual", desc: 'Adds Fuse, Magnet, Mark, and Double Down faces to shops (5+ runs).', cost: 280, type: 'faces', unlocks: TIER2_FACE_IDS },
+        { id: 'rig-shop', name: 'Backroom Rig Shop', desc: 'Adds Fuse Box, Mirror Rig, Debt Collector, and Hot Streak Coil hardware.', cost: 320, type: 'hardware', unlocks: TIER3_HARDWARE_IDS },
+        { id: 'fixer-network', name: "Fixer's Network", desc: 'Start each run with one random blueprint contract.', cost: 340, type: 'perk', unlocks: [] }
     ];
 
     const mergeMetaState = (stored = {}) => ({
@@ -4256,11 +4763,22 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const RunIntelPanel = ({ flowMultiplier, activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [], inline = false }) => (
+    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [], inline = false }) => (
         <div className={`${inline ? 'relative w-full' : 'absolute top-16 right-4 z-[80] w-[min(88vw,21rem)]'} readable-panel rounded-xl p-4 text-xs font-mono`}>
             <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
             <div className="space-y-2 text-gray-100">
-                <div className="flex justify-between gap-3"><span className="text-gray-400">FLOW</span><span className={flowMultiplier > 1 ? 'text-[#0df] font-bold' : 'text-gray-300'}>x{flowMultiplier.toFixed(2)}</span></div>
+                <div className="flex justify-between gap-3">
+                    <span className="text-gray-400">FLOW</span>
+                    <span className={flowMultiplier > 1 ? 'text-[#0df] font-bold' : 'text-gray-300'}>
+                        x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
+                    </span>
+                </div>
+                <div className="flex justify-between gap-3">
+                    <span className="text-gray-400">COMBO</span>
+                    <span className={comboMeter >= 3 ? 'text-fuchsia-300 font-bold' : 'text-gray-300'}>
+                        {comboMeter}{heatSpikeNextHand > 0 ? ` · spike +${heatSpikeNextHand}x queued` : ''}
+                    </span>
+                </div>
                 <div className="flex justify-between gap-3"><span className="text-gray-400">WAGER</span><span className={activeWager ? 'text-emerald-300 font-bold' : 'text-gray-300'}>{activeWager ? `$${activeWager.stake} @ ${activeWager.threshold}+` : 'NONE'}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-gray-400">CONTRACT</span><span className={insaneContract ? 'text-[#ff9fcf] font-bold' : 'text-gray-300'}>{insaneContract ? 'INSANE' : 'STANDARD'}</span></div>
             </div>
@@ -4315,6 +4833,21 @@ const GutterbonesGamble = (() => {
                     <div className="text-gray-300">None</div>
                 )}
             </div>
+            <div className="mt-2 pt-2 border-t border-gray-800">
+                <div className="text-gray-400 mb-1 tracking-[.12em]">BLUEPRINTS</div>
+                {blueprints.length ? (
+                    <div className="space-y-1 text-fuchsia-200/90">
+                        {blueprints.filter((bp) => !bp.consumed).map((bp) => (
+                            <div key={bp.id} className="leading-snug">
+                                <span className="font-bold">{BLUEPRINT_CATALOG[bp.id]?.name || bp.id}</span>
+                                <span className="text-gray-400 text-[10px] block">{BLUEPRINT_CATALOG[bp.id]?.desc}</span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-gray-300">None</div>
+                )}
+            </div>
         </div>
     );
 
@@ -4363,6 +4896,9 @@ const GutterbonesGamble = (() => {
                 <div className={`${ui.accent} font-bold leading-tight tracking-wide text-sm`}>BUILD: {ui.label}</div>
                 {analysis.secondaryTag && <div className="text-gray-300 mt-1 truncate">TAG: {analysis.secondaryTag}</div>}
                 <div className="text-gray-300 mt-1">CONF: <span className={tier === 'HIGH' ? 'text-[#0df] font-bold' : 'text-gray-100'}>{tier}</span></div>
+                {(analysis.chainMax || 0) > 0 && (
+                    <div className="text-fuchsia-300/90 mt-1 text-[10px]">CHAIN AVG {analysis.chainAvg} · PEAK {analysis.chainMax}</div>
+                )}
             </div>
         );
     };
@@ -4375,6 +4911,7 @@ const GutterbonesGamble = (() => {
         const keys = (runBuild?.keyItems || []).filter(Boolean);
         const formatKey = (k) => {
             if (k === 'FLOW_STREAK') return 'FLOW STREAK';
+            if (k === 'SYNERGY_CHAINS') return 'SYNERGY CHAINS';
             const meta = itemById(k);
             return meta?.name || meta?.label || k;
         };
@@ -4780,6 +5317,13 @@ const GutterbonesGamble = (() => {
         const [shopItems, setShopItems] = useState([]);
         const [shopRefreshes, setShopRefreshes] = useState(0);
         const [paths, setPaths] = useState([]);
+        const [nextShopTag, setNextShopTag] = useState(null);
+        const [activeShopTag, setActiveShopTag] = useState(null);
+        const [routeModifiers, setRouteModifiers] = useState({});
+        const [synergyState, setSynergyState] = useState({ categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 });
+        const [categoryMarkedThisRound, setCategoryMarkedThisRound] = useState([]);
+        const [blueprints, setBlueprints] = useState([]);
+        const [blueprintRoundFlags, setBlueprintRoundFlags] = useState({ multEngineUsed: false, flowSaveUsed: false });
         const [currentRouteEffect, setCurrentRouteEffect] = useState(null);
         const [activeBoss, setActiveBoss] = useState(null);
         const [bossIntro, setBossIntro] = useState(null);
@@ -4888,6 +5432,8 @@ const GutterbonesGamble = (() => {
         const pendingUnlockMessageRef = useRef(null);
         const scoreBreakdownTimeoutRef = useRef(null);
         const scoreResolutionTimeoutRef = useRef(null);
+        const nextShopTagRef = useRef(null);
+        const routeModifiersRef = useRef({});
 
         const dismissScoreOverlays = () => {
             if (scoreBreakdownTimeoutRef.current != null) {
@@ -5003,7 +5549,8 @@ const GutterbonesGamble = (() => {
             0,
             getShopRefreshCost(round, shopRefreshes) - (currentRouteEffect?.shopRefreshDiscount || 0)
         );
-        const flowMultiplier = getFlowMultiplier(flowStreak);
+        const flowStreakCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
+        const flowMultiplier = getFlowMultiplier(flowStreak, flowStreakCap);
         const wagerThreshold = GutterbonesRoutes.wagerThresholdForRound(round, WAGER_TUNING);
         const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
         const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
@@ -5373,6 +5920,12 @@ const GutterbonesGamble = (() => {
             gambleStake,
             activeWager,
             currentRouteEffect,
+            nextShopTag,
+            activeShopTag,
+            routeModifiers,
+            synergyState,
+            categoryMarkedThisRound,
+            blueprints,
             paths: paths.map(path => ({ ...path, bossId: path.boss?.id, boss: undefined })),
             activeBossId: activeBoss?.id || null,
             selectedItem,
@@ -5421,6 +5974,17 @@ const GutterbonesGamble = (() => {
             setGambleStake(saved.gambleStake || 0);
             setActiveWager(saved.activeWager || null);
             setCurrentRouteEffect(saved.currentRouteEffect || null);
+            nextShopTagRef.current = saved.nextShopTag || null;
+            routeModifiersRef.current = saved.routeModifiers || {};
+            setNextShopTag(saved.nextShopTag || null);
+            setActiveShopTag(saved.activeShopTag || null);
+            setRouteModifiers(saved.routeModifiers || {});
+            setSynergyState(saved.synergyState?.categoryMarks || saved.synergyState?.comboMeter != null
+                ? saved.synergyState
+                : { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 });
+            setCategoryMarkedThisRound(saved.categoryMarkedThisRound || []);
+            setBlueprints(saved.blueprints || []);
+            setBlueprintRoundFlags({ multEngineUsed: false, flowSaveUsed: false });
             setPaths((saved.paths || []).map(hydratePath));
             setActiveBoss(saved.activeBossId ? bossById(saved.activeBossId) : null);
             setBossIntro(null);
@@ -5512,6 +6076,21 @@ const GutterbonesGamble = (() => {
             return earned;
         };
 
+        const grantBlueprint = (id) => {
+            if (!BLUEPRINT_CATALOG[id]) return false;
+            let granted = false;
+            setBlueprints((prev) => {
+                if (prev.some((entry) => entry.id === id)) return prev;
+                granted = true;
+                return [...prev, { id, consumed: false }];
+            });
+            if (!granted) return false;
+            if (id === 'BLOOD_DEBT_START') setDebt((d) => d + 1);
+            setFixerLine(`Blueprint wired: ${BLUEPRINT_CATALOG[id].name}.`);
+            spawnPaperStamp('BLUEPRINT', '#a855f7');
+            return true;
+        };
+
         const purchaseSafehouseUpgrade = (upgrade) => {
             if (meta.purchasedUpgradeIds.includes(upgrade.id) || meta.launderedCash < upgrade.cost) return;
             updateMeta(prev => {
@@ -5568,7 +6147,7 @@ const GutterbonesGamble = (() => {
                         build: {
                             primary: buildAnalysis.primaryBuild,
                             peakConfidence: buildAnalysis.confidence,
-                            keyItems: deriveKeyItems(buildAnalysis.primaryBuild, inventory, dice, flowStreak)
+                            keyItems: deriveKeyItemsWithHistory(buildAnalysis.primaryBuild, inventory, dice, flowStreak, history)
                         }
                     };
                 }
@@ -5699,7 +6278,7 @@ const GutterbonesGamble = (() => {
         useEffect(() => {
             if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats, runModifierIds, dailyRunActive]);
+        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, nextShopTag, activeShopTag, routeModifiers, synergyState, categoryMarkedThisRound, blueprints, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats, runModifierIds, dailyRunActive]);
 
         const beginContract = ({ tutorial = false, daily = false } = {}) => {
             const p = PERSONAS[personaIdx];
@@ -5733,9 +6312,10 @@ const GutterbonesGamble = (() => {
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
+            const arcPickRng = daily ? runRandomRef.current() : Math.random();
             const runArcId = tutorial
                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
-                : (GutterbonesStory?.pickRandomArcId?.(Math.random()) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
+                : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
             const arcMeta = GutterbonesStory?.getArc?.(runArcId);
             setArcId(runArcId);
             let openingBase = EARLY_GAME_TUNING.openingTarget;
@@ -5773,6 +6353,15 @@ const GutterbonesGamble = (() => {
             setHandLevels({});
             setFlowStreak(0);
             setShopRefreshes(0);
+            nextShopTagRef.current = null;
+            routeModifiersRef.current = {};
+            setNextShopTag(null);
+            setActiveShopTag(null);
+            setRouteModifiers({});
+            setSynergyState({ categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 });
+            setCategoryMarkedThisRound([]);
+            setBlueprints([]);
+            setBlueprintRoundFlags({ multEngineUsed: false, flowSaveUsed: false });
             setCurrentRouteEffect(null);
             setActiveBoss(null);
             setBossIntro(null);
@@ -5803,6 +6392,9 @@ const GutterbonesGamble = (() => {
             setShowFirstRunOverlay(false);
             openingSniffPendingRef.current = tut ? tut.openingStash > 0 : !!(EARLY_GAME_TUNING.openingStashGrant);
             const enterPlay = () => {
+                if (meta.purchasedUpgradeIds.includes('fixer-network')) {
+                    grantBlueprint(pickRandomBlueprintId());
+                }
                 setPhase('PLAY');
                 if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted) setShowFirstRunOverlay(true);
                 if (!tutorial && !audioSettings.dismissPillPulse) {
@@ -5821,10 +6413,17 @@ const GutterbonesGamble = (() => {
         const startRun = () => beginContract({ tutorial: false });
 
         const calculateScore = (catId, currentDice) => {
+            const flowCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
             const base = GutterbonesRules.calculateScore(catId, currentDice, {
-                handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-                CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
-                synergyTuning: SYNERGY_TUNING
+                handLevels, flowStreak, debt, inventory, hardwareDisabled, activeBoss,
+                CATEGORIES, HAND_MASTERY_TUNING,
+                getFlowMultiplier: (streak) => getFlowMultiplier(streak, flowCap),
+                getHandMasteryBonus,
+                synergyTuning: SYNERGY_TUNING,
+                synergyState,
+                roundFirstCategories: categoryMarkedThisRound,
+                blueprintIds: GutterbonesRules.activeBlueprintIds(blueprints),
+                blueprintRound: blueprintRoundFlags
             });
             const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
             if (!GutterbonesReplay || !mods?.length) return base;
@@ -6226,6 +6825,14 @@ const GutterbonesGamble = (() => {
             }, breakdownLifetimeMs);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
+                setSynergyState((prev) => {
+                    let next = GutterbonesRules.advanceComboMeter(prev, true, SYNERGY_TUNING);
+                    if (result.heatSpikeApplied) next = { ...next, heatSpikeNextHand: 0 };
+                    return next;
+                });
+                if (result.blueprintMultEngineTriggered) {
+                    setBlueprintRoundFlags((prev) => ({ ...prev, multEngineUsed: true }));
+                }
                 setFlowStreak(prev => Math.min(FLOW_TUNING.maxStreak, prev + 1));
                 setHandLevels(prev => ({
                     ...prev,
@@ -6254,11 +6861,36 @@ const GutterbonesGamble = (() => {
                 } else {
                     spawnHitCallout('BOSS: STASH FROZEN');
                 }
-                setHistory(h => [...h, { id: Math.random(), round, category: catId, total: result.total, values: dice.map(d => d.value), triggers: result.triggers }]);
+                if (result.categoryMarkEarned) {
+                    setSynergyState((prev) => ({
+                        categoryMarks: {
+                            ...(prev.categoryMarks || {}),
+                            [catId]: (prev.categoryMarks?.[catId] || 0) + 1
+                        }
+                    }));
+                    setCategoryMarkedThisRound((prev) => (prev.includes(catId) ? prev : [...prev, catId]));
+                }
+                setHistory(h => [...h, {
+                    id: Math.random(),
+                    round,
+                    category: catId,
+                    total: result.total,
+                    values: dice.map(d => d.value),
+                    triggers: result.triggers,
+                    chainDepth: result.chainDepth || 0
+                }]);
                 playSynergySequence(result, () => runValidHandJuice(result, catId));
             } else {
                 setFixerLine(pickLine(FIXER_LINES.bust));
-                setFlowStreak(0);
+                setSynergyState((prev) => GutterbonesRules.advanceComboMeter(prev, false, SYNERGY_TUNING));
+                const hasFlowSave = blueprints.some((bp) => bp.id === 'FLOW_SAVE_ONCE' && !bp.consumed)
+                    && !blueprintRoundFlags.flowSaveUsed;
+                if (hasFlowSave) {
+                    setBlueprintRoundFlags((prev) => ({ ...prev, flowSaveUsed: true }));
+                    setFixerLine('Blueprint saved your FLOW streak this once.');
+                } else {
+                    setFlowStreak(0);
+                }
                 AudioSystem.playTone(80, 'sawtooth', 0.25);
             }
             if (wager) {
@@ -6361,6 +6993,31 @@ const GutterbonesGamble = (() => {
             }
         };
 
+        const resolveGambleBlueprint = () => {
+            if (phase !== 'GAMBLE') return;
+            const outcome = GutterbonesGamble.resolveBlueprintFlip({
+                flowStreak,
+                gold,
+                random: Math.random(),
+                pickBlueprintId: () => pickRandomBlueprintId()
+            });
+            setGambleStake(outcome.stake);
+            if (outcome.won && outcome.blueprintId) {
+                grantBlueprint(outcome.blueprintId);
+                setFixerLine(`Blueprint flip hit — ${BLUEPRINT_CATALOG[outcome.blueprintId]?.name || outcome.blueprintId}.`);
+                spawnPaperStamp('BLUEPRINT', '#a855f7');
+                AudioSystem.playTone(980, 'square', 0.14);
+            } else {
+                setGold((g) => Math.max(0, g - outcome.lossAmount));
+                setFixerLine(`Blueprint flip missed. −$${outcome.lossAmount}.`);
+                spawnPaperStamp('BUSTED BET');
+                AudioSystem.playTone(120, 'sawtooth', 0.18);
+            }
+            setGambleStake(0);
+            generateShop();
+            setPhase('SHOP');
+        };
+
         const resolveGamble = (doubleDown, tierId = 'FAIR') => {
             if (phase !== 'GAMBLE') return;
             if (doubleDown) {
@@ -6435,12 +7092,38 @@ const GutterbonesGamble = (() => {
         };
 
         const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
+            const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
+            setActiveShopTag(offerTag);
             const rng = dailyRunActive ? runRandomRef.current : Math.random;
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES);
             const consumableOfferChance = round <= 3 ? 0.65 : round <= 6 ? 0.45 : 0.3;
             const affordabilityCeiling = gold + Math.min(SHOP_TUNING.maxAffordableBuffer, Math.floor(stash / 4));
+            const buildSnap = analyzeBuild({ inventory, dice, history, flowStreak });
+            const primaryBuild = buildSnap.primaryBuild;
+            const isHardwareOffer = (item) => !item.type && !!item.name && !!DEVISES[item.id];
+            const isFaceOffer = (item) => !!item.type && item.type !== 'consumable';
+            const shopTagWeightDelta = (item) => {
+                if (!offerTag || offerTag === 'balanced') return 0;
+                const tags = getArchetypeTagsForItemId(item.id);
+                switch (offerTag) {
+                    case 'hardware':
+                        return isHardwareOffer(item) ? 4 : (isFaceOffer(item) ? -1 : 0);
+                    case 'danger':
+                        return item.rarity === 'danger' ? 4 : (item.rarity === 'common' ? -1 : 0);
+                    case 'rare':
+                        return item.rarity === 'rare' ? 3 : 0;
+                    case 'chaos':
+                        return tags.includes(BUILD_IDS.CHAOS) ? 4 : 0;
+                    default:
+                        return 0;
+                }
+            };
+            const buildFitWeight = (item) => {
+                if (primaryBuild === BUILD_IDS.UNKNOWN) return 0;
+                return itemFitsCurrentBuild(item.id, primaryBuild) ? 2.5 : 0;
+            };
             const baseWeight = (item) => {
                 let weight = 0;
                 if (item.cost <= gold) weight += 4;
@@ -6451,10 +7134,11 @@ const GutterbonesGamble = (() => {
                 if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
                 if (item.type === 'consumable') weight += round <= 4 ? 1 : 0;
                 if (!item.type) weight += 1;
+                weight += shopTagWeightDelta(item);
                 return weight;
             };
-            const weightedSort = (items) => items
-                .map(item => ({ item, weight: baseWeight(item) + (rng() * 0.35) }))
+            const weightedSort = (items, extraWeight = () => 0) => items
+                .map(item => ({ item, weight: baseWeight(item) + extraWeight(item) + (rng() * 0.35) }))
                 .sort((a, b) => b.weight - a.weight)
                 .map(entry => entry.item);
 
@@ -6462,9 +7146,18 @@ const GutterbonesGamble = (() => {
             const hardwarePool = weightedSort(hardware);
             const consumablePool = weightedSort(consumablePoolSeed);
             const picks = [];
-            if (facePool.length) picks.push(facePool.shift());
-            if (hardwarePool.length) picks.push(hardwarePool.shift());
-            if (consumablePool.length && picks.length < 4 && rng() < consumableOfferChance) picks.push(consumablePool.shift());
+            const pushUnique = (item) => {
+                if (!item || picks.some((p) => p.id === item.id)) return;
+                picks.push(item);
+            };
+            const buildPool = weightedSort(
+                [...faces, ...hardware, ...consumablePoolSeed].filter((item) => itemFitsCurrentBuild(item.id, primaryBuild)),
+                buildFitWeight
+            );
+            if (buildPool.length && primaryBuild !== BUILD_IDS.UNKNOWN) pushUnique(buildPool[0]);
+            if (facePool.length) pushUnique(facePool.shift());
+            if (hardwarePool.length) pushUnique(hardwarePool.shift());
+            if (consumablePool.length && picks.length < 4 && rng() < consumableOfferChance) pushUnique(consumablePool.shift());
 
             const remainder = weightedSort([...facePool, ...hardwarePool, ...consumablePool]);
             while (picks.length < 4 && remainder.length) {
@@ -6518,7 +7211,16 @@ const GutterbonesGamble = (() => {
                     ? GutterbonesReplay.filterPathsForMeta([...PATHS], meta)
                     : [...PATHS];
                 if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
-                    const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
+                    const bossPool = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT];
+                    let b = bossPool[Math.floor(rng() * bossPool.length)];
+                    if (routeModifiers.informantWeight && rng() < 0.45) {
+                        b = BOSSES.INFORMANT;
+                        setRouteModifiers((prev) => {
+                            const nextMods = { ...prev };
+                            delete nextMods.informantWeight;
+                            return nextMods;
+                        });
+                    }
                     const bossIdx = Math.max(0, next.length - 1);
                     next[bossIdx] = { ...next[bossIdx], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
@@ -6558,16 +7260,23 @@ const GutterbonesGamble = (() => {
             AudioSystem.playTone(420, 'triangle', 0.1);
         };
 
+        const shopListPrice = (item) => {
+            const discount = routeModifiers.shopDiscount || 0;
+            if (!discount) return item.cost;
+            return Math.max(1, Math.floor(item.cost * (1 - discount)));
+        };
+
         const handlePurchase = (item) => {
             if (soldItems.includes(item.id)) return;
+            const price = shopListPrice(item);
             setSoldItems(prev => [...prev, item.id]);
-            setFixerLine(gold >= item.cost ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
+            setFixerLine(gold >= price ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
             spawnPaperStamp('SOLD');
             scheduleTimeout(() => {
                 setGold(g => {
-                    if (g >= item.cost) return g - item.cost;
-                    const shortage = item.cost - g;
+                    if (g >= price) return g - price;
+                    const shortage = price - g;
                     registerDebtSpike(shortage, 'shop loan');
                     return 0;
                 });
@@ -6640,6 +7349,13 @@ const GutterbonesGamble = (() => {
 
         const handleAdvance = (path) => {
             const projection = projectPath(path);
+            const pickFx = GutterbonesRoutes.pathPickEffects(path);
+            nextShopTagRef.current = pickFx.nextShopTag || 'balanced';
+            routeModifiersRef.current = pickFx.routeModifiers || {};
+            setNextShopTag(nextShopTagRef.current);
+            setRouteModifiers(routeModifiersRef.current);
+            setCategoryMarkedThisRound([]);
+            setBlueprintRoundFlags({ multEngineUsed: false, flowSaveUsed: false });
             const nextRound = projection.nextRound;
             const storyPanel = GutterbonesStory?.getRoundTransitionPanel?.(arcId, nextRound);
             setRound(r => r + 1);
@@ -6713,6 +7429,25 @@ const GutterbonesGamble = (() => {
             setKept([false, false, false, false, false]);
             rollLockRef.current = false;
             setFixerLine('DEV: blood + shiv lane loaded — score Slop for blood ripple chain juice.');
+        };
+
+        const applyDevMultiChainDemoDice = () => {
+            if (phase !== 'PLAY') return;
+            setDice((prev) => {
+                const base = prev.length === 5 ? prev : Array(5).fill(0).map(makeBone);
+                const next = [...base];
+                next[0] = carvedDieFromFace(next[0] || makeBone(), 'GHOST_FACE');
+                next[1] = carvedDieFromFace(next[1] || makeBone(), 'ECHO_FACE');
+                next[2] = carvedDieFromFace(next[2] || makeBone(), 'GOLD_FACE');
+                next[3] = carvedDieFromFace(next[3] || makeBone(), 'WIREBAG_FACE');
+                next[4] = { ...(next[4] || makeBone()), id: Math.random(), value: 5, faceId: null, faceLabel: null, faceStyle: null, type: 'standard' };
+                return next;
+            });
+            setHasRolled(true);
+            setRollingSlots(Array(5).fill(false));
+            setKept([false, false, false, false, false]);
+            rollLockRef.current = false;
+            setFixerLine('DEV: ghost echo + wire feed lane — score Slop for multi-chain stagger QA.');
         };
 
         const forceBoss = (bossId) => {
@@ -6959,6 +7694,10 @@ const GutterbonesGamble = (() => {
                         <BuildIndicator analysis={buildAnalysis} />
                         <RunIntelPanel
                             flowMultiplier={flowMultiplier}
+                            flowStreakCap={flowStreakCap}
+                            comboMeter={synergyState.comboMeter || 0}
+                            heatSpikeNextHand={synergyState.heatSpikeNextHand || 0}
+                            blueprints={blueprints}
                             activeWager={activeWager}
                             insaneContract={insaneContract}
                             routeEffect={currentRouteEffect}
@@ -6982,7 +7721,10 @@ const GutterbonesGamble = (() => {
                             <button onClick={grantRandomConsumable} className="border border-gray-700 px-1 py-1 text-emerald-200 hover:bg-emerald-900/30">GRANT ONE-SHOT</button>
                             <button onClick={() => generateShop({ preservePaths: phase === 'SHOP', preserveRefreshes: true })} className="border border-gray-700 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">REROLL SHOP</button>
                             {phase === 'PLAY' && (
-                                <button onClick={applyDevSynergyDemoDice} className="col-span-3 border border-fuchsia-600 px-1 py-1 text-fuchsia-200 hover:bg-fuchsia-900/30">LOAD SYNERGY DEMO LANE</button>
+                                <>
+                                    <button onClick={applyDevSynergyDemoDice} className="col-span-3 border border-fuchsia-600 px-1 py-1 text-fuchsia-200 hover:bg-fuchsia-900/30">LOAD SYNERGY DEMO LANE</button>
+                                    <button onClick={applyDevMultiChainDemoDice} className="col-span-3 border border-cyan-600 px-1 py-1 text-cyan-200 hover:bg-cyan-900/30">LOAD MULTI-CHAIN DEMO</button>
+                                </>
                             )}
                         </div>
                         <div className="border-t border-gray-800 pt-2 mt-1">
@@ -7171,7 +7913,9 @@ const GutterbonesGamble = (() => {
                                 <div className="text-center" data-tutorial="heat-quota">
                                     <div className="text-xs opacity-50">STREET HEAT</div>
                                     <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
-                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>FLOW x{flowMultiplier.toFixed(2)}</div>
+                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
+                                        FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
+                                    </div>
                                     <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget} · Pills {discards}</div>
                                 </div>
                             <div className="flex gap-3 md:gap-6 text-right">
@@ -7426,6 +8170,10 @@ const GutterbonesGamble = (() => {
                                     <BuildIndicator analysis={buildAnalysis} inline />
                                     <RunIntelPanel
                                         flowMultiplier={flowMultiplier}
+                                        flowStreakCap={flowStreakCap}
+                                        comboMeter={synergyState.comboMeter || 0}
+                                        heatSpikeNextHand={synergyState.heatSpikeNextHand || 0}
+                                        blueprints={blueprints}
                                         activeWager={activeWager}
                                         insaneContract={insaneContract}
                                         routeEffect={currentRouteEffect}
@@ -7531,6 +8279,17 @@ const GutterbonesGamble = (() => {
                                 <div className="text-[11px] text-gray-400 mt-1">Keep all ${gold}. Enter shop — no flip.</div>
                             </button>
                             <div className="font-mono text-[10px] tracking-[.2em] text-gray-500 text-center mb-2">PICK YOUR FLIP</div>
+                            <button
+                                type="button"
+                                onClick={resolveGambleBlueprint}
+                                aria-label="Blueprint flip, fair odds, win a random blueprint contract or lose stake"
+                                className="w-full py-3 px-2 min-h-[44px] mb-3 border-2 border-fuchsia-600/80 bg-fuchsia-950/30 text-fuchsia-100 font-mono hover:bg-fuchsia-900/40 text-left"
+                            >
+                                <div className="font-bold">BLUEPRINT FLIP</div>
+                                <div className="text-[11px] text-gray-300 mt-1">
+                                    Fair odds — stake ${GutterbonesGamble.stakeForTier(gold, 'FAIR')} · win a random blueprint or lose stake
+                                </div>
+                            </button>
                             <div className="grid sm:grid-cols-3 gap-2">
                                 {GutterbonesGamble.allTiers().map((tier) => {
                                     const tierStake = GutterbonesGamble.stakeForTier(gold, tier.id);
@@ -7565,20 +8324,29 @@ const GutterbonesGamble = (() => {
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
-                                <p className="text-[10px] font-mono text-amber-200/85 mb-4 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
-                                <div className="gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 content-start">{shopItems.map(item => {
+                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
+                                {(activeShopTag && activeShopTag !== 'balanced') && (
+                                    <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
+                                        Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
+                                        {routeModifiers.shopDiscount ? ` · prices -${Math.round(routeModifiers.shopDiscount * 100)}%` : ''}
+                                    </div>
+                                )}
+                                <div className="gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 content-start min-h-0 flex-1">{shopItems.map(item => {
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
                                     const primaryBuild = buildAnalysis.primaryBuild;
                                     const fits = itemFitsCurrentBuild(item.id, primaryBuild);
                                     const syn = synergyLabelForItem(item.id, primaryBuild);
+                                    const hint = synergyHintForItem(item.id);
+                                    const listPrice = shopListPrice(item);
+                                    const discounted = listPrice < item.cost;
                                     return <div key={item.id} className={`bg-black/80 p-4 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
-                                        <div className="price-tag">${item.cost}</div>
+                                        <div className="price-tag">{discounted ? <><span className="line-through opacity-50 text-[10px]">${item.cost}</span> ${listPrice}</> : `$${listPrice}`}</div>
                                         {fits && !sold && <span className="absolute top-2 right-12 z-10 text-[8px] font-mono tracking-[0.2em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60">GOOD FIT</span>}
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-sm font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-sm font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{syn && <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
-                                        <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= item.cost ? 'BUY' : 'LOAN'}</span><span className="font-mono">${item.cost}</span></button>
+                                        <div className="flex items-start gap-4 mb-3">{isFace ? <div className={`w-12 h-12 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-2xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-12 h-12 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-sm font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-12 h-12 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-sm font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-lg leading-tight text-white">{isFace ? item.label : item.name}</div><div className="text-[10px] opacity-70 mt-1 font-mono">{isFace ? `${item.type} CONTRABAND` : isConsumable ? `ONE-SHOT: ${item.desc}` : item.desc}</div><RiskBadges item={item} />{hint && <div className="text-[9px] font-mono text-fuchsia-200/85 mt-1 leading-snug">{hint}</div>}{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 leading-snug">{syn}</div>}</div></div>
+                                        <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 flex justify-between px-4 disabled:opacity-50"><span>{gold >= listPrice ? 'BUY' : 'LOAN'}</span><span className="font-mono">${listPrice}</span></button>
                                     </div>;
                                 })}</div>
                             </div>
@@ -7636,6 +8404,29 @@ const GutterbonesGamble = (() => {
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
+                                {selectedItem?.id === 'SHIV_FACE' && carvingDie === 4 && (
+                                    <div className="text-red-700 font-mono text-xs mt-4 border-2 border-red-600 bg-red-100 p-2">WARNING: Slot 5 is the lane edge — Shiv destroys the right neighbor on roll. Neighbors are scarce here.</div>
+                                )}
+                                {carvingDie !== null && selectedItem && (() => {
+                                    const profile = carveAdjacencyProfile(selectedItem.id, carvingDie);
+                                    if (!profile) return null;
+                                    return (
+                                        <div className="mt-4 border border-black/30 bg-black/5 p-3 font-mono text-[10px]">
+                                            <div className="font-bold uppercase tracking-wider mb-2">{profile.title}</div>
+                                            <div className="flex gap-1 mb-2">
+                                                {[0, 1, 2, 3, 4].map((slot) => {
+                                                    const active = slot === profile.slot || profile.neighbors.includes(slot);
+                                                    return (
+                                                        <div key={slot} className={`flex-1 text-center py-1 rounded border ${active ? 'border-[#0df] bg-cyan-900/20 text-cyan-900 font-bold' : 'border-gray-400 text-gray-500'}`}>
+                                                            {slot + 1}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className="text-gray-700 leading-snug">{CARVE_ADJacency_COPY[profile.kind]}</div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                             <div className="flex-1 min-h-0 bg-[#2b1414] border-[8px] md:border-[12px] border-[#111] rounded-2xl p-4 md:p-8 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black] overflow-hidden">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">

@@ -149,3 +149,29 @@ test("wagerThresholdForRound steps by round", () => {
   assert.equal(routes.wagerThresholdForRound(1), 110);
   assert.equal(routes.wagerThresholdForRound(3), 126);
 });
+
+test("pathPickEffects — route shop tags and modifiers", () => {
+  const routes = loadRoutes();
+  assert.equal(routes.pathPickEffects(BACK_ALLEY).nextShopTag, "balanced");
+  assert.equal(Object.keys(routes.pathPickEffects(BACK_ALLEY).routeModifiers).length, 0);
+  assert.equal(routes.pathPickEffects(PAWN).nextShopTag, "hardware");
+  assert.equal(routes.pathPickEffects(PAWN).routeModifiers.shopDiscount, 0.15);
+  assert.equal(routes.pathPickEffects(SAFEHOUSE).routeModifiers.flowCapDelta, -1);
+  assert.equal(routes.pathPickEffects({ id: "SMUGGLE" }).nextShopTag, "chaos");
+  assert.equal(routes.pathPickEffects({ id: "VIP" }).nextShopTag, "rare");
+  assert.equal(routes.pathPickEffects({ id: "VIP" }).routeModifiers.informantWeight, 1);
+});
+
+test("effectiveFlowCap applies route flowCapDelta", () => {
+  const routes = loadRoutes();
+  assert.equal(routes.effectiveFlowCap(6, {}), 6);
+  assert.equal(routes.effectiveFlowCap(6, { flowCapDelta: -1 }), 5);
+  assert.equal(routes.effectiveFlowCap(6, { flowCapDelta: -8 }), 0);
+});
+
+test("describePathModifiers includes shop skew lines", () => {
+  const routes = loadRoutes();
+  const lines = routes.describePathModifiers(PAWN);
+  assert.ok(lines.some((l) => l.includes("HARDWARE")));
+  assert.ok(lines.some((l) => l.includes("15%")));
+});

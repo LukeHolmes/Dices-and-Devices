@@ -80,6 +80,9 @@ const exportedNames = [
   "DEFAULT_META_STATE",
   "SAFEHOUSE_UPGRADES",
   "normalizeSavedRun",
+  "analyzeBuild",
+  "aggregateChainStats",
+  "BUILD_IDS",
   "getFlowMultiplier",
   "getHandMasteryBonus",
   "loadSavedRun",
@@ -99,6 +102,10 @@ function createGame(snapshot = {}, options = {}) {
   const noOp = () => {};
   const audio = new Proxy({}, { get: () => noOp });
   const sandbox = {
+    blueprints: [],
+    blueprintRoundFlags: { multEngineUsed: false, flowSaveUsed: false },
+    synergyState: { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 },
+    categoryMarkedThisRound: [],
     ...snapshot,
     Math: Object.assign(Object.create(Math), {
       random: options.random || (() => 0.99),
@@ -137,6 +144,8 @@ function createGame(snapshot = {}, options = {}) {
     rollLockRef: { current: false },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
+    nextShopTagRef: { current: snapshot.nextShopTag ?? null },
+    routeModifiersRef: { current: snapshot.routeModifiers ?? {} },
     modifierFlagsRef: {
       current: { sacrificeUsed: false, shopInterestRound: null },
     },
