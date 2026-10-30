@@ -129,6 +129,15 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
 });
 
+test("No-scroll layout shell (Oct 2026)", () => {
+  assert.match(html, /html,\s*body[\s\S]*overflow:\s*hidden/);
+  assert.match(appSource, /gb-app-shell/);
+  assert.match(appSource, /gb-screen/);
+  assert.match(appSource, /gb-panel-scroll/);
+  assert.match(appSource, /layoutAudit/);
+  assert.match(appSource, /gb-play-dock/);
+});
+
 test("Playtest 4 fixes (Oct 2026)", () => {
   assert.match(html, /rel="icon"[^>]+favicon\.ico/);
   assert.match(appSource, /CarvingDieTile/);

@@ -1,4 +1,4 @@
-<div id="root-gutterbones" style="width:100%;min-height:800px;background:#121113;color:#d6b85c;position:relative;overflow:hidden;border-radius:8px;">
+<div id="root-gutterbones" style="background:#121113;color:#d6b85c;">
     <div id="gutterbones-loading" style="font-family:monospace;text-align:center;padding-top:100px;">LOADING…</div>
 </div>
 
@@ -67,6 +67,85 @@
 </script>
 
 <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        background: #121113;
+    }
+    #root-gutterbones {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
+        font-family: Georgia, serif;
+        --gb-die: clamp(2.35rem, 7.2vmin, 6rem);
+        --gb-pad: clamp(0.35rem, 1.6vmin, 1.25rem);
+        --gb-title: clamp(1.75rem, 6vmin, 4.5rem);
+        container-type: inline-size;
+        container-name: gutterbones;
+    }
+    #root-gutterbones .gb-app-shell {
+        position: relative;
+        z-index: 5;
+        display: grid;
+        grid-template-rows: 1fr;
+        width: 100%;
+        height: 100%;
+        max-height: 100dvh;
+        overflow: hidden;
+    }
+    #root-gutterbones .gb-screen {
+        grid-row: 1;
+        grid-column: 1;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    #root-gutterbones .gb-panel-scroll {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+    #root-gutterbones .gb-modal-fit {
+        max-height: min(100%, 100dvh);
+        max-width: min(100%, 96vw);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    #root-gutterbones .gb-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+    }
+    #root-gutterbones .gb-play-dock {
+        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.25rem;
+    }
+    @media (min-width: 768px) {
+        #root-gutterbones .gb-play-dock { display: none; }
+    }
+    @container gutterbones (max-height: 520px) {
+        #root-gutterbones .gb-hud-compact-hide { display: none !important; }
+        #root-gutterbones .gb-hud-compact-tight { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
+    }
     #root-gutterbones { font-family: Georgia, serif; }
     #root-gutterbones .font-marker { font-family: Impact, "Arial Black", sans-serif; }
     #root-gutterbones .font-mono { font-family: "Courier New", monospace; }
@@ -482,15 +561,13 @@
     #root-gutterbones .bone-slot-wrap { will-change: transform; }
     #root-gutterbones .bone-die-perspective { perspective: 720px; perspective-origin: 50% 50%; }
     #root-gutterbones .bone-die-btn {
-      width: 4rem; height: 4rem;
+      width: var(--gb-die); height: var(--gb-die);
       transform-style: preserve-3d;
       transform: translateZ(0) rotate(var(--rest-tilt, 0deg));
       transition: filter 180ms ease, opacity 180ms ease;
       background: transparent; border: none; padding: 0;
       box-shadow: none;
     }
-    @media (min-width: 640px) { #root-gutterbones .bone-die-btn { width: 5rem; height: 5rem; } }
-    @media (min-width: 768px) { #root-gutterbones .bone-die-btn { width: 6rem; height: 6rem; } }
     #root-gutterbones .bone-die-img {
       width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none;
       transform: translateZ(0); backface-visibility: hidden;
@@ -3143,7 +3220,7 @@ const GutterbonesGamble = (() => {
         }, [hint, onDone]);
         if (!hint) return null;
         return (
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[620] pointer-events-none w-[min(94vw,34rem)]">
+            <div data-layout-key="mechanic-toast" className="absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[620] pointer-events-none w-[min(94vw,34rem)] max-h-[40vh]">
                 <div className="readable-panel border-[#c78b16]/80 rounded-xl px-5 py-4">
                     <div className="font-mono text-xs text-[#ffd37a] tracking-[.25em] mb-2">{hint.title}</div>
                     <div className="font-mono text-sm text-gray-100 leading-relaxed">{hint.body}</div>
@@ -3332,13 +3409,13 @@ const GutterbonesGamble = (() => {
     };
 
     const HelpOverlay = ({ onClose }) => (
-        <div className="absolute inset-0 z-[760] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
-            <div className="w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-5 md:p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-4 border-b border-gray-700 pb-3">
-                    <h3 className="font-marker text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
+        <div className="absolute inset-0 z-[760] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
+            <div data-layout-key="help-dossier" className="gb-modal-fit w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-3 border-b border-gray-700 pb-3 shrink-0">
+                    <h3 className="font-marker text-2xl md:text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
                     <button onClick={onClose} className="font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
                 </div>
-                <div className="grid md:grid-cols-2 gap-4 text-sm font-mono">
+                <div className="gb-modal-body grid md:grid-cols-2 gap-3 md:gap-4 text-sm font-mono">
                     <div className="bg-black/50 border border-gray-700 rounded p-3">
                         <div className="text-[#0df] mb-2 tracking-wider">CORE LOOP</div>
                         <ul className="space-y-1 text-gray-200">
@@ -3441,8 +3518,8 @@ const GutterbonesGamble = (() => {
     );
 
     const CaseFilesPanel = ({ tab, onChangeTab, onClose }) => (
-        <div className="absolute inset-0 z-[740] bg-black/85 p-4 md:p-8 flex items-center justify-center" onClick={onClose}>
-            <div className="w-full max-w-4xl bg-[#101010] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute inset-0 z-[740] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
+            <div data-layout-key="case-files" className="gb-modal-fit w-full max-w-4xl bg-[#101010] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-700 pb-3 mb-4">
                     <div>
                         <h3 className="font-marker text-3xl text-[#ff007f] italic">CASE FILES</h3>
@@ -3455,7 +3532,7 @@ const GutterbonesGamble = (() => {
                     <button onClick={() => onChangeTab('bosses')} className={`px-3 py-2 font-mono text-xs border ${tab === 'bosses' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>HEAT BOSSES</button>
                     <button onClick={() => onChangeTab('archive')} className={`px-3 py-2 font-mono text-xs border ${tab === 'archive' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>ARCHIVE</button>
                 </div>
-                <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                <div className="gb-modal-body grid md:grid-cols-2 gap-3 pr-1">
                     {tab === 'personas' && PERSONAS.map((p) => (
                         <article key={p.id} className="border border-gray-700 bg-black/40 rounded p-3">
                             <div className="flex gap-3">
@@ -3612,6 +3689,7 @@ const GutterbonesGamble = (() => {
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
+        const [playDock, setPlayDock] = useState('lane');
         const [insaneContract, setInsaneContract] = useState(false);
         const [meta, setMeta] = useState(loadMetaState);
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
@@ -5125,8 +5203,23 @@ const GutterbonesGamble = (() => {
             setFixerLine(checks.every(check => check.pass) ? 'DEV smoke checks passed.' : 'DEV smoke checks found failures.');
         };
 
+        useEffect(() => {
+            if (typeof window === 'undefined') return;
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('layoutAudit') !== '1') return;
+            window.__GB_LAYOUT_AUDIT__ = {
+                resumeSavedRun: () => { const saved = loadSavedRun(); if (saved) resumeRun(); },
+                openHelp: () => setShowHelpOverlay(true),
+                openSystemMenu: () => setShowSystemMenu(true),
+                openLore: () => setShowLorePanel(true),
+                openFirstRun: () => setShowFirstRunOverlay(true),
+                openMechanicToast: () => setMechanicPopup(MECHANIC_HINTS.PILL),
+                getPhase: () => phase
+            };
+        }, [phase]);
+
         return (
-            <div className={`w-full h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
+            <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#262422_1px,transparent_1px),linear-gradient(180deg,rgba(255,0,127,0.05)_0%,rgba(0,221,255,0.05)_100%)] bg-[length:4px_4px,100%_100%] pointer-events-none z-0"></div>
                 {(phase === 'LINEUP' || phase === 'SAFEHOUSE') && <div className="meta-stairwell-backdrop" aria-hidden />}
                 <div className="ambient-grain"></div>
@@ -5286,15 +5379,19 @@ const GutterbonesGamble = (() => {
                 {cinematic && <div className="cinematic-iris"></div>}
                 {cinematic === 'bust' && <div className="cinematic-siren"></div>}
 
+                <div className="gb-app-shell">
                 {phase === 'LINEUP' && (
-                    <div className="h-full flex flex-col items-center justify-center relative z-20 overflow-y-auto p-6">
-                        <h1 className="font-marker text-[#ff007f] text-5xl md:text-7xl tracking-[0.12em] italic mb-3 animate-[flicker_4s_infinite]">{GAME_BRANDING.displayName}</h1>
-                        <div className="font-mono text-sm text-[#d6b85c] mb-6 flex flex-wrap gap-3 items-center justify-center">
+                    <div className="gb-screen relative z-20 p-[var(--gb-pad)]">
+                        <div className="shrink-0 text-center pt-1">
+                        <h1 data-layout-key="lineup-title" className="font-marker text-[#ff007f] tracking-[0.12em] italic mb-2 animate-[flicker_4s_infinite]" style={{ fontSize: 'var(--gb-title)' }}>{GAME_BRANDING.displayName}</h1>
+                        <div className="font-mono text-xs md:text-sm text-[#d6b85c] mb-2 flex flex-wrap gap-3 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
                             <span>Runs: <b>{meta.totalRuns}</b></span>
                         </div>
-                        <div className="grid md:grid-cols-4 gap-4 w-full max-w-6xl mb-8">
+                        </div>
+                        <div className="gb-panel-scroll w-full max-w-6xl mx-auto px-1">
+                        <div className="grid md:grid-cols-4 gap-3 md:gap-4 w-full mb-4">
                             {PERSONAS.map((p, i) => {
                                 const unlocked = meta.unlockedPersonaIds.includes(p.id);
                                 const unlock = SAFEHOUSE_UPGRADES.find(u => u.type === 'persona' && u.unlocks.includes(p.id));
@@ -5328,22 +5425,26 @@ const GutterbonesGamble = (() => {
                                 ))}
                             </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            {hasSavedRun && <button onClick={resumeRun} className="px-8 py-4 bg-[#0df] border-4 border-[#064b52] text-black text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
-                            <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-12 py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-xl md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
-                            <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-8 py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
-                            <button onClick={() => setPhase('SAFEHOUSE')} className="px-8 py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-xl md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
                         </div>
-                        <div className="mt-6 font-mono text-[10px] tracking-[0.18em] text-[#d6b85c]/70 text-center">
+                        <div className="shrink-0 w-full max-w-6xl mx-auto pt-2 pb-1">
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center">
+                            {hasSavedRun && <button data-layout-key="lineup-resume" onClick={resumeRun} className="px-4 py-2 md:px-8 md:py-4 bg-[#0df] border-4 border-[#064b52] text-black text-sm md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none transition-all">RESUME HUSTLE</button>}
+                            <button onClick={startRun} disabled={!selectedPersonaUnlocked} className="px-6 py-2 md:px-12 md:py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-sm md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
+                            <button onClick={() => setPhase('SAFEHOUSE')} className="px-4 py-2 md:px-8 md:py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
+                        </div>
+                        <div className="mt-2 font-mono text-[9px] tracking-[0.18em] text-[#d6b85c]/70 text-center">
                             Website &amp; contact:{' '}
                             <a href="https://lukeholmes.github.io/" target="_blank" rel="noopener noreferrer" className="text-[#0df] hover:text-white underline decoration-[#0df]/50 underline-offset-4">lukeholmes.github.io</a>
+                        </div>
                         </div>
                     </div>
                 )}
 
                 {phase === 'SAFEHOUSE' && (
-                    <div className="h-full flex items-center justify-center relative z-30 overflow-y-auto p-6 bg-black/50">
-                        <div className="w-full max-w-5xl bg-[#E2D1B8] text-black border-l-[18px] border-[#c4b59d] shadow-[10px_20px_30px_black] p-6 md:p-8">
+                    <div className="gb-screen relative z-30 flex p-[var(--gb-pad)] bg-black/50 items-center justify-center">
+                        <div data-layout-key="safehouse-card" className="gb-modal-fit w-full max-w-5xl bg-[#E2D1B8] text-black border-l-[18px] border-[#c4b59d] shadow-[10px_20px_30px_black] p-4 md:p-8 mx-auto">
+                            <div className="gb-modal-body pr-1">
                             <div className="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-black pb-4 mb-6 gap-3">
                                 <div><div className="font-marker text-4xl md:text-5xl">THE SAFEHOUSE</div><div className="font-mono text-sm opacity-70">Spend laundered cash on permanent contacts.</div></div>
                                 <div className="font-mono text-2xl text-green-800 font-bold">${meta.launderedCash}</div>
@@ -5366,9 +5467,10 @@ const GutterbonesGamble = (() => {
                                 <div><b>Contraband Faces:</b> {meta.unlockedFaceIds.length}/{Object.keys(FACE_DATABASE).length}</div>
                                 <div><b>Hardware:</b> {meta.unlockedHardwareIds.length}/{Object.keys(DEVISES).length}</div>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-2">
                                 <button onClick={() => { setLoreTab('bosses'); setShowLorePanel(true); }} className="px-8 py-3 bg-[#2a0017] text-[#ff9fcf] font-bold font-mono border-2 border-[#7a003d] hover:bg-[#3b0120] transition-colors">STREET INTEL</button>
                                 <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -5383,14 +5485,14 @@ const GutterbonesGamble = (() => {
                 )}
 
                 {phase === 'PLAY' && (
-                    <div className={`h-full flex flex-col p-3 md:p-6 max-w-7xl mx-auto z-40 relative ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
+                    <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
                         <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} />
-                        <div className="flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-3 md:mb-6 shadow-lg">
-                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug">{activeBoss.desc}</span></div></div>}
-                            <div className="flex justify-between items-center p-3 md:p-4">
-                                <div className="hidden sm:block">
+                        <div data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
+                            {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
+                            <div className="flex justify-between items-center p-2 md:p-4 gb-hud-compact-tight">
+                                <div className="hidden sm:block gb-hud-compact-hide">
                                     <div className="text-xs uppercase opacity-50">The Fixer</div>
                                     <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
                                     {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
@@ -5471,16 +5573,35 @@ const GutterbonesGamble = (() => {
                                     })}
                                 </div>
                             </div>
-                            <button onClick={() => setShowMobileStash(true)} className="md:hidden w-full bg-gray-800 text-gray-300 py-2 border-t border-gray-700 text-[10px] font-mono font-bold tracking-widest">OPEN STASH / HARDWARE</button>
+                            <div className="gb-play-dock px-2 pb-2 border-t border-gray-800 pt-2">
+                                {[
+                                    { id: 'lane', label: 'ALLEY' },
+                                    { id: 'payouts', label: 'PAYOUTS' },
+                                    { id: 'stash', label: 'STASH' }
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setPlayDock(tab.id);
+                                            setShowMobileStash(tab.id === 'stash');
+                                        }}
+                                        className={`py-2 font-mono text-[10px] border ${playDock === tab.id ? 'border-[#0df] text-[#0df] bg-cyan-950/30' : 'border-gray-700 text-gray-400'}`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
                             {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
                                 <div className="mx-3 md:mx-4 mb-1 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide">
                                     Tap a payout row on THE PAYOUTS to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.
                                 </div>
                             )}
                         </div>
-                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-6 min-h-0 overflow-hidden">
-                            <div className="order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-3 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-y-auto max-h-[26vh] md:max-h-full">
-                                <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 sticky top-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
+                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 overflow-hidden">
+                            <div className={`order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
+                                <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
+                                <div className="gb-panel-scroll min-h-0">
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     const availableSet = new Set(unlockInfo.available);
@@ -5504,8 +5625,9 @@ const GutterbonesGamble = (() => {
                                     if (unlockInfo.locked.length) rows.push(<CategoryUnlockFooter key="cat-unlock" meta={meta} />);
                                     return rows;
                                 })()}
+                                </div>
                             </div>
-                            <div className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-[36vh] md:min-h-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''}`}>
+                            <div data-layout-key="play-alley" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
@@ -5596,7 +5718,7 @@ const GutterbonesGamble = (() => {
                                     <button onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
                                 </div>
                             </div>
-                            <div className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-6 flex' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-4 min-h-0 overflow-y-auto pr-1`}>
+                            <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-4 min-h-0 overflow-hidden pr-1 ${playDock === 'stash' ? '' : ''} md:!flex`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div className="hidden md:flex flex-col gap-3">
                                     <BuildIndicator analysis={buildAnalysis} inline />
@@ -5682,9 +5804,10 @@ const GutterbonesGamble = (() => {
                 )}
 
                 {phase === 'GAMBLE' && (
-                    <div className="h-full flex items-center justify-center p-4 z-[320] relative overflow-hidden">
+                    <div className="gb-screen items-center justify-center p-[var(--gb-pad)] z-[320] relative">
                         <div className="gamble-backdrop" aria-hidden></div>
-                        <div className="w-full max-w-2xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-6 md:p-8 shadow-2xl relative z-10 max-h-[92vh] overflow-y-auto">
+                        <div data-layout-key="gamble-card" className="gb-modal-fit w-full max-w-2xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-4 md:p-8 shadow-2xl relative z-10">
+                            <div className="gb-modal-body pr-1">
                             <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
                             <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
                             <p className="font-mono text-xs text-gray-400 text-center mb-2">
@@ -5729,18 +5852,19 @@ const GutterbonesGamble = (() => {
                                     );
                                 })}
                             </div>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {phase === 'SHOP' && (
-                    <div className="h-full flex items-center justify-center p-3 md:p-12 z-[300] relative overflow-y-auto overflow-x-hidden">
+                    <div className="gb-screen p-[var(--gb-pad)] z-[300] relative">
                         <div className="shop-counting-cash-backdrop" aria-hidden></div>
-                        <div className="w-full max-w-6xl flex flex-col md:flex-row gap-4 md:gap-8 min-h-full py-8 md:py-0 relative z-10">
-                            <div className="flex-1 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-4 md:p-8 flex flex-col shadow-2xl">
+                        <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
+                            <div className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
                                 <p className="text-[10px] font-mono text-amber-200/85 mb-4 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">{shopItems.map(item => {
+                                <div className="gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 content-start">{shopItems.map(item => {
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
@@ -5756,7 +5880,7 @@ const GutterbonesGamble = (() => {
                                     </div>;
                                 })}</div>
                             </div>
-                            <div className="w-full md:w-1/3 bg-[#1a1a1a] border-4 border-gray-900 p-5 rounded-xl shadow-2xl flex flex-col">
+                            <div className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
                                 <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
@@ -5796,22 +5920,22 @@ const GutterbonesGamble = (() => {
                                     </div>
                                 </div>
                                 {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
-                                <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">{paths.map(p => <RouteChoiceCard key={p.id} path={p} projection={projectPath(p)} onPick={handleAdvance} />)}</div>
+                                <div className="gb-panel-scroll flex flex-col gap-3 pr-1">{paths.map(p => <RouteChoiceCard key={p.id} path={p} projection={projectPath(p)} onPick={handleAdvance} />)}</div>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {phase === 'CARVING' && (
-                    <div className="h-full flex items-center justify-center z-[400] relative overflow-y-auto overflow-x-hidden p-4 md:p-8">
+                    <div className="gb-screen items-center justify-center z-[400] relative p-[var(--gb-pad)]">
                         <div className="carving-mod-backdrop" aria-hidden></div>
-                        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl relative z-10">
-                            <div className="w-full md:w-1/3 bg-[#e8e6e1] text-gray-900 p-6 border-4 border-black shadow-2xl">
+                        <div data-layout-key="carving-layout" className="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
+                            <div className="w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
                             </div>
-                            <div className="flex-1 bg-[#2b1414] border-[12px] border-[#111] rounded-2xl p-6 md:p-12 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black]">
+                            <div className="flex-1 min-h-0 bg-[#2b1414] border-[8px] md:border-[12px] border-[#111] rounded-2xl p-4 md:p-8 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black] overflow-hidden">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">
                                     {carvingDie === null ? dice.map((d, i) => (
                                         <CarvingDieTile key={d.id} die={d} onClick={() => setCarvingDie(i)} slotLabel={`BONE ${i + 1}`} />
@@ -5827,14 +5951,15 @@ const GutterbonesGamble = (() => {
                 )}
 
                 {phase === 'RAP_SHEET' && (
-                    <div className="h-full flex items-center justify-center z-[500] relative overflow-y-auto overflow-x-hidden p-4">
+                    <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="rap-busted-backdrop" aria-hidden></div>
-                        <div className="paper-card bg-[#E2D1B8] w-full max-w-2xl max-h-[min(92vh,760px)] overflow-y-auto p-6 md:p-8 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                        <div data-layout-key="rap-sheet" className="paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                            <div className="gb-modal-body pr-1">
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
-                            <div className="border border-black p-4 bg-white/50 mb-4 relative min-h-[7rem]">
-                                <div className="font-mono text-xs opacity-70 mb-2">Hand History:</div>
-                                <HistoryPanel history={history} />
+                            <div className="border border-black p-3 bg-white/50 mb-3 relative min-h-0 max-h-[28vh] md:max-h-[32vh] overflow-hidden flex flex-col">
+                                <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
+                                <div className="gb-panel-scroll min-h-0"><HistoryPanel history={history} /></div>
                                 {showIncarceratedStamp && (
                                     <div className="absolute top-2 right-2 border-[4px] border-[#d30000] text-[#d30000] font-marker px-3 py-1.5 text-lg md:text-xl rotate-[-10deg] bg-white/92 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10 whitespace-nowrap max-w-[85%]">
                                         INCARCERATED
@@ -5842,23 +5967,27 @@ const GutterbonesGamble = (() => {
                                 )}
                             </div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
-                            <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
+                            <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="shrink-0 mt-2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {phase === 'VICTORY' && (
-                    <div className="h-full flex items-center justify-center z-[500] relative overflow-hidden p-4">
+                    <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="victory-escape-backdrop" aria-hidden></div>
                         <CashRain count={30} reducedMotion={reducedMotion} />
-                        <div className="paper-card bg-[#e8e6e1] p-4 pb-14 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-md rotate-3" style={{ '--paper-rot': '3deg' }}>
-                            <div className="bg-[#111] h-[300px] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
-                            <div className="text-center mt-6"><div className="font-marker text-4xl text-black rotate-2">See ya, Lou.</div><svg viewBox="0 0 220 70" className="mx-auto mt-1 w-44"><path className="signature-path" d="M10 44 C40 8, 55 64, 88 32 C115 8, 120 58, 155 30 C170 18, 186 26, 208 18" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/></svg><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
+                        <div data-layout-key="victory-card" className="paper-card gb-modal-fit bg-[#e8e6e1] p-4 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-md rotate-3" style={{ '--paper-rot': '3deg' }}>
+                            <div className="gb-modal-body">
+                            <div className="bg-[#111] h-[min(38vh,220px)] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-xl md:text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
+                            <div className="text-center mt-4"><div className="font-marker text-3xl md:text-4xl text-black rotate-2">See ya, Lou.</div><svg viewBox="0 0 220 70" className="mx-auto mt-1 w-44"><path className="signature-path" d="M10 44 C40 8, 55 64, 88 32 C115 8, 120 58, 155 30 C170 18, 186 26, 208 18" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/></svg><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
-                            <button onClick={() => setPhase('LINEUP')} className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
+                            </div>
+                            <button onClick={() => setPhase('LINEUP')} className="shrink-0 mt-3 w-full px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
                         </div>
                     </div>
                 )}
+                </div>
             </div>
         );
     }
