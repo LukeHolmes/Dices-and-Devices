@@ -123,7 +123,7 @@ test("Phase 6d input UX hooks present", () => {
 
 test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /openingStashGrant:\s*25/);
-  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1200/);
+  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1400/);
   assert.match(appSource, /getScoreOverlayLifetimeMs/);
   assert.match(appSource, /overlayTailMs/);
   assert.match(appSource, /applyDevSynergyDemoDice/);
@@ -184,6 +184,22 @@ test("Phase 6c safehouse and favicon polish", () => {
   assert.match(appSource, /displayNameForUnlockId/);
   assert.match(storySource, /PANEL_ART_AVAILABLE/);
   assert.match(appSource, /TODO\(art\): card-counter\.png/);
+});
+
+test("Pro polish roll and transition hooks", () => {
+  assert.match(appSource, /transitionToPhase/);
+  assert.match(appSource, /DICE_LAND_STAGGER_MS/);
+  assert.match(appSource, /AudioSystem\.dieThud/);
+  assert.match(appSource, /score-row-fixed/);
+  assert.match(appSource, /tutorial-coach-mask/);
+  assert.match(appSource, /roll-ready-pulse/);
+  assert.match(html, /@keyframes rollReadyPulse[\s\S]*?box-shadow: 0 6px 0 #7a003d/);
+  assert.doesNotMatch(html, /@keyframes rollReadyPulse[\s\S]*?translateY\(-1px\)/);
+  const audioSource = fs.readFileSync(
+    path.join(__dirname, "../assets/audio/gutterbones-audio.js"),
+    "utf8",
+  );
+  assert.match(audioSource, /dieThud\(/);
 });
 
 test("Referenced local artwork exists", () => {
