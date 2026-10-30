@@ -142,6 +142,21 @@ test("No-scroll layout shell (Oct 2026)", () => {
   assert.match(appSource, /gb-play-dock/);
 });
 
+test("Release prep — title, settings, analytics, manifest (Oct 2026)", () => {
+  assert.match(html, /coldforge\.goatcounter\.com\/count/);
+  assert.match(html, /gutterbonesTrack/);
+  assert.match(html, /rel="manifest" href="manifest\.json"/);
+  assert.match(html, /property="og:title"/);
+  assert.match(appSource, /TitleScreen/);
+  assert.match(appSource, /GameSettingsPanel/);
+  assert.match(appSource, /data-layout-key="title-screen"/);
+  assert.match(appSource, /data-layout-key="settings-panel"/);
+  assert.match(appSource, /gutterbonesTrack\(daily \? 'daily_start' : 'run_start'\)/);
+  assert.match(appSource, /gutterbonesTrack\('run_end', \{ round \}\)/);
+  assert.match(appSource, /gutterbonesTrack\('tutorial_complete'\)/);
+  assert.ok(fs.existsSync(path.join(__dirname, "..", "manifest.json")), "manifest.json");
+});
+
 test("Playtest 4 fixes (Oct 2026)", () => {
   assert.match(html, /rel="icon"[^>]+favicon\.ico/);
   assert.match(appSource, /CarvingDieTile/);
