@@ -18,7 +18,16 @@
 <meta name="twitter:image" content="gutterbones-card.png">
 <meta name="theme-color" content="#121113">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" id="gb-favicon" href="favicon.ico" sizes="any">
+<script>
+(function gutterbonesFaviconBase() {
+    var pathname = window.location.pathname || '/';
+    var assetBase = pathname.indexOf('/Dices-and-Devices') === 0 ? '/Dices-and-Devices/' : '';
+    if (!assetBase) return;
+    var el = document.getElementById('gb-favicon');
+    if (el) el.setAttribute('href', assetBase + 'favicon.ico');
+})();
+</script>
 <link rel="apple-touch-icon" href="gutterbones-card.png">
 <link rel="preload" as="image" href="assets/dice/die-1.png">
 <link rel="preload" as="image" href="assets/dice/die-2.png">
@@ -253,6 +262,59 @@
         max-height: 3.35rem;
         align-items: center;
         overflow: hidden;
+    }
+    #root-gutterbones .payout-sheet-rows {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    #root-gutterbones .payout-sheet-rows .score-row-fixed {
+        flex: 1 1 0;
+        min-height: 0;
+        max-height: none;
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+    }
+    #root-gutterbones .gb-brand-title {
+        max-width: 100%;
+        line-height: 1.05;
+        letter-spacing: 0.05em;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        padding-inline: 0.15rem;
+    }
+    #root-gutterbones .lineup-persona-grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+        overflow: hidden;
+        align-content: stretch;
+    }
+    @container gutterbones (min-width: 900px) {
+        #root-gutterbones .lineup-persona-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+    #root-gutterbones .lineup-persona-card {
+        min-height: 0;
+        overflow: hidden;
+    }
+    #root-gutterbones .lineup-persona-card .lineup-portrait {
+        height: clamp(4.5rem, 14vmin, 7rem);
+    }
+    #root-gutterbones .roll-ready-pulse {
+        animation: none;
+    }
+    #root-gutterbones .roll-ready-pulse-inner {
+        animation: rollReadyPulse 1.95s ease-in-out infinite;
+    }
+    #root-gutterbones .gb-roll-btn-squash .roll-ready-pulse-inner {
+        animation: none;
     }
     #root-gutterbones .score-row-valid-accent {
         box-shadow: inset 4px 0 0 rgba(0, 221, 255, 0.85), 0 0 18px rgba(0, 221, 255, 0.12);
@@ -966,7 +1028,6 @@
         filter: drop-shadow(0 0 18px var(--preview-tint, rgba(0,221,255,.65))) saturate(1.15) brightness(1.06);
     }
     #root-gutterbones .score-row-danger { animation: scoreBustWarn 1.35s ease-in-out infinite; }
-    #root-gutterbones .roll-ready-pulse { animation: rollReadyPulse 1.95s ease-in-out infinite; }
     #root-gutterbones .pressure-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 22; mix-blend-mode: screen; }
     #root-gutterbones .pressure-overlay.low { background: radial-gradient(circle at 50% 90%, rgba(255,109,89,.36) 0%, rgba(255,109,89,0) 62%); animation: pressureLow 2.7s ease-in-out infinite; }
     #root-gutterbones .pressure-overlay.high { background: radial-gradient(circle at 50% 90%, rgba(255,0,110,.45) 0%, rgba(255,0,110,0) 68%); animation: pressureHigh 1.15s ease-in-out infinite; }
@@ -1808,7 +1869,7 @@ const GutterbonesTutorial = (() => {
             id: 'quota',
             advance: 'ack',
             focus: 'heat-quota',
-            caption: 'Heat climbs toward the quota. Burn through your plays before the street goes cold.'
+            caption: 'Tutorial quota is soft (28 heat) — real contracts start around 90. Watch STREET HEAT climb; bank enough rows to clear before plays run out.'
         },
         {
             id: 'pill',
@@ -2290,16 +2351,16 @@ const GutterbonesRoutes = (() => {
     const ROUND_CURVE_TUNING = Object.freeze({
         earlyMaxRound: 4,
         midMaxRound: 7,
-        early: { pathModWeight: 0.72, flatIncrease: 22 },
-        mid: { pathModWeight: 0.92, flatIncrease: 44 },
-        late: { pathModWeight: 1.08, flatIncrease: 52 }
+        early: { pathModWeight: 0.72, flatIncrease: 16 },
+        mid: { pathModWeight: 0.88, flatIncrease: 28 },
+        late: { pathModWeight: 1.02, flatIncrease: 38 }
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
         minGrowthRate: 1.08,
-        earlyMaxGrowthRate: 1.35,
-        midMaxGrowthRate: 1.42,
-        lateMaxGrowthRate: 1.5
+        earlyMaxGrowthRate: 1.2,
+        midMaxGrowthRate: 1.24,
+        lateMaxGrowthRate: 1.28
     });
 
     const INSANE_CONTRACT_MODIFIERS = Object.freeze({
@@ -3183,13 +3244,16 @@ const GutterbonesGamble = (() => {
 
     const ECONOMY_TUNING = {
         shortageToDebtRatio: 0.82,
-        hustleCashDivisor: 175,
-        hustleCashCap: 3,
+        hustleCashDivisor: 115,
+        hustleCashCap: 9,
         debtReliefThreshold: 195,
         debtReliefPerBigHand: 1,
         /** Stash % gained per scored hand (lower = tighter programs economy). */
         stashFillRate: 1.55,
-        stashFillCap: 46
+        stashFillCap: 46,
+        round1HeatCapRatio: 1.22,
+        round1OverkillCashDivisor: 48,
+        round1OverkillCashCap: 12
     };
 
     const BOSS_TUNING = {
@@ -3210,7 +3274,7 @@ const GutterbonesGamble = (() => {
 
     const FIRST_RUN_TUNING = {
         enabled: true,
-        openingTarget: 70,
+        openingTarget: 90,
         enforcerRound1Pills: 1
     };
 
@@ -3228,16 +3292,16 @@ const GutterbonesGamble = (() => {
     const ROUND_CURVE_TUNING = {
         earlyMaxRound: 4,
         midMaxRound: 7,
-        early: { pathModWeight: 0.72, flatIncrease: 22 },
-        mid: { pathModWeight: 0.92, flatIncrease: 44 },
-        late: { pathModWeight: 1.08, flatIncrease: 52 }
+        early: { pathModWeight: 0.72, flatIncrease: 16 },
+        mid: { pathModWeight: 0.88, flatIncrease: 28 },
+        late: { pathModWeight: 1.02, flatIncrease: 38 }
     };
 
     const PROGRESSION_GUARDRAILS = {
         minGrowthRate: 1.08,
-        earlyMaxGrowthRate: 1.35,
-        midMaxGrowthRate: 1.42,
-        lateMaxGrowthRate: 1.5,
+        earlyMaxGrowthRate: 1.2,
+        midMaxGrowthRate: 1.24,
+        lateMaxGrowthRate: 1.28,
         dangerCapRound: 6,
         maxEarlyDangerOffers: 1
     };
@@ -4091,17 +4155,19 @@ const GutterbonesGamble = (() => {
                     <span className="absolute left-2 right-2 -top-1 z-20 translate-y-[-100%] bg-red-950 border border-red-500/70 text-red-100 text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none">{bustHint}</span>
                 )}
                 {hover && rowCanScore && result.valid && <ScorePreview result={result} />}
-                <span className="flex flex-col items-start min-w-0 truncate">
-                    <span className="flex items-center gap-1 truncate max-w-full">
-                        <span className="truncate">{cat.name}</span>
-                        <span className="text-[10px] px-1 rounded border border-gray-500 text-gray-600 shrink-0">LV{handLevel}</span>
-                    </span>
-                    {masteryBonus > 0 && <span className="text-[10px] text-green-700 font-mono truncate">+{masteryBonus} mastery</span>}
-                    <span className={`flex flex-wrap gap-1 min-h-[14px] ${showTriggers ? '' : 'invisible'}`} aria-hidden={!showTriggers}>
-                        {triggers.map((t, i) => <span key={i} className="preview-badge badge-pop" style={{ animationDelay: `${i * 80}ms` }}>{t.name} {t.value}</span>)}
-                    </span>
+                <span className="flex items-center gap-1 min-w-0 truncate max-w-[72%]">
+                    <span className="truncate">{cat.name}</span>
+                    <span className="text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
+                    {masteryBonus > 0 && (
+                        <span className="text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
+                    )}
+                    {showTriggers && (
+                        <span className="sr-only">{triggers.map((t) => `${t.name} ${t.value}`).join(', ')}</span>
+                    )}
                 </span>
-                <span className="shrink-0 ml-2">{used ? <span className="paid-stamp">PAID</span> : (rowCanScore && result.valid ? result.total : (rowCanScore ? 'BUST' : '-'))}</span>
+                <span className="shrink-0 ml-1 flex items-center justify-end min-w-[2.75rem]">
+                    {used ? <span className="paid-stamp text-[0.65rem] leading-none">PAID</span> : (rowCanScore && result.valid ? result.total : (rowCanScore ? 'BUST' : '-'))}
+                </span>
             </button>
         );
     };
@@ -4374,9 +4440,10 @@ const GutterbonesGamble = (() => {
                 height: spot.height + pad * 2
             }
             : null;
-        const captionOnTop = cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.52 : 400);
+        const hudFocus = step.focus === 'heat-quota' || step.focus === 'roll-btn';
+        const captionOnTop = hudFocus || (cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.48 : 400));
         const cardClass = captionOnTop
-            ? 'tutorial-coach-card absolute top-[max(0.75rem,env(safe-area-inset-top))] left-3 right-3 md:left-6 md:right-auto md:max-w-md'
+            ? 'tutorial-coach-card absolute top-[max(3.25rem,env(safe-area-inset-top))] left-3 right-3 md:left-6 md:right-auto md:max-w-sm'
             : 'tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md';
         const maskId = 'gb-tutorial-spot-mask';
         return (
@@ -4763,7 +4830,7 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, upcomingPaths = [], inline = false }) => (
+    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, inventory = [], upcomingPaths = [], inline = false }) => (
         <div className={`${inline ? 'relative w-full' : 'absolute top-16 right-4 z-[80] w-[min(88vw,21rem)]'} readable-panel rounded-xl p-4 text-xs font-mono`}>
             <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
             <div className="space-y-2 text-gray-100">
@@ -4823,6 +4890,18 @@ const GutterbonesGamble = (() => {
                     </div>
                 ) : (
                     <div className="text-gray-300">None active.</div>
+                )}
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-800">
+                <div className="text-gray-400 mb-1 tracking-[.12em]">HARDWARE</div>
+                {inventory?.length ? (
+                    <div className="text-cyan-200 space-y-0.5 leading-snug">
+                        {inventory.map((item, idx) => (
+                            <div key={item.instanceId || `${item.id}-${idx}`}>{item.name}</div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-gray-300">None equipped.</div>
                 )}
             </div>
             <div className="mt-2 pt-2 border-t border-gray-800">
@@ -4936,85 +5015,89 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const HelpOverlay = ({ onClose, onReplayTutorial }) => (
-        <div className="absolute inset-0 z-[760] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
-            <div data-layout-key="help-dossier" className="gb-modal-fit w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-3 border-b border-gray-700 pb-3 shrink-0">
-                    <h3 className="font-marker text-2xl md:text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
-                    <button onClick={onClose} className="font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
-                </div>
-                {onReplayTutorial && (
-                    <button type="button" onClick={onReplayTutorial} className="mb-3 w-full py-2 border border-[#0df]/60 text-[#0df] font-mono text-xs tracking-wider hover:bg-[#0df]/10 rounded shrink-0">
-                        REPLAY — LEARN THE HUSTLE
-                    </button>
-                )}
-                <div className="gb-modal-body grid md:grid-cols-2 gap-3 md:gap-4 text-sm font-mono">
-                    <div className="bg-black/50 border border-gray-700 rounded p-3">
-                        <div className="text-[#0df] mb-2 tracking-wider">CORE LOOP</div>
-                        <ul className="space-y-1 text-gray-200">
-                            <li>1. Roll bones.</li>
-                            <li>2. Keep what you want.</li>
-                            <li>3. Pick one payout row.</li>
-                            <li>4. Beat quota (heat ≥ target) before plays run out.</li>
-                        </ul>
+    const HelpOverlay = ({ onClose, onReplayTutorial }) => {
+        const [helpTab, setHelpTab] = useState('core');
+        const tabs = [
+            { id: 'core', label: 'CORE' },
+            { id: 'quota', label: 'QUOTA' },
+            { id: 'stash', label: 'STASH' },
+            { id: 'routes', label: 'ROUTES' }
+        ];
+        const panelClass = 'bg-black/50 border border-gray-700 rounded p-3 text-gray-200';
+        return (
+            <div className="absolute inset-0 z-[760] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
+                <div data-layout-key="help-dossier" className="gb-modal-fit w-full max-w-2xl bg-[#1a1a1a] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl flex flex-col overflow-hidden max-h-[min(92dvh,720px)]" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-3 border-b border-gray-700 pb-3 shrink-0">
+                        <h3 className="font-marker text-2xl md:text-3xl text-[#ff007f] italic">HELP DOSSIER</h3>
+                        <button onClick={onClose} className="font-mono text-sm text-gray-400 hover:text-white">CLOSE</button>
                     </div>
-                    <div className="bg-black/50 border border-gray-700 rounded p-3">
-                        <div className="text-[#0df] mb-2 tracking-wider">QUOTA &amp; PLAYS</div>
-                        <ul className="space-y-1 text-gray-200">
-                            <li>Heat is the score you bank toward the round quota.</li>
-                            <li>Each payout row you use costs one play.</li>
-                            <li>Invalid hands score 0 but still consume a play.</li>
-                            <li>Debt and some bosses raise pressure on later rounds.</li>
-                        </ul>
+                    {onReplayTutorial && (
+                        <button type="button" onClick={onReplayTutorial} className="mb-3 w-full py-2 border border-[#0df]/60 text-[#0df] font-mono text-sm tracking-wider hover:bg-[#0df]/10 rounded shrink-0">
+                            REPLAY — LEARN THE HUSTLE
+                        </button>
+                    )}
+                    <div className="flex flex-wrap gap-1 mb-3 shrink-0">
+                        {tabs.map((t) => (
+                            <button key={t.id} type="button" onClick={() => setHelpTab(t.id)} className={`px-3 py-1.5 font-mono text-sm border rounded ${helpTab === t.id ? 'border-[#0df] text-[#0df] bg-cyan-950/30' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>{t.label}</button>
+                        ))}
                     </div>
-                    <div className="bg-black/50 border border-gray-700 rounded p-3">
-                        <div className="text-[#0df] mb-2 tracking-wider">PILLS + STASH</div>
-                        <ul className="space-y-1 text-gray-200">
-                            <li>Pills reroll one slot immediately (PILL badge on each bone).</li>
-                            <li>Stash fills from strong hands.</li>
-                            <li>SNIFF rerolls one random free slot.</li>
-                            <li>BRIBE, FIX GAME, and LAUNDER spend stash.</li>
-                        </ul>
-                    </div>
-                    <div className="bg-black/50 border border-gray-700 rounded p-3">
-                        <div className="text-[#0df] mb-2 tracking-wider">HEAT BOSSES</div>
-                        <ul className="space-y-1 text-gray-200 text-[11px] leading-relaxed">
-                            {Object.values(BOSSES).map((boss) => (
-                                <li key={boss.id}><span className={boss.color}>{boss.name}:</span> {boss.desc}</li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
-                        <div className="text-[#0df] mb-2 tracking-wider">ROUTES &amp; GAMBLE</div>
-                        <ul className="space-y-1 text-gray-200 text-[11px] leading-relaxed mb-3">
-                            <li><span className="text-[#f4d67b]">BACK ALLEY:</span> Standard quota curve — safe default.</li>
-                            <li><span className="text-[#c78b16]">PAWN SHOP:</span> Higher quota for +$15 cash on pick.</li>
-                            <li><span className="text-cyan-400">SAFEHOUSE CUT:</span> Moderate quota, +1 play, −1 pill.</li>
-                            <li><span className="text-emerald-400">SMUGGLE RUN:</span> High quota, cash, and a random one-shot.</li>
-                            <li><span className="text-[#ff007f]">VIP ROOM:</span> Steep quota but refills stash to 100%.</li>
-                            <li><span className="text-red-400">TURF WAR:</span> From round 4 on even shop stops — last route adds a boss (quota rules on the banner).</li>
-                        </ul>
-                        <p className="text-gray-200 text-[11px] leading-relaxed mb-2">
-                            <span className="text-[#0df]">Double or nothing</span> appears when you clear a round with ${GAMBLE_TUNING.minStake}+ cash from round {GAMBLE_TUNING.minRound} onward.
-                            <b className="text-gray-100"> Safe cut</b> keeps all cash and skips the flip;
-                            <b className="text-gray-100"> Flip tiers</b> — Soft (better odds, smaller stake), Fair (50/50), Hard (lower odds, +50% win payout). Flow streak adds a small win bonus (up to +{Math.round(GAMBLE_TUNING.flowWinBonusCap * 100)}%).
-                        </p>
-                        <p className="text-gray-200 text-[11px] leading-relaxed">
-                            <span className="text-[#0df]">Side bets</span> lock before your first roll. Threshold starts at {WAGER_TUNING.baseThreshold} heat and rises +{WAGER_TUNING.roundThresholdStep} each round.
-                            Wins pay about {WAGER_TUNING.payoutMultiplier}× stake (stake is spent when you place the bet).
-                        </p>
-                    </div>
-                    <div className="bg-black/50 border border-gray-700 rounded p-3 md:col-span-2">
-                        <div className="text-[#0df] mb-2 tracking-wider">SURVIVAL NOTES</div>
-                        <p className="text-gray-200 leading-relaxed">
-                            Cash keeps you flexible in the shop; stash keeps you alive mid-round.
-                            Locked payout rows on the sheet unlock as you survive more runs — the fixer does not trust you with the full board on night one.
-                        </p>
+                    <div className="gb-modal-body min-h-0 overflow-hidden text-base font-mono leading-relaxed">
+                        {helpTab === 'core' && (
+                            <div className={`${panelClass} space-y-2`}>
+                                <div className="text-[#0df] tracking-wider text-sm">CORE LOOP</div>
+                                <ul className="space-y-1.5 list-decimal list-inside">
+                                    <li>Roll bones.</li>
+                                    <li>Keep faces you want.</li>
+                                    <li>Score one payout row per play.</li>
+                                    <li>Beat the round quota before plays run out.</li>
+                                </ul>
+                                <p className="text-sm text-gray-300 pt-2 border-t border-gray-700">Locked payout rows unlock as you finish more runs — the fixer opens the full sheet slowly.</p>
+                            </div>
+                        )}
+                        {helpTab === 'quota' && (
+                            <div className={`${panelClass} space-y-2`}>
+                                <div className="text-[#0df] tracking-wider text-sm">QUOTA &amp; PLAYS</div>
+                                <ul className="space-y-1.5">
+                                    <li>Heat banks toward the round quota shown in the HUD.</li>
+                                    <li>Standard contracts open at {EARLY_GAME_TUNING.openingTarget} heat (tutorial uses {GutterbonesTutorial?.TUNING?.roundTarget || 28}).</li>
+                                    <li>Each scored row costs one play; busts still cost a play.</li>
+                                    <li>Quota ramps ~15–20% per Back Alley route in early rounds.</li>
+                                </ul>
+                                <div className="text-sm pt-2 border-t border-gray-700 space-y-1">
+                                    {Object.values(BOSSES).map((boss) => (
+                                        <div key={boss.id}><span className={boss.color}>{boss.name}:</span> {boss.desc}</div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {helpTab === 'stash' && (
+                            <div className={`${panelClass} space-y-2`}>
+                                <div className="text-[#0df] tracking-wider text-sm">PILLS, STASH, CASH</div>
+                                <ul className="space-y-1.5">
+                                    <li>Pills reroll one slot (PILL badge on each bone).</li>
+                                    <li>Stash fills from strong hands — spend on SNIFF, BRIBE, FIX GAME, LAUNDER.</li>
+                                    <li>Hustle cash: +$1–${ECONOMY_TUNING.hustleCashCap} per scored hand from heat ÷ {ECONOMY_TUNING.hustleCashDivisor} (shown as HUSTLE +$ in the alley).</li>
+                                </ul>
+                            </div>
+                        )}
+                        {helpTab === 'routes' && (
+                            <div className={`${panelClass} space-y-2 text-sm`}>
+                                <div className="text-[#0df] tracking-wider">ROUTES, GAMBLE, SIDE BETS</div>
+                                <ul className="space-y-1.5 mb-2">
+                                    <li><span className="text-[#f4d67b]">BACK ALLEY:</span> Standard quota curve.</li>
+                                    <li><span className="text-[#c78b16]">PAWN SHOP:</span> Higher quota, +$15 cash.</li>
+                                    <li><span className="text-cyan-400">SAFEHOUSE CUT:</span> +1 play, −1 pill.</li>
+                                    <li><span className="text-emerald-400">SMUGGLE RUN:</span> High quota, cash, random one-shot.</li>
+                                    <li><span className="text-[#ff007f]">VIP ROOM:</span> Steep quota, refills stash.</li>
+                                </ul>
+                                <p>Double-or-nothing from round {GAMBLE_TUNING.minRound} with ${GAMBLE_TUNING.minStake}+ cash. Side bets lock before the first roll (threshold {WAGER_TUNING.baseThreshold}+ heat, +{WAGER_TUNING.roundThresholdStep}/round).</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const TitleScreen = ({
         onPlay,
@@ -5028,7 +5111,7 @@ const GutterbonesGamble = (() => {
         <div className="gb-screen relative z-30 p-[var(--gb-pad)] items-center justify-center">
             <div className="meta-stairwell-backdrop" aria-hidden />
             <div data-layout-key="title-screen" className="relative z-10 w-full max-w-lg max-h-full text-center flex flex-col items-center gap-3 md:gap-6 overflow-hidden">
-                <h1 className="font-marker text-[#ff007f] tracking-[0.14em] italic animate-[flicker_4s_infinite]" style={{ fontSize: 'clamp(2.5rem, 8vw, 4.5rem)' }}>
+                <h1 data-layout-key="title-logo" className="gb-brand-title font-marker text-[#ff007f] italic animate-[flicker_4s_infinite]" style={{ fontSize: 'clamp(1.65rem, min(7.5vw, 6.5vmin), 3.5rem)' }}>
                     {GAME_BRANDING.displayName}
                 </h1>
                 <p className="font-mono text-sm text-[#d6b85c]/90 max-w-md leading-relaxed">
@@ -5369,7 +5452,10 @@ const GutterbonesGamble = (() => {
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
         const [meta, setMeta] = useState(loadMetaState);
-        const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
+        const [hasSavedRun, setHasSavedRun] = useState(() => {
+            const saved = loadSavedRun();
+            return !!(saved && !saved.tutorialActive);
+        });
         const [lastLaundered, setLastLaundered] = useState(0);
         const [runClosed, setRunClosed] = useState(false);
         const [reducedMotion, setReducedMotion] = useState(() => {
@@ -5694,6 +5780,8 @@ const GutterbonesGamble = (() => {
             setTutorialActive(false);
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
+            clearSavedRun();
+            setHasSavedRun(false);
             patchSettings({ tutorialCompleted: true });
             if (typeof window.gutterbonesTrack === 'function') window.gutterbonesTrack('tutorial_complete');
         };
@@ -5702,6 +5790,11 @@ const GutterbonesGamble = (() => {
             setTutorialActive(false);
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
+            clearSavedRun();
+            setHasSavedRun(false);
+            setPhase('LINEUP');
+            setLineupToast('Tutorial skipped — no saved run. Choose an operator and start a new contract.');
+            scheduleTimeout(() => setLineupToast(null), 4500);
         };
 
         const notifyTutorial = (action) => {
@@ -5936,11 +6029,13 @@ const GutterbonesGamble = (() => {
             runStats,
             runModifierIds,
             dailyRunActive,
-            modifierFlags: modifierFlagsRef.current
+            modifierFlags: modifierFlagsRef.current,
+            tutorialActive: false
         });
 
         const persistRun = (phaseOverride = phase) => {
             if (runClosed || !RUN_PHASES.includes(phaseOverride)) return;
+            if (tutorialActiveRef.current) return;
             const snapshot = serializeRun(phaseOverride);
             saveSavedRun(snapshot);
             setHasSavedRun(true);
@@ -5949,6 +6044,13 @@ const GutterbonesGamble = (() => {
         const resumeRun = () => {
             const saved = loadSavedRun();
             if (!saved) return;
+            if (saved.tutorialActive) {
+                clearSavedRun();
+                setHasSavedRun(false);
+                setLineupToast('Tutorial runs are not saved — pick an operator for a new run.');
+                scheduleTimeout(() => setLineupToast(null), 4500);
+                return;
+            }
             const savedPersona = PERSONAS.find(p => p.id === saved.personaId) || PERSONAS[saved.personaIdx] || PERSONAS[0];
             setPersona(savedPersona);
             setPersonaIdx(Math.max(0, PERSONAS.findIndex(p => p.id === savedPersona.id)));
@@ -6838,13 +6940,30 @@ const GutterbonesGamble = (() => {
                     ...prev,
                     [catId]: Math.min(HAND_MASTERY_TUNING.maxLevel, (prev[catId] || HAND_MASTERY_TUNING.baseLevel) + 1)
                 }));
-                const nextScore = score + result.total;
+                let heatBanked = result.total;
+                let overkillCash = 0;
+                if (round === 1 && currentTarget > 0) {
+                    const heatCap = Math.floor(currentTarget * (ECONOMY_TUNING.round1HeatCapRatio || 1.22));
+                    if (result.total > heatCap) {
+                        overkillCash = Math.min(
+                            ECONOMY_TUNING.round1OverkillCashCap || 12,
+                            Math.floor((result.total - heatCap) / (ECONOMY_TUNING.round1OverkillCashDivisor || 48))
+                        );
+                        heatBanked = heatCap;
+                    }
+                }
+                const nextScore = score + heatBanked;
                 setScore(nextScore);
-                setRunStats(s => ({ ...s, totalHeat: s.totalHeat + result.total, biggestHustle: Math.max(s.biggestHustle, result.total) }));
+                setRunStats(s => ({ ...s, totalHeat: s.totalHeat + heatBanked, biggestHustle: Math.max(s.biggestHustle, result.total) }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
                 const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
-                if (hustleCash > 0) setGold(g => g + hustleCash);
-                projectedCash = Math.max(0, gold + (result.gDelta || 0) + hustleCash);
+                const bonusCash = hustleCash + overkillCash;
+                if (bonusCash > 0) {
+                    setGold(g => g + bonusCash);
+                    spawnFlying(bonusCash);
+                    if (hustleCash > 0) spawnPaperStamp(`HUSTLE +$${hustleCash}`, '#0f766e');
+                }
+                projectedCash = Math.max(0, gold + (result.gDelta || 0) + bonusCash);
                 settlementCash = projectedCash;
                 if (result.total >= ECONOMY_TUNING.debtReliefThreshold) {
                     setDebt(d => Math.max(0, d - ECONOMY_TUNING.debtReliefPerBigHand));
@@ -7703,6 +7822,7 @@ const GutterbonesGamble = (() => {
                             routeEffect={currentRouteEffect}
                             boss={activeBoss}
                             consumables={consumables}
+                            inventory={inventory}
                             upcomingPaths={shopRoutePreviews}
                         />
                     </>
@@ -7774,61 +7894,73 @@ const GutterbonesGamble = (() => {
 
                 <div className={`gb-app-shell${screenTransition === 'out' ? ' gb-screen-transition-out' : screenTransition === 'in' ? ' gb-screen-transition-in' : ''}`}>
                 {phase === 'LINEUP' && (
-                    <div className="gb-screen relative z-20 p-[var(--gb-pad)]">
-                        <div className="shrink-0 text-center pt-1">
-                        <h1 data-layout-key="lineup-title" className="font-marker text-[#ff007f] tracking-[0.12em] italic mb-2 animate-[flicker_4s_infinite]" style={{ fontSize: 'var(--gb-title)' }}>{GAME_BRANDING.displayName}</h1>
-                        <div className="font-mono text-xs md:text-sm text-[#d6b85c] mb-2 flex flex-wrap gap-3 items-center justify-center">
+                    <div className="gb-screen relative z-20 p-[var(--gb-pad)] min-h-0">
+                        <div className="shrink-0 text-center pt-0.5">
+                        <h1 data-layout-key="lineup-title" className="gb-brand-title font-marker text-[#ff007f] italic mb-1 animate-[flicker_4s_infinite]" style={{ fontSize: 'clamp(1.35rem, min(5.5vw, 5vmin), 2.75rem)' }}>{GAME_BRANDING.displayName}</h1>
+                        <div className="font-mono text-[10px] md:text-xs text-[#d6b85c] mb-1 flex flex-wrap gap-2 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
                             <span>Daily Best: <b className="text-[#0df]">{meta.dailyBestHeat || 0}</b></span>
                             <span>Runs: <b>{meta.totalRuns}</b></span>
                         </div>
                         {lineupToast && (
-                            <div data-layout-key="lineup-toast" className="mx-auto max-w-lg mb-2 px-4 py-2 border-2 border-[#0df] bg-black/80 text-[#0df] font-mono text-xs text-center">{lineupToast}</div>
+                            <div data-layout-key="lineup-toast" className="mx-auto max-w-lg mb-1 px-3 py-1.5 border-2 border-[#0df] bg-black/80 text-[#0df] font-mono text-[10px] text-center">{lineupToast}</div>
                         )}
                         </div>
-                        <div className="gb-panel-scroll w-full max-w-6xl mx-auto px-1">
-                        <div className="grid md:grid-cols-4 gap-3 md:gap-4 w-full mb-4">
+                        <div className="flex-1 min-h-0 w-full max-w-6xl mx-auto px-0.5 flex flex-col overflow-hidden">
+                        <div data-layout-key="lineup-grid" className="lineup-persona-grid w-full mb-1">
                             {PERSONAS.map((p, i) => {
                                 const unlocked = meta.unlockedPersonaIds.includes(p.id);
                                 const unlock = SAFEHOUSE_UPGRADES.find(u => u.type === 'persona' && u.unlocks.includes(p.id));
+                                const selected = personaIdx === i;
                                 return (
-                                    <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); spawnPaperStamp('SELECTED', '#be185d'); }} className={`paper-card paper-lift relative bg-[#e8e6e1] text-black p-4 pb-8 shadow-2xl text-left transform transition-all ${personaIdx === i ? 'rotate-0 ring-4 ring-[#ff007f]' : i % 2 ? 'rotate-2 hover:rotate-0' : '-rotate-2 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`} style={{ '--paper-rot': personaIdx === i ? '0deg' : (i % 2 ? '2deg' : '-2deg') }}>
-                                        <div className="h-36 bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-4">
+                                    <button key={p.id} disabled={!unlocked} onClick={() => { if (!unlocked) return; AudioSystem.init(); AudioSystem.paper(); setPersonaIdx(i); }} className={`lineup-persona-card paper-card paper-lift relative bg-[#e8e6e1] text-black p-2 md:p-3 shadow-xl text-left transform transition-all ${selected ? 'rotate-0 ring-2 ring-[#ff007f] z-[2]' : i % 2 ? 'rotate-1 hover:rotate-0' : '-rotate-1 hover:rotate-0'} ${!unlocked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`} style={{ '--paper-rot': selected ? '0deg' : (i % 2 ? '1deg' : '-1deg') }}>
+                                        {selected && <span className="absolute top-1.5 right-1.5 z-10 border-2 border-[#be185d] text-[#be185d] bg-white/90 font-marker text-[10px] px-1.5 py-0.5 rotate-[-8deg] pointer-events-none">SELECTED</span>}
+                                        <div className="lineup-portrait bg-[#111] shadow-inner relative overflow-hidden flex items-end justify-center mb-2">
                                             <PersonaPortrait persona={p} variant="lineup" />
-                                            <div className="absolute bottom-2 bg-white px-2 py-1 border-2 border-black font-mono text-black text-xs font-bold">N.Y.P.D. - {p.alias}</div>
+                                            <div className="absolute bottom-1 bg-white px-1.5 py-0.5 border border-black font-mono text-black text-[9px] font-bold truncate max-w-[95%]">N.Y.P.D. - {p.alias}</div>
                                         </div>
-                                        <div className="font-marker text-2xl">{p.name}</div>
-                                        <div className="font-mono text-xs mt-2">Cash ${p.cash} / Pills {p.pills} / Plays {p.plays}</div>
-                                        <p className="text-xs mt-3 italic">{p.quirk}</p>
-                                        {!unlocked && <div className="absolute inset-0 bg-black/75 text-gray-100 flex flex-col items-center justify-center p-4 text-center font-mono"><div className="text-[#ff007f] font-bold mb-2 tracking-widest">LOCKED</div><div className="text-xs text-[#d6b85c]">Safehouse unlock · {unlock ? `$${unlock.cost}` : 'Unknown Contact'}</div></div>}
+                                        <div className="font-marker text-base md:text-lg leading-tight">{p.name}</div>
+                                        <div className="font-mono text-[9px] mt-1">Cash ${p.cash} · Pills {p.pills} · Plays {p.plays}</div>
+                                        <p className="text-[9px] mt-1 italic line-clamp-2 leading-snug">{p.quirk}</p>
+                                        {!unlocked && <div className="absolute inset-0 bg-black/75 text-gray-100 flex flex-col items-center justify-center p-2 text-center font-mono"><div className="text-[#ff007f] font-bold mb-1 tracking-widest text-xs">LOCKED</div><div className="text-[9px] text-[#d6b85c]">Safehouse · {unlock ? `$${unlock.cost}` : 'Unknown'}</div></div>}
                                     </button>
                                 );
                             })}
                         </div>
-                        <div className={`w-full max-w-4xl mb-6 border-2 rounded-lg p-4 ${insaneContract ? 'border-[#ff007f] bg-[#2a0017]/70' : 'border-gray-700 bg-black/40'}`}>
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                                <div>
-                                    <div className="font-marker text-2xl italic text-[#ff007f]">INSANE CONTRACT</div>
-                                    <div className="font-mono text-xs text-gray-300">Hardcore street terms. Extra risk, no hidden rules.</div>
+                        <div data-layout-key="lineup-insane-contract" className={`shrink-0 w-full border rounded-lg px-2 py-1.5 md:px-3 md:py-2 ${insaneContract ? 'border-[#ff007f] bg-[#2a0017]/70' : 'border-gray-700 bg-black/40'}`}>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                    <div className="font-marker text-sm md:text-lg italic text-[#ff007f] leading-none">INSANE CONTRACT</div>
+                                    <div className="font-mono text-[9px] text-gray-300 truncate">Hardcore terms — optional.</div>
                                 </div>
-                                <button onClick={() => setInsaneContract(v => !v)} className={`px-5 py-2 border-2 font-mono tracking-wider ${insaneContract ? 'border-[#ff007f] bg-[#ff007f] text-black' : 'border-gray-600 bg-black/50 text-gray-200 hover:border-[#ff007f]'}`}>
-                                    {insaneContract ? 'ACTIVE' : 'OFF'}
+                                <button type="button" onClick={() => setInsaneContract(v => !v)} className={`shrink-0 px-3 py-1 border-2 font-mono text-[10px] tracking-wider ${insaneContract ? 'border-[#ff007f] bg-[#ff007f] text-black' : 'border-gray-600 bg-black/50 text-gray-200 hover:border-[#ff007f]'}`}>
+                                    {insaneContract ? 'ON' : 'OFF'}
                                 </button>
                             </div>
-                            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px] font-mono text-gray-200">
-                                {INSANE_CONTRACT_RULES.map((rule) => (
-                                    <div key={rule} className="border border-gray-700 rounded px-2 py-1 bg-black/35">{rule}</div>
-                                ))}
-                            </div>
+                            {insaneContract && (
+                                <div className="mt-1.5 flex flex-wrap gap-1 text-[9px] font-mono text-gray-200">
+                                    {INSANE_CONTRACT_RULES.slice(0, 4).map((rule) => (
+                                        <span key={rule} className="border border-gray-700 rounded px-1.5 py-0.5 bg-black/35">{rule}</span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         </div>
-                        <div className="shrink-0 w-full max-w-6xl mx-auto pt-2 pb-1">
-                        <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center">
-                            <div className="lineup-actions-slot w-full sm:w-auto flex justify-center">
-                                <button data-layout-key="lineup-resume" onClick={resumeRun} disabled={!hasSavedRun} className={`w-full sm:w-auto px-4 py-2 md:px-8 md:py-4 border-4 text-sm md:text-2xl font-mono tracking-widest transition-all ${hasSavedRun ? 'bg-[#0df] border-[#064b52] text-black shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none' : 'invisible pointer-events-none border-transparent bg-transparent shadow-none'}`} aria-hidden={!hasSavedRun}>RESUME HUSTLE</button>
+                        <div className="shrink-0 w-full max-w-6xl mx-auto pt-1 pb-0.5">
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-1.5 justify-center">
+                            <div className="lineup-actions-slot w-full sm:w-auto flex flex-col items-center justify-center">
+                                <button data-layout-key="lineup-resume" onClick={resumeRun} disabled={!hasSavedRun} className={`w-full sm:w-auto px-3 py-1.5 md:px-6 md:py-3 border-4 text-xs md:text-lg font-mono tracking-widest transition-all ${hasSavedRun ? 'bg-[#0df] border-[#064b52] text-black shadow-[0_5px_0_#064b52] hover:bg-cyan-200 active:translate-y-1 active:shadow-none' : 'invisible pointer-events-none border-transparent bg-transparent shadow-none h-0 p-0 border-0'}`} aria-hidden={!hasSavedRun}>
+                                    RESUME SAVED RUN
+                                </button>
+                                {hasSavedRun && (() => {
+                                    const snap = loadSavedRun();
+                                    if (!snap || snap.tutorialActive) return null;
+                                    const op = PERSONAS.find((pp) => pp.id === snap.personaId)?.name || 'Operator';
+                                    return <div className="font-mono text-[9px] text-[#0df]/90 mt-0.5 text-center">{op} · Round {snap.round || 1} · {snap.phase || 'PLAY'}</div>;
+                                })()}
                             </div>
-                            <button onClick={handleOfferContract} disabled={!selectedPersonaUnlocked} className="px-6 py-2 md:px-12 md:py-4 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-sm md:text-2xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">OFFER CONTRACT</button>
+                            <button onClick={handleOfferContract} disabled={!selectedPersonaUnlocked} className="px-4 py-1.5 md:px-8 md:py-3 bg-[#c78b16] border-4 border-[#4a1111] text-[#121113] text-xs md:text-xl font-mono tracking-widest shadow-[0_5px_0_#4a1111] hover:bg-[#d6b85c] active:translate-y-1 active:shadow-none transition-all disabled:grayscale disabled:opacity-50">NEW RUN</button>
                             {(audioSettings.tutorialCompleted || meta.totalRuns > 0) && (
                                 <button onClick={() => beginContract({ tutorial: true })} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">LEARN THE HUSTLE</button>
                             )}
@@ -7916,7 +8048,7 @@ const GutterbonesGamble = (() => {
                                     <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
                                         FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
                                     </div>
-                                    <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget} · Pills {discards}</div>
+                                    <div className="font-mono text-[9px] md:text-[10px] text-gray-400 mt-1 tracking-wide">Plays {hands} · Quota {currentTarget}{meta.totalRuns === 0 && round === 1 && !tutorialActive ? ' · First contract quota' : ''} · Pills {discards}</div>
                                 </div>
                             <div className="flex gap-3 md:gap-6 text-right">
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
@@ -8015,7 +8147,7 @@ const GutterbonesGamble = (() => {
                         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 overflow-hidden">
                             <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
-                                <div className="gb-panel-scroll min-h-0">
+                                <div className="payout-sheet-rows min-h-0">
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     const availableSet = new Set(unlockInfo.available);
@@ -8161,7 +8293,10 @@ const GutterbonesGamble = (() => {
                                 </div>
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
-                                    <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight active:translate-y-1 active:shadow-none disabled:grayscale disabled:opacity-50 py-3 ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 ml-2 font-mono">TOLL</span>}</button>
+                                    <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 relative bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight disabled:grayscale disabled:opacity-50 py-3 overflow-visible ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>
+                                        <span className={`pointer-events-none absolute inset-0 rounded-[inherit] ${rollReady ? 'roll-ready-pulse-inner' : ''}`} aria-hidden />
+                                        <span className="relative z-10 inline-flex items-center justify-center gap-2 w-full active:translate-y-px">ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 font-mono">TOLL</span>}</span>
+                                    </button>
                                 </div>
                             </div>
                             <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-4 min-h-0 overflow-hidden pr-1 ${playDock === 'stash' ? '' : ''} md:!flex`}>
@@ -8179,6 +8314,7 @@ const GutterbonesGamble = (() => {
                                         routeEffect={currentRouteEffect}
                                         boss={activeBoss}
                                         consumables={consumables}
+                                        inventory={inventory}
                                         inline
                                     />
                                 </div>
@@ -8236,10 +8372,10 @@ const GutterbonesGamble = (() => {
                                 </div>
                                 <div className="bg-black/90 border-4 border-gray-900 rounded-xl p-4 flex-1 shadow-xl flex flex-col min-h-0">
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
-                                    <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map(item => {
+                                    <div className="flex-1 min-h-[5rem] overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="text-center text-xs opacity-30 mt-4 font-mono">NO HARDWARE</div> : inventory.map((item, hwIdx) => {
                                         const syn = synergyLabelForItem(item.id, buildAnalysis.primaryBuild);
                                         return (
-                                            <div key={item.id} className={`group p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}>
+                                            <div key={item.instanceId || `${item.id}-${hwIdx}`} className={`group p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}>
                                                 <div className="text-sm font-bold text-white leading-none">{item.name}</div>
                                                 <div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div>
                                                 <RiskBadges item={item} />
@@ -8324,7 +8460,7 @@ const GutterbonesGamble = (() => {
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
-                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN appears when cash is short — the shortage is added to debt (IOU in the HUD). Hustle cash from each scored hand pays during the round; route picks can add bonus cash next job.</p>
+                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Each scored hand pays hustle cash: floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}), cap ${ECONOMY_TUNING.hustleCashCap} — watch for HUSTLE +$ stamps in the alley. Routes can add bonus cash next job.</p>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
                                     <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
                                         Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
@@ -8449,15 +8585,27 @@ const GutterbonesGamble = (() => {
                         <div data-layout-key="rap-sheet" className="paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="gb-modal-body pr-1">
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
-                            <div className="grid md:grid-cols-3 gap-6 mb-6"><div className="h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div><div className="md:col-span-2 font-mono text-lg flex flex-col gap-2"><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Apprehended:</span><b>Round {round}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Arresting Unit:</span><b className="text-red-600">{runStats.finalBoss}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Total Heat:</span><b>{runStats.totalHeat}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Largest Hustle:</span><b>{runStats.biggestHustle}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Dirty Cash:</span><b className="text-green-800">${gold}</b></div><div className="flex justify-between border-b border-gray-400 border-dashed"><span>Laundered:</span><b className="text-green-800">+${lastLaundered}</b></div></div></div>
-                            <div className="border border-black p-3 bg-white/50 mb-3 relative min-h-0 max-h-[28vh] md:max-h-[32vh] overflow-hidden flex flex-col">
-                                <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
-                                <div className="gb-panel-scroll min-h-0"><HistoryPanel history={history} /></div>
-                                {showIncarceratedStamp && (
-                                    <div className="absolute top-2 right-2 border-[4px] border-[#d30000] text-[#d30000] font-marker px-3 py-1.5 text-lg md:text-xl rotate-[-10deg] bg-white/92 shadow-md pointer-events-none animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] z-10 whitespace-nowrap max-w-[85%]">
+                            <div className="grid md:grid-cols-3 gap-4 mb-4">
+                                <div className="h-32 md:h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div>
+                                <dl className="md:col-span-2 font-mono text-base md:text-lg grid grid-cols-[minmax(8.5rem,auto)_1fr] gap-x-3 gap-y-1.5 items-baseline">
+                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Apprehended</dt><dd className="font-bold text-right border-b border-gray-400 border-dashed pb-0.5">Round {round}</dd>
+                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Arresting Unit</dt><dd className="font-bold text-red-600 text-right border-b border-gray-400 border-dashed pb-0.5">{runStats.finalBoss || '—'}</dd>
+                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Total Heat</dt><dd className="font-bold text-right border-b border-gray-400 border-dashed pb-0.5">{runStats.totalHeat}</dd>
+                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Largest Hustle</dt><dd className="font-bold text-right border-b border-gray-400 border-dashed pb-0.5">{runStats.biggestHustle}</dd>
+                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Dirty Cash</dt><dd className="font-bold text-green-800 text-right border-b border-gray-400 border-dashed pb-0.5">${gold}</dd>
+                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Laundered</dt><dd className="font-bold text-green-800 text-right border-b border-gray-400 border-dashed pb-0.5">+${lastLaundered}</dd>
+                                </dl>
+                            </div>
+                            {showIncarceratedStamp && (
+                                <div className="flex justify-end mb-2 pointer-events-none">
+                                    <div className="border-[4px] border-[#d30000] text-[#d30000] font-marker px-3 py-1.5 text-lg md:text-xl rotate-[-10deg] bg-white/92 shadow-md animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] whitespace-nowrap">
                                         INCARCERATED
                                     </div>
-                                )}
+                                </div>
+                            )}
+                            <div className="border border-black p-3 bg-white/50 mb-3 min-h-0 max-h-[22vh] md:max-h-[26vh] overflow-hidden flex flex-col">
+                                <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
+                                <div className="min-h-0 overflow-hidden flex-1"><HistoryPanel history={history} /></div>
                             </div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
                             {dailyShareBanner && (

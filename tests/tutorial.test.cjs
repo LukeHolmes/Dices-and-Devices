@@ -41,3 +41,10 @@ test("settings persistence includes tutorialCompleted flag", () => {
   assert.match(html, /tutorialCompleted:\s*!!stored\.tutorialCompleted/);
   assert.match(html, /completeTutorial\s*=\s*\(\)/);
 });
+
+test("tutorial runs are never persisted for resume", () => {
+  const { html } = require("./helpers/game.cjs");
+  assert.match(html, /if \(tutorialActiveRef\.current\) return;/);
+  assert.match(html, /saved\.tutorialActive/);
+  assert.match(html, /tutorialActive:\s*false/);
+});
