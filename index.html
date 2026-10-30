@@ -1339,6 +1339,107 @@ const GutterbonesTutorial = (() => {
 })();
 </script>
 
+<script id="gutterbones-replay">
+const GutterbonesReplay = (() => {
+    const RUN_MODIFIERS = Object.freeze({
+        ODD_EVEN_SPLIT: { id: 'ODD_EVEN_SPLIT', name: 'Odd/Even Split', desc: 'Odd slots +8 chips; even slots +0.5 mult (once per hand).' },
+        STRAIGHT_FOCUS: { id: 'STRAIGHT_FOCUS', name: 'Straight Focus', desc: 'Short/Long Run hands +25 chips.' },
+        HOLD_CHARGE: { id: 'HOLD_CHARGE', name: 'Hold Charge', desc: '+3 chips per locked die when you score.' },
+        RISK_BONE: { id: 'RISK_BONE', name: 'Risk Bone', desc: 'Rolling a 1 on any die costs $1 (max once per roll).' },
+        COPY_LAST: { id: 'COPY_LAST', name: 'Echo Hand', desc: 'Repeat last valid hand category at 50% heat.' },
+        PIP_SUM: { id: 'PIP_SUM', name: 'Pip Sum', desc: '+1 chip per pip on the table (max +30).' },
+        SACRIFICE_SLOT: { id: 'SACRIFICE_SLOT', name: 'Sacrifice', desc: 'Blank lowest slot: +15 chips, -1 play next round (once).' },
+        STASH_INTEREST: { id: 'STASH_INTEREST', name: 'Stash Interest', desc: 'End of shop: +$1 per 25% unspent stash.' }
+    });
+
+    const EXTRA_PATHS = Object.freeze([
+        { id: 'GRIND', name: 'GRIND ROUTE', desc: '+12% quota, +1 Pill next round.', mod: 1.12, discardDelta: 1, color: 'border-orange-500 text-orange-300' },
+        { id: 'HIGHWIRE', name: 'HIGH WIRE', desc: '+35% quota, shop refreshes cost $5 less.', mod: 1.35, shopRefreshDiscount: 5, color: 'border-violet-500 text-violet-300' }
+    ]);
+
+    const PLAY_UNLOCKS = Object.freeze([
+        { id: 'unlock-grinder', title: 'The Grinder', condition: 'Clear round 3 once', check: (m) => (m.bestRoundReached || 0) >= 3, reward: { personaId: 'GRINDER' } },
+        { id: 'unlock-odd-job', title: 'Odd Job', condition: 'Score 200+ heat in one run', check: (m) => (m.bestHeat || 0) >= 200, reward: { modifierPool: ['ODD_EVEN_SPLIT'] } },
+        { id: 'unlock-smuggler-route', title: 'Smuggler\'s Cut', condition: 'Complete 2 runs', check: (m) => (m.completedRuns || 0) >= 2, reward: { pathId: 'GRIND' } },
+        { id: 'unlock-highwire', title: 'High Wire', condition: 'Win a run (10 rounds)', check: (m) => (m.completedRuns || 0) >= 1 && (m.bestHeat || 0) >= 400, reward: { pathId: 'HIGHWIRE' } },
+        { id: 'unlock-risk-kit', title: 'Risk Kit', condition: 'Daily run best ≥ 120', check: (m) => (m.dailyBestHeat || 0) >= 120, reward: { modifierPool: ['RISK_BONE', 'SACRIFICE_SLOT'] } },
+        { id: 'unlock-archivist', title: 'Archivist', condition: 'Open Records 5 times', check: (m) => (m.recordsViews || 0) >= 5, reward: { modifierPool: ['COPY_LAST', 'PIP_SUM', 'STASH_INTEREST'] } }
+    ]);
+
+    const utcDateKey = (d = new Date()) => d.toISOString().slice(0, 10);
+
+    const hashString = (str) => {
+        let h = 2166136261;
+        for (let i = 0; i < str.length; i += 1) {
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return h >>> 0;
+    };
+
+    const mulberry32 = (seed) => {
+        let a = seed >>> 0;
+        return () => {
+            a |= 0;
+            a = (a + 0x6D2B79F5) | 0;
+            let t = Math.imul(a ^ (a >>> 15), 1 | a);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    };
+
+    const dailySeed = (dateKey = utcDateKey()) => hashString(`gutterbones-daily:${dateKey}`);
+
+    const dailyShareString = ({ dateKey, heat, rounds, emoji = '🎲' }) => {
+        const grid = ['🟥', '🟨', '🟩', '⬛'];
+        const pick = (n) => grid[n % grid.length];
+        const pat = [heat, rounds, hashString(dateKey) % 999].map(pick).join('');
+        return `Gutterbones ${dateKey} ${pat} heat:${heat} r:${rounds}`;
+    };
+
+    const applyRunModifiersToScore = (result, catId, dice, kept, modifierIds = [], lastHand = null) => {
+        if (!result?.valid || !modifierIds?.length) return result;
+        let chips = result.chips || 0;
+        let mult = result.mult || 1;
+        const ids = new Set(modifierIds);
+        if (ids.has('ODD_EVEN_SPLIT')) {
+            dice.forEach((d, i) => {
+                if ((i + 1) % 2 === 1) chips += 8;
+                else mult += 0.5;
+            });
+        }
+        if (ids.has('STRAIGHT_FOCUS') && (catId === 'SS' || catId === 'LS')) chips += 25;
+        if (ids.has('HOLD_CHARGE')) chips += (kept || []).filter(Boolean).length * 3;
+        if (ids.has('PIP_SUM')) {
+            const pip = dice.reduce((s, d) => s + (d.value || 0), 0);
+            chips += Math.min(30, pip);
+        }
+        if (ids.has('COPY_LAST') && lastHand?.category && lastHand.category === catId) {
+            chips += Math.floor((lastHand.total || 0) * 0.5);
+        }
+        const total = Math.floor(chips * mult * (result.flowMult || 1));
+        return { ...result, chips, mult, total };
+    };
+
+    const evaluateUnlocks = (meta) => PLAY_UNLOCKS.map((u) => ({
+        ...u,
+        unlocked: !!meta?.unlockedPlayIds?.includes(u.id) || u.check(meta || {})
+    }));
+
+    return Object.freeze({
+        RUN_MODIFIERS,
+        EXTRA_PATHS,
+        PLAY_UNLOCKS,
+        utcDateKey,
+        dailySeed,
+        mulberry32,
+        dailyShareString,
+        applyRunModifiersToScore,
+        evaluateUnlocks
+    });
+})();
+</script>
+
 <script id="gutterbones-story">
 const GutterbonesStory = (() => {
     const DEFAULT_ARC_ID = 'witness';
@@ -2176,7 +2277,8 @@ const GutterbonesGamble = (() => {
         { id: 'PAWN', name: 'PAWN SHOP', desc: '+20% quota, +$15.', mod: 1.2, reward: 15, color: 'border-[#c78b16] text-[#c78b16]' },
         { id: 'HIDEOUT', name: 'SAFEHOUSE CUT', desc: '+9% quota, +1 Play, -1 Pill.', mod: 1.09, handDelta: 1, discardDelta: -1, color: 'border-cyan-500 text-cyan-400' },
         { id: 'SMUGGLE', name: 'SMUGGLE RUN', desc: '+25% quota, +$15, random one-shot.', mod: 1.25, reward: 15, grantRandomConsumable: true, color: 'border-emerald-500 text-emerald-400' },
-        { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' }
+        { id: 'VIP', name: 'VIP ROOM', desc: '+40% quota, full Stash.', mod: 1.4, fillStash: true, color: 'border-[#ff007f] text-[#ff007f]' },
+        ...(typeof GutterbonesReplay !== 'undefined' ? GutterbonesReplay.EXTRA_PATHS : [])
     ];
 
     const ECONOMY_TUNING = {
@@ -2614,7 +2716,15 @@ const GutterbonesGamble = (() => {
         purchasedUpgradeIds: [],
         bestHeat: 0,
         totalRuns: 0,
-        completedRuns: 0
+        completedRuns: 0,
+        bestRoundReached: 0,
+        unlockedPlayIds: [],
+        unlockedModifierIds: [],
+        unlockedRouteIds: [],
+        dailyBestHeat: 0,
+        dailyLastDate: null,
+        dailyAttempts: {},
+        recordsViews: 0
     };
 
     const displayNameForUnlockId = (id) => {
@@ -3239,6 +3349,29 @@ const GutterbonesGamble = (() => {
                     {needsAck && (
                         <button type="button" onClick={onAck} className="mt-3 w-full py-2 bg-[#c78b16] text-black font-mono text-xs font-bold tracking-wider rounded hover:bg-[#d6b85c]">COPY THAT</button>
                     )}
+                </div>
+            </div>
+        );
+    };
+
+    const RecordsUnlocksPanel = ({ meta, onClose }) => {
+        const rows = GutterbonesReplay?.evaluateUnlocks(meta) || [];
+        return (
+            <div className="absolute inset-0 z-[690] bg-black/88 flex items-center justify-center p-[var(--gb-pad)]" onClick={onClose}>
+                <div data-layout-key="records-unlocks" className="gb-modal-fit w-full max-w-lg bg-[#1a1a1a] border-4 border-[#0df] rounded-xl p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                        <h3 className="font-marker text-2xl text-[#0df] italic">RECORDS &amp; UNLOCKS</h3>
+                        <button type="button" onClick={onClose} className="font-mono text-xs text-gray-400 hover:text-white">CLOSE</button>
+                    </div>
+                    <div className="gb-modal-body space-y-2 font-mono text-xs">
+                        {rows.map((row) => (
+                            <div key={row.id} className={`border rounded p-3 ${row.unlocked ? 'border-emerald-600/50 bg-emerald-950/20' : 'border-gray-700 bg-black/40'}`}>
+                                <div className="font-bold text-sm text-[#d6b85c]">{row.title}</div>
+                                <div className="text-gray-400 mt-1">{row.condition}</div>
+                                <div className="mt-1 text-[10px] tracking-wider">{row.unlocked ? 'UNLOCKED' : 'LOCKED'}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -3935,6 +4068,9 @@ const GutterbonesGamble = (() => {
         const [showMobileStash, setShowMobileStash] = useState(false);
         const [playDock, setPlayDock] = useState('lane');
         const [insaneContract, setInsaneContract] = useState(false);
+        const [runModifierIds, setRunModifierIds] = useState([]);
+        const [dailyRunActive, setDailyRunActive] = useState(false);
+        const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const [meta, setMeta] = useState(loadMetaState);
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
@@ -4615,10 +4751,19 @@ const GutterbonesGamble = (() => {
             persistRun(phase);
         }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
 
-        const beginContract = ({ tutorial = false } = {}) => {
+        const beginContract = ({ tutorial = false, daily = false } = {}) => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
             setShowFirstRunTutorialChoice(false);
+            setDailyRunActive(!!daily);
+            if (daily && GutterbonesReplay) {
+                const rng = GutterbonesReplay.mulberry32(GutterbonesReplay.dailySeed());
+                const pool = Object.keys(GutterbonesReplay.RUN_MODIFIERS);
+                const pick = pool[Math.floor(rng() * pool.length)];
+                setRunModifierIds([pick]);
+            } else {
+                setRunModifierIds([]);
+            }
             setTutorialActive(tutorial);
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
@@ -4710,11 +4855,19 @@ const GutterbonesGamble = (() => {
 
         const startRun = () => beginContract({ tutorial: false });
 
-        const calculateScore = (catId, currentDice) => GutterbonesRules.calculateScore(catId, currentDice, {
-            handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
-            CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
-            synergyTuning: SYNERGY_TUNING
-        });
+        const calculateScore = (catId, currentDice) => {
+            const base = GutterbonesRules.calculateScore(catId, currentDice, {
+                handLevels, flowStreak, inventory, hardwareDisabled, activeBoss,
+                CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
+                synergyTuning: SYNERGY_TUNING
+            });
+            const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
+            if (!GutterbonesReplay || !mods?.length) return base;
+            const hist = typeof history !== 'undefined' ? history : [];
+            const keptMask = typeof kept !== 'undefined' ? kept : [];
+            const last = hist.filter((h) => h.total > 0).slice(-1)[0] || null;
+            return GutterbonesReplay.applyRunModifiersToScore(base, catId, currentDice, keptMask, mods, last);
+        };
 
         const analyzeRunFailure = ({ score, target, debt, hands, history, attempts = 0, roundNumber = round, boss = activeBoss, flowValue = flowStreak }) => {
             const shortage = Math.max(0, target - score);
@@ -5641,6 +5794,15 @@ const GutterbonesGamble = (() => {
                         onFinish={() => storyFinishRef.current?.()}
                     />
                 )}
+                {showRecordsPanel && phase === 'LINEUP' && (
+                    <RecordsUnlocksPanel
+                        meta={meta}
+                        onClose={() => {
+                            setShowRecordsPanel(false);
+                            updateMeta((m) => ({ ...m, recordsViews: (m.recordsViews || 0) + 1 }));
+                        }}
+                    />
+                )}
                 {showFirstRunTutorialChoice && phase === 'LINEUP' && (
                     <FirstRunTutorialChoice
                         onLearn={() => beginContract({ tutorial: true })}
@@ -5855,6 +6017,8 @@ const GutterbonesGamble = (() => {
                             {(audioSettings.tutorialCompleted || meta.totalRuns > 0) && (
                                 <button onClick={() => beginContract({ tutorial: true })} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">LEARN THE HUSTLE</button>
                             )}
+                            <button onClick={() => beginContract({ daily: true })} className="px-4 py-2 md:px-8 md:py-4 bg-[#0a1628] border-4 border-[#0df] text-[#0df] text-sm md:text-xl font-mono tracking-widest hover:bg-[#0f2038] transition-all">DAILY RUN</button>
+                            <button onClick={() => { updateMeta((m) => ({ ...m, recordsViews: (m.recordsViews || 0) + 1 })); setShowRecordsPanel(true); }} className="px-4 py-2 md:px-8 md:py-4 bg-[#1a1a1a] border-4 border-[#0df]/60 text-gray-200 text-sm md:text-xl font-mono tracking-widest hover:border-[#0df] transition-all">RECORDS</button>
                             <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
                             <button onClick={() => setPhase('SAFEHOUSE')} className="px-4 py-2 md:px-8 md:py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
                         </div>
