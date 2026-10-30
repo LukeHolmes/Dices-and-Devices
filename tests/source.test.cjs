@@ -50,6 +50,7 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
   const tutorialIdx = html.indexOf('<script id="gutterbones-tutorial">');
+  const replayIdx = html.indexOf('<script id="gutterbones-replay">');
   const storyIdx = html.indexOf('<script id="gutterbones-story">');
   const routesIdx = html.indexOf('<script id="gutterbones-routes">');
   const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
@@ -58,7 +59,8 @@ test("Shared inline rules and onboarding precede the app without extra requests"
     rulesIdx >= 0 &&
       onboardingIdx > rulesIdx &&
       tutorialIdx > onboardingIdx &&
-      storyIdx > tutorialIdx &&
+      replayIdx > tutorialIdx &&
+      storyIdx > replayIdx &&
       routesIdx > storyIdx &&
       gambleIdx > routesIdx &&
       appIdx > gambleIdx,

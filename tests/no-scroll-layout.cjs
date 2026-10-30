@@ -40,6 +40,7 @@ const SCENARIOS = [
   { id: "first_run", label: "First-run overlay", resume: "normal", action: "firstRun" },
   { id: "tutorial_choice", label: "Tutorial choice", resume: null, action: "tutorialChoice" },
   { id: "tutorial_coach", label: "Tutorial coach", resume: "normal", action: "tutorialCoach" },
+  { id: "records_unlocks", label: "Records / Unlocks", resume: null, action: "records" },
   { id: "mechanic_toast", label: "Mechanic toast", resume: "normal", action: "toast" },
 ];
 
