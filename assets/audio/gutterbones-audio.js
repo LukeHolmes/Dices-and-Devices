@@ -133,6 +133,15 @@
             }
         },
 
+        /** Single die landing thud (staggered roll settle). */
+        dieThud() {
+            if (!ensureContext() || muted) return;
+            resumeIfNeeded();
+            noiseBurst(0.028, 0.055, 0);
+            scheduleTone(72 + Math.random() * 28, "triangle", 0.07, 0.07, 0);
+            scheduleTone(140 + Math.random() * 40, "sine", 0.04, 0.035, 0.018);
+        },
+
         /** Short scoring blip; used for face retriggers and synergy impacts. */
         payout() {
             scheduleTone(660, "sine", 0.07, 0.06);
