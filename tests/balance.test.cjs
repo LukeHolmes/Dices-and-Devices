@@ -11,31 +11,30 @@ const {
 const SEED = 0x6e202610;
 const ITER = 6000;
 
-test("opening balance — Street Rat clears R1 @85 often enough (seeded sim)", () => {
-  const p = probClear({ target: 85, pills: 3, iterations: ITER, seed: SEED });
-  assert.ok(p >= 0.6 && p <= 0.95, `expected P(clear) in [0.6, 0.95], got ${p}`);
+test("opening balance — Street Rat clears R1 @90 often enough (seeded sim)", () => {
+  const p = probClear({ target: 90, pills: 3, iterations: ITER, seed: SEED });
+  assert.ok(p >= 0.52 && p <= 0.95, `expected P(clear) in [0.52, 0.95], got ${p}`);
 });
 
-test("opening balance — Enforcer clears R1 @85 at least sometimes (seeded sim)", () => {
-  const p = probClear({ target: 85, pills: 0, iterations: ITER, seed: SEED + 1 });
-  assert.ok(p >= 0.2, `expected P(clear) >= 0.2, got ${p}`);
+test("opening balance — Enforcer clears R1 @90 at least sometimes (seeded sim)", () => {
+  const p = probClear({ target: 90, pills: 0, iterations: ITER, seed: SEED + 1 });
+  assert.ok(p >= 0.15, `expected P(clear) >= 0.15, got ${p}`);
 });
 
-test("opening balance — R6 Back Alley quota stays near legacy curve", () => {
+test("opening balance — quota curve smoothed (R2–R4 steps, R6 anchor)", () => {
   const routes = loadRoutes();
-  const newR6 = projectRoundTarget(routes, 85, 1, 6);
-  const legacyR6 = 312;
-  const low = legacyR6 * 0.9;
-  const high = legacyR6 * 1.1;
-  assert.ok(
-    newR6 >= low && newR6 <= high,
-    `R6 target ${newR6} should be within ±10% of legacy ${legacyR6}`,
-  );
-  assert.equal(newR6, 297);
+  const r2 = projectRoundTarget(routes, 90, 1, 2);
+  const r3 = projectRoundTarget(routes, 90, 1, 3);
+  const r4 = projectRoundTarget(routes, 90, 1, 4);
+  const r6 = projectRoundTarget(routes, 90, 1, 6);
+  assert.ok(r2 >= 108 && r2 <= 118, `R2 ${r2}`);
+  assert.ok(r3 - r2 >= 18 && r3 - r2 <= 28, `R2→R3 step ${r3 - r2}`);
+  assert.ok(r4 - r3 >= 18 && r4 - r3 <= 28, `R3→R4 step ${r4 - r3}`);
+  assert.equal(r6, 244);
 });
 
 test("FIRST_RUN_TUNING — first-run opening target is 70 in catalog", () => {
   const { html } = require("./helpers/game.cjs");
   assert.match(html, /FIRST_RUN_TUNING[\s\S]*openingTarget:\s*70/);
-  assert.match(html, /EARLY_GAME_TUNING[\s\S]*openingTarget:\s*85/);
+  assert.match(html, /EARLY_GAME_TUNING[\s\S]*openingTarget:\s*90/);
 });

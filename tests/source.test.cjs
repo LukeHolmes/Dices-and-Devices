@@ -49,6 +49,8 @@ test("Bootstrap selects production React and gates dev tools on public hosts", (
 test("Shared inline rules and onboarding precede the app without extra requests", () => {
   const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
+  const tutorialIdx = html.indexOf('<script id="gutterbones-tutorial">');
+  const replayIdx = html.indexOf('<script id="gutterbones-replay">');
   const storyIdx = html.indexOf('<script id="gutterbones-story">');
   const routesIdx = html.indexOf('<script id="gutterbones-routes">');
   const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
@@ -56,7 +58,9 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   assert.ok(
     rulesIdx >= 0 &&
       onboardingIdx > rulesIdx &&
-      storyIdx > onboardingIdx &&
+      tutorialIdx > onboardingIdx &&
+      replayIdx > tutorialIdx &&
+      storyIdx > replayIdx &&
       routesIdx > storyIdx &&
       gambleIdx > routesIdx &&
       appIdx > gambleIdx,
@@ -119,7 +123,7 @@ test("Phase 6d input UX hooks present", () => {
 
 test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /openingStashGrant:\s*25/);
-  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1200/);
+  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1400/);
   assert.match(appSource, /getScoreOverlayLifetimeMs/);
   assert.match(appSource, /overlayTailMs/);
   assert.match(appSource, /applyDevSynergyDemoDice/);
@@ -134,6 +138,42 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
 });
 
+test("No-scroll layout shell (Oct 2026)", () => {
+  assert.match(html, /html,\s*body[\s\S]*overflow:\s*hidden/);
+  assert.match(appSource, /gb-app-shell/);
+  assert.match(appSource, /gb-screen/);
+  assert.match(appSource, /gb-panel-scroll/);
+  assert.match(appSource, /layoutAudit/);
+  assert.match(appSource, /gb-play-dock/);
+});
+
+test("Release prep — title, settings, analytics, manifest (Oct 2026)", () => {
+  assert.match(html, /coldforge\.goatcounter\.com\/count/);
+  assert.match(html, /gutterbonesTrack/);
+  assert.match(html, /rel="manifest" href="manifest\.json"/);
+  assert.match(html, /property="og:title"/);
+  assert.match(appSource, /TitleScreen/);
+  assert.match(appSource, /GameSettingsPanel/);
+  assert.match(appSource, /data-layout-key="title-screen"/);
+  assert.match(appSource, /data-layout-key="settings-panel"/);
+  assert.match(appSource, /gutterbonesTrack\(daily \? 'daily_start' : 'run_start'\)/);
+  assert.match(appSource, /gutterbonesTrack\('run_end', \{ round \}\)/);
+  assert.match(appSource, /gutterbonesTrack\('tutorial_complete'\)/);
+  assert.ok(fs.existsSync(path.join(__dirname, "..", "manifest.json")), "manifest.json");
+});
+
+test("Playtest 4 fixes (Oct 2026)", () => {
+  assert.match(html, /rel="icon"[^>]+favicon\.ico/);
+  assert.match(appSource, /CarvingDieTile/);
+  assert.match(appSource, /rerollBoneSlot/);
+  assert.match(appSource, /consumePill:\s*false/);
+  assert.match(appSource, /FREE OPENING SNIFF/);
+  assert.match(appSource, /!hasRolled \?\s*\(\s*\n\s*<div>SIDE BET:/);
+  assert.match(appSource, /lossExplanation && phase === 'PLAY'/);
+  assert.match(appSource, /stashFillRate/);
+  assert.match(appSource, /pillCurrencyHint/);
+});
+
 test("Phase 6f shop loan and audio settings present", () => {
   assert.match(appSource, /LOAN appears when cash is short/);
   assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);
@@ -141,11 +181,30 @@ test("Phase 6f shop loan and audio settings present", () => {
 });
 
 test("Phase 6c safehouse and favicon polish", () => {
-  assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
+  assert.match(html, /rel="icon"[^>]+favicon\.ico/);
+  assert.match(html, /\/Dices-and-Devices\//);
+  assert.match(html, /withAssetBase/);
+  assert.match(html, /apple-touch-icon[^>]+gutterbones-card\.png/);
   assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
   assert.match(appSource, /displayNameForUnlockId/);
   assert.match(storySource, /PANEL_ART_AVAILABLE/);
   assert.match(appSource, /TODO\(art\): card-counter\.png/);
+});
+
+test("Pro polish roll and transition hooks", () => {
+  assert.match(appSource, /transitionToPhase/);
+  assert.match(appSource, /DICE_LAND_STAGGER_MS/);
+  assert.match(appSource, /AudioSystem\.dieThud/);
+  assert.match(appSource, /score-row-fixed/);
+  assert.match(appSource, /tutorial-coach-mask/);
+  assert.match(appSource, /roll-ready-pulse/);
+  assert.match(html, /@keyframes rollReadyPulse[\s\S]*?box-shadow: 0 6px 0 #7a003d/);
+  assert.doesNotMatch(html, /@keyframes rollReadyPulse[\s\S]*?translateY\(-1px\)/);
+  const audioSource = fs.readFileSync(
+    path.join(__dirname, "../assets/audio/gutterbones-audio.js"),
+    "utf8",
+  );
+  assert.match(audioSource, /dieThud\(/);
 });
 
 test("Referenced local artwork exists", () => {

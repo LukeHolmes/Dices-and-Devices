@@ -20,10 +20,12 @@ test("GB002: Pill reroll keeps carved face", () => {
   assert.equal(g.state("dice")[0].faceId, "GOLD_FACE");
 });
 
-test("GB003: SNIFF does not spend stash when no pills", () => {
-  const g = createGame(f.snapshot({ stash: 100, discards: 0 }));
+test("GB003: SNIFF spends stash without consuming pills", () => {
+  const g = createGame(f.snapshot({ stash: 100, discards: 3, hasRolled: true }));
   g.api.handleProgram(g.api.PROGRAMS.find((p) => p.id === "SNIFF"));
-  assert.equal(g.state("stash"), 100);
+  g.flushTimers();
+  assert.equal(g.state("stash"), 75);
+  assert.equal(g.state("discards"), 3);
 });
 
 test("GB004: Full Ride requires five scoring bones", () => {

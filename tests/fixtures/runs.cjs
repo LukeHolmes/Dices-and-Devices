@@ -101,6 +101,72 @@ const wager = () =>
   run({ gold: 15, activeWager: { stake: 5, threshold: 110 } });
 const gamble = () =>
   run({ phase: "GAMBLE", round: 3, gold: 25, gambleStake: 5 });
+const shop = () =>
+  run({
+    phase: "SHOP",
+    round: 2,
+    gold: 45,
+    target: 110,
+    shopItems: [
+      {
+        id: "MULT_FACE",
+        value: 0,
+        label: "+1 MULT",
+        type: "modifier",
+        cost: 12,
+        rarity: "common",
+        style: "bg-[#111] text-[#0df] border-[#0df]",
+      },
+      {
+        id: "GOLD_FACE",
+        value: 0,
+        label: "+$2 CASH",
+        type: "modifier",
+        cost: 10,
+        rarity: "common",
+        style: "bg-[#1a1a00] text-[#d6b85c] border-[#d6b85c]",
+      },
+    ],
+    paths: [
+      {
+        id: "LOCAL",
+        name: "BACK ALLEY",
+        desc: "Standard hustle.",
+        mod: 1,
+        color: "border-gray-600 text-gray-400",
+      },
+      {
+        id: "PAWN",
+        name: "PAWN SHOP",
+        desc: "Higher quota, +$15 cash.",
+        mod: 1.2,
+        reward: 15,
+        color: "border-yellow-600 text-yellow-400",
+      },
+    ],
+  });
+const rapSheet = () =>
+  run({
+    phase: "RAP_SHEET",
+    round: 4,
+    gold: 12,
+    history: [
+      {
+        id: "h1",
+        round: 3,
+        category: "Y",
+        total: 45,
+        values: [2, 2, 2, 3, 4],
+        triggers: [],
+      },
+    ],
+    runStats: {
+      totalHeat: 200,
+      biggestHustle: 80,
+      finalBoss: "THE BOUNCER",
+      build: { primary: "UNKNOWN", peakConfidence: 0, keyItems: [] },
+    },
+  });
 const carving = () =>
   run({
     phase: "CARVING",
@@ -169,6 +235,8 @@ module.exports = {
   wager,
   gamble,
   carving,
+  shop,
+  rapSheet,
   terminal,
   bustLastHand,
   victoryLastHand,
