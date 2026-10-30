@@ -9005,7 +9005,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </div>;
                                 })}</div>
                             </div>
-                            <div className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                            <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-y-auto overscroll-contain">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {round}</div></div>
                                 <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
@@ -9054,15 +9054,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         selected={selectedShopPathId === p.id}
                                     />
                                 ))}</div>
+                                <div className="shrink-0 mt-2 pt-2 border-t border-gray-800">
                                 <button
                                     type="button"
-                                    data-layout-key="shop-hit-streets"
-                                    disabled={!selectedShopPathId || shopAdvanceLockRef.current}
+                                    disabled={!selectedShopPathId}
                                     onClick={commitShopAdvance}
-                                    className="mt-3 shrink-0 w-full py-3 min-h-[48px] border-4 border-[#0df] bg-cyan-950/40 text-[#0df] font-marker text-xl italic tracking-wide hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="w-full py-2.5 min-h-[44px] border-4 border-[#0df] bg-cyan-950/40 text-[#0df] font-marker text-lg italic tracking-wide hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     HIT THE STREETS
                                 </button>
+                                </div>
                             </div>
                         </div>
                     </div>
