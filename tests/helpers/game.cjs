@@ -19,6 +19,7 @@ function block(open) {
 const sharedSource = block('<script id="gutterbones-rules">');
 const onboardingSource = block('<script id="gutterbones-onboarding">');
 const tutorialSource = block('<script id="gutterbones-tutorial">');
+const replaySource = block('<script id="gutterbones-replay">');
 const storySource = block('<script id="gutterbones-story">');
 const routesSource = block('<script id="gutterbones-routes">');
 const gambleSource = block('<script id="gutterbones-gamble">');
@@ -129,10 +130,21 @@ function createGame(snapshot = {}, options = {}) {
     },
     scheduleInterval: () => 1,
     clearScheduledInterval: noOp,
+    dailyRunActive: false,
+    runModifierIds: [],
+    audioSettings: { diceSpeed: "normal" },
+    reducedMotion: false,
     rollLockRef: { current: false },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
+    modifierFlagsRef: {
+      current: { sacrificeUsed: false, shopInterestRound: null },
+    },
+    runRandomRef: { current: () => (options.random || (() => 0.99))() },
+    sacrificePlayPenaltyRef: { current: 0 },
+    sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],
+    pillBursts: [],
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
@@ -141,11 +153,15 @@ function createGame(snapshot = {}, options = {}) {
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);
     sandbox[setter] = (update) => {
-      const previous = pending.has(key) ? pending.get(key) : snapshot[key];
-      pending.set(
-        key,
-        typeof update === "function" ? update(previous) : update,
-      );
+      const previous = pending.has(key)
+        ? pending.get(key)
+        : snapshot[key] !== undefined
+          ? snapshot[key]
+          : sandbox[key];
+      const next =
+        typeof update === "function" ? update(previous) : update;
+      pending.set(key, next);
+      if (key === "dailyRunActive") sandbox.dailyRunActive = next;
     };
   }
   const context = vm.createContext(sandbox);
@@ -153,6 +169,10 @@ function createGame(snapshot = {}, options = {}) {
     sharedSource +
       "\n" +
       onboardingSource +
+      "\n" +
+      tutorialSource +
+      "\n" +
+      replaySource +
       "\n" +
       storySource +
       "\n" +
@@ -188,6 +208,7 @@ module.exports = {
   sharedSource,
   onboardingSource,
   tutorialSource,
+  replaySource,
   storySource,
   routesSource,
   gambleSource,

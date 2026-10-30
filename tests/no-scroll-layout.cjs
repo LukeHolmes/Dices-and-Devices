@@ -27,7 +27,9 @@ const VIEWPORTS = [
 ];
 
 const SCENARIOS = [
-  { id: "lineup", label: "Title / Lineup", resume: null, action: null },
+  { id: "title_screen", label: "Title screen", resume: null, action: null },
+  { id: "lineup", label: "Operator lineup", resume: null, action: "lineup" },
+  { id: "settings", label: "Settings panel", resume: null, action: "settings" },
   { id: "play", label: "Alley / PLAY", resume: "normal", action: null },
   { id: "shop", label: "Back Alley shop", resume: "shop", action: null },
   { id: "carving", label: "The Mod", resume: "carving", action: null },
@@ -40,6 +42,7 @@ const SCENARIOS = [
   { id: "first_run", label: "First-run overlay", resume: "normal", action: "firstRun" },
   { id: "tutorial_choice", label: "Tutorial choice", resume: null, action: "tutorialChoice" },
   { id: "tutorial_coach", label: "Tutorial coach", resume: "normal", action: "tutorialCoach" },
+  { id: "records_unlocks", label: "Records / Unlocks", resume: null, action: "records" },
   { id: "mechanic_toast", label: "Mechanic toast", resume: "normal", action: "toast" },
 ];
 
@@ -117,12 +120,22 @@ async function runScenarioAction(page, action) {
   await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 20_000 });
   if (action === "help") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openHelp());
   if (action === "system") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSystemMenu());
-  if (action === "lore") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLore());
+  if (action === "lore") {
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLore());
+  }
   if (action === "firstRun") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openFirstRun());
-  if (action === "tutorialChoice") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialChoice());
+  if (action === "tutorialChoice") {
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialChoice());
+  }
   if (action === "tutorialCoach") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialCoach());
+  if (action === "records") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openRecords());
+  if (action === "lineup") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
+  if (action === "settings") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSettings());
   if (action === "toast") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openMechanicToast());
   if (action === "safehouse") {
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
     await page.getByRole("button", { name: "SAFEHOUSE", exact: true }).click();
     await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__?.getPhase?.() === "SAFEHOUSE");
   }
