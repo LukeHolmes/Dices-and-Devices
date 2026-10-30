@@ -191,7 +191,7 @@ test("Pro polish roll and transition hooks", () => {
   assert.match(appSource, /DICE_LAND_STAGGER_MS/);
   assert.match(appSource, /AudioSystem\.dieThud/);
   assert.match(appSource, /score-row-fixed/);
-  assert.match(appSource, /tutorial-coach-cutout/);
+  assert.match(appSource, /tutorial-coach-mask/);
   assert.match(appSource, /roll-ready-pulse/);
   assert.match(html, /@keyframes rollReadyPulse[\s\S]*?box-shadow: 0 6px 0 #7a003d/);
   assert.doesNotMatch(html, /@keyframes rollReadyPulse[\s\S]*?translateY\(-1px\)/);

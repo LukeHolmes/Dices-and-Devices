@@ -30,6 +30,18 @@ Three sequential PRs off **`main`** (merge **P1 → P2 → P3**). Do not merge P
 - Manual smoke: roll alley, score hand, payout keyboard, reduced motion on/off
 - PR body: before/after capture for roll + score (P1); shop transition (P2); tutorial (P3); brief perf note
 
-## P2 / P3 (follow PRs)
+## P2 — checklist (branch `cursor/pro-polish-p2-f4c3`)
 
-P2 adds scene transition manager polish, shop route cards grid, `docs/design-tokens.md`, loading/preload/modal shell. P3 tightens title/lineup (no scroll, RESUME slot, ambient motion) and tutorial SVG spotlight coach.
+| # | Area | Delivered |
+|---|------|-----------|
+| 3 | Transitions | `transitionToPhase` / `runPhaseTransition`; **ROUND CLEARED** skippable card (700ms) before shop when quota cleared |
+| 4 | Shop routes | Styled `gb-route-list` scroll (from P1 base); card layout in alley shop |
+| 5 | Tokens | [`docs/design-tokens.md`](design-tokens.md) |
+| 6 | Assets/modals | Scene preload + fade classes; modal fit shell (`gb-modal-fit`) |
+
+## P3 — checklist (branch `cursor/pro-polish-p3-f4c3`)
+
+| # | Area | Delivered |
+|---|------|-----------|
+| 9 | Main menu | Title grid / no stray scroll / button press states (P1 base); neon title flicker |
+| 10 | Tutorial | SVG mask spotlight, pulsing ring, progress dots, Back, fade-in caption positioning |

@@ -344,13 +344,41 @@
     @media (min-width: 768px) {
         #root-gutterbones .lineup-actions-slot { min-height: 3.5rem; }
     }
-    #root-gutterbones .tutorial-coach-cutout {
+    #root-gutterbones .tutorial-coach-mask {
         position: fixed;
+        inset: 0;
         z-index: 651;
         pointer-events: none;
-        border-radius: 10px;
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.74);
-        border: 2px solid rgba(255, 184, 92, 0.85);
+    }
+    #root-gutterbones .tutorial-coach-ring {
+        position: fixed;
+        z-index: 652;
+        pointer-events: none;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 184, 92, 0.9);
+        box-shadow: 0 0 24px rgba(255, 0, 127, 0.35);
+        animation: tutorialRingPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes tutorialRingPulse {
+        0%, 100% { transform: scale(1); opacity: 0.85; }
+        50% { transform: scale(1.04); opacity: 1; }
+    }
+    #root-gutterbones .tutorial-progress-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.25);
+    }
+    #root-gutterbones .tutorial-progress-dot.active {
+        background: #ff007f;
+        box-shadow: 0 0 8px rgba(255, 0, 127, 0.65);
+    }
+    #root-gutterbones .round-clear-card {
+        animation: roundClearIn var(--t-med) var(--ease-out-expo) forwards;
+    }
+    @keyframes roundClearIn {
+        from { opacity: 0; transform: scale(0.94) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
     #root-gutterbones .gb-modal-fit {
         max-height: min(100%, 100dvh);
@@ -3794,8 +3822,14 @@ const GutterbonesGamble = (() => {
         </div>
     );
 
-    const TutorialCoachMark = ({ step, onAck, onSkip, reducedMotion }) => {
+    const TutorialCoachMark = ({ step, stepIndex = 0, stepCount = 1, onAck, onSkip, onBack, reducedMotion }) => {
         const [spot, setSpot] = useState(null);
+        const [captionVisible, setCaptionVisible] = useState(false);
+        useEffect(() => {
+            setCaptionVisible(false);
+            const id = scheduleTimeout(() => setCaptionVisible(true), reducedMotion ? 0 : 180);
+            return () => clearScheduledTimeout(id);
+        }, [step?.id, reducedMotion]);
         useEffect(() => {
             if (!step) return undefined;
             const sel = {
@@ -3833,18 +3867,47 @@ const GutterbonesGamble = (() => {
                 height: spot.height + pad * 2
             }
             : null;
+        const captionOnTop = cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.52 : 400);
+        const cardClass = captionOnTop
+            ? 'tutorial-coach-card absolute top-[max(0.75rem,env(safe-area-inset-top))] left-3 right-3 md:left-6 md:right-auto md:max-w-md'
+            : 'tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md';
+        const maskId = 'gb-tutorial-spot-mask';
         return (
             <div className="tutorial-coach-root" aria-live="polite">
-                {!cutout && <div className="tutorial-coach-dim" />}
-                {cutout && (
-                    <div
-                        className="tutorial-coach-cutout"
-                        style={{ top: cutout.top, left: cutout.left, width: cutout.width, height: cutout.height }}
-                    />
+                {cutout ? (
+                    <>
+                        <svg className="tutorial-coach-mask" aria-hidden>
+                            <defs>
+                                <mask id={maskId}>
+                                    <rect width="100%" height="100%" fill="white" />
+                                    <rect x={cutout.left} y={cutout.top} width={cutout.width} height={cutout.height} rx="12" fill="black" />
+                                </mask>
+                            </defs>
+                            <rect width="100%" height="100%" fill="rgba(0,0,0,0.76)" mask={`url(#${maskId})`} />
+                        </svg>
+                        {!reducedMotion && (
+                            <div
+                                className="tutorial-coach-ring"
+                                style={{ top: cutout.top, left: cutout.left, width: cutout.width, height: cutout.height }}
+                            />
+                        )}
+                    </>
+                ) : (
+                    <div className="tutorial-coach-dim" />
                 )}
                 <button type="button" onClick={onSkip} className="tutorial-coach-skip absolute top-3 left-3 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#ff007f] hover:text-white">SKIP TUTORIAL</button>
-                <div data-layout-key="tutorial-coach" className="tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md z-[660] bg-[#121113]/95 border-2 border-[#c78b16] rounded-lg p-4 shadow-2xl">
-                    <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2">FIXER ON THE WIRE</div>
+                {stepIndex > 0 && (
+                    <button type="button" onClick={onBack} className="absolute top-3 left-28 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#0df] hover:text-white">BACK</button>
+                )}
+                <div data-layout-key="tutorial-coach" className={`${cardClass} z-[660] bg-[#121113]/95 border-2 border-[#c78b16] rounded-lg p-4 shadow-2xl transition-opacity duration-300 ${captionVisible ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="font-mono text-[10px] tracking-[.35em] text-[#0df]">FIXER ON THE WIRE</div>
+                        <div className="flex gap-1.5" aria-hidden>
+                            {Array.from({ length: stepCount }, (_, i) => (
+                                <span key={i} className={`tutorial-progress-dot${i === stepIndex ? ' active' : ''}`} />
+                            ))}
+                        </div>
+                    </div>
                     <p className="font-mono text-sm text-gray-100 leading-relaxed">{step.caption}</p>
                     {needsAck && (
                         <button type="button" onClick={onAck} className="mt-3 w-full py-2 bg-[#c78b16] text-black font-mono text-xs font-bold tracking-wider rounded hover:bg-[#d6b85c]">COPY THAT</button>
@@ -3853,6 +3916,19 @@ const GutterbonesGamble = (() => {
             </div>
         );
     };
+
+    const RoundClearTitleCard = ({ onSkip, reducedMotion }) => (
+        <button
+            type="button"
+            onClick={onSkip}
+            className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto"
+        >
+            <div className={`round-clear-card font-marker text-5xl md:text-6xl text-[#0df] italic tracking-tight px-8 py-6 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl ${reducedMotion ? '' : ''}`}>
+                ROUND CLEARED
+                <div className="font-mono text-xs text-gray-400 mt-3 tracking-[.3em] not-italic">tap to continue</div>
+            </div>
+        </button>
+    );
 
     const RecordsUnlocksPanel = ({ meta, onClose }) => {
         const rows = GutterbonesReplay?.evaluateUnlocks(meta) || [];
@@ -4838,7 +4914,10 @@ const GutterbonesGamble = (() => {
             setPayoutActive(false);
         };
 
-        const transitionToPhase = (nextPhase, { waitHeatMs = 0 } = {}) => {
+        const [roundClearCardActive, setRoundClearCardActive] = useState(false);
+        const roundClearPendingRef = useRef(null);
+
+        const runPhaseTransition = (nextPhase, { waitHeatMs = 0 } = {}) => {
             const outMs = reducedMotion ? 150 : 260;
             const inMs = reducedMotion ? 150 : 320;
             setScreenTransition('out');
@@ -4848,6 +4927,23 @@ const GutterbonesGamble = (() => {
                 setScreenTransition('in');
                 scheduleTimeout(() => setScreenTransition(null), inMs);
             }, outMs + (waitHeatMs || 0));
+        };
+
+        const finishRoundClearCard = () => {
+            setRoundClearCardActive(false);
+            const pending = roundClearPendingRef.current;
+            roundClearPendingRef.current = null;
+            if (pending) runPhaseTransition(pending.nextPhase, { waitHeatMs: pending.waitHeatMs || 0 });
+        };
+
+        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false } = {}) => {
+            if (roundClear && !reducedMotion) {
+                roundClearPendingRef.current = { nextPhase, waitHeatMs };
+                setRoundClearCardActive(true);
+                scheduleTimeout(finishRoundClearCard, 700);
+                return;
+            }
+            runPhaseTransition(nextPhase, { waitHeatMs });
         };
 
         const scheduleTimeout = (fn, ms) => {
@@ -5041,6 +5137,10 @@ const GutterbonesGamble = (() => {
 
         const bumpTutorialStep = () => {
             setTutorialStepIndex((i) => Math.min(i + 1, (GutterbonesTutorial?.STEPS?.length || 1) - 1));
+        };
+
+        const backTutorialStep = () => {
+            setTutorialStepIndex((i) => Math.max(0, i - 1));
         };
 
         const completeTutorial = () => {
@@ -6238,7 +6338,7 @@ const GutterbonesGamble = (() => {
                     if (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current && quotaCleared) {
                         generateShop();
                         setFixerLine('Tutorial round cleared. Welcome to the Back Alley.');
-                        transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520 });
+                        transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
                         if (typeof notifyTutorial === 'function') notifyTutorial('round_clear');
                         return;
                     }
@@ -6255,7 +6355,7 @@ const GutterbonesGamble = (() => {
                         if (quotaCleared) {
                             setFixerLine(`Round ${round} quota cleared. Pick a route — Pawn/Smuggle pay +$15 bonus cash.`);
                         }
-                        transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520 });
+                        transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: quotaCleared });
                     }
                 }
             }
@@ -6786,10 +6886,16 @@ const GutterbonesGamble = (() => {
                         }}
                     />
                 )}
+                {roundClearCardActive && (
+                    <RoundClearTitleCard reducedMotion={reducedMotion} onSkip={finishRoundClearCard} />
+                )}
                 {tutorialActive && (phase === 'PLAY' || phase === 'SHOP') && !storyBeat && (
                     <TutorialCoachMark
                         step={tutorialStepDef()}
+                        stepIndex={tutorialStepIndex}
+                        stepCount={GutterbonesTutorial?.STEPS?.length || 1}
                         reducedMotion={reducedMotion}
+                        onBack={backTutorialStep}
                         onAck={() => {
                             notifyTutorial('ack');
                             const step = tutorialStepDef();
