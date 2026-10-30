@@ -2681,6 +2681,103 @@ const GutterbonesGamble = (() => {
 })();
 </script>
 
+<script id="gutterbones-presentation">
+const GutterbonesPresentation = (() => {
+    const PACING_SCALE = Object.freeze({ fast: 0.78, normal: 1, relaxed: 1.32 });
+    const GATE_MIN_MS = Object.freeze({
+        roundClear: 2800,
+        bossIntro: 3200,
+        scoreOverlay: 2600,
+        unlockToast: 3200,
+        mechanicToast: 3200,
+        storyPanel: 2400,
+        rapReveal: 2800,
+        paperStamp: 1400
+    });
+    const TOAST_MIN_MS = Object.freeze({ fast: 2600, normal: 3200, relaxed: 4000 });
+    const AUTO_DISMISS_CAP_MS = 12000;
+
+    const normalizePacing = (pacing) => (
+        pacing === 'fast' || pacing === 'relaxed' ? pacing : 'normal'
+    );
+
+    const pacingScale = (pacing) => PACING_SCALE[normalizePacing(pacing)] || 1;
+
+    const scaledMs = (baseMs, pacing, reducedMotion) => {
+        const scale = reducedMotion ? Math.min(1, pacingScale(pacing)) : pacingScale(pacing);
+        return Math.max(800, Math.round(baseMs * scale));
+    };
+
+    const gateMinMs = (kind, pacing, reducedMotion) => (
+        scaledMs(GATE_MIN_MS[kind] || GATE_MIN_MS.scoreOverlay, pacing, reducedMotion)
+    );
+
+    const toastDurationMs = (pacing, reducedMotion) => (
+        scaledMs(TOAST_MIN_MS[normalizePacing(pacing)] || TOAST_MIN_MS.normal, pacing, reducedMotion)
+    );
+
+    const readableMs = (textLength, pacing, reducedMotion) => {
+        const chars = Math.max(0, Math.floor(Number(textLength) || 0));
+        const base = 2200 + Math.min(1400, chars * 28);
+        return scaledMs(base, pacing, reducedMotion);
+    };
+
+    const scoreOverlayLifetimeMs = ({
+        result,
+        reducedMotion,
+        pacing,
+        synergyTuning = {}
+    }) => {
+        const base = Math.max(
+            GATE_MIN_MS.scoreOverlay,
+            synergyTuning.overlayBaseMs || 2600
+        );
+        if (reducedMotion || !result) return scaledMs(base, pacing, reducedMotion);
+        const eventCount = (result.synergyEvents || []).length;
+        const chainStepCount = (result.explanationSteps || []).filter(
+            (step) => String(step.label || '').startsWith('CHAIN:')
+        ).length;
+        const staggerSteps = Math.max(eventCount, chainStepCount);
+        const stepMs = synergyTuning.juiceStepMs ?? 150;
+        const sequenceMs = staggerSteps > 0 ? staggerSteps * stepMs + 180 : 0;
+        const tailMs = synergyTuning.overlayTailMs ?? 1200;
+        const depth = result.chainDepth || 0;
+        const deepChain = depth >= 2 || eventCount >= 2 || chainStepCount >= 2;
+        const depthBonus = deepChain ? (synergyTuning.overlayDepthBonusMs ?? 900) : 0;
+        const perStepBonus = staggerSteps > 1
+            ? (staggerSteps - 1) * (synergyTuning.overlayPerChainStepMs ?? 220)
+            : 0;
+        const computed = staggerSteps === 0 && !deepChain
+            ? base
+            : Math.max(base, sequenceMs + tailMs + depthBonus + perStepBonus);
+        return scaledMs(computed, pacing, reducedMotion);
+    };
+
+    const synergySequenceTailMs = (eventCount, pacing, reducedMotion, stepMs = 150) => {
+        const events = Math.max(0, Math.floor(Number(eventCount) || 0));
+        const anim = events * stepMs + (events > 0 ? 220 : 0);
+        const hold = events >= 2 ? GATE_MIN_MS.scoreOverlay : 1200;
+        return scaledMs(anim + hold, pacing, reducedMotion);
+    };
+
+    return Object.freeze({
+        PACING_SCALE,
+        GATE_MIN_MS,
+        TOAST_MIN_MS,
+        AUTO_DISMISS_CAP_MS,
+        normalizePacing,
+        pacingScale,
+        scaledMs,
+        gateMinMs,
+        toastDurationMs,
+        readableMs,
+        scoreOverlayLifetimeMs,
+        synergySequenceTailMs
+    });
+})();
+if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesPresentation;
+</script>
+
 <script type="text/babel">
     const { useEffect, useMemo, useRef, useState } = React;
 
@@ -3287,7 +3384,7 @@ const GutterbonesGamble = (() => {
         bossPathStartsRound: 4
     };
 
-    const SCORE_OVERLAY_LIFETIME_MS = 1400;
+    const SCORE_OVERLAY_LIFETIME_MS = 2600;
 
     const ROUND_CURVE_TUNING = {
         earlyMaxRound: 4,
@@ -3343,10 +3440,10 @@ const GutterbonesGamble = (() => {
         enabled: true,
         maxChainPasses: 8,
         juiceStepMs: 150,
-        overlayBaseMs: 1400,
-        overlayTailMs: 900,
-        overlayDepthBonusMs: 650,
-        overlayPerChainStepMs: 200,
+        overlayBaseMs: 2600,
+        overlayTailMs: 1200,
+        overlayDepthBonusMs: 900,
+        overlayPerChainStepMs: 220,
         comboMeterValidDelta: 1,
         comboMeterInvalidDelta: -2,
         comboMeterSpikeThresholds: [3, 6, 9],
@@ -3400,26 +3497,14 @@ const GutterbonesGamble = (() => {
     };
 
     /** Breakdown/resolution panel lifetime — extends through synergy stagger + read time. */
-    const getScoreOverlayLifetimeMs = (result, reducedMotion) => {
-        const base = SYNERGY_TUNING.overlayBaseMs ?? SCORE_OVERLAY_LIFETIME_MS;
-        if (reducedMotion || !result) return base;
-        const eventCount = (result.synergyEvents || []).length;
-        const chainStepCount = (result.explanationSteps || []).filter(
-            (step) => String(step.label || '').startsWith('CHAIN:')
-        ).length;
-        const staggerSteps = Math.max(eventCount, chainStepCount);
-        const stepMs = SYNERGY_TUNING.juiceStepMs ?? 150;
-        const sequenceMs = staggerSteps > 0 ? staggerSteps * stepMs + 120 : 0;
-        const tailMs = SYNERGY_TUNING.overlayTailMs ?? 900;
-        const depth = result.chainDepth || 0;
-        const deepChain = depth >= 2 || eventCount >= 2 || chainStepCount >= 2;
-        const depthBonus = deepChain ? (SYNERGY_TUNING.overlayDepthBonusMs ?? 650) : 0;
-        const perStepBonus = staggerSteps > 1
-            ? (staggerSteps - 1) * (SYNERGY_TUNING.overlayPerChainStepMs ?? 200)
-            : 0;
-        if (staggerSteps === 0 && !deepChain) return base;
-        return Math.max(base, sequenceMs + tailMs + depthBonus + perStepBonus);
-    };
+    const getScoreOverlayLifetimeMs = (result, reducedMotion, pacing = 'normal') => (
+        GutterbonesPresentation.scoreOverlayLifetimeMs({
+            result,
+            reducedMotion,
+            pacing,
+            synergyTuning: SYNERGY_TUNING
+        })
+    );
 
     const buildSynergyLinks = (events, dice) => {
         if (!events?.length || typeof GutterbonesRules?.resolveDice !== 'function') return [];
@@ -3640,6 +3725,7 @@ const GutterbonesGamble = (() => {
         tipSeenSideBet: false,
         reducedMotionPref: null,
         diceSpeed: 'normal',
+        pacing: 'normal',
         colorblindHeld: false,
         colorblindScoring: false
     };
@@ -3661,6 +3747,7 @@ const GutterbonesGamble = (() => {
         const stored = loadJson(STORAGE_KEYS.settings);
         if (!stored || typeof stored !== 'object') return { ...DEFAULT_SETTINGS };
         const diceSpeed = ['slow', 'normal', 'fast'].includes(stored.diceSpeed) ? stored.diceSpeed : DEFAULT_SETTINGS.diceSpeed;
+        const pacing = GutterbonesPresentation.normalizePacing(stored.pacing || DEFAULT_SETTINGS.pacing);
         return {
             audioMuted: typeof stored.audioMuted === 'boolean' ? stored.audioMuted : DEFAULT_SETTINGS.audioMuted,
             audioVolume: typeof stored.audioVolume === 'number' && !Number.isNaN(stored.audioVolume)
@@ -3678,6 +3765,7 @@ const GutterbonesGamble = (() => {
             tipSeenSideBet: !!stored.tipSeenSideBet,
             reducedMotionPref: typeof stored.reducedMotionPref === 'boolean' ? stored.reducedMotionPref : null,
             diceSpeed,
+            pacing,
             colorblindHeld: !!stored.colorblindHeld,
             colorblindScoring: !!stored.colorblindScoring
         };
@@ -3696,7 +3784,12 @@ const GutterbonesGamble = (() => {
             tipSeenCarving: !!settings.tipSeenCarving,
             tipSeenRoute: !!settings.tipSeenRoute,
             tipSeenGamble: !!settings.tipSeenGamble,
-            tipSeenSideBet: !!settings.tipSeenSideBet
+            tipSeenSideBet: !!settings.tipSeenSideBet,
+            reducedMotionPref: typeof settings.reducedMotionPref === 'boolean' ? settings.reducedMotionPref : null,
+            diceSpeed: ['slow', 'normal', 'fast'].includes(settings.diceSpeed) ? settings.diceSpeed : 'normal',
+            pacing: GutterbonesPresentation.normalizePacing(settings.pacing),
+            colorblindHeld: !!settings.colorblindHeld,
+            colorblindScoring: !!settings.colorblindScoring
         });
     };
 
@@ -4172,16 +4265,15 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const BossIntro = ({ boss, target, onDone, reducedMotion }) => {
+    const BossIntro = ({ boss, target, onDone, reducedMotion, canContinue }) => {
         const [typed, setTyped] = useState('');
         const [showDesc, setShowDesc] = useState(false);
         useEffect(() => {
-            if (!boss) return;
+            if (!boss) return undefined;
             if (reducedMotion) {
                 setTyped(boss.name);
                 setShowDesc(true);
-                const doneId = window.setTimeout(onDone, 900);
-                return () => window.clearTimeout(doneId);
+                return undefined;
             }
             setTyped('');
             setShowDesc(false);
@@ -4196,13 +4288,22 @@ const GutterbonesGamble = (() => {
                     revealId = window.setTimeout(() => setShowDesc(true), 120);
                 }
             }, 40);
-            const id = window.setTimeout(onDone, 1600);
             return () => {
-                window.clearTimeout(id);
                 if (revealId) window.clearTimeout(revealId);
                 window.clearInterval(typer);
             };
         }, [boss, reducedMotion]);
+        useEffect(() => {
+            if (!boss || !canContinue) return undefined;
+            const onKey = (e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    onDone();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [boss, canContinue, onDone]);
         if (!boss) return null;
         const microByBoss = {
             LOAN_SHARK: 'IOUs flutter onto the table.',
@@ -4213,20 +4314,26 @@ const GutterbonesGamble = (() => {
             THE_RAID: 'Sirens drown out the alley.'
         };
         return (
-            <div className="absolute inset-0 z-[250] flex items-center justify-center overflow-hidden">
-                <div className="boss-intro-backdrop" aria-hidden></div>
+            <button
+                type="button"
+                data-layout-key="boss-intro-overlay"
+                onClick={() => { if (canContinue) onDone(); }}
+                className="absolute inset-0 z-[250] flex items-center justify-center overflow-hidden bg-transparent border-0 p-0 cursor-pointer"
+            >
+                <div className="boss-intro-backdrop pointer-events-none" aria-hidden></div>
                 <div className="absolute inset-0 bg-black/55 pointer-events-none z-[1]"></div>
-                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top z-[2]"></div>}
-                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom z-[2]"></div>}
-                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden z-[3]" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
+                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top z-[2] pointer-events-none"></div>}
+                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom z-[2] pointer-events-none"></div>}
+                <div className="border-4 border-red-800 bg-[#111] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden z-[3] pointer-events-none" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
                     <BossPortrait boss={boss} variant="intro" />
                     <div className="font-mono text-red-500 tracking-[.4em] text-xs mb-3">TURF WAR</div>
-                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && <span className="opacity-60">_</span>}</h2>
+                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem]`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
                     <p className={`font-mono text-gray-300 transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
                     <p className="font-mono text-xs text-gray-500 mt-3">Quota: {target}</p>
                     <p className="font-mono text-[10px] text-red-300/70 mt-2">{microByBoss[boss.id]}</p>
+                    <p className="font-mono text-[10px] text-gray-400 mt-4 tracking-[.28em]">{canContinue ? 'TAP TO CONTINUE' : '…'}</p>
                 </div>
-            </div>
+            </button>
         );
     };
 
@@ -4491,15 +4598,17 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const RoundClearTitleCard = ({ onSkip, reducedMotion }) => (
+    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue }) => (
         <button
             type="button"
-            onClick={onSkip}
+            onClick={() => { if (canContinue) onSkip(); }}
             className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto"
         >
-            <div className={`round-clear-card font-marker text-5xl md:text-6xl text-[#0df] italic tracking-tight px-8 py-6 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl ${reducedMotion ? '' : ''}`}>
+            <div data-layout-key="round-clear-card" className={`round-clear-card font-marker text-5xl md:text-6xl text-[#0df] italic tracking-tight px-8 py-6 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl ${reducedMotion ? '' : ''}`}>
                 ROUND CLEARED
-                <div className="font-mono text-xs text-gray-400 mt-3 tracking-[.3em] not-italic">tap to continue</div>
+                <div className="font-mono text-xs text-gray-400 mt-3 tracking-[.3em] not-italic">
+                    {canContinue ? 'TAP TO CONTINUE' : '…'}
+                </div>
             </div>
         </button>
     );
@@ -4606,41 +4715,48 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const UnlockNotification = ({ message, onDone }) => {
-        useEffect(() => {
-            const id = setTimeout(onDone, 3200);
-            return () => clearTimeout(id);
-        }, [onDone]);
-        return (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[550] pointer-events-none" style={{ animation: 'badgePop .3s ease-out forwards' }}>
-                <div className="bg-black/90 border-2 border-[#0df] rounded-lg px-5 py-3 shadow-2xl flex items-center gap-3" style={{ boxShadow: '0 0 20px rgba(0,221,255,.3)' }}>
-                    <span className="text-[#0df] text-sm font-mono font-bold">NEW</span>
-                    <div>
-                        <div className="font-mono text-[10px] text-[#0df] tracking-[.3em]">UNLOCKED</div>
-                        <div className="font-mono text-sm text-white">{message}</div>
+    const ToastStack = ({ items = [] }) => (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[550] pointer-events-none w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
+            {items.map((item, idx) => (
+                <div
+                    key={item.id}
+                    data-layout-key={item.layoutKey || 'toast-stack-item'}
+                    className="bg-black/90 border-2 border-[#0df] rounded-lg px-5 py-3 shadow-2xl flex items-center gap-3"
+                    style={{ animation: 'badgePop .3s ease-out forwards', marginTop: idx * 2 }}
+                >
+                    {item.kind === 'unlock' && <span className="text-[#0df] text-sm font-mono font-bold shrink-0">NEW</span>}
+                    <div className="min-w-0">
+                        {item.kind === 'unlock' && <div className="font-mono text-[10px] text-[#0df] tracking-[.3em]">UNLOCKED</div>}
+                        {item.title && <div className="font-mono text-xs text-[#ffd37a] tracking-[.25em] mb-1">{item.title}</div>}
+                        <div className="font-mono text-sm text-white leading-snug">{item.body || item.message}</div>
                     </div>
                 </div>
-            </div>
-        );
-    };
+            ))}
+        </div>
+    );
 
-    const ScoreResolutionOverlay = ({ data, reducedMotion }) => {
+    const ScoreResolutionOverlay = ({ data, reducedMotion, canDismiss, onDismiss }) => {
         if (!data) return null;
         return (
-            <div className="absolute inset-0 z-[560] pointer-events-none flex items-center justify-center p-4">
-                <div className={`readable-panel rounded-xl px-7 py-5 ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+            <div className="absolute inset-0 z-[560] flex items-center justify-center p-4 pointer-events-none">
+                <button
+                    type="button"
+                    onClick={() => { if (canDismiss) onDismiss?.(); }}
+                    className={`pointer-events-auto readable-panel rounded-xl px-7 py-5 text-left ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
+                >
                     <div className="font-mono text-xs text-[#0df] tracking-[.35em] text-center mb-3">SCORE RESOLUTION</div>
                     <div className="font-mono text-base text-center text-gray-100">
                         <span className="text-yellow-300">{data.chips}</span> CHIPS x <span className="text-cyan-300">{data.mult.toFixed(2)}x</span>
                         {data.flowMult > 1 && <> x <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
                     </div>
                     <div className="font-marker text-5xl text-[#ff007f] text-center mt-2">{data.total}</div>
-                </div>
+                    <div className="font-mono text-[10px] text-gray-400 text-center mt-3 tracking-[.28em]">{canDismiss ? 'TAP TO CONTINUE' : '…'}</div>
+                </button>
             </div>
         );
     };
 
-    const ScoreBreakdownOverlay = ({ result, reducedMotion, onDismiss, chainStepsRevealed = null }) => {
+    const ScoreBreakdownOverlay = ({ result, reducedMotion, onDismiss, canDismiss = true, chainStepsRevealed = null }) => {
         const [tilesRevealed, setTilesRevealed] = useState(reducedMotion ? 4 : 0);
         const [stampSlammed, setStampSlammed] = useState(!!reducedMotion);
         useEffect(() => {
@@ -4697,14 +4813,14 @@ const GutterbonesGamble = (() => {
             <div className="absolute bottom-[11.5rem] md:bottom-[10rem] left-1/2 -translate-x-1/2 z-[575] pointer-events-none w-[min(94vw,42rem)]">
                 <button
                     type="button"
-                    onClick={onDismiss}
+                    onClick={() => { if (canDismiss) onDismiss?.(); }}
                     className={`pointer-events-auto relative w-full readable-panel gb-type-panel border-[#ff007f]/80 rounded-xl px-5 py-4 text-left overflow-hidden ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
                 >
                     <span className={`score-card-stamp paid-stamp ${!reducedMotion && stampSlammed ? 'score-card-stamp-animate' : ''}`} aria-hidden>FILED</span>
                     <div className="flex items-start justify-between gap-3 mb-3 pr-16">
                         <div className="min-w-0">
                             <div className="font-mono text-xs tracking-[.32em] text-[#ff9fcf]">SCORE EXPLANATION</div>
-                            <div className="font-mono text-sm text-gray-200 mt-1 truncate">{result.categoryName || 'HAND'} · tap to skip</div>
+                            <div className="font-mono text-sm text-gray-200 mt-1 truncate">{result.categoryName || 'HAND'} · {canDismiss ? 'TAP TO CONTINUE' : '…'}</div>
                             {(result.chainDepth || 0) > 0 && (
                                 <div className="font-mono text-[10px] text-fuchsia-300 mt-1 tracking-wider">CHAIN DEPTH {result.chainDepth}</div>
                             )}
@@ -4770,21 +4886,6 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const MechanicPopup = ({ hint, onDone }) => {
-        useEffect(() => {
-            const id = setTimeout(onDone, 2800);
-            return () => clearTimeout(id);
-        }, [hint, onDone]);
-        if (!hint) return null;
-        return (
-            <div data-layout-key="mechanic-toast" className="absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[620] pointer-events-none w-[min(94vw,34rem)] max-h-[40vh]">
-                <div className="readable-panel border-[#c78b16]/80 rounded-xl px-5 py-4">
-                    <div className="font-mono text-xs text-[#ffd37a] tracking-[.25em] mb-2">{hint.title}</div>
-                    <div className="font-mono text-sm text-gray-100 leading-relaxed">{hint.body}</div>
-                </div>
-            </div>
-        );
-    };
 
     const ActiveModifiers = ({ inventory, boss, insaneContract, runModifierIds = [] }) => {
         const hasBoss = !!boss;
@@ -5150,6 +5251,11 @@ const GutterbonesGamble = (() => {
             const idx = order.indexOf(settings.diceSpeed);
             onPatch({ diceSpeed: order[(idx + 1) % order.length] });
         };
+        const cyclePacing = () => {
+            const order = ['fast', 'normal', 'relaxed'];
+            const idx = order.indexOf(GutterbonesPresentation.normalizePacing(settings.pacing));
+            onPatch({ pacing: order[(idx + 1) % order.length] });
+        };
         const cycleVolume = () => {
             const steps = [0.35, 0.55, 0.82, 1];
             const idx = steps.findIndex((v) => Math.abs(v - settings.audioVolume) < 0.05);
@@ -5172,6 +5278,9 @@ const GutterbonesGamble = (() => {
                         </button>
                         <button type="button" onClick={cycleDiceSpeed} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                             DICE SPEED: {String(settings.diceSpeed || 'normal').toUpperCase()}
+                        </button>
+                        <button type="button" onClick={cyclePacing} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
+                            PACING: {String(GutterbonesPresentation.normalizePacing(settings.pacing)).toUpperCase()}
                         </button>
                         <button type="button" onClick={() => onPatch({ colorblindHeld: !settings.colorblindHeld })} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                             COLORBLIND HELD SLOTS {settings.colorblindHeld ? 'ON' : 'OFF'}
@@ -5476,8 +5585,8 @@ const GutterbonesGamble = (() => {
         const [arcId, setArcId] = useState(GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
         const [storyBeat, setStoryBeat] = useState(null);
         const storyFinishRef = useRef(null);
-        const [unlockNotification, setUnlockNotification] = useState(null);
-        const [mechanicPopup, setMechanicPopup] = useState(null);
+        const [toastStack, setToastStack] = useState([]);
+        const toastRemoveIdsRef = useRef(new Set());
         const [scoreResolution, setScoreResolution] = useState(null);
         const [scoreBreakdown, setScoreBreakdown] = useState(null);
         const [chainStepsRevealed, setChainStepsRevealed] = useState(null);
@@ -5520,6 +5629,36 @@ const GutterbonesGamble = (() => {
         const scoreResolutionTimeoutRef = useRef(null);
         const nextShopTagRef = useRef(null);
         const routeModifiersRef = useRef({});
+        const pendingPhaseTransitionRef = useRef(null);
+        const [roundClearCanContinue, setRoundClearCanContinue] = useState(false);
+        const [bossIntroCanContinue, setBossIntroCanContinue] = useState(false);
+        const [scoreOverlayCanDismiss, setScoreOverlayCanDismiss] = useState(false);
+        const [rapSheetRevealReady, setRapSheetRevealReady] = useState(false);
+        const [rapSheetCanContinue, setRapSheetCanContinue] = useState(false);
+
+        const presentationPacing = () => GutterbonesPresentation.normalizePacing(audioSettings.pacing);
+
+        const pushToast = (payload) => {
+            const id = payload.id ?? Math.random();
+            const durationMs = payload.durationMs ?? GutterbonesPresentation.toastDurationMs(
+                presentationPacing(),
+                reducedMotion
+            );
+            const item = {
+                id,
+                kind: payload.kind || 'info',
+                body: payload.body || payload.message || '',
+                title: payload.title,
+                layoutKey: payload.layoutKey || 'toast-stack-item'
+            };
+            setToastStack((prev) => [...prev, item].slice(-5));
+            const tid = scheduleTimeout(() => {
+                setToastStack((prev) => prev.filter((t) => t.id !== id));
+                toastRemoveIdsRef.current.delete(id);
+            }, durationMs);
+            toastRemoveIdsRef.current.add(id);
+            return id;
+        };
 
         const dismissScoreOverlays = () => {
             if (scoreBreakdownTimeoutRef.current != null) {
@@ -5534,6 +5673,7 @@ const GutterbonesGamble = (() => {
             setScoreResolution(null);
             setChainStepsRevealed(null);
             setSynergyLinks([]);
+            setScoreOverlayCanDismiss(false);
         };
 
         const clearTransientJuice = () => {
@@ -5562,20 +5702,40 @@ const GutterbonesGamble = (() => {
         };
 
         const finishRoundClearCard = () => {
+            if (!roundClearCanContinue) return;
             setRoundClearCardActive(false);
+            setRoundClearCanContinue(false);
             const pending = roundClearPendingRef.current;
             roundClearPendingRef.current = null;
             if (pending) runPhaseTransition(pending.nextPhase, { waitHeatMs: pending.waitHeatMs || 0 });
         };
 
-        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false } = {}) => {
-            if (roundClear && !reducedMotion) {
-                roundClearPendingRef.current = { nextPhase, waitHeatMs };
-                setRoundClearCardActive(true);
-                scheduleTimeout(finishRoundClearCard, 700);
+        const beginRoundClearCard = (nextPhase, waitHeatMs = 0) => {
+            roundClearPendingRef.current = { nextPhase, waitHeatMs };
+            setRoundClearCardActive(true);
+            setRoundClearCanContinue(false);
+            scheduleTimeout(
+                () => setRoundClearCanContinue(true),
+                GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion)
+            );
+        };
+
+        const tryRunPendingPhaseTransition = () => {
+            const pending = pendingPhaseTransitionRef.current;
+            if (!pending) return;
+            if (scoreBreakdown || scoreResolution || bossIntro) return;
+            if (roundClearCardActive) return;
+            pendingPhaseTransitionRef.current = null;
+            if (pending.roundClear) {
+                beginRoundClearCard(pending.nextPhase, pending.waitHeatMs || 0);
                 return;
             }
-            runPhaseTransition(nextPhase, { waitHeatMs });
+            runPhaseTransition(pending.nextPhase, { waitHeatMs: pending.waitHeatMs || 0 });
+        };
+
+        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false } = {}) => {
+            pendingPhaseTransitionRef.current = { nextPhase, waitHeatMs, roundClear: !!roundClear };
+            tryRunPendingPhaseTransition();
         };
 
         const scheduleTimeout = (fn, ms) => {
@@ -5606,11 +5766,12 @@ const GutterbonesGamble = (() => {
             const prev = lastMechanicPopupRef.current;
             if (prev.key === hintKey && (now - prev.at) < 1200) return;
             lastMechanicPopupRef.current = { key: hintKey, at: now };
-            const id = Math.random();
-            setMechanicPopup({ id, ...hint });
-            scheduleTimeout(() => {
-                setMechanicPopup(current => (current?.id === id ? null : current));
-            }, 2800);
+            pushToast({
+                kind: 'mechanic',
+                title: hint.title,
+                body: hint.body,
+                layoutKey: 'mechanic-toast'
+            });
         };
         const triggerCameraKick = (kind = 'soft') => {
             if (reducedMotion) return;
@@ -5810,7 +5971,12 @@ const GutterbonesGamble = (() => {
                 if (prev[settingsKey]) return prev;
                 const hint = MECHANIC_HINTS[key];
                 if (!hint) return prev;
-                scheduleTimeout(() => setMechanicPopup(hint), 0);
+                scheduleTimeout(() => pushToast({
+                    kind: 'mechanic',
+                    title: hint.title,
+                    body: hint.body,
+                    layoutKey: 'mechanic-toast'
+                }), 0);
                 const next = { ...prev, [settingsKey]: true };
                 saveSettingsState(next);
                 return next;
@@ -5969,9 +6135,47 @@ const GutterbonesGamble = (() => {
             if (!msg) return;
             pendingUnlockMessageRef.current = msg;
             if (phase === 'RAP_SHEET' || (phase === 'PLAY' && bustActive)) return;
-            setUnlockNotification(msg);
+            pushToast({ kind: 'unlock', message: msg, layoutKey: 'unlock-toast' });
             pendingUnlockMessageRef.current = null;
         }, [meta.totalRuns, phase, bustActive]);
+
+        useEffect(() => {
+            if (!bossIntro) {
+                setBossIntroCanContinue(false);
+                return undefined;
+            }
+            setBossIntroCanContinue(false);
+            const id = scheduleTimeout(
+                () => setBossIntroCanContinue(true),
+                GutterbonesPresentation.gateMinMs('bossIntro', presentationPacing(), reducedMotion)
+            );
+            return () => clearScheduledTimeout(id);
+        }, [bossIntro, audioSettings.pacing, reducedMotion]);
+
+        useEffect(() => {
+            if (!scoreBreakdown && !scoreResolution) {
+                setScoreOverlayCanDismiss(false);
+                return undefined;
+            }
+            setScoreOverlayCanDismiss(false);
+            const minHold = GutterbonesPresentation.gateMinMs('scoreOverlay', presentationPacing(), reducedMotion);
+            const minId = scheduleTimeout(() => setScoreOverlayCanDismiss(true), minHold);
+            if (scoreBreakdownTimeoutRef.current != null) {
+                clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
+            }
+            scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
+                scoreBreakdownTimeoutRef.current = null;
+                dismissScoreOverlays();
+            }, GutterbonesPresentation.AUTO_DISMISS_CAP_MS);
+            return () => {
+                clearScheduledTimeout(minId);
+            };
+        }, [scoreBreakdown?.id, scoreResolution?.id, audioSettings.pacing, reducedMotion]);
+
+        useEffect(() => {
+            if (scoreBreakdown || scoreResolution || bossIntro || roundClearCardActive) return;
+            tryRunPendingPhaseTransition();
+        }, [scoreBreakdown, scoreResolution, bossIntro, roundClearCardActive]);
 
         const playStoryBeat = (panel, onDone) => {
             if (!panel || !panel.src) {
@@ -6352,15 +6556,26 @@ const GutterbonesGamble = (() => {
                 setTypedCase(full.slice(0, idx));
                 if (idx >= full.length) clearScheduledInterval(id);
             }, 50);
-            const stampId = scheduleTimeout(() => setShowIncarceratedStamp(true), 450);
-            return () => { clearScheduledInterval(id); clearScheduledTimeout(stampId); };
-        }, [phase, reducedMotion]);
+            setRapSheetRevealReady(false);
+            setRapSheetCanContinue(false);
+            const stampDelay = GutterbonesPresentation.gateMinMs('rapReveal', presentationPacing(), reducedMotion);
+            const stampId = scheduleTimeout(() => setShowIncarceratedStamp(true), Math.max(450, Math.floor(stampDelay * 0.45)));
+            const readyId = scheduleTimeout(() => setRapSheetCanContinue(true), stampDelay);
+            return () => {
+                clearScheduledInterval(id);
+                clearScheduledTimeout(stampId);
+                clearScheduledTimeout(readyId);
+            };
+        }, [phase, reducedMotion, audioSettings.pacing]);
 
         useEffect(() => {
             if (phase !== 'RAP_SHEET' || !showIncarceratedStamp || !pendingUnlockMessageRef.current) return;
             const msg = pendingUnlockMessageRef.current;
             pendingUnlockMessageRef.current = null;
-            const toastId = scheduleTimeout(() => setUnlockNotification(msg), 350);
+            const toastId = scheduleTimeout(
+                () => pushToast({ kind: 'unlock', message: msg, layoutKey: 'unlock-toast' }),
+                350
+            );
             return () => clearScheduledTimeout(toastId);
         }, [phase, showIncarceratedStamp]);
 
@@ -6823,11 +7038,17 @@ const GutterbonesGamble = (() => {
                         setChainStepsRevealed(i + 1);
                     }, i * stepMs);
                 });
+                const sequenceMs = GutterbonesPresentation.synergySequenceTailMs(
+                    events.length,
+                    presentationPacing(),
+                    reducedMotion,
+                    stepMs || SYNERGY_TUNING.juiceStepMs || 150
+                );
                 scheduleTimeout(() => {
                     setSynergyLinks([]);
                     setChainStepsRevealed(null);
                     onDone();
-                }, events.length * stepMs + 90);
+                }, sequenceMs);
             };
             const runValidHandJuice = (result, payoutCatId) => {
                 if (['Y', 'LS', 'FH'].includes(payoutCatId)) AudioSystem.categoryStinger(payoutCatId);
@@ -6844,10 +7065,6 @@ const GutterbonesGamble = (() => {
                         clearScheduledTimeout(scoreResolutionTimeoutRef.current);
                     }
                     setScoreResolution(resolutionPayload);
-                    scoreResolutionTimeoutRef.current = scheduleTimeout(() => {
-                        scoreResolutionTimeoutRef.current = null;
-                        setScoreResolution(current => (current?.id === resolutionPayload.id ? null : current));
-                    }, getScoreOverlayLifetimeMs(result, reducedMotion));
                 }
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
@@ -6916,15 +7133,8 @@ const GutterbonesGamble = (() => {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
             }
             const chainEventCount = (result.synergyEvents || []).length;
-            const breakdownLifetimeMs = getScoreOverlayLifetimeMs(result, reducedMotion);
             setChainStepsRevealed(!reducedMotion && chainEventCount > 0 ? 0 : null);
             setScoreBreakdown(breakdownPayload);
-            scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
-                scoreBreakdownTimeoutRef.current = null;
-                setScoreBreakdown(current => (current?.id === breakdownPayload.id ? null : current));
-                setChainStepsRevealed(null);
-                setSynergyLinks([]);
-            }, breakdownLifetimeMs);
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setSynergyState((prev) => {
@@ -7650,10 +7860,27 @@ const GutterbonesGamble = (() => {
                     setPhase('TITLE');
                     setShowSettingsPanel(true);
                 },
-                openMechanicToast: () => setMechanicPopup(MECHANIC_HINTS.PILL),
-                getPhase: () => phase
+                openMechanicToast: () => {
+                    const hint = MECHANIC_HINTS.PILL;
+                    pushToast({
+                        kind: 'mechanic',
+                        title: hint.title,
+                        body: hint.body,
+                        layoutKey: 'mechanic-toast'
+                    });
+                },
+                openRoundClear: () => beginRoundClearCard('SHOP', 0),
+                openBossIntro: () => {
+                    const boss = bossById('LOAN_SHARK');
+                    if (boss) setBossIntro(boss);
+                },
+                pushToast: (payload) => pushToast(payload),
+                getPhase: () => phase,
+                isRoundClearVisible: () => !!roundClearCardActive,
+                isBossIntroVisible: () => !!bossIntro,
+                scoreOverlayCanDismiss: () => scoreOverlayCanDismiss
             };
-        }, [phase]);
+        }, [phase, roundClearCardActive, bossIntro, scoreOverlayCanDismiss]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
@@ -7701,7 +7928,16 @@ const GutterbonesGamble = (() => {
                 )}
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
-                {bossIntro && <BossIntro boss={bossIntro} target={currentTarget} onDone={() => setBossIntro(null)} reducedMotion={reducedMotion} />}
+                {bossIntro && (
+                    <BossIntro
+                        boss={bossIntro}
+                        target={currentTarget}
+                        onDone={() => setBossIntro(null)}
+                        reducedMotion={reducedMotion}
+                        canContinue={bossIntroCanContinue}
+                    />
+                )}
+                {toastStack.length > 0 && <ToastStack items={toastStack} />}
                 {storyBeat && (
                     <StoryPanelOverlay
                         beat={storyBeat}
@@ -7741,7 +7977,11 @@ const GutterbonesGamble = (() => {
                     />
                 )}
                 {roundClearCardActive && (
-                    <RoundClearTitleCard reducedMotion={reducedMotion} onSkip={finishRoundClearCard} />
+                    <RoundClearTitleCard
+                        reducedMotion={reducedMotion}
+                        onSkip={finishRoundClearCard}
+                        canContinue={roundClearCanContinue}
+                    />
                 )}
                 {tutorialActive && (phase === 'PLAY' || phase === 'SHOP') && !storyBeat && (
                     <TutorialCoachMark
@@ -7758,10 +7998,23 @@ const GutterbonesGamble = (() => {
                         onSkip={exitTutorial}
                     />
                 )}
-                {unlockNotification && <UnlockNotification message={unlockNotification} onDone={() => setUnlockNotification(null)} />}
-                {mechanicPopup && <MechanicPopup hint={mechanicPopup} onDone={() => setMechanicPopup(null)} />}
-                {scoreResolution && phase === 'PLAY' && <ScoreResolutionOverlay data={scoreResolution} reducedMotion={reducedMotion} />}
-                {scoreBreakdown && phase === 'PLAY' && <ScoreBreakdownOverlay result={scoreBreakdown} reducedMotion={reducedMotion} onDismiss={dismissScoreOverlays} chainStepsRevealed={chainStepsRevealed} />}
+                {scoreResolution && phase === 'PLAY' && (
+                    <ScoreResolutionOverlay
+                        data={scoreResolution}
+                        reducedMotion={reducedMotion}
+                        canDismiss={scoreOverlayCanDismiss}
+                        onDismiss={dismissScoreOverlays}
+                    />
+                )}
+                {scoreBreakdown && phase === 'PLAY' && (
+                    <ScoreBreakdownOverlay
+                        result={scoreBreakdown}
+                        reducedMotion={reducedMotion}
+                        onDismiss={dismissScoreOverlays}
+                        canDismiss={scoreOverlayCanDismiss}
+                        chainStepsRevealed={chainStepsRevealed}
+                    />
+                )}
                 {lossExplanation && phase === 'PLAY' && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
                 {showSystemMenu && inRunPhase && (
@@ -8579,6 +8832,17 @@ const GutterbonesGamble = (() => {
                     </div>
                 )}
 
+                {phase === 'RAP_SHEET' && !rapSheetRevealReady && (
+                    <button
+                        type="button"
+                        data-layout-key="rap-reveal-gate"
+                        className="fixed inset-0 z-[520] bg-black/55 flex flex-col items-center justify-end pb-16 font-mono text-[10px] tracking-[.32em] text-gray-200"
+                        onClick={() => { if (rapSheetCanContinue) setRapSheetRevealReady(true); }}
+                        aria-label="Continue to rap sheet"
+                    >
+                        {rapSheetCanContinue ? 'TAP TO CONTINUE' : '…'}
+                    </button>
+                )}
                 {phase === 'RAP_SHEET' && (
                     <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="rap-busted-backdrop" aria-hidden></div>

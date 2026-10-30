@@ -123,7 +123,11 @@ test("Phase 6d input UX hooks present", () => {
 
 test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /openingStashGrant:\s*25/);
-  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1400/);
+  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*2600/);
+  assert.match(html, /id="gutterbones-presentation"/);
+  assert.match(appSource, /GutterbonesPresentation/);
+  assert.match(appSource, /ToastStack/);
+  assert.match(appSource, /pacing:\s*'normal'/);
   assert.match(appSource, /getScoreOverlayLifetimeMs/);
   assert.match(appSource, /overlayTailMs/);
   assert.match(appSource, /applyDevSynergyDemoDice/);
