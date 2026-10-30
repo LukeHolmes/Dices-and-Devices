@@ -122,6 +122,7 @@ async function runScenarioAction(page, action) {
   if (action === "firstRun") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openFirstRun());
   if (action === "tutorialChoice") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialChoice());
   if (action === "tutorialCoach") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openTutorialCoach());
+  if (action === "records") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openRecords());
   if (action === "toast") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openMechanicToast());
   if (action === "safehouse") {
     await page.getByRole("button", { name: "SAFEHOUSE", exact: true }).click();
