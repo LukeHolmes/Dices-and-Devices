@@ -1,0 +1,23 @@
+{
+  "name": "Gutterbones 1977",
+  "short_name": "Gutterbones",
+  "description": "Neon-noir dice roguelike — carve bones, beat quotas, escape the alley.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121113",
+  "theme_color": "#121113",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "gutterbones-card.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
