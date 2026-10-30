@@ -1,34 +1,35 @@
 # Pro polish (2026-10-30)
 
-Branch: `cursor/pro-polish` (stacked on `cursor/release-prep-f4c3` / promote PR **#58**).
+Three sequential PRs off **`main`** (merge **P1 → P2 → P3**). Do not merge Phase 7 Vite split (**#44**).
 
-**Merge order:** Luke should merge **#58 (promote to main)** first, then retarget this PR’s base to `main`.
+| PR | Branch (working) | Items |
+|----|------------------|-------|
+| **P1** | `cursor/pro-polish-p1-f4c3` | Shared foundation + **1, 2, 7, 8** (core feel) |
+| **P2** | `cursor/pro-polish-p2-f4c3` | **3, 4, 5, 6** (flow, shop, tokens, preload/modals) |
+| **P3** | `cursor/pro-polish-p3-f4c3` | **9, 10** (main menu, tutorial) |
 
-## Summary
+## P1 — shared foundation
 
-UX and juice pass for playtest readiness: faster, staggered dice rolls; payout sheet stability; screen transitions; shop route layout; unified panel styling; art preload/fade; score card polish; held-die clarity; title/lineup stability; tutorial spotlight cut-outs; roll-ready glow-only pulse for stable automation clicks.
+- **Motion:** CSS vars `--t-fast` (120ms), `--t-med` (240ms), `--t-slow` (400ms); easings `--ease-out-expo`, `--ease-out-back`, `--ease-in-out-cubic`. See [`docs/motion-system.md`](motion-system.md).
+- **Reduced motion:** Settings toggle + `prefers-reduced-motion` → root class `gb-motion-reduce` (collapsed motion; short screen fades kept).
+- **Sound bus:** `assets/audio/gutterbones-audio.js` — pooled voices (16), per-category gain (`ui`, `dice`, `score`, `hud`, `ambient`), ±4% pitch jitter, `dieThud(i)`, `holdTick` / `holdRelease`, `scoreTick`, `stampThunk`, `uiClick`, `hudDelta`.
+- **Perf:** Dice juice uses `transform` / `opacity` on die images; `will-change` only on rolling slots. Target 60fps — spot-check alley roll in Performance panel (transform-heavy frames ~16ms on desktop audit VM).
 
-## Checklist (request items)
+## P1 — checklist
 
-| # | Area | Change |
-|---|------|--------|
-| 1 | Roll | ~0.6–1s tumble, per-die land + `dieThud`, staggered settle (no long blank lane) |
-| 2 | Payouts | Fixed row height; BUST reason in tooltip/title only; 240ms scoring input lock on payout |
-| 3 | Transitions | `transitionToPhase` fade/slide; clears stamps, flow chips, floating numbers; waits for heat tally before round-end screens |
-| 4 | Shop routes | Auto-height cards; `gb-route-list` styled scroll (no default white box) |
-| 5 | Type/panels | `gb-type-panel` shared with `readable-panel`; HUD side panels unchanged in layout |
-| 6 | Art / Case Files | Scene preload links + `scene-backdrop-fade`; Case Files min-height + open animation; boss `NO PHOTO` placeholder |
-| 7 | Score card | FILED stamp offset; no inner scroll; tap/auto dismiss unchanged; flow display rounded; stamp bounce |
-| 8 | Held die | Lift/glow/`HELD` label; hold tick tone; ROLL 'EM copy unified |
-| 9 | Main menu | Title actions grid (no stray scroll); lineup RESUME slot reserved; button active states; locked card contrast |
-| 10 | Tutorial | Box-shadow spotlight cut-out; Free Sniff banner moved below heat; onboarding kicker stable height |
-| — | Automation | `rollReadyPulse` uses glow only (no transform) |
+| # | Area | Delivered in P1 |
+|---|------|-----------------|
+| 1 | Roll | Staggered tumble/land, per-die `dieThud`, lane focus anim, roll-btn squash, last-die camera nudge, speed via settings, pill reroll uses same thud path |
+| 2 | Payouts | Fixed row height; BUST in title + long-press tooltip (touch); valid-row accent; preview tint on dice; **150ms** input lock; keys **1–9** / **↑↓** + **Enter** |
+| 7 | Score moment | Breakdown tiles reveal in sequence + rising `scoreTick`; FILED stamp after tiles + `stampThunk`; **1.4s** base dismiss window; flow shown to 2 decimals |
+| 8 | Feedback | Held lift/brass rim/`HELD`; hold/release tones; ROLL 'EM copy; roll-ready **glow-only** pulse |
 
-## Verification
+## Verification (each PR)
 
-- `npm run check` (layout audit + Node tests)
-- Manual: roll in alley, payout BUST tooltip, round-end → shop transition, tutorial spotlight, title/lineup with/without save
+- `npm run check` (Node tests + no-scroll layout audit + known-issues audit)
+- Manual smoke: roll alley, score hand, payout keyboard, reduced motion on/off
+- PR body: before/after capture for roll + score (P1); shop transition (P2); tutorial (P3); brief perf note
 
-## Out of scope
+## P2 / P3 (follow PRs)
 
-- Phase 7 Vite split (#44) — unchanged.
+P2 adds scene transition manager polish, shop route cards grid, `docs/design-tokens.md`, loading/preload/modal shell. P3 tightens title/lineup (no scroll, RESUME slot, ambient motion) and tutorial SVG spotlight coach.
