@@ -130,9 +130,17 @@ function createGame(snapshot = {}, options = {}) {
     },
     scheduleInterval: () => 1,
     clearScheduledInterval: noOp,
+    dailyRunActive: false,
+    runModifierIds: [],
     rollLockRef: { current: false },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
+    modifierFlagsRef: {
+      current: { sacrificeUsed: false, shopInterestRound: null },
+    },
+    runRandomRef: { current: () => (options.random || (() => 0.99))() },
+    sacrificePlayPenaltyRef: { current: 0 },
+    sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
@@ -143,10 +151,10 @@ function createGame(snapshot = {}, options = {}) {
     const key = setter[3].toLowerCase() + setter.slice(4);
     sandbox[setter] = (update) => {
       const previous = pending.has(key) ? pending.get(key) : snapshot[key];
-      pending.set(
-        key,
-        typeof update === "function" ? update(previous) : update,
-      );
+      const next =
+        typeof update === "function" ? update(previous) : update;
+      pending.set(key, next);
+      if (key === "dailyRunActive") sandbox.dailyRunActive = next;
     };
   }
   const context = vm.createContext(sandbox);

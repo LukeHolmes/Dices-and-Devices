@@ -1397,28 +1397,149 @@ const GutterbonesReplay = (() => {
         return `Gutterbones ${dateKey} ${pat} heat:${heat} r:${rounds}`;
     };
 
-    const applyRunModifiersToScore = (result, catId, dice, kept, modifierIds = [], lastHand = null) => {
+    const BASE_ROUTE_IDS = Object.freeze(['LOCAL', 'PAWN', 'HIDEOUT', 'SMUGGLE', 'VIP', 'BOSS', 'RAID']);
+    const DAILY_MODIFIER_COUNT = 2;
+
+    const applyRunModifiersToScore = (result, catId, dice, kept, modifierIds = [], lastHand = null, extra = {}) => {
         if (!result?.valid || !modifierIds?.length) return result;
         let chips = result.chips || 0;
         let mult = result.mult || 1;
         const ids = new Set(modifierIds);
         if (ids.has('ODD_EVEN_SPLIT')) {
             dice.forEach((d, i) => {
-                if ((i + 1) % 2 === 1) chips += 8;
-                else mult += 0.5;
+                if ((i + 1) % 2 === 1) chips += 6;
+                else mult += 0.35;
             });
         }
-        if (ids.has('STRAIGHT_FOCUS') && (catId === 'SS' || catId === 'LS')) chips += 25;
-        if (ids.has('HOLD_CHARGE')) chips += (kept || []).filter(Boolean).length * 3;
+        if (ids.has('STRAIGHT_FOCUS') && (catId === 'SS' || catId === 'LS')) chips += 18;
+        if (ids.has('HOLD_CHARGE')) chips += (kept || []).filter(Boolean).length * 2;
         if (ids.has('PIP_SUM')) {
             const pip = dice.reduce((s, d) => s + (d.value || 0), 0);
-            chips += Math.min(30, pip);
+            chips += Math.min(22, pip);
         }
         if (ids.has('COPY_LAST') && lastHand?.category && lastHand.category === catId) {
-            chips += Math.floor((lastHand.total || 0) * 0.5);
+            chips += Math.floor((lastHand.total || 0) * 0.4);
         }
-        const total = Math.floor(chips * mult * (result.flowMult || 1));
+        if (extra.sacrificeBonus) chips += extra.sacrificeBonus;
+        const flowMult = result.flowMult || 1;
+        const total = Math.floor(chips * mult * flowMult);
         return { ...result, chips, mult, total };
+    };
+
+    const applySacrificeToDice = (dice) => {
+        if (!Array.isArray(dice) || dice.length === 0) return { dice, bonus: 0, applied: false };
+        let minIdx = 0;
+        let minVal = dice[0]?.value ?? 6;
+        dice.forEach((d, i) => {
+            const v = d?.value ?? 6;
+            if (v < minVal) {
+                minVal = v;
+                minIdx = i;
+            }
+        });
+        const next = dice.map((d, i) => (i === minIdx
+            ? { ...d, value: 0, faceId: null, faceLabel: 'SAC', faceStyle: null, type: 'standard' }
+            : d));
+        return { dice: next, bonus: 12, applied: true };
+    };
+
+    const riskBoneToll = (dice, activeMask) => {
+        if (!Array.isArray(dice) || !Array.isArray(activeMask)) return 0;
+        const rolledOne = dice.some((d, i) => activeMask[i] && d.value === 1);
+        return rolledOne ? 1 : 0;
+    };
+
+    const stashInterestPayout = (stashPct = 0) => Math.max(0, Math.floor((stashPct || 0) / 25));
+
+    const getDailyRunConfig = (dateKey = utcDateKey()) => {
+        const seed = dailySeed(dateKey);
+        const rng = mulberry32(seed);
+        const allMods = Object.keys(RUN_MODIFIERS);
+        const modifierIds = [];
+        while (modifierIds.length < DAILY_MODIFIER_COUNT && modifierIds.length < allMods.length) {
+            const pick = allMods[Math.floor(rng() * allMods.length)];
+            if (!modifierIds.includes(pick)) modifierIds.push(pick);
+        }
+        return { dateKey, seed, modifierIds, rng };
+    };
+
+    const canStartDaily = (meta, dateKey = utcDateKey()) => {
+        const attempts = meta?.dailyAttempts || {};
+        return !attempts[dateKey]?.used;
+    };
+
+    const recordDailyResult = (meta, { dateKey = utcDateKey(), heat = 0, round = 1, victory = false } = {}) => {
+        const attempts = { ...(meta?.dailyAttempts || {}) };
+        const prev = attempts[dateKey] || {};
+        const bestHeat = Math.max(prev.bestHeat || 0, heat);
+        attempts[dateKey] = {
+            used: true,
+            bestHeat,
+            lastHeat: heat,
+            lastRound: round,
+            victory: !!victory || !!prev.victory
+        };
+        return {
+            ...meta,
+            dailyAttempts: attempts,
+            dailyBestHeat: Math.max(meta?.dailyBestHeat || 0, bestHeat),
+            dailyLastDate: dateKey
+        };
+    };
+
+    const isExtraPath = (pathId) => EXTRA_PATHS.some((p) => p.id === pathId);
+
+    const isPathAvailable = (path, meta) => {
+        if (!path?.id) return false;
+        if (!isExtraPath(path.id)) return true;
+        return (meta?.unlockedRouteIds || []).includes(path.id);
+    };
+
+    const filterPathsForMeta = (paths, meta) => (paths || []).filter((p) => isPathAvailable(p, meta));
+
+    const syncPlayUnlocks = (meta) => {
+        let next = { ...meta };
+        const earned = new Set(next.unlockedPlayIds || []);
+        let changed = false;
+        PLAY_UNLOCKS.forEach((u) => {
+            if (earned.has(u.id)) return;
+            if (!u.check(next)) return;
+            earned.add(u.id);
+            changed = true;
+            const r = u.reward || {};
+            if (r.personaId) {
+                next.unlockedPersonaIds = [...new Set([...(next.unlockedPersonaIds || []), r.personaId])];
+            }
+            if (r.modifierPool?.length) {
+                next.unlockedModifierIds = [...new Set([...(next.unlockedModifierIds || []), ...r.modifierPool])];
+            }
+            if (r.pathId) {
+                next.unlockedRouteIds = [...new Set([...(next.unlockedRouteIds || []), r.pathId])];
+            }
+        });
+        if (changed) next.unlockedPlayIds = [...earned];
+        return next;
+    };
+
+    const modifierShopOffers = (meta, rng = Math.random) => {
+        const pool = (meta?.unlockedModifierIds || []).filter((id) => RUN_MODIFIERS[id]);
+        if (!pool.length || rng() > 0.22) return [];
+        const id = pool[Math.floor(rng() * pool.length)];
+        const mod = RUN_MODIFIERS[id];
+        return [{
+            id: `mod-offer-${id}`,
+            type: 'runModifier',
+            modifierId: id,
+            name: mod.name,
+            desc: mod.desc,
+            cost: 14,
+            rarity: 'rare'
+        }];
+    };
+
+    const personaStartModifiers = (personaId) => {
+        if (personaId === 'GRINDER') return ['HOLD_CHARGE', 'STRAIGHT_FOCUS'];
+        return [];
     };
 
     const evaluateUnlocks = (meta) => PLAY_UNLOCKS.map((u) => ({
@@ -1430,11 +1551,23 @@ const GutterbonesReplay = (() => {
         RUN_MODIFIERS,
         EXTRA_PATHS,
         PLAY_UNLOCKS,
+        BASE_ROUTE_IDS,
         utcDateKey,
         dailySeed,
         mulberry32,
         dailyShareString,
+        getDailyRunConfig,
+        canStartDaily,
+        recordDailyResult,
         applyRunModifiersToScore,
+        applySacrificeToDice,
+        riskBoneToll,
+        stashInterestPayout,
+        isPathAvailable,
+        filterPathsForMeta,
+        syncPlayUnlocks,
+        modifierShopOffers,
+        personaStartModifiers,
         evaluateUnlocks
     });
 })();
@@ -1932,7 +2065,8 @@ const GutterbonesGamble = (() => {
         { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
         { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700', portraitSrc: 'assets/personas/hustler.png', portraitAlt: 'The Hustler' },
         { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900', portraitSrc: 'assets/personas/enforcer.png', portraitAlt: 'The Enforcer' },
-        { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 15% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' }
+        { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 15% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' },
+        { id: 'GRINDER', name: 'The Grinder', alias: 'WORKHORSE', cash: 25, plays: 5, pills: 2, quirk: 'Starts each contract with Hold Charge + Straight Focus run mods.', loadout: '5x Standard Bones', color: 'bg-orange-900', portraitSrc: 'assets/personas/hustler.png', portraitAlt: 'The Grinder' }
     ];
 
     const FACE_DATABASE = {
@@ -2749,7 +2883,15 @@ const GutterbonesGamble = (() => {
         unlockedPersonaIds: [...new Set([...(DEFAULT_META_STATE.unlockedPersonaIds || []), ...((stored && stored.unlockedPersonaIds) || [])])],
         unlockedFaceIds: [...new Set([...(DEFAULT_META_STATE.unlockedFaceIds || []), ...((stored && stored.unlockedFaceIds) || [])])],
         unlockedHardwareIds: [...new Set([...(DEFAULT_META_STATE.unlockedHardwareIds || []), ...((stored && stored.unlockedHardwareIds) || [])])],
-        purchasedUpgradeIds: [...new Set(((stored && stored.purchasedUpgradeIds) || []))]
+        purchasedUpgradeIds: [...new Set(((stored && stored.purchasedUpgradeIds) || []))],
+        unlockedPlayIds: [...new Set([...(stored?.unlockedPlayIds || [])])],
+        unlockedModifierIds: [...new Set([...(stored?.unlockedModifierIds || [])])],
+        unlockedRouteIds: [...new Set([...(stored?.unlockedRouteIds || [])])],
+        dailyAttempts: { ...(stored?.dailyAttempts || {}) },
+        bestRoundReached: stored?.bestRoundReached || 0,
+        dailyBestHeat: stored?.dailyBestHeat || 0,
+        dailyLastDate: stored?.dailyLastDate || null,
+        recordsViews: stored?.recordsViews || 0
     });
 
     const loadJson = (key) => {
@@ -2770,7 +2912,13 @@ const GutterbonesGamble = (() => {
         }
     };
 
-    const loadMetaState = () => mergeMetaState(loadJson(STORAGE_KEYS.meta) || {});
+    const loadMetaState = () => {
+        let meta = mergeMetaState(loadJson(STORAGE_KEYS.meta) || {});
+        if (typeof GutterbonesReplay !== 'undefined' && GutterbonesReplay.syncPlayUnlocks) {
+            meta = GutterbonesReplay.syncPlayUnlocks(meta);
+        }
+        return meta;
+    };
     const saveMetaState = (meta) => saveJson(STORAGE_KEYS.meta, meta);
 
     const normalizeSavedRun = (raw) => GutterbonesRules.normalizeSavedRun(raw, {
@@ -3597,11 +3745,12 @@ const GutterbonesGamble = (() => {
         );
     };
 
-    const ActiveModifiers = ({ inventory, boss, insaneContract }) => {
+    const ActiveModifiers = ({ inventory, boss, insaneContract, runModifierIds = [] }) => {
         const hasBoss = !!boss;
         const hasInventory = inventory.length > 0;
         const hasContract = !!insaneContract;
-        if (!hasBoss && !hasInventory && !hasContract) return null;
+        const runMods = (runModifierIds || []).map((id) => GutterbonesReplay?.RUN_MODIFIERS?.[id]).filter(Boolean);
+        if (!hasBoss && !hasInventory && !hasContract && !runMods.length) return null;
         return (
             <div className="absolute bottom-4 left-4 readable-panel px-3 py-3 text-xs font-mono z-50 rounded-xl min-w-48 max-w-64 hidden lg:block">
                 <div className="text-[#0df] mb-2 tracking-[.18em] font-bold">ACTIVE MODIFIERS</div>
@@ -3620,6 +3769,13 @@ const GutterbonesGamble = (() => {
                                 <div className="text-red-100 leading-relaxed">{boss.desc}</div>
                             </div>
                         </div>
+                    </div>
+                )}
+                {runMods.length > 0 && (
+                    <div className="mb-2 text-amber-200 space-y-1">
+                        {runMods.map((m) => (
+                            <div key={m.id}><span className="text-[#c78b16]">RUN:</span> {m.name}</div>
+                        ))}
                     </div>
                 )}
                 {hasInventory && (
@@ -4070,7 +4226,13 @@ const GutterbonesGamble = (() => {
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
         const [dailyRunActive, setDailyRunActive] = useState(false);
+        const [dailyShareBanner, setDailyShareBanner] = useState(null);
+        const [lineupToast, setLineupToast] = useState(null);
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
+        const runRandomRef = useRef(() => Math.random());
+        const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
+        const sacrificePlayPenaltyRef = useRef(0);
+        const sacrificeBonusRef = useRef(0);
         const [meta, setMeta] = useState(loadMetaState);
         const [hasSavedRun, setHasSavedRun] = useState(() => !!loadSavedRun());
         const [lastLaundered, setLastLaundered] = useState(0);
@@ -4193,7 +4355,10 @@ const GutterbonesGamble = (() => {
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
         const inRunPhase = RUN_PHASES.includes(phase);
-        const shopRefreshCost = getShopRefreshCost(round, shopRefreshes);
+        const shopRefreshCost = Math.max(
+            0,
+            getShopRefreshCost(round, shopRefreshes) - (currentRouteEffect?.shopRefreshDiscount || 0)
+        );
         const flowMultiplier = getFlowMultiplier(flowStreak);
         const wagerThreshold = GutterbonesRoutes.wagerThresholdForRound(round, WAGER_TUNING);
         const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
@@ -4485,7 +4650,10 @@ const GutterbonesGamble = (() => {
             swapMode,
             swapIdx,
             history,
-            runStats
+            runStats,
+            runModifierIds,
+            dailyRunActive,
+            modifierFlags: modifierFlagsRef.current
         });
 
         const persistRun = (phaseOverride = phase) => {
@@ -4532,6 +4700,12 @@ const GutterbonesGamble = (() => {
             setSwapIdx(saved.swapIdx ?? null);
             setHistory(saved.history || []);
             setRunStats(saved.runStats || { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
+            setRunModifierIds(saved.runModifierIds || []);
+            setDailyRunActive(!!saved.dailyRunActive);
+            modifierFlagsRef.current = saved.modifierFlags || { sacrificeUsed: false, shopInterestRound: null };
+            runRandomRef.current = saved.dailyRunActive && GutterbonesReplay
+                ? GutterbonesReplay.mulberry32(GutterbonesReplay.dailySeed())
+                : () => Math.random();
             setBustActive(false);
             setPayoutActive(false);
             setFlyingScores([]);
@@ -4553,25 +4727,55 @@ const GutterbonesGamble = (() => {
 
         const updateMeta = (updater) => {
             setMeta(prev => {
-                const next = mergeMetaState(typeof updater === 'function' ? updater(prev) : updater);
+                let next = mergeMetaState(typeof updater === 'function' ? updater(prev) : updater);
+                if (GutterbonesReplay?.syncPlayUnlocks) next = GutterbonesReplay.syncPlayUnlocks(next);
                 saveMetaState(next);
                 return next;
             });
+        };
+
+        const copyDailyShare = (shareText) => {
+            if (!shareText) return;
+            const done = () => setDailyShareBanner(shareText);
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(shareText).then(done).catch(done);
+            } else {
+                done();
+            }
         };
 
         const awardLaunderedCash = ({ victory, totalHeat, cash }) => {
             const earned = Math.max(0, victory ? Math.floor(totalHeat / 10) + Math.max(0, cash) : Math.floor(totalHeat / 25));
             setLastLaundered(earned);
             setRunClosed(true);
-            updateMeta(prev => ({
-                ...prev,
-                launderedCash: prev.launderedCash + earned,
-                bestHeat: Math.max(prev.bestHeat || 0, totalHeat),
-                totalRuns: (prev.totalRuns || 0) + 1,
-                completedRuns: (prev.completedRuns || 0) + (victory ? 1 : 0)
-            }));
+            updateMeta(prev => {
+                let next = {
+                    ...prev,
+                    launderedCash: prev.launderedCash + earned,
+                    bestHeat: Math.max(prev.bestHeat || 0, totalHeat),
+                    bestRoundReached: Math.max(prev.bestRoundReached || 0, round),
+                    totalRuns: (prev.totalRuns || 0) + 1,
+                    completedRuns: (prev.completedRuns || 0) + (victory ? 1 : 0)
+                };
+                if (dailyRunActive && GutterbonesReplay) {
+                    next = GutterbonesReplay.recordDailyResult(next, {
+                        heat: totalHeat,
+                        round,
+                        victory
+                    });
+                    const share = GutterbonesReplay.dailyShareString({
+                        dateKey: GutterbonesReplay.utcDateKey(),
+                        heat: totalHeat,
+                        rounds: round
+                    });
+                    copyDailyShare(share);
+                }
+                return next;
+            });
             clearSavedRun();
             setHasSavedRun(false);
+            setDailyRunActive(false);
+            runRandomRef.current = () => Math.random();
             return earned;
         };
 
@@ -4747,22 +4951,47 @@ const GutterbonesGamble = (() => {
         }, [phase, showIncarceratedStamp]);
 
         useEffect(() => {
+            if (phase !== 'SHOP') return;
+            const mods = runModifierIds || [];
+            if (!mods.includes('STASH_INTEREST') || !GutterbonesReplay) return;
+            if (modifierFlagsRef.current.shopInterestRound === round) return;
+            modifierFlagsRef.current.shopInterestRound = round;
+            const pay = GutterbonesReplay.stashInterestPayout(stash);
+            if (pay > 0) {
+                setGold((g) => g + pay);
+                spawnPaperStamp(`INTEREST +$${pay}`, '#0f766e');
+            }
+        }, [phase, round, stash, runModifierIds]);
+
+        useEffect(() => {
             if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats]);
+        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats, runModifierIds, dailyRunActive]);
 
         const beginContract = ({ tutorial = false, daily = false } = {}) => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
             setShowFirstRunTutorialChoice(false);
+            setDailyShareBanner(null);
+            if (daily && GutterbonesReplay && !GutterbonesReplay.canStartDaily(meta)) {
+                setLineupToast('Daily run already played today (UTC). Come back tomorrow.');
+                scheduleTimeout(() => setLineupToast(null), 4500);
+                return;
+            }
             setDailyRunActive(!!daily);
+            modifierFlagsRef.current = { sacrificeUsed: false, shopInterestRound: null };
+            sacrificePlayPenaltyRef.current = 0;
+            sacrificeBonusRef.current = 0;
             if (daily && GutterbonesReplay) {
-                const rng = GutterbonesReplay.mulberry32(GutterbonesReplay.dailySeed());
-                const pool = Object.keys(GutterbonesReplay.RUN_MODIFIERS);
-                const pick = pool[Math.floor(rng() * pool.length)];
-                setRunModifierIds([pick]);
+                const cfg = GutterbonesReplay.getDailyRunConfig();
+                setRunModifierIds(cfg.modifierIds);
+                runRandomRef.current = cfg.rng;
+            } else if (GutterbonesReplay?.personaStartModifiers?.(p.id)?.length) {
+                setRunModifierIds(GutterbonesReplay.personaStartModifiers(p.id));
+                runRandomRef.current = () => Math.random();
             } else {
                 setRunModifierIds([]);
+                runRandomRef.current = () => Math.random();
             }
             setTutorialActive(tutorial);
             setTutorialStepIndex(0);
@@ -4866,7 +5095,11 @@ const GutterbonesGamble = (() => {
             const hist = typeof history !== 'undefined' ? history : [];
             const keptMask = typeof kept !== 'undefined' ? kept : [];
             const last = hist.filter((h) => h.total > 0).slice(-1)[0] || null;
-            return GutterbonesReplay.applyRunModifiersToScore(base, catId, currentDice, keptMask, mods, last);
+            const extra = typeof sacrificeBonusRef !== 'undefined' && sacrificeBonusRef.current
+                ? { sacrificeBonus: sacrificeBonusRef.current }
+                : {};
+            sacrificeBonusRef.current = 0;
+            return GutterbonesReplay.applyRunModifiersToScore(base, catId, currentDice, keptMask, mods, last, extra);
         };
 
         const analyzeRunFailure = ({ score, target, debt, hands, history, attempts = 0, roundNumber = round, boss = activeBoss, flowValue = flowStreak }) => {
@@ -5003,7 +5236,8 @@ const GutterbonesGamble = (() => {
                             type: 'standard'
                         };
                     }
-                    const face = d.faces[Math.floor(Math.random() * d.faces.length)];
+                    const rnd = () => (dailyRunActive ? runRandomRef.current() : Math.random());
+                    const face = d.faces[Math.floor(rnd() * d.faces.length)];
                     const isStandard = face.type === 'standard';
                     let value = face.value;
                     if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
@@ -5018,6 +5252,17 @@ const GutterbonesGamble = (() => {
                 }));
                 setRollingSlots(prev => prev.map((active, i) => (activeMask[i] ? false : active)));
                 rollLockRef.current = false;
+                const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
+                if (GutterbonesReplay && mods.includes('RISK_BONE')) {
+                    setDice((current) => {
+                        const toll = GutterbonesReplay.riskBoneToll(current, activeMask);
+                        if (toll > 0) {
+                            setGold((g) => Math.max(0, g - toll));
+                            spawnHitCallout('RISK BONE −$1');
+                        }
+                        return current;
+                    });
+                }
                 if (typeof notifyTutorial === 'function') notifyTutorial('roll_settled');
                 const pending = pendingPayoutRef.current;
                 if (pending) {
@@ -5112,6 +5357,17 @@ const GutterbonesGamble = (() => {
         const executePayout = (catId) => {
             if (typeof notifyTutorial === 'function') notifyTutorial('payout');
             if (typeof tutorialPayoutCountRef !== 'undefined') tutorialPayoutCountRef.current += 1;
+            const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
+            if (GutterbonesReplay && mods.includes('SACRIFICE_SLOT') && !modifierFlagsRef.current.sacrificeUsed) {
+                const sac = GutterbonesReplay.applySacrificeToDice(dice);
+                if (sac.applied) {
+                    modifierFlagsRef.current.sacrificeUsed = true;
+                    sacrificePlayPenaltyRef.current += 1;
+                    sacrificeBonusRef.current = sac.bonus;
+                    setDice(sac.dice);
+                    spawnPaperStamp('SACRIFICE', '#7c2d12');
+                }
+            }
             const playSynergySequence = (result, onDone) => {
                 const events = result.synergyEvents || [];
                 const stepMs = reducedMotion ? 0 : (SYNERGY_TUNING.juiceStepMs || 150);
@@ -5437,6 +5693,7 @@ const GutterbonesGamble = (() => {
         };
 
         const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
+            const rng = dailyRunActive ? runRandomRef.current : Math.random;
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES);
@@ -5455,7 +5712,7 @@ const GutterbonesGamble = (() => {
                 return weight;
             };
             const weightedSort = (items) => items
-                .map(item => ({ item, weight: baseWeight(item) + (Math.random() * 0.35) }))
+                .map(item => ({ item, weight: baseWeight(item) + (rng() * 0.35) }))
                 .sort((a, b) => b.weight - a.weight)
                 .map(entry => entry.item);
 
@@ -5465,7 +5722,7 @@ const GutterbonesGamble = (() => {
             const picks = [];
             if (facePool.length) picks.push(facePool.shift());
             if (hardwarePool.length) picks.push(hardwarePool.shift());
-            if (consumablePool.length && picks.length < 4 && Math.random() < consumableOfferChance) picks.push(consumablePool.shift());
+            if (consumablePool.length && picks.length < 4 && rng() < consumableOfferChance) picks.push(consumablePool.shift());
 
             const remainder = weightedSort([...facePool, ...hardwarePool, ...consumablePool]);
             while (picks.length < 4 && remainder.length) {
@@ -5504,13 +5761,20 @@ const GutterbonesGamble = (() => {
                 }
             }
 
+            const modOffers = GutterbonesReplay?.modifierShopOffers(meta, rng) || [];
+            modOffers.forEach((offer) => {
+                if (picks.length < 4 && !picks.some((p) => p.id === offer.id)) picks.unshift(offer);
+            });
+
             setShopItems(picks.slice(0, 4));
             if (!preserveRefreshes) setShopRefreshes(0);
             if (preservePaths) return;
             if (round === 9) {
                 setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
             } else {
-                const next = [...PATHS];
+                const next = GutterbonesReplay
+                    ? GutterbonesReplay.filterPathsForMeta([...PATHS], meta)
+                    : [...PATHS];
                 if (round >= EARLY_GAME_TUNING.bossPathStartsRound && round % 2 === 0) {
                     const b = [BOSSES.BOUNCER, BOSSES.LOAN_SHARK, BOSSES.JUNKIE, BOSSES.CROOKED_COP, BOSSES.INFORMANT][Math.floor(Math.random()*5)];
                     const bossIdx = Math.max(0, next.length - 1);
@@ -5565,7 +5829,11 @@ const GutterbonesGamble = (() => {
                     registerDebtSpike(shortage, 'shop loan');
                     return 0;
                 });
-                if (item.type === 'consumable') {
+                if (item.type === 'runModifier' && item.modifierId) {
+                    setRunModifierIds(prev => [...new Set([...prev, item.modifierId])]);
+                    setShopItems(prev => prev.filter(i => i.id !== item.id));
+                    setFixerLine(`Run modifier wired: ${item.name}.`);
+                } else if (item.type === 'consumable') {
                     setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
                     setShopItems(prev => prev.filter(i => i.id !== item.id));
                 } else if (item.type) {
@@ -5635,13 +5903,19 @@ const GutterbonesGamble = (() => {
             setRound(r => r + 1);
             setScore(0);
             setTarget(projection.nextTarget);
-            setHands(projection.nextHands);
+            const playPenalty = sacrificePlayPenaltyRef.current || 0;
+            sacrificePlayPenaltyRef.current = 0;
+            setHands(Math.max(1, projection.nextHands - playPenalty));
             setDiscards(projection.nextDiscards);
             setUsedCats([]);
             setFlowStreak(0);
             setHasRolled(false);
             setKept([false,false,false,false,false]);
-            setCurrentRouteEffect({ name: path.name, effects: describeRouteEffects(path) });
+            setCurrentRouteEffect({
+                name: path.name,
+                effects: describeRouteEffects(path),
+                shopRefreshDiscount: path.shopRefreshDiscount || 0
+            });
             setActiveBoss(path.boss || null);
             if (path.boss) {
                 setFixerLine(pickLine(FIXER_LINES.boss));
@@ -5766,6 +6040,10 @@ const GutterbonesGamble = (() => {
                     setTutorialActive(true);
                     setTutorialStepIndex(1);
                     setPhase('PLAY');
+                },
+                openRecords: () => {
+                    setPhase('LINEUP');
+                    setShowRecordsPanel(true);
                 },
                 openMechanicToast: () => setMechanicPopup(MECHANIC_HINTS.PILL),
                 getPhase: () => phase
@@ -5971,8 +6249,12 @@ const GutterbonesGamble = (() => {
                         <div className="font-mono text-xs md:text-sm text-[#d6b85c] mb-2 flex flex-wrap gap-3 items-center justify-center">
                             <span>Safehouse Cash: <b className="text-green-400">${meta.launderedCash}</b></span>
                             <span>Best Heat: <b className="text-red-400">{meta.bestHeat}</b></span>
+                            <span>Daily Best: <b className="text-[#0df]">{meta.dailyBestHeat || 0}</b></span>
                             <span>Runs: <b>{meta.totalRuns}</b></span>
                         </div>
+                        {lineupToast && (
+                            <div data-layout-key="lineup-toast" className="mx-auto max-w-lg mb-2 px-4 py-2 border-2 border-[#0df] bg-black/80 text-[#0df] font-mono text-xs text-center">{lineupToast}</div>
+                        )}
                         </div>
                         <div className="gb-panel-scroll w-full max-w-6xl mx-auto px-1">
                         <div className="grid md:grid-cols-4 gap-3 md:gap-4 w-full mb-4">
@@ -6017,7 +6299,13 @@ const GutterbonesGamble = (() => {
                             {(audioSettings.tutorialCompleted || meta.totalRuns > 0) && (
                                 <button onClick={() => beginContract({ tutorial: true })} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">LEARN THE HUSTLE</button>
                             )}
-                            <button onClick={() => beginContract({ daily: true })} className="px-4 py-2 md:px-8 md:py-4 bg-[#0a1628] border-4 border-[#0df] text-[#0df] text-sm md:text-xl font-mono tracking-widest hover:bg-[#0f2038] transition-all">DAILY RUN</button>
+                            <button
+                                onClick={() => beginContract({ daily: true })}
+                                disabled={GutterbonesReplay && !GutterbonesReplay.canStartDaily(meta)}
+                                className={`px-4 py-2 md:px-8 md:py-4 border-4 text-sm md:text-xl font-mono tracking-widest transition-all ${GutterbonesReplay && !GutterbonesReplay.canStartDaily(meta) ? 'bg-[#1a1a1a] border-gray-600 text-gray-500 cursor-not-allowed' : 'bg-[#0a1628] border-[#0df] text-[#0df] hover:bg-[#0f2038]'}`}
+                            >
+                                {GutterbonesReplay && !GutterbonesReplay.canStartDaily(meta) ? 'DAILY DONE (UTC)' : 'DAILY RUN'}
+                            </button>
                             <button onClick={() => { updateMeta((m) => ({ ...m, recordsViews: (m.recordsViews || 0) + 1 })); setShowRecordsPanel(true); }} className="px-4 py-2 md:px-8 md:py-4 bg-[#1a1a1a] border-4 border-[#0df]/60 text-gray-200 text-sm md:text-xl font-mono tracking-widest hover:border-[#0df] transition-all">RECORDS</button>
                             <button onClick={() => { setLoreTab('personas'); setShowLorePanel(true); }} className="px-4 py-2 md:px-8 md:py-4 bg-[#2a0017] border-4 border-[#7a003d] text-[#ff9fcf] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#3b0120] transition-all">CASE FILES</button>
                             <button onClick={() => setPhase('SAFEHOUSE')} className="px-4 py-2 md:px-8 md:py-4 bg-[#1a1a1a] border-4 border-[#c78b16] text-[#d6b85c] text-sm md:text-2xl font-mono tracking-widest hover:bg-[#2a2114] transition-all">SAFEHOUSE</button>
@@ -6077,7 +6365,7 @@ const GutterbonesGamble = (() => {
                     <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} />
+                        <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} />
                         <div data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
                             <div className="flex justify-between items-center p-2 md:p-4 gb-hud-compact-tight">
@@ -6557,6 +6845,12 @@ const GutterbonesGamble = (() => {
                                 )}
                             </div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
+                            {dailyShareBanner && (
+                                <div data-layout-key="daily-share-banner" className="mt-3 p-3 border-2 border-[#0df] bg-black/10 font-mono text-xs break-all">
+                                    <div className="text-[#0df] mb-1">Daily score copied — share it:</div>
+                                    {dailyShareBanner}
+                                </div>
+                            )}
                             <button onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="shrink-0 mt-2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                             </div>
                         </div>
@@ -6572,6 +6866,12 @@ const GutterbonesGamble = (() => {
                             <div className="bg-[#111] h-[min(38vh,220px)] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-xl md:text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
                             <div className="text-center mt-4"><div className="font-marker text-3xl md:text-4xl text-black rotate-2">See ya, Lou.</div><svg viewBox="0 0 220 70" className="mx-auto mt-1 w-44"><path className="signature-path" d="M10 44 C40 8, 55 64, 88 32 C115 8, 120 58, 155 30 C170 18, 186 26, 208 18" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round"/></svg><div className="font-mono text-sm text-gray-500 mt-2 text-left px-4">Heat Evaded: {runStats.totalHeat}<br/>Run Cash: ${gold}<br/>Safehouse Cut: +${lastLaundered}</div></div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
+                            {dailyShareBanner && (
+                                <div data-layout-key="daily-share-banner" className="mt-3 p-3 border-2 border-[#0df] bg-black/10 font-mono text-xs break-all">
+                                    <div className="text-[#0df] mb-1">Daily score copied — share it:</div>
+                                    {dailyShareBanner}
+                                </div>
+                            )}
                             </div>
                             <button onClick={() => setPhase('LINEUP')} className="shrink-0 mt-3 w-full px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap">START NEW RUN</button>
                         </div>
