@@ -3827,8 +3827,8 @@ const GutterbonesGamble = (() => {
         const [captionVisible, setCaptionVisible] = useState(false);
         useEffect(() => {
             setCaptionVisible(false);
-            const id = scheduleTimeout(() => setCaptionVisible(true), reducedMotion ? 0 : 180);
-            return () => clearScheduledTimeout(id);
+            const id = window.setTimeout(() => setCaptionVisible(true), reducedMotion ? 0 : 180);
+            return () => window.clearTimeout(id);
         }, [step?.id, reducedMotion]);
         useEffect(() => {
             if (!step) return undefined;
@@ -4088,11 +4088,11 @@ const GutterbonesGamble = (() => {
                     if (typeof AudioSystem.stampThunk === 'function') AudioSystem.stampThunk();
                     return;
                 }
-                timers.push(scheduleTimeout(tick, 260));
+                timers.push(window.setTimeout(tick, 260));
             };
-            timers.push(scheduleTimeout(tick, 120));
+            timers.push(window.setTimeout(tick, 120));
             return () => {
-                timers.forEach((id) => clearScheduledTimeout(id));
+                timers.forEach((id) => window.clearTimeout(id));
             };
         }, [result?.id, reducedMotion]);
         if (!result) return null;
