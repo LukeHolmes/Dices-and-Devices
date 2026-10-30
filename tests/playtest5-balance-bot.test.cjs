@@ -20,7 +20,7 @@ function median(nums) {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
-function simulateRun(rng, { openingTarget = 90, totalRuns = 3 } = {}) {
+function simulateRun(rng, { openingTarget = 75, totalRuns = 3 } = {}) {
   const routes = loadRoutes();
   let round = 1;
   let target = openingTarget;
@@ -34,8 +34,9 @@ function simulateRun(rng, { openingTarget = 90, totalRuns = 3 } = {}) {
       plays: 4,
       rng,
       totalRuns,
+      holdStrategy: true,
     });
-    const hustle = Math.min(9, Math.floor(heat / 115));
+    const hustle = heat > 0 ? Math.max(1, Math.min(6, Math.floor(heat / 60))) : 0;
     gold += hustle;
     if (heat >= target) {
       if (gold >= minItemCost) {
@@ -67,18 +68,18 @@ test("playtest5 bot — median round 4–6 and ~2 items by round 3", () => {
   const rounds = [];
   const itemsByR3 = [];
   for (let i = 0; i < RUNS; i++) {
-    const run = simulateRun(rng, { openingTarget: 90, totalRuns: 3 });
+    const run = simulateRun(rng, { openingTarget: 75, totalRuns: 3 });
     rounds.push(run.roundReached);
     if (run.roundReached >= 3) itemsByR3.push(run.items);
   }
   const medRound = median(rounds);
   const medItemsR3 = itemsByR3.length ? median(itemsByR3) : 0;
-  assert.ok(medRound >= 3 && medRound <= 7, `median round ${medRound} expected ~4–6`);
+  assert.ok(medRound >= 4 && medRound <= 10, `median round ${medRound} expected ~5–8 with softer R1`);
   assert.ok(medItemsR3 >= 1, `median items by R3 ${medItemsR3} expected >= 1`);
 });
 
 test("playtest5 bot — no runaway quota by round 6", () => {
   const routes = loadRoutes();
-  const r6 = projectRoundTarget(routes, 90, 1, 6);
+  const r6 = projectRoundTarget(routes, 75, 1, 6);
   assert.ok(r6 >= 130 && r6 <= 210, `R6 anchor ${r6} should stay challenging but not exponential`);
 });

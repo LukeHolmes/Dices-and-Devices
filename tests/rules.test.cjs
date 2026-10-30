@@ -4,14 +4,14 @@ const assert = require("node:assert/strict");
 const { createGame, plain } = require("./helpers/game.cjs");
 const { snapshot, dice, bone, bossCases } = require("./fixtures/runs.cjs");
 for (const [cat, values, total] of [
-  ["C", [1, 2, 3, 4, 5], 15],
+  ["C", [1, 2, 3, 4, 5], 37],
   ["TOK", [2, 2, 2, 4, 5], 40],
   ["FOK", [3, 3, 3, 3, 5], 105],
   ["FH", [2, 2, 3, 3, 3], 90],
   ["SS", [1, 2, 3, 4, 6], 60],
   ["LS", [1, 2, 3, 4, 5], 120],
   ["Y", [6, 6, 6, 6, 6], 250],
-  ["SIXES", [6, 6, 1, 2, 3], 12],
+  ["SIXES", [6, 6, 1, 2, 3], 36],
 ]) {
   test(`${cat}: standard payout ${total}`, () =>
     assert.equal(
@@ -54,7 +54,7 @@ test("Carved modifier and gold face apply without mutating dice", () => {
   d[4].faceId = "GOLD_FACE";
   const before = JSON.stringify(d);
   const r = createGame(snapshot()).api.calculateScore("C", d);
-  assert.equal(r.total, 12);
+  assert.equal(r.total, 40);
   assert.equal(r.gDelta, 2);
   assert.equal(JSON.stringify(d), before);
 });
@@ -77,7 +77,7 @@ test("Crooked Cop suppresses hardware", () => {
   const inv = [{ id: "ENGINE" }];
   assert.equal(
     createGame(snapshot({ inventory: inv })).api.calculateScore("C", d).total,
-    75,
+    137,
   );
   assert.equal(
     createGame(
@@ -87,7 +87,7 @@ test("Crooked Cop suppresses hardware", () => {
         activeBoss: { id: "CROOKED_COP" },
       }),
     ).api.calculateScore("C", d).total,
-    15,
+    37,
   );
 });
 for (const [id, target] of bossCases)
@@ -118,5 +118,5 @@ test("Informant freezes stash", () => {
   );
   g.api.executePayout("C");
   assert.equal(g.state("stash"), 20);
-  assert.equal(g.state("score"), 15);
+  assert.equal(g.state("score"), 37);
 });

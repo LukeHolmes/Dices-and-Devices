@@ -142,7 +142,7 @@ function keepMaskForCategory(catId, values) {
   return mask;
 }
 
-function simulateRound({ pills, plays = 4, rng, totalRuns = 0 }) {
+function simulateRound({ pills, plays = 4, rng, totalRuns = 0, holdStrategy = true }) {
   const onboarding = loadOnboarding();
   const categoryIds = onboarding.getAvailableCategoryIds(totalRuns);
   const api = loadRulesApi();
@@ -153,17 +153,19 @@ function simulateRound({ pills, plays = 4, rng, totalRuns = 0 }) {
   for (let play = 0; play < plays; play++) {
     let currentDice = rollDice(rng);
     let pillsLeft = pills;
-    while (pillsLeft > 0) {
-      api.setFlow(flowStreak);
-      const prospect = bestPlay(api, currentDice, usedCats, categoryIds);
-      if (!prospect.valid || prospect.total < 12) break;
-      const values = currentDice.map((d) => d.value);
-      const mask = keepMaskForCategory(prospect.cat, values);
-      if (!mask.some(Boolean)) break;
-      currentDice = currentDice.map((d, i) =>
-        mask[i] ? d : bone(1 + Math.floor(rng() * 6), i),
-      );
-      pillsLeft -= 1;
+    if (holdStrategy) {
+      while (pillsLeft > 0) {
+        api.setFlow(flowStreak);
+        const prospect = bestPlay(api, currentDice, usedCats, categoryIds);
+        if (!prospect.valid || prospect.total < 12) break;
+        const values = currentDice.map((d) => d.value);
+        const mask = keepMaskForCategory(prospect.cat, values);
+        if (!mask.some(Boolean)) break;
+        currentDice = currentDice.map((d, i) =>
+          mask[i] ? d : bone(1 + Math.floor(rng() * 6), i),
+        );
+        pillsLeft -= 1;
+      }
     }
     api.setFlow(flowStreak);
     const scored = bestPlay(api, currentDice, usedCats, categoryIds);
@@ -178,11 +180,11 @@ function simulateRound({ pills, plays = 4, rng, totalRuns = 0 }) {
   return heat;
 }
 
-function probClear({ target, pills, iterations, seed, totalRuns = 0 }) {
+function probClear({ target, pills, iterations, seed, totalRuns = 0, holdStrategy = true }) {
   const rng = mulberry32(seed);
   let clears = 0;
   for (let i = 0; i < iterations; i++) {
-    if (simulateRound({ pills, rng, totalRuns }) >= target) clears += 1;
+    if (simulateRound({ pills, rng, totalRuns, holdStrategy }) >= target) clears += 1;
   }
   return clears / iterations;
 }
@@ -238,5 +240,6 @@ module.exports = {
   probClear,
   projectRoundTarget,
   loadRoutes,
+  loadRulesApi,
   BACK_ALLEY,
 };

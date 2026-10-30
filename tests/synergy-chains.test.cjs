@@ -27,7 +27,7 @@ test("blood_ripple: adjacent blood/destructive adds mult", () => {
   d[1] = bone(0, 1, { faceId: "SHIV_FACE", type: "destructive" });
   const r = g.api.GutterbonesRules.calculateScore("C", d, synergyContext(g));
   assert.ok(r.synergyEvents.some((e) => e.id === "blood_ripple"));
-  assert.equal(r.total, 146);
+  assert.equal(r.total, 207);
   assert.equal(r.chainDepth, 1);
 });
 
@@ -38,7 +38,7 @@ test("ghost_echo: ghost adjacent to echo adds mult", () => {
   d[2] = bone(0, 2, { faceId: "GHOST_FACE", type: "ethereal" });
   const r = g.api.GutterbonesRules.calculateScore("C", d, synergyContext(g));
   assert.ok(r.synergyEvents.some((e) => e.id === "ghost_echo"));
-  assert.equal(r.total, 60);
+  assert.equal(r.total, 112);
 });
 
 test("wire_feed: gold and wirebag neighbors add extra cash", () => {
@@ -53,7 +53,7 @@ test("wire_feed: gold and wirebag neighbors add extra cash", () => {
   const r = g.api.GutterbonesRules.calculateScore("C", d, synergyContext(g));
   assert.ok(r.synergyEvents.some((e) => e.id === "wire_feed"));
   assert.equal(r.gDelta, 8);
-  assert.equal(r.total, 4);
+  assert.equal(r.total, 9);
 });
 
 test("engine_link: engine bonus 2+ adds mult per modifier face", () => {
@@ -67,7 +67,7 @@ test("engine_link: engine bonus 2+ adds mult per modifier face", () => {
     synergyContext(g, { inventory: [{ id: "ENGINE" }] }),
   );
   assert.ok(r.synergyEvents.some((e) => e.id === "engine_link"));
-  assert.equal(r.total, 135);
+  assert.equal(r.total, 237);
 });
 
 test("bookends_retrigger: matching ends retrigger face modifiers", () => {
@@ -82,7 +82,7 @@ test("bookends_retrigger: matching ends retrigger face modifiers", () => {
   );
   assert.ok(r.synergyEvents.some((e) => e.id === "bookends_retrigger"));
   assert.equal(r.retriggerCount, 1);
-  assert.equal(r.total, 245);
+  assert.equal(r.total, 324);
 });
 
 test("crowbar_cascade: destroyed blood slot adds chips after crowbar", () => {
@@ -97,7 +97,7 @@ test("crowbar_cascade: destroyed blood slot adds chips after crowbar", () => {
     synergyContext(g, { inventory: [{ id: "CROWBAR" }] }),
   );
   assert.ok(r.synergyEvents.some((e) => e.id === "crowbar_cascade"));
-  assert.equal(r.total, 228);
+  assert.equal(r.total, 301);
 });
 
 test("synergy enabled with no triggers matches disabled baseline", () => {

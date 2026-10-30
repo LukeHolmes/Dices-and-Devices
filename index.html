@@ -297,7 +297,12 @@
     }
     @container gutterbones (min-width: 900px) {
         #root-gutterbones .lineup-persona-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+    @container gutterbones (min-width: 1100px) {
+        #root-gutterbones .lineup-persona-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
         }
     }
     #root-gutterbones .lineup-persona-card {
@@ -1527,7 +1532,14 @@ const GutterbonesRules = (() => {
                 break;
             }
             case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
-            case 'C': valid = true; chips = sum; break;
+            case 'C': valid = true; chips = sum + 10; mult *= 1.5; break;
+        }
+        if (['ONES', 'TWOS', 'THREES'].includes(catId)) mult *= 2;
+        if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 3;
+        const runUpperHeat = Math.max(0, Number(context.runUpperHeat) || 0);
+        const upperBonusActive = runUpperHeat >= 63;
+        if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
+            mult += 1;
         }
         if (!valid) {
             const invalidReason = (() => {
@@ -1547,6 +1559,9 @@ const GutterbonesRules = (() => {
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         const categoryMult = mult;
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
+        if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
+            pushStep('multiplier', 'UPPER BONUS', '+1x (upper section ≥63)', '+1x');
+        }
         const markBonus = Math.max(0, Math.floor(Number(synergyState?.categoryMarks?.[catId]) || 0));
         if (markBonus > 0) {
             mult += markBonus;
@@ -2560,6 +2575,7 @@ const GutterbonesRoutes = (() => {
     return Object.freeze({
         BOSS_TUNING,
         ROUND_CURVE_TUNING,
+        PROGRESSION_GUARDRAILS,
         SHOP_OFFER_TAGS,
         projectNextRound,
         applyBossAdjustedTarget,
@@ -3341,15 +3357,19 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const ECONOMY_TUNING = {
         shortageToDebtRatio: 0.82,
-        hustleCashDivisor: 115,
-        hustleCashCap: 9,
+        hustleCashDivisor: 60,
+        hustleCashCap: 6,
+        roundClearBaseCash: 8,
+        roundClearPerUnusedPlay: 1,
+        roundClearInterestPerFive: 1,
+        roundClearInterestCap: 5,
         debtReliefThreshold: 195,
         debtReliefPerBigHand: 1,
         /** Stash % gained per scored hand (lower = tighter programs economy). */
         stashFillRate: 1.55,
         stashFillCap: 46,
         round1HeatCapRatio: 1.22,
-        round1OverkillCashDivisor: 48,
+        round1OverkillCashDivisor: 30,
         round1OverkillCashCap: 12
     };
 
@@ -3371,12 +3391,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const FIRST_RUN_TUNING = {
         enabled: true,
-        openingTarget: 90,
+        openingTarget: 75,
         enforcerRound1Pills: 1
     };
 
     const EARLY_GAME_TUNING = {
-        openingTarget: 90,
+        openingTarget: 75,
         counterOpeningMultiplier: 1.15,
         /** Stash % shown at run start after the free opening reroll (one SNIFF worth). */
         openingStashGrant: 25,
@@ -3386,22 +3406,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const SCORE_OVERLAY_LIFETIME_MS = 2600;
 
-    const ROUND_CURVE_TUNING = {
-        earlyMaxRound: 4,
-        midMaxRound: 7,
-        early: { pathModWeight: 0.72, flatIncrease: 16 },
-        mid: { pathModWeight: 0.88, flatIncrease: 28 },
-        late: { pathModWeight: 1.02, flatIncrease: 38 }
-    };
-
-    const PROGRESSION_GUARDRAILS = {
-        minGrowthRate: 1.08,
-        earlyMaxGrowthRate: 1.2,
-        midMaxGrowthRate: 1.24,
-        lateMaxGrowthRate: 1.28,
+    const ROUND_CURVE_TUNING = GutterbonesRoutes.ROUND_CURVE_TUNING;
+    const PROGRESSION_GUARDRAILS = Object.freeze({
+        ...GutterbonesRoutes.PROGRESSION_GUARDRAILS,
         dangerCapRound: 6,
         maxEarlyDangerOffers: 1
-    };
+    });
 
     const SHOP_AGENCY_TUNING = {
         refreshBaseCost: 10,
@@ -3582,11 +3592,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     ];
 
     const STREET_INTEL = {
+        PERSONA_REDACTED: 'FILE SEALED — clear deeper blocks or buy the contact at the Safehouse to read this sheet.',
         personas: {
             STREET_RAT: 'Runs light, moves fast, and survives on instinct. Nothing fancy, but every scrap can become leverage.',
             HUSTLER: 'Knows every back-room table in the borough. Starts rich, burns bright, and pays for it with slower stash momentum.',
             ENFORCER: 'An ex-collector with cracked knuckles and no patience. Starts rough, no pills, and swings heavy from hand one.',
-            CARD_COUNTER: 'Reads patterns, marks tells, and weaponizes math. Opens with The Black Book but draws bigger heat from the start.'
+            CARD_COUNTER: 'Reads patterns, marks tells, and weaponizes math. Opens with The Black Book but draws bigger heat from the start.',
+            GRINDER: 'Five plays, two pills, no shortcuts. Hold Charge and Straight Focus mods keep the workhorse grinding upper rows and straights for steady heat.'
         },
         bosses: {
             BOUNCER: 'Owns the club doors and skims every take. If you cannot clear his inflated quota, you are out on the curb.',
@@ -3649,19 +3661,19 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
     const CATEGORY_RULE_TOOLTIPS = {
-        ONES: 'Sum of all 1s (wilds count as 1).',
-        TWOS: 'Sum of all 2s.',
-        THREES: 'Sum of all 3s.',
-        FOURS: 'Sum of all 4s.',
-        FIVES: 'Sum of all 5s.',
-        SIXES: 'Sum of all 6s.',
+        ONES: 'Sum of 1s ×2 mult (wilds count as 1).',
+        TWOS: 'Sum of 2s ×2 mult.',
+        THREES: 'Sum of 3s ×2 mult.',
+        FOURS: 'Sum of 4s ×3 mult.',
+        FIVES: 'Sum of 5s ×3 mult.',
+        SIXES: 'Sum of 6s ×3 mult (five 6s = 90 heat).',
         TOK: 'Three of a kind — 20 chips ×2 mult.',
         FOK: 'Four of a kind — 35 chips ×3 mult.',
         FH: 'Full house (3+2) — 30 chips ×3 mult.',
         SS: 'Small straight (4 in a row) — 30 chips ×2 mult.',
         LS: 'Large straight (5 in a row) — 40 chips ×3 mult.',
         Y: 'Five of a kind — 50 chips ×5 mult.',
-        C: 'Slop — sum of all standard face values.'
+        C: 'Chance — sum of faces +10 chips ×1.5 mult.'
     };
 
     const CATEGORIES = {
@@ -3718,6 +3730,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         dismissBossHint: false,
         seenHelpDossier: false,
         tutorialCompleted: false,
+        skippedAlleyIntro: false,
         tipSeenShop: false,
         tipSeenCarving: false,
         tipSeenRoute: false,
@@ -3758,6 +3771,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             dismissBossHint: !!stored.dismissBossHint,
             seenHelpDossier: !!stored.seenHelpDossier,
             tutorialCompleted: !!stored.tutorialCompleted,
+            skippedAlleyIntro: !!stored.skippedAlleyIntro,
             tipSeenShop: !!stored.tipSeenShop,
             tipSeenCarving: !!stored.tipSeenCarving,
             tipSeenRoute: !!stored.tipSeenRoute,
@@ -3780,6 +3794,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             dismissBossHint: !!settings.dismissBossHint,
             seenHelpDossier: !!settings.seenHelpDossier,
             tutorialCompleted: !!settings.tutorialCompleted,
+            skippedAlleyIntro: !!settings.skippedAlleyIntro,
             tipSeenShop: !!settings.tipSeenShop,
             tipSeenCarving: !!settings.tipSeenCarving,
             tipSeenRoute: !!settings.tipSeenRoute,
@@ -4036,7 +4051,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
         const rollStyleRef = useRef({
             '--roll-delay': `${slot * 90}ms`,
             '--roll-dur': '680ms',
@@ -4106,9 +4121,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <button
                         type="button"
                         disabled={!canPill}
-                        onClick={(e) => { e.stopPropagation(); if (canPill) onPill(); }}
+                        onClick={(e) => { e.stopPropagation(); onDismissPillHint?.(); if (canPill) onPill(); }}
                         onMouseEnter={onExplainPill}
+                        onMouseLeave={onDismissPillHint}
                         onFocus={onExplainPill}
+                        onBlur={onDismissPillHint}
                         title={canPill ? 'Pill reroll this bone' : 'No pills left'}
                         aria-label={canPill ? 'Reroll this bone (spend 1 pill)' : 'No pills remaining'}
                         className={`absolute -top-3 -right-3 z-50 flex min-h-11 min-w-11 md:min-h-8 md:min-w-9 items-center justify-center rounded-full border border-[#0df]/70 bg-black px-1.5 font-mono text-[9px] font-bold text-[#0df] shadow-[0_0_10px_rgba(0,221,255,.25)] transition-opacity ${canPill ? 'opacity-100 hover:bg-[#0a1520]' : 'cursor-not-allowed opacity-35'} ${pillPulse && canPill ? 'animate-pulse ring-2 ring-[#ff007f]/80' : ''}`}
@@ -4344,7 +4361,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
     const HistoryPanel = ({ history }) => (
-        <div className="space-y-2 max-h-48 overflow-y-auto">
+        <div className="space-y-2 max-h-48 overflow-y-auto overflow-x-hidden">
             {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 6).map(h => (
                 <div key={h.id} className="border border-black/30 bg-white/30 p-2 font-mono text-xs">
                     <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total}</b></div>
@@ -4576,9 +4593,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 ) : (
                     <div className="tutorial-coach-dim" />
                 )}
-                <button type="button" onClick={onSkip} className="tutorial-coach-skip absolute top-3 left-3 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#ff007f] hover:text-white">SKIP TUTORIAL</button>
+                <button type="button" onClick={onSkip} className="tutorial-coach-skip absolute top-3 right-3 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#ff007f] hover:text-white">SKIP TUTORIAL</button>
                 {stepIndex > 0 && (
-                    <button type="button" onClick={onBack} className="absolute top-3 left-28 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#0df] hover:text-white">BACK</button>
+                    <button type="button" onClick={onBack} className="absolute top-3 left-3 z-[660] px-3 py-1 border border-gray-600 bg-black/80 text-[10px] font-mono tracking-widest text-gray-300 hover:border-[#0df] hover:text-white">BACK</button>
                 )}
                 <div data-layout-key="tutorial-coach" className={`${cardClass} z-[660] bg-[#121113]/95 border-2 border-[#c78b16] rounded-lg p-4 shadow-2xl transition-opacity duration-300 ${captionVisible ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex items-center justify-between gap-3 mb-2">
@@ -4598,15 +4615,23 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue }) => (
+    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout }) => (
         <button
             type="button"
             onClick={() => { if (canContinue) onSkip(); }}
-            className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto"
+            className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto p-4"
         >
-            <div data-layout-key="round-clear-card" className={`round-clear-card font-marker text-5xl md:text-6xl text-[#0df] italic tracking-tight px-8 py-6 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl ${reducedMotion ? '' : ''}`}>
+            <div data-layout-key="round-clear-card" className={`round-clear-card font-marker text-4xl md:text-5xl text-[#0df] italic tracking-tight px-6 py-5 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl max-w-md w-full ${reducedMotion ? '' : ''}`}>
                 ROUND CLEARED
-                <div className="font-mono text-xs text-gray-400 mt-3 tracking-[.3em] not-italic">
+                {payout && payout.total > 0 && (
+                    <div className="font-mono text-[11px] not-italic text-left mt-4 space-y-1 text-gray-200 tracking-normal">
+                        <div className="flex justify-between gap-3"><span>Round bonus</span><span>${payout.base}</span></div>
+                        <div className="flex justify-between gap-3"><span>Unused plays × ${ECONOMY_TUNING.roundClearPerUnusedPlay || 1}</span><span>${payout.unused}</span></div>
+                        <div className="flex justify-between gap-3"><span>Cash interest</span><span>${payout.interest}</span></div>
+                        <div className="flex justify-between gap-3 border-t border-gray-600 pt-1 text-[#0df] font-bold"><span>Total</span><span>${payout.total}</span></div>
+                    </div>
+                )}
+                <div className="font-mono text-xs text-gray-400 mt-3 tracking-[.3em] not-italic text-center">
                     {canContinue ? 'TAP TO CONTINUE' : '…'}
                 </div>
             </div>
@@ -4820,7 +4845,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <div className="flex items-start justify-between gap-3 mb-3 pr-16">
                         <div className="min-w-0">
                             <div className="font-mono text-xs tracking-[.32em] text-[#ff9fcf]">SCORE EXPLANATION</div>
-                            <div className="font-mono text-sm text-gray-200 mt-1 truncate">{result.categoryName || 'HAND'} · {canDismiss ? 'TAP TO CONTINUE' : '…'}</div>
+                            <div className="font-mono text-sm text-gray-200 mt-1">{result.categoryName || 'HAND'}</div>
+                            <div className="font-mono text-[10px] text-gray-400 tracking-[.28em] mt-1">{canDismiss ? 'TAP TO CONTINUE' : '…'}</div>
                             {(result.chainDepth || 0) > 0 && (
                                 <div className="font-mono text-[10px] text-fuchsia-300 mt-1 tracking-wider">CHAIN DEPTH {result.chainDepth}</div>
                             )}
@@ -4894,7 +4920,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const runMods = (runModifierIds || []).map((id) => GutterbonesReplay?.RUN_MODIFIERS?.[id]).filter(Boolean);
         if (!hasBoss && !hasInventory && !hasContract && !runMods.length) return null;
         return (
-            <div className="absolute bottom-4 left-4 readable-panel px-3 py-3 text-xs font-mono z-50 rounded-xl min-w-48 max-w-64 hidden lg:block">
+            <div data-layout-key="active-modifiers-panel" className="absolute top-[5.25rem] right-3 readable-panel px-3 py-3 text-xs font-mono z-40 rounded-xl min-w-48 max-w-64 hidden lg:block pointer-events-none">
                 <div className="text-[#0df] mb-2 tracking-[.18em] font-bold">ACTIVE MODIFIERS</div>
                 {hasContract && (
                     <div className="mb-2">
@@ -5177,7 +5203,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <ul className="space-y-1.5">
                                     <li>Pills reroll one slot (PILL badge on each bone).</li>
                                     <li>Stash fills from strong hands — spend on SNIFF, BRIBE, FIX GAME, LAUNDER.</li>
-                                    <li>Hustle cash: +$1–${ECONOMY_TUNING.hustleCashCap} per scored hand from heat ÷ {ECONOMY_TUNING.hustleCashDivisor} (shown as HUSTLE +$ in the alley).</li>
+                                    <li>Hustle cash: at least $1 per valid hand, up to ${ECONOMY_TUNING.hustleCashCap} (floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor})) — HUSTLE +$ stamps in the alley.</li>
                                 </ul>
                             </div>
                         )}
@@ -5295,7 +5321,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 RESET ALL SAVE DATA…
                             </button>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-2 min-h-[8.5rem]">
                                 <p className="font-mono text-xs text-red-300">Clears meta, active run, and settings. Cannot undo.</p>
                                 <button type="button" onClick={() => { onResetSave(); setConfirmReset(false); onClose(); }} className="w-full py-2 bg-red-700 text-white font-mono font-bold border-2 border-red-900">
                                     CONFIRM RESET
@@ -5370,7 +5396,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         </div>
     );
 
-    const CaseFilesPanel = ({ tab, onChangeTab, onClose }) => (
+    const CaseFilesPanel = ({ tab, onChangeTab, onClose, unlockedPersonaIds = [] }) => (
         <div className="absolute inset-0 z-[740] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
             <div data-layout-key="case-files" className="gb-modal-fit case-files-shell case-files-open w-full max-w-4xl bg-[#101010] border-4 border-[#c78b16] rounded-xl p-4 md:p-6 shadow-2xl gb-type-panel" onClick={(e) => e.stopPropagation()}>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-700 pb-3 mb-4">
@@ -5386,19 +5412,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <button onClick={() => onChangeTab('archive')} className={`px-3 py-2 font-mono text-xs border ${tab === 'archive' ? 'border-[#ff007f] text-white bg-[#2a0017]' : 'border-gray-700 text-gray-300 bg-black/40'}`}>ARCHIVE</button>
                 </div>
                 <div className="gb-modal-body grid md:grid-cols-2 gap-3 pr-1">
-                    {tab === 'personas' && PERSONAS.map((p) => (
+                    {tab === 'personas' && PERSONAS.map((p) => {
+                        const unlocked = unlockedPersonaIds.includes(p.id);
+                        return (
                         <article key={p.id} className="border border-gray-700 bg-black/40 rounded p-3">
                             <div className="flex gap-3">
                                 <PersonaPortrait persona={p} variant="lore" />
                                 <div className="min-w-0 flex-1">
-                                    <div className="font-marker text-2xl text-[#d6b85c]">{p.name}</div>
-                                    <div className="font-mono text-[11px] text-[#0df] mb-2">ALIAS: {p.alias}</div>
-                                    <p className="font-mono text-xs text-gray-200 leading-relaxed">{STREET_INTEL.personas[p.id]}</p>
-                                    <div className="mt-2 text-[11px] font-mono text-gray-400">Loadout: {p.loadout}</div>
+                                    <div className="font-marker text-2xl text-[#d6b85c]">{unlocked ? p.name : '████████'}</div>
+                                    <div className="font-mono text-[11px] text-[#0df] mb-2">{unlocked ? `ALIAS: ${p.alias}` : 'ALIAS: [REDACTED]'}</div>
+                                    <p className="font-mono text-xs text-gray-200 leading-relaxed">{unlocked ? (STREET_INTEL.personas[p.id] || p.quirk) : STREET_INTEL.PERSONA_REDACTED}</p>
+                                    <div className="mt-2 text-[11px] font-mono text-gray-400">{unlocked ? `Loadout: ${p.loadout}` : 'Loadout: classified'}</div>
                                 </div>
                             </div>
                         </article>
-                    ))}
+                        );
+                    })}
                     {tab === 'bosses' && Object.values(BOSSES).map((boss) => (
                         <article key={boss.id} className="border border-gray-700 bg-black/40 rounded p-3">
                             <div className="flex gap-3">
@@ -5677,7 +5706,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const clearTransientJuice = () => {
-            dismissScoreOverlays();
             setPaperStamps([]);
             setFlyingScores([]);
             setHitCallouts([]);
@@ -5687,7 +5715,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const [roundClearCardActive, setRoundClearCardActive] = useState(false);
+        const [roundClearPayout, setRoundClearPayout] = useState(null);
         const roundClearPendingRef = useRef(null);
+
+        const computeRoundClearPayout = (handsRemaining, cashHeld) => {
+            const base = ECONOMY_TUNING.roundClearBaseCash || 8;
+            const unused = Math.max(0, handsRemaining) * (ECONOMY_TUNING.roundClearPerUnusedPlay || 1);
+            const interest = Math.min(
+                ECONOMY_TUNING.roundClearInterestCap || 5,
+                Math.floor(Math.max(0, cashHeld) / 5) * (ECONOMY_TUNING.roundClearInterestPerFive || 1)
+            );
+            return { base, unused, interest, total: base + unused + interest };
+        };
 
         const runPhaseTransition = (nextPhase, { waitHeatMs = 0 } = {}) => {
             const outMs = reducedMotion ? 150 : 260;
@@ -5759,6 +5798,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             window.clearInterval(id);
             intervalIdsRef.current.delete(id);
         };
+        const dismissMechanicToasts = () => {
+            setToastStack((prev) => prev.filter((t) => t.kind !== 'mechanic'));
+        };
+
         const showMechanicPopup = (hintKey) => {
             const hint = MECHANIC_HINTS[hintKey];
             if (!hint) return;
@@ -6162,13 +6205,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const minId = scheduleTimeout(() => setScoreOverlayCanDismiss(true), minHold);
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
-            }
-            scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
                 scoreBreakdownTimeoutRef.current = null;
-                dismissScoreOverlays();
-            }, GutterbonesPresentation.AUTO_DISMISS_CAP_MS);
+            }
+            if (presentationPacing() === 'fast') {
+                scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
+                    scoreBreakdownTimeoutRef.current = null;
+                    dismissScoreOverlays();
+                }, GutterbonesPresentation.AUTO_DISMISS_CAP_MS);
+            }
             return () => {
                 clearScheduledTimeout(minId);
+                if (scoreBreakdownTimeoutRef.current != null) {
+                    clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
+                    scoreBreakdownTimeoutRef.current = null;
+                }
             };
         }, [scoreBreakdown?.id, scoreResolution?.id, audioSettings.pacing, reducedMotion]);
 
@@ -6696,7 +6746,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setCarveSparks([]);
             setPillBursts([]);
             setActiveWager(null);
-            setRunStats({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
+            setRunStats({ totalHeat: 0, biggestHustle: 0, upperHeat: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
+            setRoundClearPayout(null);
             buildCalloutPrevRef.current = null;
             synergyCalloutAtRef.current = 0;
             setInventory(p.id === 'CARD_COUNTER' && !tutorial ? [DEVISES.BLACK_BOOK] : []);
@@ -6713,7 +6764,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     grantBlueprint(pickRandomBlueprintId());
                 }
                 setPhase('PLAY');
-                if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted) setShowFirstRunOverlay(true);
+                if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted && !audioSettings.skippedAlleyIntro) {
+                    setShowFirstRunOverlay(true);
+                }
                 if (!tutorial && !audioSettings.dismissPillPulse) {
                     setPillCurrencyHint(true);
                     scheduleTimeout(() => setPillCurrencyHint(false), reducedMotion ? 4500 : 6200);
@@ -6740,7 +6793,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 synergyState,
                 roundFirstCategories: categoryMarkedThisRound,
                 blueprintIds: GutterbonesRules.activeBlueprintIds(blueprints),
-                blueprintRound: blueprintRoundFlags
+                blueprintRound: blueprintRoundFlags,
+                runUpperHeat: runStats.upperHeat || 0
             });
             const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
             if (!GutterbonesReplay || !mods?.length) return base;
@@ -7164,9 +7218,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }
                 const nextScore = score + heatBanked;
                 setScore(nextScore);
-                setRunStats(s => ({ ...s, totalHeat: s.totalHeat + heatBanked, biggestHustle: Math.max(s.biggestHustle, result.total) }));
+                const isUpper = ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId);
+                setRunStats((s) => ({
+                    ...s,
+                    totalHeat: s.totalHeat + heatBanked,
+                    biggestHustle: Math.max(s.biggestHustle, heatBanked),
+                    upperHeat: isUpper ? (s.upperHeat || 0) + result.total : (s.upperHeat || 0)
+                }));
                 if (result.gDelta) setGold(g => Math.max(0, g + result.gDelta));
-                const hustleCash = Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor));
+                const hustleCash = Math.max(
+                    1,
+                    Math.min(ECONOMY_TUNING.hustleCashCap, Math.floor(result.total / ECONOMY_TUNING.hustleCashDivisor))
+                );
                 const bonusCash = hustleCash + overkillCash;
                 if (bonusCash > 0) {
                     setGold(g => g + bonusCash);
@@ -7278,6 +7341,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }, bustDelay);
             } else if (hands <= 1) {
                 const quotaCleared = score + gained >= currentTarget;
+                const applyRoundClearCash = () => {
+                    if (!quotaCleared) {
+                        setRoundClearPayout(null);
+                        return;
+                    }
+                    const payout = computeRoundClearPayout(hands, settlementCash);
+                    setRoundClearPayout(payout);
+                    if (payout.total > 0) {
+                        setGold((g) => g + payout.total);
+                        spawnPaperStamp(`ROUND +$${payout.total}`, '#0f766e');
+                    }
+                };
                 if (round >= 10) {
                     setLossExplanation(null);
                     setGambleStake(0);
@@ -7297,6 +7372,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     }, reducedMotion ? 120 : 480);
                 } else {
                     if (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current && quotaCleared) {
+                        applyRoundClearCash();
                         generateShop();
                         setFixerLine('Tutorial round cleared. Welcome to the Back Alley.');
                         transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
@@ -7312,6 +7388,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             : pickLine(FIXER_LINES.gamble));
                         transitionToPhase('GAMBLE', { waitHeatMs: reducedMotion ? 0 : 520 });
                     } else {
+                        applyRoundClearCash();
                         generateShop();
                         if (quotaCleared) {
                             setFixerLine(`Round ${round} quota cleared. Pick a route — Pawn/Smuggle pay +$15 bonus cash.`);
@@ -7389,6 +7466,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
         const handleProgram = (p) => {
             showMechanicPopup(`PROGRAM_${p.id}`);
+            if (!hasRolled || rolling) return;
             if (stash < p.cost || activeBoss?.id === 'INFORMANT') return;
             if (p.id === 'SNIFF') {
                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
@@ -7878,7 +7956,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 getPhase: () => phase,
                 isRoundClearVisible: () => !!roundClearCardActive,
                 isBossIntroVisible: () => !!bossIntro,
-                scoreOverlayCanDismiss: () => scoreOverlayCanDismiss
+                scoreOverlayCanDismiss: () => scoreOverlayCanDismiss,
+                finishRapReveal: () => {
+                    setRapSheetRevealReady(true);
+                    setShowIncarceratedStamp(true);
+                }
             };
         }, [phase, roundClearCardActive, bossIntro, scoreOverlayCanDismiss]);
 
@@ -7957,17 +8039,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {showFirstRunTutorialChoice && phase === 'LINEUP' && (
                     <FirstRunTutorialChoice
                         onLearn={() => beginContract({ tutorial: true })}
-                        onSkip={() => beginContract({ tutorial: false })}
+                        onSkip={() => {
+                            patchSettings({ skippedAlleyIntro: true, tutorialCompleted: true });
+                            beginContract({ tutorial: false });
+                        }}
                     />
                 )}
                 {showFirstRunOverlay && phase === 'PLAY' && !storyBeat && !tutorialActive && (
                     <FirstRunOverlay
                         onDismiss={() => {
                             setShowFirstRunOverlay(false);
-                            if (!audioSettings.seenHelpDossier && !audioSettings.tutorialCompleted) {
-                                setShowHelpOverlay(true);
-                                patchSettings({ seenHelpDossier: true });
-                            }
+                            patchSettings({ seenHelpDossier: true });
                         }}
                         onShowRules={() => {
                             setShowFirstRunOverlay(false);
@@ -7981,6 +8063,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         reducedMotion={reducedMotion}
                         onSkip={finishRoundClearCard}
                         canContinue={roundClearCanContinue}
+                        payout={roundClearPayout}
                     />
                 )}
                 {tutorialActive && (phase === 'PLAY' || phase === 'SHOP') && !storyBeat && (
@@ -8016,7 +8099,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     />
                 )}
                 {lossExplanation && phase === 'PLAY' && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
-                {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} />}
+                {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} unlockedPersonaIds={meta.unlockedPersonaIds} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
                         onResume={() => setShowSystemMenu(false)}
@@ -8240,8 +8323,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
                 {phase === 'SAFEHOUSE' && (
                     <div className="gb-screen relative z-30 flex p-[var(--gb-pad)] bg-black/50 items-center justify-center">
-                        <div data-layout-key="safehouse-card" className="gb-modal-fit w-full max-w-5xl bg-[#E2D1B8] text-black border-l-[18px] border-[#c4b59d] shadow-[10px_20px_30px_black] p-4 md:p-8 mx-auto">
-                            <div className="gb-modal-body pr-1">
+                        <div data-layout-key="safehouse-card" className="gb-modal-fit w-full max-w-5xl max-h-[min(92dvh,720px)] bg-[#E2D1B8] text-black border-l-[18px] border-[#c4b59d] shadow-[10px_20px_30px_black] p-4 md:p-6 mx-auto flex flex-col overflow-hidden">
+                            <div className="gb-modal-body pr-1 min-h-0 flex-1 overflow-y-auto">
                             <div className="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-black pb-4 mb-6 gap-3">
                                 <div><div className="font-marker text-4xl md:text-5xl">THE SAFEHOUSE</div><div className="font-mono text-sm opacity-70">Spend laundered cash on permanent contacts.</div></div>
                                 <div className="font-mono text-2xl text-green-800 font-bold">${meta.launderedCash}</div>
@@ -8253,7 +8336,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     return (
                                         <div key={upgrade.id} className={`paper-card border-2 p-4 bg-white/50 ${bought ? 'border-green-700' : 'border-black'}`} style={{ '--paper-rot': '-0.8deg' }}>
                                             <div className="flex justify-between gap-3"><div><div className="font-marker text-2xl">{upgrade.name}</div><div className="font-mono text-xs opacity-70 mt-1">{upgrade.desc}</div></div><div className="font-mono font-bold text-lg">${upgrade.cost}</div></div>
-                                            <div className="font-mono text-[10px] mt-3 opacity-60">Unlocks: {upgrade.unlocks.map(displayNameForUnlockId).join(' · ')}</div>
+                                            {upgrade.unlocks?.length > 0 && (
+                                                <div className="font-mono text-[10px] mt-3 opacity-60">Unlocks: {upgrade.unlocks.map(displayNameForUnlockId).join(' · ')}</div>
+                                            )}
+                                            {upgrade.id === 'fixer-network' && (
+                                                <div className="font-mono text-[10px] mt-3 opacity-60">Perk: random blueprint at the start of each run.</div>
+                                            )}
                                             <button onClick={() => purchaseSafehouseUpgrade(upgrade)} disabled={!canBuy} className={`mt-4 w-full py-2 font-mono font-bold border-2 ${bought ? 'border-green-700 text-green-800 bg-green-100' : canBuy ? 'border-black bg-[#c78b16] text-black hover:bg-yellow-500' : 'border-gray-500 text-gray-500 bg-gray-200'}`}>{bought ? 'CONTACT SECURED' : canBuy ? 'PAY THE BRIBE' : 'NEED MORE CASH'}</button>
                                         </div>
                                     );
@@ -8264,10 +8352,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <div><b>Contraband Faces:</b> {meta.unlockedFaceIds.length}/{Object.keys(FACE_DATABASE).length}</div>
                                 <div><b>Hardware:</b> {meta.unlockedHardwareIds.length}/{Object.keys(DEVISES).length}</div>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-2">
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-3 border-t border-black/20 mt-2">
                                 <button onClick={() => { setLoreTab('bosses'); setShowLorePanel(true); }} className="px-8 py-3 bg-[#2a0017] text-[#ff9fcf] font-bold font-mono border-2 border-[#7a003d] hover:bg-[#3b0120] transition-colors">STREET INTEL</button>
                                 <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
-                            </div>
                             </div>
                         </div>
                     </div>
@@ -8391,11 +8479,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </button>
                                 ))}
                             </div>
-                            {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
-                                <div className="mx-3 md:mx-4 mb-1 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide">
-                                    Tap a payout row on THE PAYOUTS to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.
-                                </div>
-                            )}
+                            <div className="relative mx-3 md:mx-4 mb-1 min-h-[2.75rem] shrink-0">
+                                {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
+                                    <div className="absolute inset-0 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide flex items-center justify-center pointer-events-none">
+                                        Tap a payout row on THE PAYOUTS to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 overflow-hidden">
                             <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
@@ -8465,7 +8555,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </div>
                                 )}
                                 {!hasRolled && !rolling && (
-                                    <div className="absolute inset-x-4 top-[38%] z-40 px-3 py-2 bg-black/75 border border-[#ff007f]/40 font-mono text-xs md:text-sm text-[#ff9fcf] text-center pointer-events-none">
+                                    <div className="absolute inset-x-4 top-[22%] md:top-[18%] z-30 px-3 py-2 bg-black/75 border border-[#ff007f]/40 font-mono text-xs md:text-sm text-[#ff9fcf] text-center pointer-events-none">
                                         Hit ROLL 'EM to throw your bones.
                                     </div>
                                 )}
@@ -8513,6 +8603,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                                 canPill={discards > 0 && hasRolled && !rolling}
                                                 pillPulse={!audioSettings.dismissPillPulse && meta.totalRuns === 0 && hasRolled && discards > 0}
                                                 onExplainPill={() => showMechanicPopup('PILL')}
+                                                onDismissPillHint={dismissMechanicToasts}
                                                 onPill={() => popPill(i)}
                                                 onClick={() => {
                                                     if (swapMode) {
@@ -8606,7 +8697,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                             return <div key={idx} className={`rounded-sm transition-[background-color,transform,opacity] duration-200 ease-out ${filled ? `${segColor} ${leading ? 'animate-pulse' : ''} scale-y-100 opacity-100` : 'bg-gray-800 scale-y-75 opacity-60'}`} style={{ transitionDelay: `${delay}ms` }}></div>;
                                         })}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT'} onMouseEnter={() => showMechanicPopup(`PROGRAM_${p.id}`)} onFocus={() => showMechanicPopup(`PROGRAM_${p.id}`)} onClick={() => handleProgram(p)} title={p.desc} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
+                                    <div className="grid grid-cols-2 gap-2 mt-4">{PROGRAMS.map(p => <button key={p.id} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT' || !hasRolled || rolling} onMouseEnter={() => showMechanicPopup(`PROGRAM_${p.id}`)} onFocus={() => showMechanicPopup(`PROGRAM_${p.id}`)} onClick={() => handleProgram(p)} title={p.desc} className="flex flex-col items-center py-2 px-1 rounded border border-gray-700 bg-gray-900/50 hover:border-[#ff007f] disabled:opacity-50 disabled:grayscale"><span className="font-mono text-xs">{p.name}</span><span className="text-[10px] text-[#0df]">{p.cost}%</span></button>)}</div>
                                     <div className="mt-4 border-t border-gray-800 pt-3">
                                         <div className="font-mono text-[10px] text-emerald-300 tracking-wider mb-2">TACTICAL CONSUMABLES</div>
                                         {consumables.length === 0 ? (
@@ -8713,7 +8804,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
-                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Each scored hand pays hustle cash: floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}), cap ${ECONOMY_TUNING.hustleCashCap} — watch for HUSTLE +$ stamps in the alley. Routes can add bonus cash next job.</p>
+                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
                                     <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
                                         Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
@@ -8846,28 +8937,35 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {phase === 'RAP_SHEET' && (
                     <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="rap-busted-backdrop" aria-hidden></div>
-                        <div data-layout-key="rap-sheet" className="paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                        <div data-layout-key="rap-sheet" className="paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={rapSheetRevealReady ? { transform: 'none' } : { animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="gb-modal-body pr-1">
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-4 mb-4">
                                 <div className="h-32 md:h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div>
-                                <dl className="md:col-span-2 font-mono text-base md:text-lg grid grid-cols-[minmax(8.5rem,auto)_1fr] gap-x-3 gap-y-1.5 items-baseline">
-                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Apprehended</dt><dd className="font-bold text-right border-b border-gray-400 border-dashed pb-0.5">Round {round}</dd>
-                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Arresting Unit</dt><dd className="font-bold text-red-600 text-right border-b border-gray-400 border-dashed pb-0.5">{runStats.finalBoss || '—'}</dd>
-                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Total Heat</dt><dd className="font-bold text-right border-b border-gray-400 border-dashed pb-0.5">{runStats.totalHeat}</dd>
-                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Largest Hustle</dt><dd className="font-bold text-right border-b border-gray-400 border-dashed pb-0.5">{runStats.biggestHustle}</dd>
-                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Dirty Cash</dt><dd className="font-bold text-green-800 text-right border-b border-gray-400 border-dashed pb-0.5">${gold}</dd>
-                                    <dt className="text-gray-700 border-b border-gray-400 border-dashed pb-0.5">Laundered</dt><dd className="font-bold text-green-800 text-right border-b border-gray-400 border-dashed pb-0.5">+${lastLaundered}</dd>
-                                </dl>
+                                <div className="md:col-span-2 font-mono text-sm md:text-base space-y-1.5">
+                                    {[
+                                        ['Apprehended', `Round ${round}`],
+                                        ['Arresting Unit', runStats.finalBoss || '—', 'text-red-600'],
+                                        ['Heat Banked', String(runStats.totalHeat)],
+                                        ['Largest Hustle', String(runStats.biggestHustle)],
+                                        ['Dirty Cash', `$${gold}`, 'text-green-800'],
+                                        ['Laundered', `+$${lastLaundered}`, 'text-green-800']
+                                    ].map(([label, value, tone]) => (
+                                        <div key={label} data-layout-key="rap-sheet-stat-row" className="flex items-baseline justify-between gap-4 border-b border-gray-400 border-dashed pb-0.5">
+                                            <span className="text-gray-700 shrink-0">{label}</span>
+                                            <span className={`font-bold text-right ${tone || ''}`}>{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            {showIncarceratedStamp && (
-                                <div className="flex justify-end mb-2 pointer-events-none">
-                                    <div className="border-[4px] border-[#d30000] text-[#d30000] font-marker px-3 py-1.5 text-lg md:text-xl rotate-[-10deg] bg-white/92 shadow-md animate-[stampSlam_.25s_cubic-bezier(.25,1,.5,1)_forwards] whitespace-nowrap">
+                            {showIncarceratedStamp && rapSheetRevealReady && (
+                                <div className="flex justify-end mb-2 pointer-events-none pr-1">
+                                    <div className="border-[4px] border-[#d30000] text-[#d30000] font-marker px-3 py-1.5 text-lg md:text-xl rotate-[-10deg] bg-white/92 shadow-md whitespace-nowrap">
                                         INCARCERATED
                                     </div>
                                 </div>
                             )}
-                            <div className="border border-black p-3 bg-white/50 mb-3 min-h-0 max-h-[22vh] md:max-h-[26vh] overflow-hidden flex flex-col">
+                            <div className="border border-black p-3 bg-white/50 mb-3 min-h-0 max-h-[18vh] md:max-h-[22vh] overflow-hidden flex flex-col">
                                 <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
                                 <div className="min-h-0 overflow-hidden flex-1"><HistoryPanel history={history} /></div>
                             </div>

@@ -83,9 +83,9 @@ test("all run modifiers keep R1-style scores within sane band on sample hand", (
   });
 });
 
-test("opening balance unchanged with replay module loaded (R1 @90)", () => {
-  const p = probClear({ target: 90, pills: 3, iterations: 2000, seed: 0x6e202610 });
-  assert.ok(p >= 0.52 && p <= 0.95, `P(clear) ${p}`);
+test("opening balance unchanged with replay module loaded (R1 @75)", () => {
+  const p = probClear({ target: 75, pills: 3, iterations: 2000, seed: 0x6e202610 });
+  assert.ok(p >= 0.75 && p <= 1, `P(clear) ${p}`);
 });
 
 test("risk bone toll fires once per roll with a one", () => {

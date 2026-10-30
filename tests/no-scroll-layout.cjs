@@ -18,10 +18,12 @@ const RUN_KEY = "gutterbones1977:run:v1";
 
 const VIEWPORTS = [
   { name: "1280x800", width: 1280, height: 800 },
+  { name: "1280x690", width: 1280, height: 690 },
   { name: "1366x768", width: 1366, height: 768 },
   { name: "1440x900", width: 1440, height: 900 },
   { name: "1920x1080", width: 1920, height: 1080 },
   { name: "1024x768", width: 1024, height: 768 },
+  { name: "1024x640", width: 1024, height: 640 },
   { name: "844x390", width: 844, height: 390 },
   { name: "390x844", width: 390, height: 844 },
 ];
@@ -228,3 +230,42 @@ for (const scenario of SCENARIOS) {
     });
   }
 }
+
+test("rap sheet — label and value share row baseline", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 1280, height: 690 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
+    await waitForGameReady(page);
+    const payload = normalizeFixture("rapSheet");
+    await page.evaluate(
+      ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
+      { key: RUN_KEY, data: payload },
+    );
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await waitForGameReady(page);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+    await page.waitForTimeout(800);
+    await page.evaluate(() => {
+      if (window.__GB_LAYOUT_AUDIT__?.finishRapReveal) window.__GB_LAYOUT_AUDIT__.finishRapReveal();
+    });
+    await page.waitForTimeout(200);
+    const misaligned = await page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('[data-layout-key="rap-sheet-stat-row"]'));
+      return rows.filter((row) => {
+        const kids = row.children;
+        if (kids.length < 2) return true;
+        const a = kids[0].getBoundingClientRect();
+        const b = kids[1].getBoundingClientRect();
+        return Math.abs(a.top - b.top) > 6 || Math.abs(a.bottom - b.bottom) > 8;
+      }).length;
+    });
+    assert.equal(misaligned, 0, `rap sheet stat rows misaligned: ${misaligned}`);
+  } finally {
+    await browser.close();
+  }
+});
