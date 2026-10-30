@@ -74,7 +74,7 @@ test("playtest5 bot — median round 4–6 and ~2 items by round 3", () => {
   }
   const medRound = median(rounds);
   const medItemsR3 = itemsByR3.length ? median(itemsByR3) : 0;
-  assert.ok(medRound >= 4 && medRound <= 10, `median round ${medRound} expected ~5–8 with softer R1`);
+  assert.ok(medRound >= 4 && medRound <= 8, `median stall round ${medRound} expected ~5–7 with steeper curve`);
   assert.ok(medItemsR3 >= 1, `median items by R3 ${medItemsR3} expected >= 1`);
 });
 

@@ -27,9 +27,9 @@ test("opening balance — quota curve smoothed (R2–R4 steps, R6 anchor)", () =
   const r3 = projectRoundTarget(routes, 75, 1, 3);
   const r4 = projectRoundTarget(routes, 75, 1, 4);
   const r6 = projectRoundTarget(routes, 75, 1, 6);
-  assert.ok(r2 >= 88 && r2 <= 92, `R2 ${r2}`);
-  assert.ok(r3 - r2 >= 12 && r3 - r2 <= 22, `R2→R3 step ${r3 - r2}`);
-  assert.ok(r4 - r3 >= 12 && r4 - r3 <= 22, `R3→R4 step ${r4 - r3}`);
+  assert.ok(r2 >= 91 && r2 <= 98, `R2 ${r2}`);
+  assert.ok(r3 - r2 >= 14 && r3 - r2 <= 26, `R2→R3 step ${r3 - r2}`);
+  assert.ok(r4 - r3 >= 14 && r4 - r3 <= 26, `R3→R4 step ${r4 - r3}`);
   assert.ok(r6 >= 140 && r6 <= 210, `R6 anchor ${r6}`);
 });
 

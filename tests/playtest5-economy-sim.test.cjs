@@ -47,7 +47,7 @@ test("round 1 — no-hold best row clears quota ≥75% of runs", () => {
     if (simulateRound1Cash(rng, { holdStrategy: false }).cleared) cleared += 1;
   }
   const rate = cleared / RUNS;
-  assert.ok(rate >= 0.75, `no-hold clear rate ${(rate * 100).toFixed(1)}% expected ≥75%`);
+  assert.ok(rate >= 0.85, `no-hold clear rate ${(rate * 100).toFixed(1)}% expected ≥85%`);
 });
 
 test("round 1 — hold strategy clears quota ≥95%", () => {
@@ -120,6 +120,31 @@ test("multi-round — ~2 shop items affordable by round 3, no runaway quota", ()
     personaPills: 3,
   }).nextTarget;
   assert.ok(r6 >= 120 && r6 <= 220, `R6 anchor ${r6} should not run away`);
+});
+
+test("synergy — tagged pair can produce chain events on Slop", () => {
+  const { dice } = require("./fixtures/runs.cjs");
+  const { createGame } = require("./helpers/game.cjs");
+  const g = createGame(require("./fixtures/runs.cjs").snapshot());
+  const d = dice([2, 2, 3, 4, 5]);
+  d[0] = require("./fixtures/runs.cjs").bone(2, 0, { faceId: "BLOOD_6", type: "modifier" });
+  d[1] = require("./fixtures/runs.cjs").bone(2, 1, { faceId: "SHIV_FACE", type: "adjacent" });
+  const r = g.api.GutterbonesRules.calculateScore("C", d, {
+    handLevels: {},
+    flowStreak: 0,
+    inventory: [{ id: "ENGINE", name: "Engine" }],
+    hardwareDisabled: false,
+    activeBoss: null,
+    CATEGORIES: g.api.CATEGORIES,
+    HAND_MASTERY_TUNING: { baseLevel: 1, maxLevel: 8, chipPerLevel: 5 },
+    getFlowMultiplier: g.api.getFlowMultiplier,
+    getHandMasteryBonus: g.api.getHandMasteryBonus,
+    synergyTuning: { enabled: true, maxChainPasses: 8 },
+    synergyState: { categoryMarks: {}, comboMeter: 2 },
+    roundFirstCategories: [],
+  });
+  assert.ok(r.valid);
+  assert.ok((r.synergyEvents || []).length >= 1, "expected at least one synergy chain event");
 });
 
 test("upper row scoring — five sixes reach 90 heat", () => {

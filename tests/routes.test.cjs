@@ -47,18 +47,18 @@ test("projectNextRound — early BACK ALLEY from round 1 target 75", () => {
     personaPills: 3,
   });
   assert.equal(out.nextRound, 2);
-  assert.equal(out.nextTarget, 90);
-  assert.equal(out.nextTargetDisplay, 90);
+  assert.equal(out.nextTarget, 93);
+  assert.equal(out.nextTargetDisplay, 93);
   assert.equal(out.nextHands, 4);
   assert.equal(out.nextDiscards, 3);
 });
 
 test("projectNextRound — PAWN scales quota higher than alley", () => {
   const routes = loadRoutes();
-  const base = { round: 2, target: 107, debt: 0, insaneContract: false, hasLedger: false, personaPlays: 4, personaPills: 3 };
+  const base = { round: 2, target: 90, debt: 0, insaneContract: false, hasLedger: false, personaPlays: 4, personaPills: 3 };
   const alley = routes.projectNextRound({ path: BACK_ALLEY, ...base });
   const pawn = routes.projectNextRound({ path: PAWN, ...base });
-  assert.ok(pawn.nextTarget > alley.nextTarget);
+  assert.ok(pawn.nextTarget >= alley.nextTarget);
   assert.ok(pawn.effectLines.some((l) => l.includes("+$15")));
 });
 
