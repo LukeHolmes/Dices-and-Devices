@@ -129,6 +129,18 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
 });
 
+test("Playtest 4 fixes (Oct 2026)", () => {
+  assert.match(html, /rel="icon"[^>]+favicon\.ico/);
+  assert.match(appSource, /CarvingDieTile/);
+  assert.match(appSource, /rerollBoneSlot/);
+  assert.match(appSource, /consumePill:\s*false/);
+  assert.match(appSource, /FREE OPENING SNIFF/);
+  assert.match(appSource, /!hasRolled \?\s*\(\s*\n\s*<div>SIDE BET:/);
+  assert.match(appSource, /lossExplanation && phase === 'PLAY'/);
+  assert.match(appSource, /stashFillRate/);
+  assert.match(appSource, /pillCurrencyHint/);
+});
+
 test("Phase 6f shop loan and audio settings present", () => {
   assert.match(appSource, /LOAN appears when cash is short/);
   assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);
@@ -136,7 +148,8 @@ test("Phase 6f shop loan and audio settings present", () => {
 });
 
 test("Phase 6c safehouse and favicon polish", () => {
-  assert.match(html, /rel="icon"[^>]+gutterbones-card\.png/);
+  assert.match(html, /rel="icon"[^>]+favicon\.ico/);
+  assert.match(html, /apple-touch-icon[^>]+gutterbones-card\.png/);
   assert.doesNotMatch(appSource, /UNLOCKS: \{upgrade\.unlocks\.join\(', '\)\}/);
   assert.match(appSource, /displayNameForUnlockId/);
   assert.match(storySource, /PANEL_ART_AVAILABLE/);
