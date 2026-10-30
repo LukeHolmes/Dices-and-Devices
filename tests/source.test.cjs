@@ -49,6 +49,7 @@ test("Bootstrap selects production React and gates dev tools on public hosts", (
 test("Shared inline rules and onboarding precede the app without extra requests", () => {
   const rulesIdx = html.indexOf('<script id="gutterbones-rules">');
   const onboardingIdx = html.indexOf('<script id="gutterbones-onboarding">');
+  const tutorialIdx = html.indexOf('<script id="gutterbones-tutorial">');
   const storyIdx = html.indexOf('<script id="gutterbones-story">');
   const routesIdx = html.indexOf('<script id="gutterbones-routes">');
   const gambleIdx = html.indexOf('<script id="gutterbones-gamble">');
@@ -56,7 +57,8 @@ test("Shared inline rules and onboarding precede the app without extra requests"
   assert.ok(
     rulesIdx >= 0 &&
       onboardingIdx > rulesIdx &&
-      storyIdx > onboardingIdx &&
+      tutorialIdx > onboardingIdx &&
+      storyIdx > tutorialIdx &&
       routesIdx > storyIdx &&
       gambleIdx > routesIdx &&
       appIdx > gambleIdx,
@@ -127,6 +129,15 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /Side bet: this roll/);
   assert.match(appSource, /pendingUnlockMessageRef/);
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
+});
+
+test("No-scroll layout shell (Oct 2026)", () => {
+  assert.match(html, /html,\s*body[\s\S]*overflow:\s*hidden/);
+  assert.match(appSource, /gb-app-shell/);
+  assert.match(appSource, /gb-screen/);
+  assert.match(appSource, /gb-panel-scroll/);
+  assert.match(appSource, /layoutAudit/);
+  assert.match(appSource, /gb-play-dock/);
 });
 
 test("Playtest 4 fixes (Oct 2026)", () => {
