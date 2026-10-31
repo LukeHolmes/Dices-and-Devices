@@ -335,7 +335,13 @@
     }
     #root-gutterbones .score-explanation-panel {
         max-height: none;
-        overflow: visible;
+        overflow: hidden;
+        scrollbar-width: none;
+    }
+    #root-gutterbones .score-explanation-panel::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
     }
     #root-gutterbones [data-layout-key="score-breakdown-overlay"],
     #root-gutterbones [data-layout-key="score-resolution-overlay"] {
@@ -343,12 +349,20 @@
         max-height: calc(100dvh - var(--gb-score-panel-top, 12.5rem) - 0.75rem);
         overflow: hidden;
         overscroll-behavior: contain;
+        scrollbar-width: none;
     }
     #root-gutterbones [data-layout-key="score-breakdown-overlay"] .score-explanation-panel,
     #root-gutterbones [data-layout-key="score-resolution-overlay"] button {
         max-height: calc(100dvh - var(--gb-score-panel-top, 12.5rem) - 0.75rem);
         overflow-y: auto;
         overflow-x: hidden;
+        scrollbar-width: none;
+    }
+    #root-gutterbones [data-layout-key="score-breakdown-overlay"] .score-explanation-panel::-webkit-scrollbar,
+    #root-gutterbones [data-layout-key="score-resolution-overlay"] button::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
     }
     #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="play-alley"] {
         overflow: hidden !important;
@@ -732,8 +746,8 @@
     .story-panel-fade-in { animation: storyFadeIn 0.3s ease-out forwards; }
     .story-panel-fade-out { animation: storyFadeOut 0.3s ease-in forwards; }
     @keyframes paperSway {
-        0%, 100% { transform: rotate(var(--paper-rot, -2deg)); }
-        50% { transform: rotate(calc(var(--paper-rot, -2deg) + 0.4deg)); }
+        0%, 100% { transform: rotate(var(--paper-rot, -0.6deg)); }
+        50% { transform: rotate(calc(var(--paper-rot, -0.6deg) + 0.25deg)); }
     }
     @keyframes stampFade {
         0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(-8deg); }
@@ -1216,6 +1230,17 @@
      category validation → face modifiers → synergy chains → hardware → synergy chains (hardware) → FLOW. -->
 <script id="gutterbones-rules">
 const GutterbonesRules = (() => {
+    const effectiveScoringValue = (d) => {
+        if (!d) return d?.value;
+        if (d.value === 'W') return 'W';
+        if (d.faceId === 'MULT_FACE') {
+            const v = d.value;
+            if (typeof v === 'number' && v >= 1 && v <= 6) return v;
+            return 1;
+        }
+        return d.value;
+    };
+
     const prepScoringDice = (currentDice, inventory, hardwareDisabled) => {
         const useMirror = !hardwareDisabled && inventory.some((item) => item.id === 'MIRROR_RIG');
         if (!useMirror) return { scoringDice: currentDice, mirrorMatched: false };
@@ -1339,7 +1364,13 @@ const GutterbonesRules = (() => {
     const applyFaceModifiersForDie = (d, state, { pushStep, triggers, slotLabel = '' }) => {
         const face = d.faceId;
         const prefix = slotLabel ? `SLOT ${slotLabel}: ` : '';
-        if (face === 'MULT_FACE') { state.mult += 1; triggers.push({ name: '+MULT', value: '+1x' }); pushStep('multiplier', `${prefix}FACE: +MULT`, '+1x multiplier', '+1x'); }
+        if (face === 'MULT_FACE') {
+            if (state.multFaceBonusCount >= 2) return;
+            state.multFaceBonusCount += 1;
+            state.mult += 1;
+            triggers.push({ name: '+MULT', value: '+1x' });
+            pushStep('multiplier', `${prefix}FACE: +MULT`, '+1x multiplier', '+1x');
+        }
         if (face === 'GOLD_FACE') { state.gDelta += 2; triggers.push({ name: 'CASH', value: '+$2' }); pushStep('modifier', `${prefix}FACE: GOLD`, '+$2 cash', '+$2'); }
         if (face === 'BLOOD_6') { state.chips += 20; state.gDelta -= 1; triggers.push({ name: 'BLOOD', value: '+20/-$1' }); pushStep('modifier', `${prefix}FACE: BLOOD 6`, '+20 chips, -$1', '+20 / -$1'); }
         if (face === 'SHIV_FACE') { state.chips += 40; triggers.push({ name: 'SHIV', value: '+40' }); pushStep('modifier', `${prefix}FACE: SHIV`, '+40 chips', 40); }
@@ -1351,6 +1382,7 @@ const GutterbonesRules = (() => {
     };
 
     const applyAllFaceModifiers = (resolved, destroyed, state, api) => {
+        state.multFaceBonusCount = 0;
         resolved.forEach((d, i) => {
             if (destroyed.has(i)) return;
             applyFaceModifiersForDie(d, state, api);
@@ -1618,7 +1650,11 @@ const GutterbonesRules = (() => {
             synergyTuning, inventory, hardwareDisabled, resolved, destroyed, synergyEnabled
         );
         const handHardwareContext = { debt, flowStreak, mirrorMatched, synergyEnabled };
-        const standardVals = resolved.filter((d, i) => !destroyed.has(i) && typeof d.value === 'number' && d.value > 0 && d.faceId !== 'GHOST_FACE').map(d => d.value);
+        const standardVals = resolved.filter((d, i) => {
+            if (destroyed.has(i) || d.faceId === 'GHOST_FACE') return false;
+            const v = effectiveScoringValue(d);
+            return typeof v === 'number' && v > 0;
+        }).map((d) => effectiveScoringValue(d));
         const wilds = resolved.filter((d, i) => !destroyed.has(i) && d.value === 'W').length;
         const sum = standardVals.reduce((a,b)=>a+b,0) + wilds * 6;
         const counts = {};
@@ -1662,7 +1698,7 @@ const GutterbonesRules = (() => {
                 break;
             }
             case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
-            case 'C': valid = sum > 0; chips = valid ? sum + 7 : 0; if (valid) mult *= 1.35; break;
+            case 'C': valid = sum > 0; chips = valid ? sum + 5 : 0; if (valid) mult *= 1.22; break;
         }
         if (!valid) {
             const invalidReason = (() => {
@@ -1886,6 +1922,7 @@ const GutterbonesRules = (() => {
         resolveDice,
         prepScoringDice,
         calculateScore,
+        effectiveScoringValue,
         normalizeSavedRun,
         BLUEPRINT_IDS,
         activeBlueprintIds,
@@ -3471,7 +3508,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const CONSUMABLES = {
         SECOND_WIND: { id: 'SECOND_WIND', name: 'Second Wind', desc: '+1 Play this round.', cost: 32, rarity: 'common', type: 'consumable', icon: '+1' },
-        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 Pills immediately.', cost: 24, rarity: 'common', type: 'consumable', icon: '+P' },
+        SMELLING_SALTS: { id: 'SMELLING_SALTS', name: 'Smelling Salts', desc: '+2 max pills for this run (refreshes each round).', cost: 24, rarity: 'common', type: 'consumable', icon: '+P' },
         DIRTY_WAD: { id: 'DIRTY_WAD', name: 'Dirty Wad', desc: '+$12 cash on use.', cost: 30, rarity: 'rare', type: 'consumable', icon: '+$' }
     };
 
@@ -3481,7 +3518,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]', portraitSrc: 'assets/bosses/junkie.png', portraitAlt: 'The Junkie' },
         CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware disabled', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
         INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
-        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota +50% (boss modifier). Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
+        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota ×1.38 (~+38%). Pills cost $2. Clear R10 to escape — beating this boss does not end the run.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
     };
 
     const PATHS = [
@@ -3626,16 +3663,19 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const d = resolved[slotIndex];
         if (d.faceId === 'GHOST_FACE') return false;
         const faceVal = CATEGORY_FACE_VALUE[catId];
-        if (faceVal != null) return d.value === 'W' || d.value === faceVal;
-        if (catId === 'C') return d.value === 'W' || typeof d.value === 'number';
+        const pip = typeof GutterbonesRules?.effectiveScoringValue === 'function'
+            ? GutterbonesRules.effectiveScoringValue(d)
+            : d.value;
+        if (faceVal != null) return pip === 'W' || pip === faceVal;
+        if (catId === 'C') return pip === 'W' || typeof pip === 'number';
         return true;
     };
 
     const carvedDieFromFace = (die, faceId) => {
         const face = FACE_DATABASE[faceId];
         if (!face) return die;
-        const pipValue = face.id === 'MULT_FACE' && typeof die.value === 'number' && die.value >= 1
-            ? die.value
+        const pipValue = face.id === 'MULT_FACE'
+            ? (typeof die.value === 'number' && die.value >= 1 && die.value <= 6 ? die.value : 1)
             : face.value;
         return {
             ...die,
@@ -3748,7 +3788,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             JUNKIE: 'A chaos broker who salts the bones. Sixes twist into ones when he is around, shredding high-roll plans.',
             CROOKED_COP: 'Badge on paper, extortionist in practice. Hardware goes dark while the cop watches your table.',
             INFORMANT: 'Knows every stash route in the district. Locks your stash progress until you force your way through.',
-            THE_RAID: 'Not a person but a citywide crackdown. Boss quota +50%, expensive pills, and no room for sloppy hands.'
+            THE_RAID: 'Not a person but a citywide crackdown. Boss quota ×1.38 (~+38%), expensive pills, and no room for sloppy hands. Clear round 10 to escape — beating the raid does not end your run.'
         }
     };
 
@@ -4522,8 +4562,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
     const HistoryPanel = ({ history }) => (
-        <div className="space-y-2 max-h-48 overflow-y-auto overflow-x-hidden">
-            {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 6).map(h => (
+        <div className="space-y-2 overflow-x-hidden">
+            {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 3).map(h => (
                 <div key={h.id} className="border border-black/30 bg-white/30 p-2 font-mono text-xs">
                     <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total}</b></div>
                     <div className="opacity-70">Bones: [{h.values.join(', ')}]</div>
@@ -5353,7 +5393,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             return meta?.name || meta?.label || k;
         };
         return (
-            <div className="mt-4 border-2 border-black/70 bg-white/40 p-3 rounded font-mono text-xs text-left">
+            <div className="mt-4 border-2 border-black/70 bg-white/40 p-3 rounded font-mono text-xs text-left overflow-x-hidden">
                 <div className="text-[10px] tracking-[.3em] text-gray-600 mb-2">RUN ARCHETYPE</div>
                 <div className={`text-base font-bold ${ui.accent}`}>RUN TYPE: {ui.label}</div>
                 <div className="text-[11px] text-gray-700 mt-2 leading-relaxed">
@@ -5750,6 +5790,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [target, setTarget] = useState(150);
         const [hands, setHands] = useState(4);
         const [discards, setDiscards] = useState(3);
+        const [pillRunBonus, setPillRunBonus] = useState(0);
         const [gold, setGold] = useState(20);
         const [debt, setDebt] = useState(0);
         const [stash, setStash] = useState(0);
@@ -5896,6 +5937,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const buildCalloutPrevRef = useRef(null);
         const synergyCalloutAtRef = useRef(0);
         const rollLockRef = useRef(false);
+        const [rollLocked, setRollLocked] = useState(false);
+        const setRollLock = (locked) => {
+            rollLockRef.current = !!locked;
+            setRollLocked(!!locked);
+        };
         const openingSniffPendingRef = useRef(false);
         const lastRollStartedAtRef = useRef(0);
         const pendingPayoutRef = useRef(null);
@@ -5941,15 +5987,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 return;
             }
             if (scoreResolution && pendingScoreBreakdownRef.current) {
-                scoreOverlayDismissQueuedRef.current = false;
-                setScoreResolution(null);
-                setPaperStamps([]);
-                const pendingBreakdown = pendingScoreBreakdownRef.current;
+                const midRoundStillPlaying = hands > 0 && score < currentTarget;
+                if (!midRoundStillPlaying) {
+                    scoreOverlayDismissQueuedRef.current = false;
+                    setScoreResolution(null);
+                    setPaperStamps([]);
+                    const pendingBreakdown = pendingScoreBreakdownRef.current;
+                    pendingScoreBreakdownRef.current = null;
+                    setScoreBreakdown(pendingBreakdown);
+                    flushPendingHandJuiceRef.current?.();
+                    setScoreOverlayCanDismiss(false);
+                    return;
+                }
                 pendingScoreBreakdownRef.current = null;
-                setScoreBreakdown(pendingBreakdown);
                 flushPendingHandJuiceRef.current?.();
-                setScoreOverlayCanDismiss(false);
-                return;
             }
             scoreOverlayDismissQueuedRef.current = false;
             if (scoreBreakdownTimeoutRef.current != null) {
@@ -5970,6 +6021,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setSynergyLinks([]);
             setSynergyChainBanner(null);
             setScoreOverlayCanDismiss(false);
+            setPayoutInputLock(false);
+            setRollLock(false);
         };
 
         const clearTransientJuice = () => {
@@ -6131,7 +6184,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
         const scoreOverlayOpen = !!(scoreBreakdown || scoreResolution);
         scoreOverlayLockRef.current = scoreOverlayOpen;
-        const rollReady = !rolling && hands > 0 && !swapMode && !scoreOverlayOpen && !payoutInputLock
+        const rollBlockedByPresentation = scoreOverlayOpen || payoutInputLock || !!bossIntro || !!storyBeat
+            || !!roundClearCardActive || !!lossExplanation;
+        const rollReady = !rolling && !rollLocked && hands > 0 && !swapMode && !rollBlockedByPresentation
             && (!hasRolled || discards > 0);
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
@@ -6585,6 +6640,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             target,
             hands,
             discards,
+            pillRunBonus,
             gold,
             debt,
             stash,
@@ -6648,6 +6704,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setTarget(saved.target || EARLY_GAME_TUNING.openingTarget);
             setHands(saved.hands || savedPersona.plays);
             setDiscards(saved.discards ?? savedPersona.pills);
+            setPillRunBonus(Math.max(0, Math.min(2, Number(saved.pillRunBonus) || 0)));
             setGold(saved.gold ?? savedPersona.cash);
             setDebt(saved.debt || 0);
             setStash(saved.stash || 0);
@@ -6992,7 +7049,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         useEffect(() => {
             if (!RUN_PHASES.includes(phase)) return;
             persistRun(phase);
-        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, nextShopTag, activeShopTag, routeModifiers, synergyState, categoryMarkedThisRound, blueprints, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats, runModifierIds, dailyRunActive]);
+        }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, pillRunBonus, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, nextShopTag, activeShopTag, routeModifiers, synergyState, categoryMarkedThisRound, blueprints, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats, runModifierIds, dailyRunActive]);
 
         const beginContract = ({ tutorial = false, daily = false } = {}) => {
             const p = PERSONAS[personaIdx];
@@ -7060,6 +7117,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     ? FIRST_RUN_TUNING.enforcerRound1Pills
                     : p.pills);
             setDiscards(round1Pills);
+            setPillRunBonus(0);
             setGold(p.cash);
             setDebt(0);
             setStash(tut ? tut.openingStash : (EARLY_GAME_TUNING.openingStashGrant || 0));
@@ -7236,15 +7294,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const rollBones = () => {
-            const overlayOpen = (typeof scoreBreakdown !== 'undefined' && (scoreBreakdown || scoreResolution))
-                || scoreOverlayLockRef.current;
-            if (overlayOpen || payoutInputLock) return;
-            if (rollLockRef.current || rolling || hands <= 0) return;
+            const overlayOpen = !!(scoreBreakdown || scoreResolution);
+            if (overlayOpen || payoutInputLock || bossIntro || storyBeat || roundClearCardActive || lossExplanation) return;
+            if (rollLockRef.current || rollLocked || rolling || hands <= 0) return;
             if (hasRolled && discards <= 0) return;
             const now = Date.now();
-            if (hasRolled && now - lastRollStartedAtRef.current < 180) return;
-            rollLockRef.current = true;
+            if (hasRolled && now - lastRollStartedAtRef.current < 280) return;
+            setRollLock(true);
             lastRollStartedAtRef.current = now;
+            const consumePill = hasRolled;
+            if (consumePill) setDiscards((d) => d - 1);
             if (!reducedMotion) {
                 setRollBtnSquash(true);
                 scheduleTimeout(() => setRollBtnSquash(false), 80);
@@ -7273,13 +7332,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setFeltPulse(true);
             triggerCameraKick('soft');
             scheduleTimeout(() => setFeltPulse(false), 650);
-            if (hasRolled) setDiscards(d => d - 1);
             setHasRolled(true);
             const tutRollIdx = (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current && GutterbonesTutorial)
                 ? GutterbonesTutorial.nextRollIndex()
                 : null;
             const completeRoll = () => {
-                rollLockRef.current = false;
+                setRollLock(false);
                 const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
                 if (GutterbonesReplay && mods.includes('RISK_BONE')) {
                     setDice((current) => {
@@ -7349,7 +7407,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 setPillCountTick((t) => t + 1);
                 setActiveMechanicPopup(null);
             }
-            rollLockRef.current = true;
+            setRollLock(true);
             setRollingSlots(prev => prev.map((_, i) => i === idx));
             const settleMs = reducedMotion ? 0 : getDiceSettleMs(typeof audioSettings !== 'undefined' ? audioSettings : {}, reducedMotion) + 120;
             scheduleTimeout(() => {
@@ -7373,7 +7431,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     return next;
                 });
                 setRollingSlots(prev => prev.map(() => false));
-                rollLockRef.current = false;
+                setRollLock(false);
                 if (!reducedMotion) {
                     if (typeof AudioSystem.dieThud === 'function') AudioSystem.dieThud(0);
                     else AudioSystem.clatter();
@@ -7571,7 +7629,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 setSynergyChainBanner(null);
             }
             const useResolutionGate = result.valid && result.total >= 120;
-            scoreOverlayLockRef.current = true;
             if (useResolutionGate) {
                 pendingScoreBreakdownRef.current = breakdownPayload;
                 setScoreBreakdown(null);
@@ -7926,7 +7983,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (!item) return;
             setConsumables(prev => prev.filter((_, i) => i !== idx));
             if (item.id === 'SECOND_WIND') setHands(h => h + 1);
-            if (item.id === 'SMELLING_SALTS') setDiscards(d => d + 2);
+            if (item.id === 'SMELLING_SALTS') setPillRunBonus(2);
             if (item.id === 'DIRTY_WAD') setGold(g => g + 12);
             setFixerLine(`Used ${item.name}. Stay sharp.`);
             spawnPaperStamp('USED', '#0f766e');
@@ -8143,10 +8200,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 setFixerLine(`Run modifier wired: ${item.name}.`);
             } else if (item.type === 'consumable') {
                 if (item.id === 'SMELLING_SALTS') {
-                    setDiscards(d => d + 2);
+                    setPillRunBonus(2);
                     setPillCountTick(t => t + 1);
-                    spawnPaperStamp('+2 PILLS', '#0f766e');
-                    setFixerLine('Smelling salts — +2 pills, right now.');
+                    spawnPaperStamp('+2 MAX PILLS', '#0f766e');
+                    setFixerLine('Smelling salts — +2 max pills each round this run.');
                 } else {
                     setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
                 }
@@ -8240,12 +8297,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setBlueprintRoundFlags({ multEngineUsed: false, flowSaveUsed: false });
             const nextRound = projection.nextRound;
             const storyPanel = GutterbonesStory?.getRoundTransitionPanel?.(arcId, nextRound);
+            const prevBossAdjustedTarget = activeBoss
+                ? getBossAdjustedTarget(target, activeBoss, round)
+                : null;
             setScore(0);
-            setTarget(projection.nextTarget);
+            let nextTargetBase = projection.nextTarget;
+            if (prevBossAdjustedTarget && !path.boss && nextTargetBase < prevBossAdjustedTarget) {
+                nextTargetBase = Math.max(
+                    nextTargetBase,
+                    Math.floor(prevBossAdjustedTarget * GutterbonesRoutes.PROGRESSION_GUARDRAILS.minGrowthRate)
+                );
+            }
+            setTarget(nextTargetBase);
             const playPenalty = sacrificePlayPenaltyRef.current || 0;
             sacrificePlayPenaltyRef.current = 0;
             setHands(Math.max(1, projection.nextHands - playPenalty));
-            setDiscards(projection.nextDiscards);
+            setDiscards(projection.nextDiscards + pillRunBonus);
             setUsedCats([]);
             setFlowStreak(0);
             setHasRolled(false);
@@ -8317,7 +8384,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setHasRolled(true);
             setRollingSlots(Array(5).fill(false));
             setKept([false, false, false, false, false]);
-            rollLockRef.current = false;
+            setRollLock(false);
             setFixerLine('DEV: blood + shiv lane loaded — score Slop for blood ripple chain juice.');
         };
 
@@ -8336,7 +8403,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setHasRolled(true);
             setRollingSlots(Array(5).fill(false));
             setKept([false, false, false, false, false]);
-            rollLockRef.current = false;
+            setRollLock(false);
             setFixerLine('DEV: ghost echo + wire feed lane — score Slop for multi-chain stagger QA.');
         };
 
@@ -8478,6 +8545,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         return !!(btn && btn.disabled);
                     },
                     getHasRolled: () => !!hasRolled,
+                    getDiceValues: () => dice.map((d) => d.value),
+                    getDiscards: () => discards,
+                    dismissBossIntro: () => {
+                        setBossIntroCanContinue(true);
+                        setBossIntro(null);
+                        setRollLock(false);
+                    },
+                    forceBossIntro: (bossId = 'LOAN_SHARK') => {
+                        const boss = bossById(bossId);
+                        if (boss) {
+                            setBossIntroCanContinue(true);
+                            setBossIntro(boss);
+                        }
+                    },
+                    rollOnce: () => rollBones(),
                     measureRapSheetStatAlignment: () => {
                         const rows = Array.from(document.querySelectorAll('[data-layout-key="rap-sheet-stat-row"]'));
                         if (!rows.length) return { ok: false, reason: 'no rows' };
@@ -8501,7 +8583,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
                         openingSniffPendingRef.current = false;
-                        rollLockRef.current = false;
+                        setRollLock(false);
                         pendingPayoutRef.current = null;
                         setRollingSlots(Array(5).fill(false));
                         setOpeningSniffBanner(null);
@@ -8522,7 +8604,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         setHasRolled(true);
                         setKept([false, false, false, false, false]);
                         scheduleTimeout(() => {
-                            rollLockRef.current = false;
+                            setRollLock(false);
                             setRollingSlots(Array(5).fill(false));
                             executePayout(catId);
                         }, 0);
@@ -9718,7 +9800,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {phase === 'RAP_SHEET' && (
                     <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="rap-busted-backdrop" aria-hidden></div>
-                        <div data-layout-key="rap-sheet" className={`paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20${rapSheetRevealReady ? ' paper-card-flat' : ''}`} style={rapSheetRevealReady ? { transform: 'none', animation: 'none', '--paper-rot': '0deg' } : { animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                        <div data-layout-key="rap-sheet" className={`paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20${rapSheetRevealReady ? ' paper-card-flat' : ''}`} style={rapSheetRevealReady ? { transform: 'none', animation: 'none', '--paper-rot': '0deg' } : { animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-0.35deg' }}>
                             <div className="gb-modal-body pr-1">
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-4 mb-4">
