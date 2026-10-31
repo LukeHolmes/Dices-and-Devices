@@ -31,7 +31,7 @@ const BOUNCER = {
 const THE_RAID = {
   id: "THE_RAID",
   name: "THE RAID",
-  applyTarget: (t) => Math.floor(t * 3),
+  applyTarget: (t) => Math.floor(t * 1.5),
 };
 
 test("projectNextRound — early BACK ALLEY entering round 2 from target 75", () => {
@@ -134,7 +134,8 @@ test("projectNextRound — THE RAID path round 9 scale", () => {
     personaPlays: 4,
     personaPills: 3,
   });
-  assert.ok(out.nextTargetDisplay >= out.nextTarget * 2);
+  assert.ok(out.nextTargetDisplay >= Math.floor(out.nextTarget * 1.35));
+  assert.ok(out.nextTargetDisplay <= Math.floor(out.nextTarget * 1.65));
 });
 
 test("sideBetPayout mirrors production formula", () => {

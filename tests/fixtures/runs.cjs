@@ -297,7 +297,7 @@ const bossCases = [
   ["JUNKIE", 130],
   ["CROOKED_COP", 130],
   ["INFORMANT", 130],
-  ["THE_RAID", 358],
+  ["THE_RAID", 179],
 ];
 module.exports = {
   bone,

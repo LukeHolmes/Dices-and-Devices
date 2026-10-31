@@ -40,7 +40,7 @@ test("fuse_spark: neighbor modifier adds chips", () => {
   d[1] = bone(0, 1, { faceId: "FUSE_FACE", type: "modifier" });
   const r = g.api.GutterbonesRules.calculateScore("C", d, scoreContext(g));
   assert.ok(r.synergyEvents.some((e) => e.id === "fuse_spark"));
-  assert.equal(r.total, 72);
+  assert.equal(r.total, 61);
 });
 
 test("double_down_face: x1.25 when category mult >= 3", () => {

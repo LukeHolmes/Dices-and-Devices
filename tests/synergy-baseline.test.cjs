@@ -5,7 +5,7 @@ const { createGame } = require("./helpers/game.cjs");
 const { snapshot, dice } = require("./fixtures/runs.cjs");
 
 const STANDARD_PAYOUTS = [
-  ["C", [1, 2, 3, 4, 5], 37],
+  ["C", [1, 2, 3, 4, 5], 29],
   ["TOK", [2, 2, 2, 4, 5], 40],
   ["FOK", [3, 3, 3, 3, 5], 105],
   ["FH", [2, 2, 3, 3, 3], 90],
@@ -40,6 +40,6 @@ test("synergy flag on with no chain triggers matches baseline (Slop)", () => {
     synergyTuning: { enabled: true, maxChainPasses: 8 },
   };
   const r = g.api.GutterbonesRules.calculateScore("C", dice([1, 2, 3, 4, 5]), ctx);
-  assert.equal(r.total, 37);
+  assert.equal(r.total, 29);
   assert.equal(r.chainDepth, 0);
 });

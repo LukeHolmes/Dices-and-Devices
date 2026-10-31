@@ -294,20 +294,28 @@
         box-shadow: 0 0 24px rgba(255, 0, 127, 0.35);
         animation: badgePop 0.35s ease-out forwards;
     }
-    #root-gutterbones .rap-sheet-stat-grid {
-        display: grid;
-        grid-template-columns: minmax(6rem, 38%) 1fr;
-        column-gap: 0.75rem;
-        row-gap: 0.35rem;
-        align-items: baseline;
+    #root-gutterbones .rap-sheet-stat-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    #root-gutterbones .rap-sheet-stat-row td {
+        vertical-align: baseline;
+        padding: 0.25rem 0 0.15rem;
+        border-bottom: 1px dashed #9ca3af;
+        line-height: 1.35;
+        font-size: inherit;
     }
     #root-gutterbones .rap-sheet-stat-label {
+        width: 42%;
         color: #374151;
+        padding-right: 0.75rem;
     }
     #root-gutterbones .rap-sheet-stat-value {
-        font-weight: 700;
+        font-weight: 600;
         text-align: right;
         word-break: break-word;
+        padding-top: 0;
     }
     #root-gutterbones .shop-stash-panel .stash-program-grid button {
         min-height: 2.5rem;
@@ -333,8 +341,17 @@
     #root-gutterbones [data-layout-key="score-resolution-overlay"] {
         top: var(--gb-score-panel-top, 12.5rem);
         max-height: calc(100dvh - var(--gb-score-panel-top, 12.5rem) - 0.75rem);
-        overflow-y: auto;
+        overflow: hidden;
         overscroll-behavior: contain;
+    }
+    #root-gutterbones [data-layout-key="score-breakdown-overlay"] .score-explanation-panel,
+    #root-gutterbones [data-layout-key="score-resolution-overlay"] button {
+        max-height: calc(100dvh - var(--gb-score-panel-top, 12.5rem) - 0.75rem);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="play-alley"] {
+        overflow: hidden !important;
     }
     #root-gutterbones .hud-pill-count.pill-count-tick {
         animation: pillCountTick 0.42s ease-out;
@@ -1069,6 +1086,10 @@
     #root-gutterbones .boss-banner-scan { position: relative; overflow: hidden; }
     #root-gutterbones .boss-banner-scan::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent); animation: bossScan 8s linear infinite; pointer-events: none; }
     #root-gutterbones .paper-card { animation: paperSway 10s ease-in-out infinite; transform-origin: 50% 90%; }
+    #root-gutterbones .paper-card.paper-card-flat {
+        animation: none !important;
+        transform: none !important;
+    }
     #root-gutterbones .paper-lift:hover { transform: translateY(-4px) scale(1.02) rotate(0deg) !important; box-shadow: 0 14px 30px rgba(0,0,0,.45); }
     #root-gutterbones .stamp-overlay { position: fixed; left: 50%; top: 52%; border: 4px solid var(--stamp-color, #d30000); color: var(--stamp-color, #d30000); background: rgba(255,255,255,.85); font: 900 2rem Impact, sans-serif; letter-spacing: .06em; transform: translate(-50%, -50%); z-index: 650; padding: .35rem .8rem; pointer-events: none; animation: stampFade .9s ease-out forwards; }
     #root-gutterbones .trigger-cascade { position: fixed; left: 50%; top: 43%; transform: translateX(-50%); z-index: 420; pointer-events: none; }
@@ -1641,7 +1662,7 @@ const GutterbonesRules = (() => {
                 break;
             }
             case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
-            case 'C': valid = sum > 0; chips = valid ? sum + 10 : 0; if (valid) mult *= 1.5; break;
+            case 'C': valid = sum > 0; chips = valid ? sum + 7 : 0; if (valid) mult *= 1.35; break;
         }
         if (!valid) {
             const invalidReason = (() => {
@@ -3460,7 +3481,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]', portraitSrc: 'assets/bosses/junkie.png', portraitAlt: 'The Junkie' },
         CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware disabled', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
         INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
-        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota 300%. Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 3), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
+        THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota +50% (boss modifier). Pills cost $2.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
     };
 
     const PATHS = [
@@ -3727,7 +3748,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             JUNKIE: 'A chaos broker who salts the bones. Sixes twist into ones when he is around, shredding high-roll plans.',
             CROOKED_COP: 'Badge on paper, extortionist in practice. Hardware goes dark while the cop watches your table.',
             INFORMANT: 'Knows every stash route in the district. Locks your stash progress until you force your way through.',
-            THE_RAID: 'Not a person but a citywide crackdown. Triple pressure, expensive pills, and no room for sloppy hands.'
+            THE_RAID: 'Not a person but a citywide crackdown. Boss quota +50%, expensive pills, and no room for sloppy hands.'
         }
     };
 
@@ -4183,10 +4204,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [impactParticles, setImpactParticles] = useState([]);
         const isCarved = !!(data.faceId && data.faceId !== 'standard');
         const multFace = data.faceId === 'MULT_FACE';
+        const pipValue = multFace
+            ? (typeof data.value === 'number' && data.value >= 1 && data.value <= 6 ? data.value : 1)
+            : data.value;
         const showTumble = rolling && !reducedMotion;
         const faceSrc = rolling
             ? DICE_ART.faces.blank
-            : ((!isCarved || multFace) ? diceStandardFaceSrc(data.value) : DICE_ART.faces.blank);
+            : ((!isCarved || multFace) ? diceStandardFaceSrc(pipValue) : DICE_ART.faces.blank);
         useEffect(() => {
             if (rolling) return;
             const glow = verdictGlowForFace(data.faceId, data.type);
@@ -4232,7 +4256,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         <img className="bone-die-img" src={faceSrc} alt="" draggable={false} decoding="async" />
                         {!rolling && isCarved && (
                             multFace ? (
-                                <div className="absolute top-1 right-1 z-10 rounded border border-[#0df] bg-black/85 px-1 py-0.5 font-mono text-[9px] font-bold text-[#0df] shadow-[0_0_8px_rgba(0,221,255,.45)]" aria-hidden>
+                                <div className="absolute top-1 right-1 z-10 rounded border border-[#0df] bg-black/85 px-1.5 py-0.5 font-mono text-[10px] md:text-[11px] font-bold text-[#0df] shadow-[0_0_8px_rgba(0,221,255,.45)]" aria-hidden>
                                     +M
                                 </div>
                             ) : (
@@ -5274,6 +5298,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {projection && (
                     <div className="mt-2 font-mono text-sm text-yellow-200">
                         Next quota: <span className="font-bold text-white">~{quota}</span>
+                        {path.boss?.applyTarget && projection.nextTarget != null && projection.nextTargetDisplay != null && projection.nextTargetDisplay !== projection.nextTarget && (
+                            <span className="block text-[10px] text-red-300 mt-0.5">
+                                Base {projection.nextTarget} → boss {path.boss.name} ×{Math.round((projection.nextTargetDisplay / Math.max(1, projection.nextTarget)) * 100) / 100} ≈ {projection.nextTargetDisplay}
+                            </span>
+                        )}
                     </div>
                 )}
                 {projection?.effectLines?.length > 0 && (
@@ -5936,6 +5965,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             pendingScoreBreakdownRef.current = null;
             pendingHandJuiceRef.current = null;
             scoreOverlayLockRef.current = false;
+            lastRollStartedAtRef.current = 0;
             setChainStepsRevealed(null);
             setSynergyLinks([]);
             setSynergyChainBanner(null);
@@ -6099,7 +6129,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
         const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
-        const rollReady = !rolling && hands > 0 && !swapMode && !scoreOverlayLockRef.current && !payoutInputLock
+        const scoreOverlayOpen = !!(scoreBreakdown || scoreResolution);
+        scoreOverlayLockRef.current = scoreOverlayOpen;
+        const rollReady = !rolling && hands > 0 && !swapMode && !scoreOverlayOpen && !payoutInputLock
             && (!hasRolled || discards > 0);
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
@@ -6509,14 +6541,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 const hud = playHudRef.current;
                 if (!hud) return;
                 const bottom = hud.getBoundingClientRect().bottom;
-                const topPx = Math.ceil(bottom + 12);
+                const chainBump = synergyChainBanner ? 58 : 0;
+                const topPx = Math.ceil(bottom + 12 + chainBump);
                 document.documentElement.style.setProperty('--gb-score-panel-top', `${topPx}px`);
                 document.documentElement.style.setProperty('--gb-chain-banner-top', `${Math.ceil(bottom + 4)}px`);
             };
             measureHudLayout();
             window.addEventListener('resize', measureHudLayout);
             return () => window.removeEventListener('resize', measureHudLayout);
-        }, [phase, activeBoss?.id, fixerLine, round, hands, discards, gold, activeWager, insaneContract]);
+        }, [phase, activeBoss?.id, fixerLine, round, hands, discards, gold, activeWager, insaneContract, synergyChainBanner]);
+
+        useEffect(() => {
+            const root = document.getElementById('root-gutterbones');
+            if (!root) return;
+            root.dataset.scoreOverlayOpen = (scoreBreakdown || scoreResolution) ? '1' : '0';
+        }, [scoreBreakdown, scoreResolution]);
 
         useEffect(() => {
             if (scoreBreakdown || scoreResolution || bossIntro || roundClearCardActive) return;
@@ -6900,6 +6939,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 setShowIncarceratedStamp(false);
                 return;
             }
+            if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layoutAudit') === '1') {
+                setTypedCase('CASE #77-0492');
+                setRapSheetRevealReady(true);
+                setRapSheetCanContinue(true);
+                setShowIncarceratedStamp(true);
+                return undefined;
+            }
             const full = 'CASE #77-0492';
             let idx = 0;
             const id = scheduleInterval(() => {
@@ -7190,11 +7236,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const rollBones = () => {
-            if (scoreOverlayLockRef.current || payoutInputLock) return;
+            const overlayOpen = (typeof scoreBreakdown !== 'undefined' && (scoreBreakdown || scoreResolution))
+                || scoreOverlayLockRef.current;
+            if (overlayOpen || payoutInputLock) return;
             if (rollLockRef.current || rolling || hands <= 0) return;
             if (hasRolled && discards <= 0) return;
             const now = Date.now();
-            if (now - lastRollStartedAtRef.current < 180) return;
+            if (hasRolled && now - lastRollStartedAtRef.current < 180) return;
             rollLockRef.current = true;
             lastRollStartedAtRef.current = now;
             if (!reducedMotion) {
@@ -7277,7 +7325,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const rerollBoneSlot = (idx, { consumePill = true, silent = false } = {}) => {
-            if (scoreOverlayLockRef.current || payoutInputLock) return false;
+            const overlayOpen = (typeof scoreBreakdown !== 'undefined' && (scoreBreakdown || scoreResolution))
+                || scoreOverlayLockRef.current;
+            if (overlayOpen || payoutInputLock) return false;
             if (rolling || rollLockRef.current) return false;
             if (consumePill) {
                 if (discards <= 0) return false;
@@ -8092,7 +8142,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 setShopItems(prev => prev.filter(i => i.id !== item.id));
                 setFixerLine(`Run modifier wired: ${item.name}.`);
             } else if (item.type === 'consumable') {
-                setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
+                if (item.id === 'SMELLING_SALTS') {
+                    setDiscards(d => d + 2);
+                    setPillCountTick(t => t + 1);
+                    spawnPaperStamp('+2 PILLS', '#0f766e');
+                    setFixerLine('Smelling salts — +2 pills, right now.');
+                } else {
+                    setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
+                }
                 setShopItems(prev => prev.filter(i => i.id !== item.id));
             } else if (item.type) {
                 setSelectedItem(item);
@@ -8420,6 +8477,27 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         const btn = document.querySelector('[data-tutorial="roll-btn"]');
                         return !!(btn && btn.disabled);
                     },
+                    getHasRolled: () => !!hasRolled,
+                    measureRapSheetStatAlignment: () => {
+                        const rows = Array.from(document.querySelectorAll('[data-layout-key="rap-sheet-stat-row"]'));
+                        if (!rows.length) return { ok: false, reason: 'no rows' };
+                        const bad = [];
+                        rows.forEach((row, idx) => {
+                            const label = row.querySelector('.rap-sheet-stat-label');
+                            const value = row.querySelector('.rap-sheet-stat-value');
+                            if (!label || !value) {
+                                bad.push({ idx, reason: 'missing label/value' });
+                                return;
+                            }
+                            const lr = label.getBoundingClientRect();
+                            const vr = value.getBoundingClientRect();
+                            const labelMid = (lr.top + lr.bottom) / 2;
+                            const valueMid = (vr.top + vr.bottom) / 2;
+                            const delta = Math.abs(labelMid - valueMid);
+                            if (delta > 6) bad.push({ idx, label: label.textContent, delta });
+                        });
+                        return { ok: bad.length === 0, bad, rowCount: rows.length };
+                    },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
                         openingSniffPendingRef.current = false;
@@ -8488,6 +8566,40 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     });
                 },
                 openRoundClear: () => beginRoundClearCard('SHOP', 0, { bumpJobRound: false }),
+                openRapSheet: () => {
+                    setRound(9);
+                    setPhase('RAP_SHEET');
+                    setLastLaundered(24);
+                    setRunStats((prev) => ({
+                        ...prev,
+                        totalHeat: 1200,
+                        biggestHustle: 520,
+                        finalBoss: 'THE RAID'
+                    }));
+                    setRapSheetRevealReady(true);
+                    setShowIncarceratedStamp(true);
+                    setRapSheetCanContinue(true);
+                },
+                measureRapSheetStatAlignment: () => {
+                    const sheet = document.querySelector('[data-layout-key="rap-sheet"]');
+                    if (!sheet) return { ok: false, reason: 'no rap sheet' };
+                    const rows = Array.from(sheet.querySelectorAll('[data-layout-key="rap-sheet-stat-row"]'));
+                    if (!rows.length) return { ok: false, reason: 'no rows' };
+                    const bad = [];
+                    rows.forEach((row, idx) => {
+                        const label = row.querySelector('.rap-sheet-stat-label');
+                        const value = row.querySelector('.rap-sheet-stat-value');
+                        if (!label || !value) {
+                            bad.push({ idx, reason: 'missing label/value cell' });
+                            return;
+                        }
+                        const a = label.getBoundingClientRect();
+                        const b = value.getBoundingClientRect();
+                        const delta = Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2);
+                        if (delta > 8) bad.push({ idx, label: label.textContent, delta });
+                    });
+                    return { ok: bad.length === 0, bad, rowCount: rows.length };
+                },
                 openBossIntro: () => {
                     const boss = bossById('LOAN_SHARK');
                     if (boss) setBossIntro(boss);
@@ -8529,7 +8641,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         const hud = playHudRef.current;
                         if (!hud) return;
                         const bottom = hud.getBoundingClientRect().bottom;
-                        document.documentElement.style.setProperty('--gb-score-panel-top', `${Math.ceil(bottom + 12)}px`);
+                        const chainBump = 58;
+                        document.documentElement.style.setProperty('--gb-score-panel-top', `${Math.ceil(bottom + 12 + chainBump)}px`);
                         document.documentElement.style.setProperty('--gb-chain-banner-top', `${Math.ceil(bottom + 4)}px`);
                     });
                 },
@@ -9307,7 +9420,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                             )}
                                         </div>
                                     )}
-                                    <div className={`h-6 bg-black border border-gray-600 rounded overflow-hidden mt-4 p-1 grid grid-cols-10 gap-1 ${activeBoss?.id === 'INFORMANT' ? 'informant-shimmer' : ''}`}>
+                                    {stash >= 100 && hasRolled && activeBoss?.id !== 'INFORMANT' && (
+                                        <div className="mt-2 font-mono text-[10px] text-[#0df] border border-[#0df]/40 rounded px-2 py-1 bg-cyan-950/30 text-center leading-snug">
+                                            Stash full — spend on a program below (SNIFF reroll, BRIBE quota cut, FIX GAME, LAUNDER debt).
+                                        </div>
+                                    )}
+                                    <div className={`h-6 bg-black border border-gray-600 rounded overflow-hidden mt-4 p-1 grid grid-cols-10 gap-1 ${activeBoss?.id === 'INFORMANT' ? 'informant-shimmer' : ''} ${stash >= 100 ? 'ring-1 ring-[#0df]/60' : ''}`}>
                                         {Array.from({ length: 10 }, (_, idx) => {
                                             const filled = stash >= (idx + 1) * 10;
                                             const leading = filled && stash < (idx + 2) * 10;
@@ -9600,25 +9718,29 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {phase === 'RAP_SHEET' && (
                     <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="rap-busted-backdrop" aria-hidden></div>
-                        <div data-layout-key="rap-sheet" className="paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={rapSheetRevealReady ? { transform: 'none' } : { animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
+                        <div data-layout-key="rap-sheet" className={`paper-card gb-modal-fit bg-[#E2D1B8] w-full max-w-2xl p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20${rapSheetRevealReady ? ' paper-card-flat' : ''}`} style={rapSheetRevealReady ? { transform: 'none', animation: 'none', '--paper-rot': '0deg' } : { animation: 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '-1deg' }}>
                             <div className="gb-modal-body pr-1">
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-4 mb-4">
                                 <div className="h-32 md:h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div>
-                                <div className="md:col-span-2 font-mono text-sm md:text-base rap-sheet-stat-grid">
-                                    {[
-                                        ['Apprehended', `Round ${round}`],
-                                        ['Arresting Unit', runStats.finalBoss || '—', 'text-red-600'],
-                                        ['Heat Banked', String(runStats.totalHeat)],
-                                        ['Largest Hustle', String(runStats.biggestHustle)],
-                                        ['Dirty Cash', `$${gold}`, 'text-green-800'],
-                                        ['Laundered', `+$${lastLaundered}`, 'text-green-800']
-                                    ].map(([label, value, tone]) => (
-                                        <React.Fragment key={label}>
-                                            <div data-layout-key="rap-sheet-stat-row" className="rap-sheet-stat-label border-b border-gray-400 border-dashed pb-0.5">{label}</div>
-                                            <div className={`rap-sheet-stat-value border-b border-gray-400 border-dashed pb-0.5 ${tone || ''}`}>{value}</div>
-                                        </React.Fragment>
-                                    ))}
+                                <div className="md:col-span-2 font-mono text-sm md:text-base min-w-0">
+                                    <table className="rap-sheet-stat-table">
+                                        <tbody>
+                                            {[
+                                                ['Apprehended', `Round ${round}`],
+                                                ['Arresting Unit', runStats.finalBoss || '—', 'text-red-600'],
+                                                ['Heat Banked', String(runStats.totalHeat)],
+                                                ['Largest Hustle', String(runStats.biggestHustle)],
+                                                ['Dirty Cash', `$${gold}`, 'text-green-800'],
+                                                ['Laundered', `+$${lastLaundered}`, 'text-green-800']
+                                            ].map(([label, value, tone]) => (
+                                                <tr key={label} data-layout-key="rap-sheet-stat-row" className="rap-sheet-stat-row">
+                                                    <td className="rap-sheet-stat-label">{label}</td>
+                                                    <td className={`rap-sheet-stat-value ${tone || ''}`}>{value}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             {showIncarceratedStamp && rapSheetRevealReady && (

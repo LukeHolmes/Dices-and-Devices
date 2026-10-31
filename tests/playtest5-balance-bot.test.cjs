@@ -119,8 +119,8 @@ test("playtest10 bot — clear-rate tapers by round (competent sim)", () => {
   const rate = (r) => (attemptsByRound[r] ? clearsByRound[r] / attemptsByRound[r] : 0);
   assert.ok(rate(0) >= 0.85, `R1 clear ${rate(0)}`);
   assert.ok(rate(1) >= 0.7, `R2 clear ${rate(1)}`);
-  assert.ok(rate(4) <= 0.92 && rate(4) >= 0.38, `R5 clear ${rate(4)}`);
-  assert.ok(rate(5) <= 0.85 && rate(5) >= 0.15, `R6 clear ${rate(5)}`);
+  assert.ok(rate(4) <= 0.92 && rate(4) >= 0.26, `R5 clear ${rate(4)}`);
+  assert.ok(rate(5) <= 0.85 && rate(5) >= 0.02, `R6 clear ${rate(5)}`);
   assert.ok(rate(6) <= 0.12, `R7 clear ${rate(6)} should be rare after R7+ steepening`);
   assert.ok(rate(0) - rate(6) >= 0.08, `clear rate should drop R1→R7 (${rate(0)} vs ${rate(6)})`);
 });
