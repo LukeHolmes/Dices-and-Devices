@@ -215,20 +215,32 @@
         gap: 0.75rem;
         min-height: 0;
         flex: 1 1 auto;
-        overflow: auto;
+        overflow: hidden;
         overscroll-behavior: contain;
         padding-right: 0.25rem;
-        scrollbar-color: rgba(199, 139, 22, 0.5) rgba(8, 10, 14, 0.95);
-        scrollbar-width: thin;
+        scrollbar-width: none;
     }
-    #root-gutterbones .gb-route-list::-webkit-scrollbar { width: 8px; }
-    #root-gutterbones .gb-route-list::-webkit-scrollbar-track {
-        background: rgba(8, 10, 14, 0.92);
-        border-radius: 999px;
+    #root-gutterbones .gb-route-list::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
     }
-    #root-gutterbones .gb-route-list::-webkit-scrollbar-thumb {
-        background: rgba(199, 139, 22, 0.55);
-        border-radius: 999px;
+    #root-gutterbones .shop-routes-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    #root-gutterbones .shop-routes-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        transform-origin: top center;
+    }
+    #root-gutterbones .run-intel-body {
+        transform-origin: top center;
     }
     #root-gutterbones .gb-type-panel,
     #root-gutterbones .readable-panel {
@@ -260,9 +272,24 @@
         overflow: hidden;
     }
     #root-gutterbones .run-intel-compact {
-        max-height: 6.75rem;
-        overflow-y: auto;
-        overscroll-behavior: contain;
+        overflow: hidden;
+        scrollbar-width: none;
+    }
+    #root-gutterbones .run-intel-compact::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+    }
+    #root-gutterbones .run-intel-panel,
+    #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
+        overflow: hidden;
+        scrollbar-width: none;
+    }
+    #root-gutterbones .run-intel-panel::-webkit-scrollbar,
+    #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-routes-scroll::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
     }
     #root-gutterbones .stash-programs-pinned {
         flex-shrink: 0;
@@ -327,7 +354,7 @@
     #root-gutterbones .shop-routes-scroll {
         flex: 1 1 auto;
         min-height: 0;
-        overflow-y: auto;
+        overflow: hidden;
         overscroll-behavior: contain;
     }
     #root-gutterbones .shop-routes-footer {
@@ -2538,13 +2565,14 @@ const GutterbonesRoutes = (() => {
     });
 
     const ROUND_CURVE_TUNING = Object.freeze({
-        earlyMaxRound: 2,
+        earlyMaxRound: 4,
         midMaxRound: 5,
         lateMaxRound: 6,
-        early: { pathModWeight: 0.88, flatIncrease: 28 },
+        early: { pathModWeight: 0.92, flatIncrease: 22 },
         mid: { pathModWeight: 1.02, flatIncrease: 52 },
         late: { pathModWeight: 1.02, flatIncrease: 52 },
-        extreme: { pathModWeight: 1.14, flatIncrease: 78 }
+        extreme: { pathModWeight: 1.14, flatIncrease: 78 },
+        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 36 })
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
@@ -2671,43 +2699,66 @@ const GutterbonesRoutes = (() => {
         const nextRound = Math.max(1, Math.floor(Number(round) || 0));
         const currentTarget = Math.max(1, Math.floor(Number(target) || 0));
         const roundCurve = roundCurveFor(nextRound);
-        const scaledPathMod = 1 + (((path?.mod || 1) - 1) * roundCurve.pathModWeight);
-        let nextTarget = Math.floor(currentTarget * scaledPathMod) + roundCurve.flatIncrease;
+        const pathMod = path?.mod || 1;
 
-        let debtPenaltyApplied = 0;
+        const growTargetForMod = (effectiveMod) => {
+            const scaledPathMod = 1 + (((effectiveMod || 1) - 1) * roundCurve.pathModWeight);
+            let grown = Math.floor(currentTarget * scaledPathMod) + roundCurve.flatIncrease;
+            if (nextRound >= (ROUND_CURVE_TUNING.postEarlyCatchUp?.fromRound || 99)) {
+                grown += ROUND_CURVE_TUNING.postEarlyCatchUp?.flatBonus || 0;
+            }
+
+            if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
+                let debtPenaltyApplied = Math.min(
+                    BOSS_TUNING.debtQuotaPenaltyCap,
+                    Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio)
+                );
+                if (insaneContract) {
+                    debtPenaltyApplied = Math.floor(debtPenaltyApplied * INSANE_CONTRACT_MODIFIERS.debtPenaltyMultiplier);
+                }
+                grown += debtPenaltyApplied;
+            }
+
+            if (path?.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
+                grown = Math.floor(grown * BOSS_TUNING.bossPathTargetRelief);
+            }
+
+            const growthCap = growthCapFor(nextRound);
+            const minTarget = Math.floor(currentTarget * PROGRESSION_GUARDRAILS.minGrowthRate);
+            const maxTarget = Math.floor(currentTarget * growthCap);
+            const beforeGuardrail = grown;
+            grown = Math.max(minTarget, Math.min(grown, maxTarget));
+            if (effectiveMod === 1 && grown === minTarget && beforeGuardrail < minTarget) {
+                warnings.push(`Quota growth clamped to minimum (+${Math.round((PROGRESSION_GUARDRAILS.minGrowthRate - 1) * 100)}%)`);
+                effectLines.push(`Guardrail: quota floored at ${grown}`);
+            } else if (effectiveMod === 1 && grown === maxTarget && beforeGuardrail > maxTarget) {
+                warnings.push(`Quota growth clamped to maximum (+${Math.round((growthCap - 1) * 100)}%)`);
+                effectLines.push(`Guardrail: quota capped at ${grown}`);
+            }
+
+            if (insaneContract) {
+                grown = Math.floor(grown * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
+            }
+            return grown;
+        };
+
         if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
-            debtPenaltyApplied = Math.min(
+            const debtPenaltyApplied = Math.min(
                 BOSS_TUNING.debtQuotaPenaltyCap,
                 Math.floor(debt * BOSS_TUNING.debtQuotaPenaltyRatio)
             );
-            if (insaneContract) {
-                debtPenaltyApplied = Math.floor(debtPenaltyApplied * INSANE_CONTRACT_MODIFIERS.debtPenaltyMultiplier);
+            if (debtPenaltyApplied > 0) {
+                effectLines.push(`Debt pressure +${debtPenaltyApplied} quota`);
             }
-            nextTarget += debtPenaltyApplied;
-            effectLines.push(`Debt pressure +${debtPenaltyApplied} quota`);
         }
-
         if (path?.boss && nextRound <= BOSS_TUNING.earlyBossRoundCap) {
-            nextTarget = Math.floor(nextTarget * BOSS_TUNING.bossPathTargetRelief);
             effectLines.push('Boss turf: early-route quota relief applied');
         }
 
-        const growthCap = growthCapFor(nextRound);
-        const minTarget = Math.floor(currentTarget * PROGRESSION_GUARDRAILS.minGrowthRate);
-        const maxTarget = Math.floor(currentTarget * growthCap);
-        const beforeGuardrail = nextTarget;
-        nextTarget = Math.max(minTarget, Math.min(nextTarget, maxTarget));
-        if (nextTarget === minTarget && beforeGuardrail < minTarget) {
-            warnings.push(`Quota growth clamped to minimum (+${Math.round((PROGRESSION_GUARDRAILS.minGrowthRate - 1) * 100)}%)`);
-            effectLines.push(`Guardrail: quota floored at ${nextTarget}`);
-        } else if (nextTarget === maxTarget && beforeGuardrail > maxTarget) {
-            warnings.push(`Quota growth clamped to maximum (+${Math.round((growthCap - 1) * 100)}%)`);
-            effectLines.push(`Guardrail: quota capped at ${nextTarget}`);
-        }
-
-        if (insaneContract) {
-            nextTarget = Math.floor(nextTarget * INSANE_CONTRACT_MODIFIERS.targetMultiplier);
-            effectLines.push('Insane contract: quota +28%');
+        const baselineTarget = growTargetForMod(1);
+        let nextTarget = pathMod === 1 ? baselineTarget : Math.floor(baselineTarget * pathMod);
+        if (pathMod !== 1) {
+            effectLines.push(`Route quota modifier ×${pathMod.toFixed(2)} applied after curve`);
         }
 
         const delta = nextTarget - currentTarget;
@@ -2970,7 +3021,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 </script>
 
 <script type="text/babel">
-    const { useEffect, useMemo, useRef, useState } = React;
+    const { useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
     const GAME_BRANDING = window.__GUTTERBONES_BRANDING__ || Object.freeze({
         title: 'GUTTERBONES',
@@ -3590,9 +3641,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     });
 
     const SHOP_AGENCY_TUNING = {
-        refreshBaseCost: 10,
-        refreshRoundTax: 2,
-        refreshEscalation: 5,
+        refreshBaseCost: 8,
+        refreshRoundTax: 1,
+        refreshEscalation: 3,
         sellRate: 0.6
     };
 
@@ -3661,6 +3712,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const { resolved, destroyed } = GutterbonesRules.resolveDice(currentDice);
         if (destroyed.has(slotIndex)) return false;
         const d = resolved[slotIndex];
+        if (!d) return false;
         if (d.faceId === 'GHOST_FACE') return false;
         const faceVal = CATEGORY_FACE_VALUE[catId];
         const pip = typeof GutterbonesRules?.effectiveScoringValue === 'function'
@@ -4233,7 +4285,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const Bone = ({ data, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
         const rollStyleRef = useRef({
             '--roll-delay': `${slot * 90}ms`,
             '--roll-dur': '680ms',
@@ -4242,15 +4294,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         });
         const [verdictColor, setVerdictColor] = useState(null);
         const [impactParticles, setImpactParticles] = useState([]);
+        const pipSource = scoringDie || data;
         const isCarved = !!(data.faceId && data.faceId !== 'standard');
         const multFace = data.faceId === 'MULT_FACE';
+        const resolvedPip = typeof GutterbonesRules?.effectiveScoringValue === 'function'
+            ? GutterbonesRules.effectiveScoringValue(pipSource)
+            : pipSource.value;
         const pipValue = multFace
-            ? (typeof data.value === 'number' && data.value >= 1 && data.value <= 6 ? data.value : 1)
-            : data.value;
+            ? (typeof resolvedPip === 'number' && resolvedPip >= 1 && resolvedPip <= 6 ? resolvedPip : 1)
+            : resolvedPip;
+        const showEchoedPip = !!(data.faceId === 'ECHO_FACE' || data.isEchoed || pipSource?.isMagnetCopied);
         const showTumble = rolling && !reducedMotion;
         const faceSrc = rolling
             ? DICE_ART.faces.blank
-            : ((!isCarved || multFace) ? diceStandardFaceSrc(pipValue) : DICE_ART.faces.blank);
+            : ((!isCarved || multFace || showEchoedPip) ? diceStandardFaceSrc(pipValue) : DICE_ART.faces.blank);
         useEffect(() => {
             if (rolling) return;
             const glow = verdictGlowForFace(data.faceId, data.type);
@@ -4562,12 +4619,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
     const HistoryPanel = ({ history }) => (
-        <div className="space-y-2 overflow-x-hidden">
+        <div className="space-y-2 overflow-x-hidden overflow-y-visible">
             {history.length === 0 ? <div className="text-xs opacity-50 font-mono">No paid hands logged.</div> : [...history].reverse().slice(0, 3).map(h => (
-                <div key={h.id} className="border border-black/30 bg-white/30 p-2 font-mono text-xs">
-                    <div className="flex justify-between"><span>R{h.round} {CATEGORIES[h.category]?.name}</span><b>{h.total}</b></div>
-                    <div className="opacity-70">Bones: [{h.values.join(', ')}]</div>
-                    {h.triggers.length > 0 && <div className="opacity-70">Hooks: {h.triggers.map(t => t.name).join(', ')}</div>}
+                <div key={h.id} data-layout-key="rap-sheet-history-row" className="border border-black/30 bg-white/30 p-2 font-mono text-xs shrink-0">
+                    <div className="flex justify-between gap-2"><span className="min-w-0 truncate">R{h.round} {CATEGORIES[h.category]?.name}</span><b className="shrink-0">{h.total}</b></div>
+                    <div className="opacity-70 break-words">Bones: [{h.values.join(', ')}]</div>
+                    {h.triggers.length > 0 && <div className="opacity-70 break-words">Hooks: {h.triggers.map(t => t.name).join(', ')}</div>}
                 </div>
             ))}
         </div>
@@ -5183,7 +5240,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     MODS ({count}) {open ? '▾' : '▸'}
                 </button>
                 {open && (
-                <div className="readable-panel px-3 py-3 mt-1 rounded-xl max-h-40 overflow-y-auto">
+                <div className="readable-panel px-3 py-3 mt-1 rounded-xl overflow-hidden">
                 <div className="text-[#0df] mb-2 tracking-[.18em] font-bold">ACTIVE MODIFIERS</div>
                 {hasContract && (
                     <div className="mb-2">
@@ -5222,8 +5279,50 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, inventory = [], upcomingPaths = [], inline = false }) => (
-        <div className={`${inline ? 'relative w-full' : 'absolute bottom-4 right-4 z-[70] w-[min(88vw,18rem)] max-h-[40vh] overflow-y-auto'} readable-panel rounded-xl p-4 text-xs font-mono pointer-events-none`}>
+    const usePanelScaleToFit = (shellRef, bodyRef, deps = []) => {
+        useLayoutEffect(() => {
+            const shell = shellRef.current;
+            const body = bodyRef.current;
+            if (!shell || !body) return undefined;
+            const fit = () => {
+                body.style.transform = 'none';
+                body.style.width = '';
+                const avail = shell.clientHeight;
+                const need = body.scrollHeight;
+                if (avail <= 0 || need <= 0) return;
+                const scale = Math.min(1, avail / need);
+                if (scale < 0.995) {
+                    body.style.transformOrigin = 'top center';
+                    body.style.transform = `scale(${scale})`;
+                    body.style.width = `${100 / scale}%`;
+                }
+            };
+            fit();
+            const ro = new ResizeObserver(fit);
+            ro.observe(shell);
+            return () => ro.disconnect();
+        }, deps);
+    };
+
+    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, inventory = [], upcomingPaths = [], inline = false }) => {
+        const intelShellRef = useRef(null);
+        const intelBodyRef = useRef(null);
+        usePanelScaleToFit(intelShellRef, intelBodyRef, [
+            flowMultiplier,
+            comboMeter,
+            heatSpikeNextHand,
+            insaneContract,
+            routeEffect,
+            boss,
+            inventory?.length,
+            consumables?.length,
+            blueprints?.length,
+            upcomingPaths?.length,
+            inline
+        ]);
+        return (
+        <div ref={intelShellRef} className={`run-intel-panel ${inline ? 'relative w-full max-h-[min(40vh,100%)]' : 'absolute bottom-4 right-4 z-[70] w-[min(88vw,18rem)] max-h-[40vh]'} overflow-hidden readable-panel rounded-xl p-4 text-xs font-mono pointer-events-none`}>
+            <div ref={intelBodyRef} className="run-intel-body">
             <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
             <div className="space-y-2 text-gray-100">
                 <div className="flex justify-between gap-3">
@@ -5319,8 +5418,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     )}
                 </div>
             </div>
+            </div>
         </div>
-    );
+        );
+    };
 
     const RouteChoiceCard = ({ path, projection, onPick, selected = false }) => {
         const quota = projection?.nextTargetDisplay ?? projection?.nextTarget;
@@ -5822,6 +5923,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const pendingScoreBreakdownRef = useRef(null);
         const pendingHandJuiceRef = useRef(null);
         const playHudRef = useRef(null);
+        const shopRoutesShellRef = useRef(null);
+        const shopRoutesBodyRef = useRef(null);
         const flushPendingHandJuiceRef = useRef(null);
         const scoreOverlayLockRef = useRef(false);
         const [pillCountTick, setPillCountTick] = useState(0);
@@ -6203,6 +6306,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
+        usePanelScaleToFit(shopRoutesShellRef, shopRoutesBodyRef, [
+            phase,
+            paths?.length,
+            shopItems?.length,
+            round,
+            inventory?.length,
+            debt,
+            shopRefreshes,
+            fixerLine
+        ]);
+
         useEffect(() => {
             if (audioSettings.reducedMotionPref !== null) return;
             const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -6222,6 +6336,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (!rootEl) return;
             rootEl.classList.toggle('gb-motion-reduce', !!reducedMotion);
         }, [reducedMotion]);
+
+        const scoringDiceResolved = useMemo(() => {
+            if (!dice.length || typeof GutterbonesRules?.resolveDice !== 'function') return dice;
+            return GutterbonesRules.resolveDice(dice).resolved;
+        }, [dice]);
 
         const scorablePayoutIds = useMemo(() => {
             const unlockInfo = getCategoryUnlockInfo(meta);
@@ -8104,6 +8223,24 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (picks.length < 4 && !picks.some((p) => p.id === offer.id)) picks.unshift(offer);
             });
 
+            const tagMatchesOffer = (tag, item) => {
+                if (!tag || tag === 'balanced') return false;
+                if (tag === 'hardware') return isHardwareOffer(item);
+                if (tag === 'danger') return item.rarity === 'danger';
+                if (tag === 'rare') return item.rarity === 'rare';
+                if (tag === 'chaos') return getArchetypeTagsForItemId(item.id).includes(BUILD_IDS.CHAOS);
+                return false;
+            };
+            if (offerTag && offerTag !== 'balanced' && !picks.some((item) => tagMatchesOffer(offerTag, item))) {
+                const guaranteePool = weightedSort(
+                    [...faces, ...hardware, ...consumablePoolSeed].filter((item) => tagMatchesOffer(offerTag, item))
+                );
+                if (guaranteePool.length) {
+                    if (picks.length >= 4) picks[picks.length - 1] = guaranteePool[0];
+                    else pushUnique(guaranteePool[0]);
+                }
+            }
+
             const ensureStarterHardware = (deviceId) => {
                 if (round > 4 || inventory.some((i) => i.id === deviceId)) return;
                 const device = DEVISES[deviceId];
@@ -8658,6 +8795,30 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         biggestHustle: 520,
                         finalBoss: 'THE RAID'
                     }));
+                    setRapSheetRevealReady(true);
+                    setShowIncarceratedStamp(true);
+                    setRapSheetCanContinue(true);
+                },
+                openRapSheetDemo: (historyRows) => {
+                    if (Array.isArray(historyRows) && historyRows.length) {
+                        setHistory(historyRows.map((row, idx) => ({
+                            id: row.id || `demo-${idx}`,
+                            round: row.round ?? idx + 1,
+                            category: row.category || 'TOK',
+                            total: row.total ?? 0,
+                            values: Array.isArray(row.values) ? row.values : [],
+                            triggers: Array.isArray(row.triggers) ? row.triggers : []
+                        })));
+                    }
+                    setRound(6);
+                    setPhase('RAP_SHEET');
+                    setLastLaundered(24);
+                    setRunStats({
+                        totalHeat: 320,
+                        biggestHustle: 120,
+                        finalBoss: 'THE BOUNCER',
+                        build: { primary: BUILD_IDS.UNKNOWN, peakConfidence: 0, keyItems: [] }
+                    });
                     setRapSheetRevealReady(true);
                     setShowIncarceratedStamp(true);
                     setRapSheetCanContinue(true);
@@ -9400,6 +9561,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         >
                                             <Bone
                                                 data={d}
+                                                scoringDie={scoringDiceResolved[i]}
                                                 slot={i}
                                                 rolling={rollingSlots[i]}
                                                 kept={kept[i]}
@@ -9654,7 +9816,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 })}</div>
                             </div>
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
-                                <div className="shop-routes-scroll overscroll-contain pr-0.5">
+                                <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
+                                <div ref={shopRoutesBodyRef} className="shop-routes-body">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 className="text-red-600 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-50">ROUND {displayJobRound('SHOP', round)}</div></div>
                                 <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
@@ -9669,7 +9832,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         {inventory.length === 0 ? (
                                             <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
                                         ) : (
-                                            <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                                            <div className="space-y-2 max-h-36 overflow-hidden pr-1">
                                                 {inventory.map(item => (
                                                     <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
                                                         <span className="font-mono text-[10px] text-gray-200 truncate">{item.name}</span>
@@ -9703,6 +9866,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         selected={selectedShopPathId === p.id}
                                     />
                                 ))}</div>
+                                </div>
                                 </div>
                                 <div data-layout-key="shop-stash-panel" className="shop-stash-panel shop-routes-footer shrink-0 mt-2 pt-2 border-t border-gray-800">
                                 <div className="font-mono text-[10px] text-[#0df] mb-1.5 tracking-wide">STASH {Math.round(stash)}% · spend in the alley</div>
@@ -9832,9 +9996,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </div>
                                 </div>
                             )}
-                            <div className="border border-black p-3 bg-white/50 mb-3 min-h-0 max-h-[18vh] md:max-h-[22vh] overflow-hidden flex flex-col">
+                            <div data-layout-key="rap-sheet-history" className="border border-black p-3 bg-white/50 mb-3 flex flex-col shrink-0 overflow-visible">
                                 <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
-                                <div className="min-h-0 overflow-hidden flex-1"><HistoryPanel history={history} /></div>
+                                <HistoryPanel history={history} />
                             </div>
                             <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
                             {dailyShareBanner && (

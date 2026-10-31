@@ -218,6 +218,24 @@ const rapSheetR7 = () =>
     ],
   });
 
+const rapSheetHistory3 = () =>
+  run({
+    phase: "RAP_SHEET",
+    round: 6,
+    gold: 8,
+    history: [
+      { id: "h1", round: 4, category: "TOK", total: 40, values: [2, 2, 2, 3, 4], triggers: [] },
+      { id: "h2", round: 5, category: "C", total: 24, values: [1, 2, 3, 4, 5], triggers: [] },
+      { id: "h3", round: 6, category: "LS", total: 120, values: [1, 2, 3, 4, 5], triggers: [{ name: "FLOW", value: "x1" }] },
+    ],
+    runStats: {
+      totalHeat: 320,
+      biggestHustle: 120,
+      finalBoss: "THE BOUNCER",
+      build: { primary: "UNKNOWN", peakConfidence: 0, keyItems: [] },
+    },
+  });
+
 const rapSheet = () =>
   run({
     phase: "RAP_SHEET",
@@ -312,6 +330,7 @@ module.exports = {
   shopBusy,
   playHeavyHardware,
   rapSheet,
+  rapSheetHistory3,
   rapSheetR7,
   terminal,
   bustLastHand,
