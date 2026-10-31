@@ -149,7 +149,12 @@ function createGame(snapshot = {}, options = {}) {
     payoutInputLock: false,
     scoreBreakdown: null,
     scoreResolution: null,
+    bossIntro: null,
+    storyBeat: null,
+    roundClearCardActive: false,
+    lossExplanation: null,
     rollLockRef: { current: false },
+    rollLocked: false,
     e2ePendingDiceRef: { current: null },
     pendingScoreBreakdownRef: { current: null },
     pendingHandJuiceRef: { current: null },
@@ -168,11 +173,16 @@ function createGame(snapshot = {}, options = {}) {
     sacrificePlayPenaltyRef: { current: 0 },
     sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],
+    pillRunBonus: 0,
     pillBursts: [],
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
     dismissScoreOverlays: () => {},
+  };
+  sandbox.setRollLock = (locked) => {
+    sandbox.rollLocked = !!locked;
+    sandbox.rollLockRef.current = !!locked;
   };
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);

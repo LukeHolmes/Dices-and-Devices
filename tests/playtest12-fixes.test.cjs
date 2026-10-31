@@ -247,18 +247,19 @@ test("e2e — chain banner sits above score breakdown (no overlap)", async () =>
   }
 });
 
-test("rules — smelling salts shop purchase adds pills immediately", () => {
+test("rules — smelling salts shop purchase adds run pill bonus", () => {
   const item = {
     id: "SMELLING_SALTS",
     name: "Smelling Salts",
-    desc: "+2 Pills immediately.",
+    desc: "+2 max pills for this run (refreshes each round).",
     cost: 24,
     rarity: "common",
     type: "consumable",
     icon: "+P",
   };
-  const g = createGame(fixtures.snapshot({ phase: "SHOP", gold: 50, discards: 2, shopItems: [item] }));
+  const g = createGame(fixtures.snapshot({ phase: "SHOP", gold: 50, discards: 2, pillRunBonus: 0, shopItems: [item] }));
   g.api.handlePurchase(item);
-  assert.equal(g.state("discards"), 4);
+  assert.equal(g.state("pillRunBonus"), 2);
+  assert.equal(g.state("discards"), 2);
   assert.equal(g.state("consumables").length, 0);
 });
