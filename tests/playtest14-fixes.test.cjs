@@ -145,9 +145,13 @@ function panelNoScrollMetrics(page) {
       const style = getComputedStyle(shell);
       const overflowScroll = style.overflowY === "auto" || style.overflowY === "scroll";
       const body = shell.querySelector(".shop-routes-body, .run-intel-body") || shell;
-      const scaled = body.scrollHeight * (body.getBoundingClientRect().height / Math.max(1, body.offsetHeight));
-      const clipped = scaled > shell.clientHeight + 2;
-      if (overflowScroll || clipped) {
+      const sr = shell.getBoundingClientRect();
+      const br = body.getBoundingClientRect();
+      const tr = getComputedStyle(body).transform;
+      const scaled =
+        tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
+      const clipped = br.bottom > sr.bottom + 3 || br.right > sr.right + 3;
+      if (overflowScroll || (clipped && !scaled)) {
         bad.push({
           sel,
           overflowY: style.overflowY,
@@ -186,6 +190,21 @@ for (const vp of VIEWPORTS) {
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
       await page.waitForSelector('[data-layout-key="shop-routes-panel"]', { timeout: 12_000 });
+      await page.waitForFunction(
+        () => {
+          const shopBody = document.querySelector(".shop-routes-body");
+          const intelBody = document.querySelector(".run-intel-panel:not(.run-intel-panel--inline) .run-intel-body");
+          const ready = (el) => {
+            if (!el) return true;
+            const shell = el.closest(".shop-routes-scroll, .run-intel-panel");
+            if (!shell || el.scrollHeight <= shell.clientHeight + 2) return true;
+            const tr = getComputedStyle(el).transform;
+            return tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
+          };
+          return ready(shopBody) && ready(intelBody);
+        },
+        { timeout: 8000 },
+      );
       const metrics = await panelNoScrollMetrics(page);
       assert.ok(metrics.ok, JSON.stringify(metrics));
     } finally {

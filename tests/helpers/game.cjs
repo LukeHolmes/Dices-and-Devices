@@ -114,6 +114,7 @@ function createGame(snapshot = {}, options = {}) {
     Math: Object.assign(Object.create(Math), {
       random: options.random || (() => 0.99),
     }),
+    performance: { now: () => Date.now() },
     console: { warn: (...args) => warnings.push(args), log: noOp },
     window: {
       localStorage: {
@@ -179,6 +180,7 @@ function createGame(snapshot = {}, options = {}) {
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
     dismissScoreOverlays: () => {},
+    overlayInputGuardUntilRef: { current: 0 },
   };
   sandbox.setRollLock = (locked) => {
     sandbox.rollLocked = !!locked;

@@ -274,11 +274,46 @@
     #root-gutterbones .run-intel-compact {
         overflow: hidden;
         scrollbar-width: none;
+        max-height: 5.5rem;
     }
     #root-gutterbones .run-intel-compact::-webkit-scrollbar {
         width: 0;
         height: 0;
         display: none;
+    }
+    #root-gutterbones .run-intel-panel--inline {
+        max-height: none;
+        font-size: clamp(10px, 1.65vmin, 12px);
+    }
+    #root-gutterbones .run-intel-panel--inline .run-intel-compact {
+        max-height: none;
+    }
+    #root-gutterbones .run-intel-route-copy {
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+    }
+    #root-gutterbones .gb-btn-shop {
+        transition: transform 0.08s ease, filter 0.12s ease, border-color 0.12s ease;
+    }
+    #root-gutterbones .gb-btn-shop:hover:not(:disabled) {
+        filter: brightness(1.08);
+    }
+    #root-gutterbones .gb-btn-shop:active:not(:disabled) {
+        transform: translateY(1px);
+    }
+    #root-gutterbones .gb-btn-shop:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        filter: grayscale(0.35);
+    }
+    #root-gutterbones .score-tick-pop {
+        animation: scoreTickPop 0.35s ease-out;
+    }
+    @keyframes scoreTickPop {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.06); }
+        100% { transform: scale(1); }
     }
     #root-gutterbones .run-intel-panel,
     #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
@@ -1941,6 +1976,12 @@ const GutterbonesRules = (() => {
                     keyItems: Array.isArray(b.keyItems) ? b.keyItems.filter((x) => typeof x === 'string') : []
                 }
             };
+            if (typeof rs.roundsCleared === 'number' && !Number.isNaN(rs.roundsCleared)) {
+                normalized.runStats.roundsCleared = Math.max(0, Math.floor(rs.roundsCleared));
+            }
+            if (typeof rs.runCashHeld === 'number' && !Number.isNaN(rs.runCashHeld)) {
+                normalized.runStats.runCashHeld = Math.max(0, Math.floor(rs.runCashHeld));
+            }
         }
         return normalized;
     };
@@ -4347,6 +4388,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         className={`bone-die-btn relative flex items-center justify-center ${showTumble ? 'bone-die-tumble' : ''} ${kept ? 'bone-die-kept' : ''} ${kept && colorblindHeld ? 'bone-die-kept-cb' : ''} ${selected ? 'ring-4 ring-[#0df] z-50 rounded-lg' : ''}`}
                         style={rollStyleRef.current}
                         aria-label={`Bone slot ${slot + 1}`}
+                        title={`Scoring pip ${pipValue}${data.faceLabel ? ` · ${data.faceLabel}` : ''}${showEchoedPip ? ' (resolved)' : ''}`}
                     >
                         {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
                         {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
@@ -4873,13 +4915,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout, jobRound }) => (
-        <button
-            type="button"
-            onPointerDown={onSkip}
+    const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout, jobRound }) => {
+        const handleBackdrop = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSkip?.(e);
+        };
+        return (
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={handleBackdrop}
+            onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
             className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto p-4"
         >
-            <div data-layout-key="round-clear-card" className={`round-clear-card font-marker text-4xl md:text-5xl text-[#0df] italic tracking-tight px-6 py-5 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl max-w-md w-full ${reducedMotion ? '' : ''}`}>
+            <div data-layout-key="round-clear-card" onClick={(e) => e.stopPropagation()} className={`round-clear-card font-marker text-4xl md:text-5xl text-[#0df] italic tracking-tight px-6 py-5 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl max-w-md w-full ${reducedMotion ? '' : ''}`}>
                 ROUND {jobRound || '?'} CLEARED
                 {payout && payout.total > 0 && (
                     <div className="font-mono text-[11px] not-italic text-left mt-4 space-y-1 text-gray-200 tracking-normal">
@@ -4898,8 +4948,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     {canContinue ? 'TAP TO CONTINUE' : '…'}
                 </div>
             </div>
-        </button>
-    );
+        </div>
+        );
+    };
 
     const RecordsUnlocksPanel = ({ meta, onClose }) => {
         const rows = GutterbonesReplay?.evaluateUnlocks(meta) || [];
@@ -5025,18 +5076,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const ScoreResolutionOverlay = ({ data, reducedMotion, canDismiss, onDismiss }) => {
         const [displayChips, setDisplayChips] = useState(0);
-        const [displayMult, setDisplayMult] = useState(0);
+        const [displayMult, setDisplayMult] = useState(null);
         const [displayTotal, setDisplayTotal] = useState(0);
+        const [multPhase, setMultPhase] = useState(false);
         useEffect(() => {
             if (!data) return undefined;
             if (reducedMotion) {
                 setDisplayChips(data.chips);
                 setDisplayMult(data.mult);
+                setMultPhase(true);
                 setDisplayTotal(data.total);
                 return undefined;
             }
             setDisplayChips(0);
-            setDisplayMult(0);
+            setDisplayMult(null);
+            setMultPhase(false);
             setDisplayTotal(0);
             const chipTarget = data.chips;
             const multTarget = data.mult;
@@ -5052,10 +5106,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (typeof AudioSystem.scoreTick === 'function') AudioSystem.scoreTick(step);
                 if (step < chipSteps) timers.push(window.setTimeout(tickChips, 70));
                 else {
+                    setMultPhase(true);
                     let mStep = 0;
                     const tickMult = () => {
                         mStep += 1;
-                        setDisplayMult(Math.round((multTarget * (mStep / multSteps)) * 100) / 100);
+                        const partial = Math.round((multTarget * (mStep / multSteps)) * 100) / 100;
+                        setDisplayMult(Math.max(0.01, partial));
                         if (typeof AudioSystem.scoreTick === 'function') AudioSystem.scoreTick(chipSteps + mStep);
                         if (mStep < multSteps) timers.push(window.setTimeout(tickMult, 65));
                         else {
@@ -5070,16 +5126,23 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             return () => timers.forEach((id) => window.clearTimeout(id));
         }, [data?.id, reducedMotion]);
         if (!data) return null;
+        const multShown = multPhase && displayMult != null ? Math.max(0.01, displayMult) : null;
+        const handleDismiss = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (canDismiss) onDismiss?.(e);
+        };
         return (
             <div data-layout-key="score-resolution-overlay" className="absolute left-1/2 -translate-x-1/2 z-[560] pointer-events-none w-[min(92vw,36rem)] p-4">
                 <button
                     type="button"
-                    onClick={() => { if (canDismiss) onDismiss?.(); }}
+                    onClick={handleDismiss}
+                    onPointerDown={(e) => e.stopPropagation()}
                     className={`pointer-events-auto w-full readable-panel rounded-xl px-7 py-5 text-left ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
                 >
                     <div className="font-mono text-xs text-[#0df] tracking-[.35em] text-center mb-3">SCORE RESOLUTION</div>
                     <div className="font-mono text-base text-center text-gray-100">
-                        <span className="text-yellow-300">{displayChips}</span> CHIPS x <span className="text-cyan-300">{displayMult.toFixed(2)}x</span>
+                        <span className="text-yellow-300">{displayChips}</span> CHIPS x <span className="text-cyan-300">{multShown != null ? `${multShown.toFixed(2)}x` : '…'}</span>
                         {data.flowMult > 1 && <> x <span className="text-[#ff9fcf]">{data.flowMult.toFixed(2)} FLOW</span></>}
                     </div>
                     <div className="font-marker text-5xl text-[#ff007f] text-center mt-2">{displayTotal || '…'}</div>
@@ -5146,7 +5209,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             <div data-layout-key="score-breakdown-overlay" className="absolute left-1/2 -translate-x-1/2 z-[280] pointer-events-none w-[min(92vw,36rem)]">
                 <button
                     type="button"
-                    onPointerDown={() => { if (canDismiss) onDismiss?.(); }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (canDismiss) onDismiss?.(e);
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
                     className={`pointer-events-auto score-explanation-panel relative w-full readable-panel gb-type-panel border-[#ff007f]/80 rounded-xl px-5 py-4 text-left overflow-hidden ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
                 >
                     <span className={`score-card-stamp paid-stamp ${!reducedMotion && stampSlammed ? 'score-card-stamp-animate' : ''}`} aria-hidden>FILED</span>
@@ -5279,32 +5347,42 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const usePanelScaleToFit = (shellRef, bodyRef, deps = []) => {
+    const usePanelScaleToFit = (shellRef, bodyRef, deps = [], { enabled = true, minScale = 0.88 } = {}) => {
         useLayoutEffect(() => {
             const shell = shellRef.current;
             const body = bodyRef.current;
-            if (!shell || !body) return undefined;
+            if (!enabled || !shell || !body) {
+                if (body) {
+                    body.style.transform = 'none';
+                    body.style.width = '';
+                }
+                return undefined;
+            }
             const fit = () => {
                 body.style.transform = 'none';
                 body.style.width = '';
                 const avail = shell.clientHeight;
                 const need = body.scrollHeight;
                 if (avail <= 0 || need <= 0) return;
-                const scale = Math.min(1, avail / need);
+                const raw = avail / need;
+                const scale = Math.min(1, Math.max(minScale, raw));
                 if (scale < 0.995) {
                     body.style.transformOrigin = 'top center';
                     body.style.transform = `scale(${scale})`;
                     body.style.width = `${100 / scale}%`;
+                    shell.style.height = `${Math.ceil(need * scale)}px`;
+                } else {
+                    shell.style.height = '';
                 }
             };
             fit();
             const ro = new ResizeObserver(fit);
             ro.observe(shell);
             return () => ro.disconnect();
-        }, deps);
+        }, [...deps, enabled, minScale]);
     };
 
-    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, inventory = [], upcomingPaths = [], inline = false }) => {
+    const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, inventory = [], upcomingPaths = [], inline = false, compact = false }) => {
         const intelShellRef = useRef(null);
         const intelBodyRef = useRef(null);
         usePanelScaleToFit(intelShellRef, intelBodyRef, [
@@ -5319,9 +5397,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             blueprints?.length,
             upcomingPaths?.length,
             inline
-        ]);
+        ], { enabled: !inline, minScale: 0.88 });
         return (
-        <div ref={intelShellRef} className={`run-intel-panel ${inline ? 'relative w-full max-h-[min(40vh,100%)]' : 'absolute bottom-4 right-4 z-[70] w-[min(88vw,18rem)] max-h-[40vh]'} overflow-hidden readable-panel rounded-xl p-4 text-xs font-mono pointer-events-none`}>
+        <div ref={intelShellRef} className={`run-intel-panel ${inline ? 'run-intel-panel--inline relative w-full' : 'absolute bottom-4 right-4 z-[70] w-[min(92vw,22rem)] max-h-[min(42vh,22rem)]'} overflow-hidden readable-panel rounded-xl p-4 pr-3 box-border text-xs font-mono pointer-events-none`}>
             <div ref={intelBodyRef} className="run-intel-body">
             <div className="text-[#0df] tracking-[.25em] mb-3 font-bold">RUN INTEL</div>
             <div className="space-y-2 text-gray-100">
@@ -5345,7 +5423,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {routeEffect ? (
                     <div>
                         <div className="text-[#f4d67b] font-bold">{routeEffect.name}</div>
-                        <div className="text-gray-100 leading-relaxed">{routeEffect.effects?.join(' / ') || 'No special modifiers'}</div>
+                        <div className="text-gray-100 run-intel-route-copy text-[10px] md:text-xs">{routeEffect.effects?.join(' / ') || 'No special modifiers'}</div>
                     </div>
                 ) : (
                     <div className="text-gray-300">No active route modifier.</div>
@@ -5369,6 +5447,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     </div>
                 )}
             </div>
+            {!compact && (
             <div className="mt-2 pt-2 border-t border-gray-800">
                 <div className="text-gray-400 mb-1 tracking-[.12em]">BOSS EFFECT</div>
                 {boss ? (
@@ -5383,13 +5462,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <div className="text-gray-300">None active.</div>
                 )}
             </div>
+            )}
+            {!compact && (
             <div className={`${inline ? 'run-intel-compact mt-2 pt-2 border-t border-gray-800' : 'mt-2 pt-2 border-t border-gray-800'}`}>
                 <div className="text-gray-400 mb-1 tracking-[.12em]">HARDWARE</div>
                 {inventory?.length ? (
-                    <div className="text-cyan-200 space-y-0.5 leading-snug">
-                        {inventory.map((item, idx) => (
-                            <div key={item.instanceId || `${item.id}-${idx}`}>{item.name}</div>
+                    <div className="text-cyan-200 space-y-0.5 leading-snug overflow-hidden">
+                        {inventory.slice(0, 4).map((item, idx) => (
+                            <div key={item.instanceId || `${item.id}-${idx}`} className="truncate">{item.name}</div>
                         ))}
+                        {inventory.length > 4 && (
+                            <div className="text-gray-400 text-[10px]">+{inventory.length - 4} more rig{inventory.length - 4 === 1 ? '' : 's'}</div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-gray-300">None equipped.</div>
@@ -5418,6 +5502,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     )}
                 </div>
             </div>
+            )}
             </div>
         </div>
         );
@@ -5736,37 +5821,50 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         onOpenHelp,
         onReplayTutorial,
         onExitToLineup,
+        onForfeitRun,
         reducedMotion,
         onToggleReducedMotion,
         audioMuted,
         onToggleAudioMuted,
         audioVolume,
         onCycleAudioVolume
-    }) => (
+    }) => {
+        const [confirmForfeit, setConfirmForfeit] = useState(false);
+        return (
         <div className="absolute inset-0 z-[750] bg-black/70 p-4 md:p-8 flex items-start justify-end" onClick={onResume}>
             <div className="w-full max-w-sm bg-[#1a1a1a] border-4 border-[#0df] rounded-xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="font-mono text-xs tracking-[.3em] text-[#0df] mb-3">SYSTEM MENU</div>
                 <div className="space-y-2 font-mono text-sm">
-                    <button onClick={onResume} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">RESUME HUSTLE</button>
-                    <button onClick={onRestart} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">RESTART RUN</button>
-                    <button onClick={onOpenHelp} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
+                    <button type="button" onClick={onResume} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">RESUME HUSTLE</button>
+                    <button type="button" onClick={onRestart} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">RESTART RUN</button>
+                    <button type="button" onClick={onOpenHelp} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#ff007f]">HELP DOSSIER</button>
                     {onReplayTutorial && (
-                        <button onClick={onReplayTutorial} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">LEARN THE HUSTLE (TUTORIAL)</button>
+                        <button type="button" onClick={onReplayTutorial} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">LEARN THE HUSTLE (TUTORIAL)</button>
                     )}
-                    <button onClick={onToggleReducedMotion} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
+                    <button type="button" onClick={onToggleReducedMotion} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#0df]">
                         ACCESSIBILITY: REDUCED MOTION {reducedMotion ? 'ON' : 'OFF'}
                     </button>
-                    <button onClick={onToggleAudioMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">
+                    <button type="button" onClick={onToggleAudioMuted} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16]">
                         SOUND {audioMuted ? 'MUTED' : 'ON'}
                     </button>
-                    <button onClick={onCycleAudioVolume} disabled={audioMuted} className="w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16] disabled:opacity-40 disabled:hover:border-gray-700">
+                    <button type="button" onClick={onCycleAudioVolume} disabled={audioMuted} className="gb-btn-shop w-full text-left px-3 py-2 border border-gray-700 bg-black/40 hover:border-[#c78b16] disabled:opacity-40 disabled:hover:border-gray-700">
                         VOLUME: {formatVolumeLabel(audioVolume)} ({Math.round(audioVolume * 100)}%)
                     </button>
-                    <button onClick={onExitToLineup} className="w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">EXIT TO LINEUP</button>
+                    {!confirmForfeit ? (
+                        <button type="button" onClick={() => setConfirmForfeit(true)} className="gb-btn-shop w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">FORFEIT / ABANDON RUN</button>
+                    ) : (
+                        <div className="border border-red-700 bg-red-950/50 rounded p-3 space-y-2">
+                            <div className="text-[11px] text-red-200 leading-snug">Abandon this run? You will go straight to the arrest record — no safehouse payout.</div>
+                            <button type="button" onClick={() => { setConfirmForfeit(false); onForfeitRun?.(); }} className="gb-btn-shop w-full px-3 py-2 border border-red-500 bg-red-900/60 text-red-100 hover:border-red-300">YES — ABANDON RUN</button>
+                            <button type="button" onClick={() => setConfirmForfeit(false)} className="gb-btn-shop w-full px-3 py-2 border border-gray-700 bg-black/40 hover:border-gray-500">CANCEL</button>
+                        </div>
+                    )}
+                    <button type="button" onClick={onExitToLineup} className="gb-btn-shop w-full text-left px-3 py-2 border border-red-900 bg-red-950/40 hover:border-red-500 text-red-300">EXIT TO LINEUP</button>
                 </div>
             </div>
         </div>
-    );
+        );
+    };
 
     const CaseFilesPanel = ({ tab, onChangeTab, onClose, unlockedPersonaIds = [] }) => (
         <div className="absolute inset-0 z-[740] bg-black/85 p-[var(--gb-pad)] flex items-center justify-center overflow-hidden" onClick={onClose}>
@@ -5913,6 +6011,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [paths, setPaths] = useState([]);
         const [selectedShopPathId, setSelectedShopPathId] = useState(null);
         const shopAdvanceLockRef = useRef(false);
+        const overlayInputGuardUntilRef = useRef(0);
+        const displayScoreRef = useRef(0);
+        const OVERLAY_INPUT_GUARD_MS = 480;
+        const armOverlayInputGuard = () => {
+            overlayInputGuardUntilRef.current = performance.now() + OVERLAY_INPUT_GUARD_MS;
+        };
+        const overlayInputBlocked = () => performance.now() < overlayInputGuardUntilRef.current;
         const [shopAdvancing, setShopAdvancing] = useState(false);
         const scoreOverlayDismissQueuedRef = useRef(false);
         const roundClearContinueQueuedRef = useRef(false);
@@ -6125,6 +6230,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setSynergyChainBanner(null);
             setScoreOverlayCanDismiss(false);
             setPayoutInputLock(false);
+            armOverlayInputGuard();
             setRollLock(false);
         };
 
@@ -6177,6 +6283,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 roundClearContinueQueuedRef.current = true;
                 return;
             }
+            armOverlayInputGuard();
             roundClearContinueQueuedRef.current = false;
             setRoundClearCardActive(false);
             setRoundClearCanContinue(false);
@@ -6315,7 +6422,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             debt,
             shopRefreshes,
             fixerLine
-        ]);
+        ], { enabled: phase === 'SHOP', minScale: 0.72 });
 
         useEffect(() => {
             if (audioSettings.reducedMotionPref !== null) return;
@@ -7049,28 +7156,35 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         useEffect(() => {
+            displayScoreRef.current = displayScore;
+        }, [displayScore]);
+
+        useEffect(() => {
             cancelAnimationFrame(scoreAnimRef.current);
-            const from = displayScore;
+            const from = displayScoreRef.current;
             const to = score;
+            if (to === from) return undefined;
             const start = performance.now();
-            const dur = reducedMotion ? 260 : 620;
+            const dur = reducedMotion ? 220 : 520;
             const rising = to > from;
-            const overshoot = (!reducedMotion && rising) ? Math.max(1, Math.min(24, Math.round((to - from) * 0.035))) : 0;
-            const peak = to + overshoot;
             const tick = (ts) => {
                 const p = Math.min(1, (ts - start) / dur);
-                let next = from + (to - from) * (1 - Math.pow(1 - p, 3));
-                if (overshoot > 0) {
-                    if (p < 0.72) {
-                        const p1 = p / 0.72;
-                        next = from + (peak - from) * (1 - Math.pow(1 - p1, 3));
-                    } else {
-                        const p2 = (p - 0.72) / 0.28;
-                        next = peak + (to - peak) * (1 - Math.pow(1 - p2, 2));
+                const eased = 1 - Math.pow(1 - p, 3);
+                let next = Math.round(from + (to - from) * eased);
+                if (rising) next = Math.min(next, to);
+                else next = Math.max(next, to);
+                displayScoreRef.current = next;
+                setDisplayScore(next);
+                if (p < 1) {
+                    scoreAnimRef.current = requestAnimationFrame(tick);
+                } else {
+                    displayScoreRef.current = to;
+                    setDisplayScore(to);
+                    if (rising) {
+                        setScorePulse(true);
+                        scheduleTimeout(() => setScorePulse(false), 380);
                     }
                 }
-                setDisplayScore(Math.round(next));
-                if (p < 1) scoreAnimRef.current = requestAnimationFrame(tick);
             };
             scoreAnimRef.current = requestAnimationFrame(tick);
             return () => cancelAnimationFrame(scoreAnimRef.current);
@@ -7812,6 +7926,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     return;
                 }
                 if (!quotaCleared) return;
+                setRunStats((s) => ({
+                    ...s,
+                    roundsCleared: Math.max(Number(s.roundsCleared) || 0, round)
+                }));
                 dismissScoreOverlays();
                 const applyRoundClearCash = () => {
                     const payout = computeRoundClearPayout(handsAfterPlay, settlementCashLocal);
@@ -8155,6 +8273,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (item.rarity === 'rare') weight += round >= 3 ? 2 : 0;
                 if (item.rarity === 'danger') weight += round >= SHOP_TUNING.earlyDangerRoundGate ? 1 : -2;
                 if (item.type === 'consumable') weight += round <= 4 ? 1 : 0;
+                if (item.id === 'SMELLING_SALTS' && round <= 4) weight += 4;
                 if (!item.type) weight += 1;
                 weight += shopTagWeightDelta(item);
                 return weight;
@@ -8251,6 +8370,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             ensureStarterHardware('ENGINE');
             ensureStarterHardware('LOADED_DIE');
 
+            const ensureEarlySmellingSalts = () => {
+                if (round > 4) return;
+                const salts = CONSUMABLES.SMELLING_SALTS;
+                if (!salts || picks.some((p) => p.id === 'SMELLING_SALTS')) return;
+                const roll = typeof rng === 'function' ? rng() : Math.random();
+                if (roll > 0.55) return;
+                if (picks.length >= 4) picks[picks.length - 1] = salts;
+                else picks.push(salts);
+            };
+            ensureEarlySmellingSalts();
+
             setShopItems(picks.slice(0, 4));
             if (!preserveRefreshes) setShopRefreshes(0);
             if (preservePaths) return;
@@ -8318,7 +8448,32 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             return Math.max(1, Math.floor(scaled * (1 - discount)));
         };
 
+        const forfeitRun = () => {
+            armOverlayInputGuard();
+            dismissScoreOverlays();
+            setShowSystemMenu(false);
+            setShowHelpOverlay(false);
+            setRunClosed(true);
+            clearSavedRun();
+            setHasSavedRun(false);
+            setRunStats((s) => ({
+                ...s,
+                finalBoss: 'SELF FORFEIT',
+                roundsCleared: Math.max(0, (s.roundsCleared ?? Math.max(0, round - 1))),
+                runCashHeld: gold
+            }));
+            setFixerLine('You walked away. NYPD still files the rap sheet.');
+            setBustActive(false);
+            setLossExplanation(null);
+            setPhase('RAP_SHEET');
+            setRapSheetRevealReady(true);
+            setShowIncarceratedStamp(true);
+            setRapSheetCanContinue(true);
+            if (typeof AudioSystem.bust === 'function') AudioSystem.bust();
+        };
+
         const handlePurchase = (item) => {
+            if (performance.now() < (overlayInputGuardUntilRef.current || 0)) return;
             if (soldItems.includes(item.id)) return;
             const price = shopListPrice(item);
             setSoldItems(prev => [...prev, item.id]);
@@ -8405,12 +8560,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             : [];
 
         const selectShopPath = (path) => {
+            if (performance.now() < (overlayInputGuardUntilRef.current || 0)) return;
             if (phase !== 'SHOP' || shopAdvanceLockRef.current || !path) return;
             setSelectedShopPathId(path.id);
             setFixerLine(`Route locked: ${path.name}. Hit the streets when you're ready.`);
         };
 
         const commitShopAdvance = () => {
+            if (performance.now() < (overlayInputGuardUntilRef.current || 0)) return;
             if (phase !== 'SHOP' || shopAdvanceLockRef.current) return;
             const path = paths.find((p) => p.id === selectedShopPathId);
             if (!path) {
@@ -9097,6 +9254,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             setShowHelpOverlay(false);
                             setPhase('LINEUP');
                         }}
+                        onForfeitRun={forfeitRun}
                         reducedMotion={reducedMotion}
                         onToggleReducedMotion={toggleReducedMotionSetting}
                         audioMuted={audioSettings.audioMuted}
@@ -9137,7 +9295,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             boss={activeBoss}
                             consumables={consumables}
                             inventory={inventory}
-                            upcomingPaths={shopRoutePreviews}
+                            upcomingPaths={phase === 'SHOP' ? [] : shopRoutePreviews}
+                            compact={phase === 'SHOP'}
                         />
                     </>
                 )}
@@ -9371,7 +9530,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 </div>
                                 <div className="text-center" data-tutorial="heat-quota">
                                     <div className="text-xs opacity-50">STREET HEAT</div>
-                                    <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
+                                    <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse score-tick-pop' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
                                     <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
                                         FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
                                     </div>
@@ -9811,7 +9970,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
                                         <div className="flex items-start gap-3 mb-2">{isFace ? <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-xs font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
-                                        <button onClick={() => handlePurchase(item)} disabled={sold} className="w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono text-xs tracking-wide disabled:opacity-50">{buyLabel}</button>
+                                        <button type="button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono text-xs tracking-wide disabled:opacity-50">{buyLabel}</button>
                                     </div>;
                                 })}</div>
                             </div>
@@ -9955,7 +10114,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         type="button"
                         data-layout-key="rap-reveal-gate"
                         className="fixed inset-0 z-[520] bg-black/55 flex flex-col items-center justify-end pb-16 font-mono text-[10px] tracking-[.32em] text-gray-200"
-                        onClick={() => { if (rapSheetCanContinue) setRapSheetRevealReady(true); }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (rapSheetCanContinue) {
+                                armOverlayInputGuard();
+                                setRapSheetRevealReady(true);
+                            }
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
                         aria-label="Continue to rap sheet"
                     >
                         {rapSheetCanContinue ? 'TAP TO CONTINUE' : '…'}
@@ -9996,6 +10163,19 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </div>
                                 </div>
                             )}
+                            <div data-layout-key="rap-sheet-run-summary" className="border border-black/40 bg-black/5 p-3 mb-3 font-mono text-xs shrink-0">
+                                <div className="font-bold tracking-[.2em] mb-2 opacity-70">RUN SUMMARY</div>
+                                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                                    <span className="opacity-70">Rounds cleared</span>
+                                    <span className="text-right font-bold">{runStats.roundsCleared ?? Math.max(0, round - 1)}</span>
+                                    <span className="opacity-70">Best hand</span>
+                                    <span className="text-right font-bold">{runStats.biggestHustle || 0}</span>
+                                    <span className="opacity-70">Cash on you</span>
+                                    <span className="text-right font-bold text-green-900">${runStats.runCashHeld ?? gold}</span>
+                                    <span className="opacity-70">Total heat</span>
+                                    <span className="text-right font-bold">{runStats.totalHeat}</span>
+                                </div>
+                            </div>
                             <div data-layout-key="rap-sheet-history" className="border border-black p-3 bg-white/50 mb-3 flex flex-col shrink-0 overflow-visible">
                                 <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
                                 <HistoryPanel history={history} />
