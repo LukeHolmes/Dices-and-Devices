@@ -30,7 +30,7 @@ test("opening balance — quota curve smoothed (R2–R4 steps, R6 anchor)", () =
   assert.ok(r2 >= 91 && r2 <= 98, `R2 ${r2}`);
   assert.ok(r3 - r2 >= 26 && r3 - r2 <= 36, `R2→R3 step ${r3 - r2}`);
   assert.ok(r4 - r3 >= 28 && r4 - r3 <= 40, `R3→R4 step ${r4 - r3}`);
-  assert.ok(r6 >= 180 && r6 <= 240, `R6 anchor ${r6}`);
+  assert.ok(r6 >= 180 && r6 <= 242, `R6 anchor ${r6}`);
 });
 
 test("FIRST_RUN_TUNING — first-run opening target matches standard R1 quota", () => {

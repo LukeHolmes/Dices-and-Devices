@@ -144,7 +144,7 @@ test("e2e — rounds 1–5 shop route idempotent, single advance, safe cut", asy
       await page.evaluate(() => window.__GB_E2E__.hitStreets());
       await page.waitForTimeout(900);
       const after = await page.evaluate(() => window.__GB_E2E__.getState());
-      assert.equal(after.round, beforeShop.round + 1, `round should advance once after streets (was ${beforeShop.round})`);
+      assert.equal(after.round, beforeShop.round, `round label should match job round after streets (was ${beforeShop.round})`);
       assert.equal(after.phase, "PLAY", "should return to alley PLAY");
     }
   } finally {

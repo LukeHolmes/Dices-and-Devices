@@ -193,11 +193,11 @@ const BACK_ALLEY = { id: "LOCAL", name: "BACK ALLEY", mod: 1 };
 
 function projectRoundTarget(routes, startTarget, fromRound, toRound) {
   let target = startTarget;
-  let round = fromRound;
-  while (round < toRound) {
+  let playRound = fromRound + 1;
+  while (playRound <= toRound) {
     const out = routes.projectNextRound({
       path: BACK_ALLEY,
-      round,
+      round: playRound,
       target,
       debt: 0,
       insaneContract: false,
@@ -205,8 +205,9 @@ function projectRoundTarget(routes, startTarget, fromRound, toRound) {
       personaPlays: 4,
       personaPills: 3,
     });
+    if (playRound === toRound) return out.nextTarget;
     target = out.nextTarget;
-    round = out.nextRound;
+    playRound += 1;
   }
   return target;
 }

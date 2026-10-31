@@ -121,6 +121,41 @@ const playHeavyHardware = () =>
     dice: dice([3, 4, 5, 2, 6]),
   });
 
+const shopBusy = () => {
+  const items = [
+    "MULT_FACE",
+    "GOLD_FACE",
+    "PIP_FACE",
+    "FLOW_FACE",
+    "WILD_FACE",
+    "DEBT_FACE",
+    "GHOST_FACE",
+    "SHIV_FACE",
+  ].map((id, i) => ({
+    id: `${id}_${i}`,
+    value: 0,
+    label: id.replace(/_/g, " "),
+    type: "modifier",
+    cost: 10 + i * 3,
+    rarity: i > 4 ? "rare" : "common",
+    style: "bg-[#111] text-[#0df] border-[#0df]",
+  }));
+  return run({
+    phase: "SHOP",
+    round: 4,
+    gold: 80,
+    target: 161,
+    stash: 40,
+    shopItems: items,
+    paths: [
+      { id: "LOCAL", name: "BACK ALLEY", desc: "Standard hustle.", mod: 1, color: "border-gray-600 text-gray-400" },
+      { id: "PAWN", name: "PAWN SHOP", desc: "Higher quota.", mod: 1.2, reward: 15, color: "border-yellow-600 text-yellow-400" },
+      { id: "HIDEOUT", name: "SAFEHOUSE", desc: "Extra play.", mod: 1.09, handDelta: 1, color: "border-green-700 text-green-400" },
+      { id: "BOSS", name: "TURF WAR", desc: "Boss turf.", mod: 1.4, color: "border-red-700 text-red-400" },
+    ],
+  });
+};
+
 const shop = () =>
   run({
     phase: "SHOP",
@@ -256,6 +291,7 @@ module.exports = {
   gamble,
   carving,
   shop,
+  shopBusy,
   playHeavyHardware,
   rapSheet,
   terminal,

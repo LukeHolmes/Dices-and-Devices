@@ -137,7 +137,7 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /pathPickEffects/);
   assert.match(appSource, /SYNERGY_HINTS/);
   assert.match(appSource, /carveAdjacencyProfile/);
-  assert.match(appSource, /Side bet: this roll/);
+  assert.match(appSource, /SIDE BET \$|best \$\{bestPreviewHeat\}/);
   assert.match(appSource, /pendingUnlockMessageRef/);
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
 });
@@ -172,7 +172,7 @@ test("Playtest 4 fixes (Oct 2026)", () => {
   assert.match(appSource, /rerollBoneSlot/);
   assert.match(appSource, /consumePill:\s*false/);
   assert.match(appSource, /FREE OPENING SNIFF/);
-  assert.match(appSource, /!hasRolled \?\s*\(\s*\n\s*<div>SIDE BET:/);
+  assert.match(appSource, /!hasRolled \?[\s\S]*SIDE BET \(pre-roll\)/);
   assert.match(appSource, /lossExplanation && phase === 'PLAY'/);
   assert.match(appSource, /stashFillRate/);
   assert.match(appSource, /pillCurrencyHint/);

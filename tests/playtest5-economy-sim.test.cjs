@@ -9,6 +9,7 @@ const {
   simulateRound,
   loadRoutes,
   loadRulesApi,
+  projectRoundTarget,
 } = require("../scripts/sim-opening.cjs");
 
 const RUNS = 400;
@@ -92,6 +93,7 @@ test("multi-round — ~2 shop items affordable by round 3, no runaway quota", ()
         items += 1;
       }
       if (round >= 3) break;
+      round += 1;
       const out = routes.projectNextRound({
         path: { id: "LOCAL", mod: 1 },
         round,
@@ -102,24 +104,14 @@ test("multi-round — ~2 shop items affordable by round 3, no runaway quota", ()
         personaPlays: 4,
         personaPills: 3,
       });
-      round = out.nextRound;
       target = out.nextTarget;
     }
     if (round >= 3) itemsByR3.push(items);
   }
   const medItems = itemsByR3.length ? median(itemsByR3) : 0;
   assert.ok(medItems >= 1.5, `median items by R3 ${medItems} expected ~2`);
-  const r6 = routes.projectNextRound({
-    path: { id: "LOCAL", mod: 1 },
-    round: 5,
-    target: 130,
-    debt: 0,
-    insaneContract: false,
-    hasLedger: false,
-    personaPlays: 4,
-    personaPills: 3,
-  }).nextTarget;
-  assert.ok(r6 >= 120 && r6 <= 220, `R6 anchor ${r6} should not run away`);
+  const r6 = projectRoundTarget(routes, 75, 1, 6);
+  assert.ok(r6 >= 180 && r6 <= 242, `R6 anchor ${r6} should not run away`);
 });
 
 test("synergy — tagged pair can produce chain events on Slop", () => {

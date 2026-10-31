@@ -34,11 +34,11 @@ const THE_RAID = {
   applyTarget: (t) => Math.floor(t * 3),
 };
 
-test("projectNextRound — early BACK ALLEY from round 1 target 75", () => {
+test("projectNextRound — early BACK ALLEY entering round 2 from target 75", () => {
   const routes = loadRoutes();
   const out = routes.projectNextRound({
     path: BACK_ALLEY,
-    round: 1,
+    round: 2,
     target: 75,
     debt: 0,
     insaneContract: false,
@@ -82,7 +82,7 @@ test("projectNextRound — debt penalty from round 4 without ledger", () => {
   const routes = loadRoutes();
   const out = routes.projectNextRound({
     path: BACK_ALLEY,
-    round: 3,
+    round: 4,
     target: 200,
     debt: 20,
     insaneContract: false,
@@ -93,7 +93,7 @@ test("projectNextRound — debt penalty from round 4 without ledger", () => {
   assert.ok(out.effectLines.some((l) => l.includes("Debt pressure")));
   const noDebt = routes.projectNextRound({
     path: BACK_ALLEY,
-    round: 3,
+    round: 4,
     target: 200,
     debt: 0,
     insaneContract: false,
