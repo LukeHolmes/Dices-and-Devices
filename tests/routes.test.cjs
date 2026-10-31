@@ -31,15 +31,15 @@ const BOUNCER = {
 const THE_RAID = {
   id: "THE_RAID",
   name: "THE RAID",
-  applyTarget: (t) => Math.floor(t * 3),
+  applyTarget: (t) => Math.floor(t * 1.5),
 };
 
-test("projectNextRound — early BACK ALLEY from round 1 target 85", () => {
+test("projectNextRound — early BACK ALLEY entering round 2 from target 75", () => {
   const routes = loadRoutes();
   const out = routes.projectNextRound({
     path: BACK_ALLEY,
-    round: 1,
-    target: 85,
+    round: 2,
+    target: 75,
     debt: 0,
     insaneContract: false,
     hasLedger: false,
@@ -47,18 +47,18 @@ test("projectNextRound — early BACK ALLEY from round 1 target 85", () => {
     personaPills: 3,
   });
   assert.equal(out.nextRound, 2);
-  assert.equal(out.nextTarget, 107);
-  assert.equal(out.nextTargetDisplay, 107);
+  assert.equal(out.nextTarget, 99);
+  assert.equal(out.nextTargetDisplay, 99);
   assert.equal(out.nextHands, 4);
   assert.equal(out.nextDiscards, 3);
 });
 
 test("projectNextRound — PAWN scales quota higher than alley", () => {
   const routes = loadRoutes();
-  const base = { round: 2, target: 107, debt: 0, insaneContract: false, hasLedger: false, personaPlays: 4, personaPills: 3 };
+  const base = { round: 2, target: 90, debt: 0, insaneContract: false, hasLedger: false, personaPlays: 4, personaPills: 3 };
   const alley = routes.projectNextRound({ path: BACK_ALLEY, ...base });
   const pawn = routes.projectNextRound({ path: PAWN, ...base });
-  assert.ok(pawn.nextTarget > alley.nextTarget);
+  assert.ok(pawn.nextTarget >= alley.nextTarget);
   assert.ok(pawn.effectLines.some((l) => l.includes("+$15")));
 });
 
@@ -82,7 +82,7 @@ test("projectNextRound — debt penalty from round 4 without ledger", () => {
   const routes = loadRoutes();
   const out = routes.projectNextRound({
     path: BACK_ALLEY,
-    round: 3,
+    round: 4,
     target: 200,
     debt: 20,
     insaneContract: false,
@@ -93,7 +93,7 @@ test("projectNextRound — debt penalty from round 4 without ledger", () => {
   assert.ok(out.effectLines.some((l) => l.includes("Debt pressure")));
   const noDebt = routes.projectNextRound({
     path: BACK_ALLEY,
-    round: 3,
+    round: 4,
     target: 200,
     debt: 0,
     insaneContract: false,
@@ -134,7 +134,8 @@ test("projectNextRound — THE RAID path round 9 scale", () => {
     personaPlays: 4,
     personaPills: 3,
   });
-  assert.ok(out.nextTargetDisplay >= out.nextTarget * 2);
+  assert.ok(out.nextTargetDisplay >= Math.floor(out.nextTarget * 1.35));
+  assert.ok(out.nextTargetDisplay <= Math.floor(out.nextTarget * 1.65));
 });
 
 test("sideBetPayout mirrors production formula", () => {

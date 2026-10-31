@@ -101,6 +101,61 @@ const wager = () =>
   run({ gold: 15, activeWager: { stake: 5, threshold: 110 } });
 const gamble = () =>
   run({ phase: "GAMBLE", round: 3, gold: 25, gambleStake: 5 });
+const playHeavyHardware = () =>
+  run({
+    phase: "PLAY",
+    round: 5,
+    score: 40,
+    target: 178,
+    hands: 3,
+    stash: 55,
+    inventory: [
+      { id: "ENGINE", name: "The Engine", instanceId: "hw-1" },
+      { id: "FUSE_BOX", name: "Fuse Box", instanceId: "hw-2" },
+      { id: "CROWBAR", name: "Crowbar", instanceId: "hw-3" },
+      { id: "HOT_STREAK_COIL", name: "Hot Streak Coil", instanceId: "hw-4" },
+      { id: "MIRROR_RIG", name: "Mirror Rig", instanceId: "hw-5" },
+      { id: "CENTERPIECE", name: "Centerpiece", instanceId: "hw-6" },
+    ],
+    hasRolled: true,
+    dice: dice([3, 4, 5, 2, 6]),
+  });
+
+const shopBusy = () => {
+  const items = [
+    "MULT_FACE",
+    "GOLD_FACE",
+    "PIP_FACE",
+    "FLOW_FACE",
+    "WILD_FACE",
+    "DEBT_FACE",
+    "GHOST_FACE",
+    "SHIV_FACE",
+  ].map((id, i) => ({
+    id: `${id}_${i}`,
+    value: 0,
+    label: id.replace(/_/g, " "),
+    type: "modifier",
+    cost: 10 + i * 3,
+    rarity: i > 4 ? "rare" : "common",
+    style: "bg-[#111] text-[#0df] border-[#0df]",
+  }));
+  return run({
+    phase: "SHOP",
+    round: 4,
+    gold: 80,
+    target: 161,
+    stash: 40,
+    shopItems: items,
+    paths: [
+      { id: "LOCAL", name: "BACK ALLEY", desc: "Standard hustle.", mod: 1, color: "border-gray-600 text-gray-400" },
+      { id: "PAWN", name: "PAWN SHOP", desc: "Higher quota.", mod: 1.2, reward: 15, color: "border-yellow-600 text-yellow-400" },
+      { id: "HIDEOUT", name: "SAFEHOUSE", desc: "Extra play.", mod: 1.09, handDelta: 1, color: "border-green-700 text-green-400" },
+      { id: "BOSS", name: "TURF WAR", desc: "Boss turf.", mod: 1.4, color: "border-red-700 text-red-400" },
+    ],
+  });
+};
+
 const shop = () =>
   run({
     phase: "SHOP",
@@ -145,6 +200,24 @@ const shop = () =>
       },
     ],
   });
+const rapSheetR7 = () =>
+  run({
+    phase: "RAP_SHEET",
+    round: 7,
+    target: 358,
+    score: 280,
+    gold: 18,
+    runStats: {
+      totalHeat: 890,
+      biggestHustle: 210,
+      finalBoss: "THE BOUNCER",
+      build: { primary: "MULT_ENGINE", peakConfidence: 0.72, keyItems: ["ENGINE", "LOADED_DIE"] },
+    },
+    history: [
+      { id: "h1", round: 7, category: "TOK", total: 180, values: [2, 2, 2, 3, 4] },
+    ],
+  });
+
 const rapSheet = () =>
   run({
     phase: "RAP_SHEET",
@@ -224,7 +297,7 @@ const bossCases = [
   ["JUNKIE", 130],
   ["CROOKED_COP", 130],
   ["INFORMANT", 130],
-  ["THE_RAID", 358],
+  ["THE_RAID", 179],
 ];
 module.exports = {
   bone,
@@ -236,7 +309,10 @@ module.exports = {
   gamble,
   carving,
   shop,
+  shopBusy,
+  playHeavyHardware,
   rapSheet,
+  rapSheetR7,
   terminal,
   bustLastHand,
   victoryLastHand,

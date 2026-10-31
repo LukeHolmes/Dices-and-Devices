@@ -123,7 +123,11 @@ test("Phase 6d input UX hooks present", () => {
 
 test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /openingStashGrant:\s*25/);
-  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*1400/);
+  assert.match(appSource, /SCORE_OVERLAY_LIFETIME_MS\s*=\s*2600/);
+  assert.match(html, /id="gutterbones-presentation"/);
+  assert.match(appSource, /GutterbonesPresentation/);
+  assert.match(appSource, /ToastStack/);
+  assert.match(appSource, /pacing:\s*'normal'/);
   assert.match(appSource, /getScoreOverlayLifetimeMs/);
   assert.match(appSource, /overlayTailMs/);
   assert.match(appSource, /applyDevSynergyDemoDice/);
@@ -133,7 +137,7 @@ test("Live playtest polish hooks (Oct 2026)", () => {
   assert.match(appSource, /pathPickEffects/);
   assert.match(appSource, /SYNERGY_HINTS/);
   assert.match(appSource, /carveAdjacencyProfile/);
-  assert.match(appSource, /Side bet: this roll/);
+  assert.match(appSource, /SIDE BET \$|best \$\{bestPreviewHeat\}/);
   assert.match(appSource, /pendingUnlockMessageRef/);
   assert.ok(fs.existsSync(path.join(__dirname, "..", "favicon.ico")), "favicon.ico");
 });
@@ -168,14 +172,14 @@ test("Playtest 4 fixes (Oct 2026)", () => {
   assert.match(appSource, /rerollBoneSlot/);
   assert.match(appSource, /consumePill:\s*false/);
   assert.match(appSource, /FREE OPENING SNIFF/);
-  assert.match(appSource, /!hasRolled \?\s*\(\s*\n\s*<div>SIDE BET:/);
+  assert.match(appSource, /!hasRolled \?[\s\S]*SIDE BET \(pre-roll\)/);
   assert.match(appSource, /lossExplanation && phase === 'PLAY'/);
   assert.match(appSource, /stashFillRate/);
   assert.match(appSource, /pillCurrencyHint/);
 });
 
 test("Phase 6f shop loan and audio settings present", () => {
-  assert.match(appSource, /LOAN appears when cash is short/);
+  assert.match(appSource, /LOAN when cash is short/);
   assert.match(appSource, /SOUND \{audioMuted \? 'MUTED' : 'ON'\}/);
   assert.match(appSource, /Round \$\{round\} quota cleared/);
 });
@@ -197,7 +201,7 @@ test("Pro polish roll and transition hooks", () => {
   assert.match(appSource, /AudioSystem\.dieThud/);
   assert.match(appSource, /score-row-fixed/);
   assert.match(appSource, /tutorial-coach-mask/);
-  assert.match(appSource, /roll-ready-pulse/);
+  assert.match(appSource, /roll-ready-pulse-inner/);
   assert.match(html, /@keyframes rollReadyPulse[\s\S]*?box-shadow: 0 6px 0 #7a003d/);
   assert.doesNotMatch(html, /@keyframes rollReadyPulse[\s\S]*?translateY\(-1px\)/);
   const audioSource = fs.readFileSync(
