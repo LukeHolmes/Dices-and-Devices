@@ -74,7 +74,7 @@ test("playtest5 bot — median round 4–6 and ~2 items by round 3", () => {
   }
   const medRound = median(rounds);
   const medItemsR3 = itemsByR3.length ? median(itemsByR3) : 0;
-  assert.ok(medRound >= 5 && medRound <= 9, `median stall round ${medRound} expected ~6–7 with steeper curve`);
+  assert.ok(medRound >= 5 && medRound <= 9, `median stall round ${medRound} expected ~7–8 with R7+ steepening`);
   assert.ok(medItemsR3 >= 1, `median items by R3 ${medItemsR3} expected >= 1`);
 });
 
@@ -121,6 +121,6 @@ test("playtest10 bot — clear-rate tapers by round (competent sim)", () => {
   assert.ok(rate(1) >= 0.7, `R2 clear ${rate(1)}`);
   assert.ok(rate(4) <= 0.92 && rate(4) >= 0.38, `R5 clear ${rate(4)}`);
   assert.ok(rate(5) <= 0.85 && rate(5) >= 0.15, `R6 clear ${rate(5)}`);
-  assert.ok(rate(6) <= 0.88, `R7 clear ${rate(6)} should taper vs R1`);
+  assert.ok(rate(6) <= 0.12, `R7 clear ${rate(6)} should be rare after R7+ steepening`);
   assert.ok(rate(0) - rate(6) >= 0.08, `clear rate should drop R1→R7 (${rate(0)} vs ${rate(6)})`);
 });

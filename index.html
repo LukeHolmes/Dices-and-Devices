@@ -275,11 +275,11 @@
         flex-direction: column;
     }
     #root-gutterbones .synergy-chain-banner {
-        position: absolute;
-        top: 2.75rem;
+        position: fixed;
+        top: var(--gb-chain-banner-top, 4.75rem);
         left: 50%;
         transform: translateX(-50%);
-        z-index: 120;
+        z-index: 295;
         pointer-events: none;
         font-family: ui-monospace, monospace;
         font-size: 0.82rem;
@@ -328,6 +328,20 @@
     #root-gutterbones .score-explanation-panel {
         max-height: none;
         overflow: visible;
+    }
+    #root-gutterbones [data-layout-key="score-breakdown-overlay"],
+    #root-gutterbones [data-layout-key="score-resolution-overlay"] {
+        top: var(--gb-score-panel-top, 12.5rem);
+        max-height: calc(100dvh - var(--gb-score-panel-top, 12.5rem) - 0.75rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    #root-gutterbones .hud-pill-count.pill-count-tick {
+        animation: pillCountTick 0.42s ease-out;
+    }
+    @keyframes pillCountTick {
+        0% { transform: scale(1.35); color: #fff; }
+        100% { transform: scale(1); color: #0df; }
     }
     @keyframes gbScreenOut {
         from { opacity: 1; transform: translateY(0); }
@@ -2467,17 +2481,20 @@ const GutterbonesRoutes = (() => {
 
     const ROUND_CURVE_TUNING = Object.freeze({
         earlyMaxRound: 2,
-        midMaxRound: 7,
+        midMaxRound: 5,
+        lateMaxRound: 6,
         early: { pathModWeight: 0.88, flatIncrease: 28 },
         mid: { pathModWeight: 1.02, flatIncrease: 52 },
-        late: { pathModWeight: 1.08, flatIncrease: 58 }
+        late: { pathModWeight: 1.02, flatIncrease: 52 },
+        extreme: { pathModWeight: 1.14, flatIncrease: 78 }
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
         minGrowthRate: 1.16,
         earlyMaxGrowthRate: 1.32,
         midMaxGrowthRate: 1.52,
-        lateMaxGrowthRate: 1.58
+        lateMaxGrowthRate: 1.52,
+        extremeMaxGrowthRate: 1.24
     });
 
     const INSANE_CONTRACT_MODIFIERS = Object.freeze({
@@ -2486,21 +2503,19 @@ const GutterbonesRoutes = (() => {
         playPenalty: 1
     });
 
-    const roundCurveFor = (nextRound) => (
-        nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
-            ? ROUND_CURVE_TUNING.early
-            : nextRound <= ROUND_CURVE_TUNING.midMaxRound
-                ? ROUND_CURVE_TUNING.mid
-                : ROUND_CURVE_TUNING.late
-    );
+    const roundCurveFor = (nextRound) => {
+        if (nextRound <= ROUND_CURVE_TUNING.earlyMaxRound) return ROUND_CURVE_TUNING.early;
+        if (nextRound <= ROUND_CURVE_TUNING.midMaxRound) return ROUND_CURVE_TUNING.mid;
+        if (nextRound <= ROUND_CURVE_TUNING.lateMaxRound) return ROUND_CURVE_TUNING.late;
+        return ROUND_CURVE_TUNING.extreme;
+    };
 
-    const growthCapFor = (nextRound) => (
-        nextRound <= ROUND_CURVE_TUNING.earlyMaxRound
-            ? PROGRESSION_GUARDRAILS.earlyMaxGrowthRate
-            : nextRound <= ROUND_CURVE_TUNING.midMaxRound
-                ? PROGRESSION_GUARDRAILS.midMaxGrowthRate
-                : PROGRESSION_GUARDRAILS.lateMaxGrowthRate
-    );
+    const growthCapFor = (nextRound) => {
+        if (nextRound <= ROUND_CURVE_TUNING.earlyMaxRound) return PROGRESSION_GUARDRAILS.earlyMaxGrowthRate;
+        if (nextRound <= ROUND_CURVE_TUNING.midMaxRound) return PROGRESSION_GUARDRAILS.midMaxGrowthRate;
+        if (nextRound <= ROUND_CURVE_TUNING.lateMaxRound) return PROGRESSION_GUARDRAILS.lateMaxGrowthRate;
+        return PROGRESSION_GUARDRAILS.extremeMaxGrowthRate;
+    };
 
     const applyBossAdjustedTarget = (baseTarget, boss, roundNum) => {
         if (!boss?.applyTarget) return baseTarget;
@@ -3598,10 +3613,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     const carvedDieFromFace = (die, faceId) => {
         const face = FACE_DATABASE[faceId];
         if (!face) return die;
+        const pipValue = face.id === 'MULT_FACE' && typeof die.value === 'number' && die.value >= 1
+            ? die.value
+            : face.value;
         return {
             ...die,
             id: Math.random(),
-            value: face.value,
+            value: pipValue,
             faceId: face.id,
             faceLabel: face.label,
             faceStyle: face.style,
@@ -4250,9 +4268,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const CarvingDieTile = ({ die, face, onClick, slotLabel, className = '' }) => {
         const isFacePick = face != null;
-        const isModifier = isFacePick && face.id && face.type !== 'standard';
-        const pipValue = isFacePick ? face.value : die.value;
-        const showCarvedOverlay = !isFacePick && die.faceId && die.faceId !== 'standard';
+        const faceId = isFacePick ? face.id : die.faceId;
+        const isMultFace = faceId === 'MULT_FACE';
+        const isModifier = isFacePick && face.id && face.type !== 'standard' && !isMultFace;
+        const showCarvedOverlay = !isFacePick && die.faceId && die.faceId !== 'standard' && !isMultFace;
+        const pipValue = isMultFace
+            ? (isFacePick ? (die?.value ?? 3) : die.value)
+            : (isFacePick ? face.value : die.value);
         const faceSrc = (isModifier || showCarvedOverlay) ? DICE_ART.faces.blank : diceStandardFaceSrc(pipValue);
         const overlayItem = isFacePick ? (isModifier ? face : null) : (showCarvedOverlay ? die : null);
         return (
@@ -4262,6 +4284,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 className={`carving-die-tile w-20 h-20 md:w-32 md:h-32 rounded-lg border-2 border-[#8c8880] flex flex-col items-center justify-center shadow-2xl hover:scale-105 hover:ring-4 ring-[#0df] relative bg-black/20 ${className}`}
             >
                 <img className="w-[88%] h-[88%] object-contain pointer-events-none" src={faceSrc} alt="" draggable={false} decoding="async" />
+                {isMultFace && (
+                    <div className="absolute top-2 right-2 z-10 rounded border border-[#0df] bg-black/85 px-1 py-0.5 font-mono text-[10px] font-bold text-[#0df] shadow-[0_0_8px_rgba(0,221,255,.45)]" aria-hidden>
+                        +M
+                    </div>
+                )}
                 {overlayItem && (
                     <div className={`absolute inset-[10%] rounded flex flex-col items-center justify-center border pointer-events-none ${overlayItem.faceStyle || overlayItem.style}`}>
                         <div className="font-serif text-3xl md:text-4xl leading-none text-white drop-shadow">{(overlayItem.faceLabel || overlayItem.label || '?').charAt(0)}</div>
@@ -4923,11 +4950,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         }, [data?.id, reducedMotion]);
         if (!data) return null;
         return (
-            <div className="absolute inset-0 z-[560] flex items-center justify-center p-4 pointer-events-none">
+            <div data-layout-key="score-resolution-overlay" className="absolute left-1/2 -translate-x-1/2 z-[560] pointer-events-none w-[min(92vw,36rem)] p-4">
                 <button
                     type="button"
                     onClick={() => { if (canDismiss) onDismiss?.(); }}
-                    className={`pointer-events-auto readable-panel rounded-xl px-7 py-5 text-left ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
+                    className={`pointer-events-auto w-full readable-panel rounded-xl px-7 py-5 text-left ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
                 >
                     <div className="font-mono text-xs text-[#0df] tracking-[.35em] text-center mb-3">SCORE RESOLUTION</div>
                     <div className="font-mono text-base text-center text-gray-100">
@@ -4995,10 +5022,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
         const flowDisplay = (Math.round((result.flowMult || 1) * 100) / 100).toFixed(2);
         return (
-            <div className="absolute top-[max(9.5rem,22vh)] md:top-[max(10rem,20vh)] left-1/2 -translate-x-1/2 z-[280] pointer-events-none w-[min(92vw,36rem)]">
+            <div data-layout-key="score-breakdown-overlay" className="absolute left-1/2 -translate-x-1/2 z-[280] pointer-events-none w-[min(92vw,36rem)]">
                 <button
                     type="button"
-                    onPointerDown={() => onDismiss?.()}
+                    onPointerDown={() => { if (canDismiss) onDismiss?.(); }}
                     className={`pointer-events-auto score-explanation-panel relative w-full readable-panel gb-type-panel border-[#ff007f]/80 rounded-xl px-5 py-4 text-left overflow-hidden ${reducedMotion ? '' : 'animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
                 >
                     <span className={`score-card-stamp paid-stamp ${!reducedMotion && stampSlammed ? 'score-card-stamp-animate' : ''}`} aria-hidden>FILED</span>
@@ -5722,6 +5749,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [synergyChainBanner, setSynergyChainBanner] = useState(null);
         const shopRewardGrantedRef = useRef(null);
         const e2ePendingDiceRef = useRef(null);
+        const pendingScoreBreakdownRef = useRef(null);
+        const pendingHandJuiceRef = useRef(null);
+        const playHudRef = useRef(null);
+        const flushPendingHandJuiceRef = useRef(null);
+        const scoreOverlayLockRef = useRef(false);
+        const [pillCountTick, setPillCountTick] = useState(0);
         const [nextShopTag, setNextShopTag] = useState(null);
         const [activeShopTag, setActiveShopTag] = useState(null);
         const [routeModifiers, setRouteModifiers] = useState({});
@@ -5878,6 +5911,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 scoreOverlayDismissQueuedRef.current = true;
                 return;
             }
+            if (scoreResolution && pendingScoreBreakdownRef.current) {
+                scoreOverlayDismissQueuedRef.current = false;
+                setScoreResolution(null);
+                setPaperStamps([]);
+                const pendingBreakdown = pendingScoreBreakdownRef.current;
+                pendingScoreBreakdownRef.current = null;
+                setScoreBreakdown(pendingBreakdown);
+                flushPendingHandJuiceRef.current?.();
+                setScoreOverlayCanDismiss(false);
+                return;
+            }
             scoreOverlayDismissQueuedRef.current = false;
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
@@ -5889,6 +5933,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             setScoreBreakdown(null);
             setScoreResolution(null);
+            pendingScoreBreakdownRef.current = null;
+            pendingHandJuiceRef.current = null;
+            scoreOverlayLockRef.current = false;
             setChainStepsRevealed(null);
             setSynergyLinks([]);
             setSynergyChainBanner(null);
@@ -5958,6 +6005,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const beginRoundClearCard = (nextPhase, waitHeatMs = 0, { bumpJobRound = true } = {}) => {
+            clearTransientJuice();
+            setPaperStamps([]);
             roundClearPendingRef.current = { nextPhase, waitHeatMs, bumpJobRound: !!bumpJobRound };
             setRoundClearCardActive(true);
             setRoundClearCanContinue(false);
@@ -6050,7 +6099,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
         const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
-        const rollReady = !rolling && hands > 0 && !swapMode && (!hasRolled || discards > 0);
+        const rollReady = !rolling && hands > 0 && !swapMode && !scoreOverlayLockRef.current && !payoutInputLock
+            && (!hasRolled || discards > 0);
         const pressureLevel = phase === 'PLAY' && !reducedMotion
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
@@ -6452,6 +6502,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }
             };
         }, [scoreBreakdown?.id, scoreResolution?.id, audioSettings.pacing, reducedMotion]);
+
+        useEffect(() => {
+            if (phase !== 'PLAY') return undefined;
+            const measureHudLayout = () => {
+                const hud = playHudRef.current;
+                if (!hud) return;
+                const bottom = hud.getBoundingClientRect().bottom;
+                const topPx = Math.ceil(bottom + 12);
+                document.documentElement.style.setProperty('--gb-score-panel-top', `${topPx}px`);
+                document.documentElement.style.setProperty('--gb-chain-banner-top', `${Math.ceil(bottom + 4)}px`);
+            };
+            measureHudLayout();
+            window.addEventListener('resize', measureHudLayout);
+            return () => window.removeEventListener('resize', measureHudLayout);
+        }, [phase, activeBoss?.id, fixerLine, round, hands, discards, gold, activeWager, insaneContract]);
 
         useEffect(() => {
             if (scoreBreakdown || scoreResolution || bossIntro || roundClearCardActive) return;
@@ -7003,10 +7068,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted && !audioSettings.skippedAlleyIntro) {
                     setShowFirstRunOverlay(true);
                 }
-                if (!tutorial && !audioSettings.dismissPillPulse && meta.totalRuns === 0) {
-                    setPillCurrencyHint(true);
-                    scheduleTimeout(() => setPillCurrencyHint(false), reducedMotion ? 4500 : 6200);
-                }
             };
             if (tutorial) {
                 enterPlay();
@@ -7129,10 +7190,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const rollBones = () => {
+            if (scoreOverlayLockRef.current || payoutInputLock) return;
             if (rollLockRef.current || rolling || hands <= 0) return;
             if (hasRolled && discards <= 0) return;
             const now = Date.now();
-            if (now - lastRollStartedAtRef.current < 300) return;
+            if (now - lastRollStartedAtRef.current < 180) return;
             rollLockRef.current = true;
             lastRollStartedAtRef.current = now;
             if (!reducedMotion) {
@@ -7215,11 +7277,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const rerollBoneSlot = (idx, { consumePill = true, silent = false } = {}) => {
+            if (scoreOverlayLockRef.current || payoutInputLock) return false;
             if (rolling || rollLockRef.current) return false;
             if (consumePill) {
                 if (discards <= 0) return false;
-                if (!silent) showMechanicPopup('PILL');
-                patchSettings({ dismissPillPulse: true });
+                if (!silent && !audioSettings.seenPillPop) {
+                    showMechanicPopup('PILL');
+                    patchSettings({ seenPillPop: true, dismissPillPulse: true });
+                }
                 if (activeBoss?.id === 'THE_RAID') {
                     spawnHitCallout('BOSS: RAID PILL TOLL');
                     setGold(g => {
@@ -7231,6 +7296,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }
                 if (inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled) setGold(g => g + 1);
                 setDiscards(d => d - 1);
+                setPillCountTick((t) => t + 1);
                 setActiveMechanicPopup(null);
             }
             rollLockRef.current = true;
@@ -7345,12 +7411,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setChainStepsRevealed(null);
                     onDone();
                 }, sequenceMs);
-                scheduleTimeout(() => setSynergyChainBanner(null), sequenceMs + (reducedMotion ? 80 : 1800));
+                scheduleTimeout(() => {
+                    if (!scoreBreakdown && !pendingScoreBreakdownRef.current) setSynergyChainBanner(null);
+                }, sequenceMs + (reducedMotion ? 80 : 2800));
             };
-            const runValidHandJuice = (result, payoutCatId) => {
+            const runValidHandJuice = (result, payoutCatId, { resolutionOnly = false, skipResolution = false, skipStamps = false } = {}) => {
                 if (['Y', 'LS', 'FH'].includes(payoutCatId)) AudioSystem.categoryStinger(payoutCatId);
                 else if ((result.chainDepth || 0) >= 2) AudioSystem.chainStep(0, 'multi');
-                if (result.total >= 120) {
+                if (result.total >= 120 && !skipResolution) {
                     const resolutionPayload = {
                         id: Math.random(),
                         chips: result.chips,
@@ -7361,8 +7429,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     if (scoreResolutionTimeoutRef.current != null) {
                         clearScheduledTimeout(scoreResolutionTimeoutRef.current);
                     }
+                    setPaperStamps([]);
                     setScoreResolution(resolutionPayload);
+                    if (resolutionOnly) {
+                        setScorePulse(true);
+                        scheduleTimeout(() => setScorePulse(false), 420);
+                        const tier = result.total >= 250 ? 'max' : result.total >= 100 ? 'big' : result.total >= 30 ? 'mid' : 'small';
+                        AudioSystem.stinger(tier);
+                        return;
+                    }
                 }
+                if (skipStamps) return;
                 if (result.total >= 250) triggerCameraKick('hard');
                 else if (result.total >= 80) triggerCameraKick('soft');
                 if (result.total >= 150 && !reducedMotion) {
@@ -7379,7 +7456,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (payoutCatId === 'Y') spawnPaperStamp('JACKPOT', '#d6b85c');
                 else if (payoutCatId === 'LS') spawnPaperStamp('LONG RUN', '#0df');
                 else if (payoutCatId === 'FH') spawnPaperStamp('FULL RIDE', '#059669');
-                spawnPaperStamp('FILED');
                 const tier = result.total >= 250 ? 'max' : result.total >= 100 ? 'big' : result.total >= 30 ? 'mid' : 'small';
                 AudioSystem.stinger(tier);
                 if (result.total >= 30) {
@@ -7444,7 +7520,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             } else {
                 setSynergyChainBanner(null);
             }
-            setScoreBreakdown(breakdownPayload);
+            const useResolutionGate = result.valid && result.total >= 120;
+            scoreOverlayLockRef.current = true;
+            if (useResolutionGate) {
+                pendingScoreBreakdownRef.current = breakdownPayload;
+                setScoreBreakdown(null);
+            } else {
+                pendingScoreBreakdownRef.current = null;
+                setScoreBreakdown(breakdownPayload);
+            }
+            flushPendingHandJuiceRef.current = () => {
+                const pending = pendingHandJuiceRef.current;
+                if (!pending) return;
+                pendingHandJuiceRef.current = null;
+                runValidHandJuice(pending.result, pending.catId, { skipResolution: true });
+            };
             const handsAfterPlay = Math.max(0, handsBeforePlay - 1);
             let scoreAfter = score;
             const runStoryOrContinue = (panel, onDone) => {
@@ -7651,7 +7741,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     triggers: result.triggers,
                     chainDepth: result.chainDepth || 0
                 }]);
-                playSynergySequence(result, () => runValidHandJuice(result, catId));
+                playSynergySequence(result, () => {
+                    if (useResolutionGate) {
+                        pendingHandJuiceRef.current = { result, catId };
+                        runValidHandJuice(result, catId, { resolutionOnly: true });
+                    } else {
+                        runValidHandJuice(result, catId);
+                    }
+                });
             } else {
                 setFixerLine(pickLine(FIXER_LINES.bust));
                 setSynergyState((prev) => GutterbonesRules.advanceComboMeter(prev, false, SYNERGY_TUNING));
@@ -8309,6 +8406,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         setShowFirstRunOverlay(false);
                         setPillCurrencyHint(false);
                     },
+                    measureScoreHudOverlap: () => {
+                        const hud = document.querySelector('[data-layout-key="play-hud"]');
+                        const panel = document.querySelector('[data-layout-key="score-breakdown-overlay"]')
+                            || document.querySelector('[data-layout-key="score-resolution-overlay"]');
+                        if (!hud || !panel) return { ok: false, reason: 'missing nodes' };
+                        const h = hud.getBoundingClientRect();
+                        const p = panel.getBoundingClientRect();
+                        const intersects = !(p.top >= h.bottom - 1);
+                        return { ok: !intersects, hudBottom: h.bottom, panelTop: p.top, intersects };
+                    },
+                    isRollDisabled: () => {
+                        const btn = document.querySelector('[data-tutorial="roll-btn"]');
+                        return !!(btn && btn.disabled);
+                    },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
                         openingSniffPendingRef.current = false;
@@ -8389,6 +8500,87 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 finishRapReveal: () => {
                     setRapSheetRevealReady(true);
                     setShowIncarceratedStamp(true);
+                },
+                openScoreBreakdownDemo: () => {
+                    openingSniffPendingRef.current = false;
+                    setOpeningSniffBanner(null);
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setPhase('PLAY');
+                    setHands(4);
+                    setHasRolled(true);
+                    setRoundClearCardActive(false);
+                    setScoreResolution(null);
+                    pendingScoreBreakdownRef.current = null;
+                    setScoreBreakdown({
+                        id: Math.random(),
+                        categoryName: 'Triad',
+                        chips: 40,
+                        mult: 4,
+                        flowMult: 1,
+                        total: 160,
+                        explanationSteps: [{ type: 'modifier', label: 'CHAIN: Build link', value: '+1x', impact: '+1x' }],
+                        chainDepth: 1,
+                        synergyEvents: [{ id: 'build_tag_link' }]
+                    });
+                    setSynergyChainBanner({ depth: 1, steps: 1, label: 'Build link' });
+                    setScoreOverlayCanDismiss(true);
+                    window.requestAnimationFrame(() => {
+                        const hud = playHudRef.current;
+                        if (!hud) return;
+                        const bottom = hud.getBoundingClientRect().bottom;
+                        document.documentElement.style.setProperty('--gb-score-panel-top', `${Math.ceil(bottom + 12)}px`);
+                        document.documentElement.style.setProperty('--gb-chain-banner-top', `${Math.ceil(bottom + 4)}px`);
+                    });
+                },
+                openScoreResolutionDemo: () => {
+                    setPhase('PLAY');
+                    setRoundClearCardActive(false);
+                    setScoreBreakdown(null);
+                    pendingScoreBreakdownRef.current = null;
+                    setScoreResolution({
+                        id: Math.random(),
+                        chips: 80,
+                        mult: 3,
+                        flowMult: 1,
+                        total: 240
+                    });
+                    setScoreOverlayCanDismiss(true);
+                },
+                openRoundClearDemo: () => beginRoundClearCard('SHOP', 0, { bumpJobRound: false }),
+                measureScoreHudOverlap: () => {
+                    const hud = document.querySelector('[data-layout-key="play-hud"]');
+                    const panel = document.querySelector('[data-layout-key="score-breakdown-overlay"]')
+                        || document.querySelector('[data-layout-key="score-resolution-overlay"]');
+                    if (!hud || !panel) return { ok: false, reason: 'missing nodes' };
+                    const h = hud.getBoundingClientRect();
+                    const p = panel.getBoundingClientRect();
+                    const intersects = !(p.top >= h.bottom - 1);
+                    return { ok: !intersects, hudBottom: h.bottom, panelTop: p.top, intersects };
+                },
+                measureOverlayOverlap: () => {
+                    const resolution = document.querySelector('[data-layout-key="score-resolution-overlay"]');
+                    const breakdown = document.querySelector('[data-layout-key="score-breakdown-overlay"]');
+                    const roundClear = document.querySelector('[data-layout-key="round-clear-card"]');
+                    const rects = [
+                        resolution && { key: 'resolution', r: resolution.getBoundingClientRect() },
+                        breakdown && { key: 'breakdown', r: breakdown.getBoundingClientRect() },
+                        roundClear && { key: 'roundClear', r: roundClear.getBoundingClientRect() }
+                    ].filter(Boolean);
+                    const overlaps = [];
+                    for (let i = 0; i < rects.length; i += 1) {
+                        for (let j = i + 1; j < rects.length; j += 1) {
+                            const a = rects[i].r;
+                            const b = rects[j].r;
+                            const hit = !(a.bottom <= b.top + 2 || b.bottom <= a.top + 2 || a.right <= b.left + 2 || b.right <= a.left + 2);
+                            if (hit) overlaps.push(`${rects[i].key}:${rects[j].key}`);
+                        }
+                    }
+                    return { ok: overlaps.length === 0, overlaps };
+                },
+                isRollDisabled: () => {
+                    const btn = document.querySelector('[data-tutorial="roll-btn"]');
+                    return !!(btn && btn.disabled);
                 }
             };
         }, [phase, round, target, score, gold, hands, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
@@ -8511,7 +8703,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         onSkip={exitTutorial}
                     />
                 )}
-                {scoreResolution && phase === 'PLAY' && !roundClearCardActive && (
+                {scoreResolution && !scoreBreakdown && phase === 'PLAY' && !roundClearCardActive && (
                     <ScoreResolutionOverlay
                         data={scoreResolution}
                         reducedMotion={reducedMotion}
@@ -8791,6 +8983,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     </div>
                 )}
 
+                {synergyChainBanner && phase === 'PLAY' && !roundClearCardActive && (
+                    <div
+                        data-layout-key="synergy-chain-overlay"
+                        className="synergy-chain-banner"
+                        style={{ top: 'var(--gb-chain-banner-top, 4.75rem)' }}
+                    >
+                        CHAIN · {synergyChainBanner.steps} LINK{synergyChainBanner.steps === 1 ? '' : 'S'}
+                    </div>
+                )}
                 {openingSniffBanner && phase === 'PLAY' && (
                     <div className="absolute bottom-[max(7.5rem,22vh)] left-1/2 -translate-x-1/2 z-[540] pointer-events-none w-[min(94vw,40rem)] px-4">
                         <div className="readable-panel border-emerald-500/70 rounded-xl px-4 py-3 text-center font-mono text-xs md:text-sm text-emerald-100 leading-relaxed animate-[stampSlam_.22s_cubic-bezier(.25,1,.5,1)_forwards]">
@@ -8803,7 +9004,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <div data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
+                        <div ref={playHudRef} data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
                             <div className="flex justify-between items-center p-2 md:p-4 gb-hud-compact-tight">
                                 <div className="hidden sm:block gb-hud-compact-hide">
@@ -8835,12 +9036,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                                 ?
                                             </button>
                                         </div>
-                                        <div className={`text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''}`}>{discards}</div>
-                                        {pillCurrencyHint && !hasRolled && (
-                                            <div className="absolute right-0 top-full mt-1 w-56 pointer-events-none z-[145] font-mono text-[9px] text-cyan-200/95 leading-snug border border-cyan-500/40 bg-black/90 rounded px-2 py-1.5">
-                                                Pills = reroll currency. After ROLL 'EM, tap PILL on a bone to reroll that slot.
-                                            </div>
-                                        )}
+                                        <div key={pillCountTick} className={`hud-pill-count text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''} ${pillCountTick ? 'pill-count-tick' : ''}`}>{discards}</div>
                                         {activeMechanicPopup === 'pills' && (
                                             <div className="mechanic-popover absolute right-0 top-full mt-2 w-72 text-left z-[140]">
                                                 <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
@@ -8970,11 +9166,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 </div>
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
-                                {synergyChainBanner && (
-                                    <div data-layout-key="synergy-chain-overlay" className="synergy-chain-banner">
-                                        CHAIN · {synergyChainBanner.steps} LINK{synergyChainBanner.steps === 1 ? '' : 'S'}
-                                    </div>
-                                )}
                                 {swapMode && (
                                     <div className="absolute top-14 left-2 right-2 z-40 px-3 py-2 bg-black/80 border border-[#0df]/50 font-mono text-[10px] md:text-xs text-cyan-100 text-center">
                                         {swapIdx === null

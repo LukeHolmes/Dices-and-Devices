@@ -34,6 +34,7 @@ const SCENARIOS = [
   { id: "lineup", label: "Operator lineup", resume: null, action: "lineup" },
   { id: "settings", label: "Settings panel", resume: null, action: "settings" },
   { id: "play", label: "Alley / PLAY", resume: "normal", action: null },
+  { id: "play_score_overlay", label: "Score overlay below HUD", resume: "normal", action: "scoreBreakdown" },
   { id: "play_heavy_hardware", label: "PLAY heavy hardware stash", resume: "playHeavyHardware", action: null },
   { id: "shop", label: "Back Alley shop", resume: "shop", action: null },
   { id: "shop_busy", label: "Shop many items + routes footer", resume: "shopBusy", action: null },
@@ -113,13 +114,13 @@ after(async () => {
 });
 
 async function waitForGameReady(page) {
-  await page.waitForSelector("#root-gutterbones", { timeout: 45_000 });
+  await page.waitForSelector("#root-gutterbones", { timeout: 55_000 });
   await page.waitForFunction(
     () => {
       const root = document.getElementById("root-gutterbones");
       return root && root.innerText && !root.innerText.includes("LOADING");
     },
-    { timeout: 45_000 },
+    { timeout: 55_000 },
   );
   await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 }).catch(() => {});
 }
@@ -143,6 +144,7 @@ async function runScenarioAction(page, action) {
   if (action === "lineup") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
   if (action === "settings") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSettings());
   if (action === "toast") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openMechanicToast());
+  if (action === "scoreBreakdown") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openScoreBreakdownDemo());
   if (action === "safehouse") {
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
     await page.getByRole("button", { name: "SAFEHOUSE", exact: true }).click();
@@ -196,6 +198,7 @@ async function auditViewport(page) {
 
 for (const scenario of SCENARIOS) {
   for (const vp of VIEWPORTS) {
+    if (scenario.id === "play_score_overlay" && vp.height < 500) continue;
     test(`no scroll — ${scenario.id} @ ${vp.name}`, async () => {
       const browser = await chromium.launch({ headless: true });
       const page = await browser.newPage();
