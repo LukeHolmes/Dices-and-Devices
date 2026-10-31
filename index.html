@@ -276,20 +276,41 @@
     }
     #root-gutterbones .synergy-chain-banner {
         position: absolute;
-        top: 3.25rem;
+        top: 2.75rem;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 45;
+        z-index: 120;
         pointer-events: none;
         font-family: ui-monospace, monospace;
-        font-size: 0.65rem;
-        letter-spacing: 0.28em;
-        color: #f0abfc;
-        background: rgba(0, 0, 0, 0.82);
-        border: 2px solid rgba(255, 0, 127, 0.65);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        color: #fde68a;
+        text-shadow: 0 0 12px rgba(255, 0, 127, 0.55);
+        background: rgba(0, 0, 0, 0.92);
+        border: 3px solid rgba(255, 0, 127, 0.85);
         border-radius: 9999px;
-        padding: 0.35rem 0.85rem;
+        padding: 0.45rem 1.1rem;
+        box-shadow: 0 0 24px rgba(255, 0, 127, 0.35);
         animation: badgePop 0.35s ease-out forwards;
+    }
+    #root-gutterbones .rap-sheet-stat-grid {
+        display: grid;
+        grid-template-columns: minmax(6rem, 38%) 1fr;
+        column-gap: 0.75rem;
+        row-gap: 0.35rem;
+        align-items: baseline;
+    }
+    #root-gutterbones .rap-sheet-stat-label {
+        color: #374151;
+    }
+    #root-gutterbones .rap-sheet-stat-value {
+        font-weight: 700;
+        text-align: right;
+        word-break: break-word;
+    }
+    #root-gutterbones .shop-stash-panel .stash-program-grid button {
+        min-height: 2.5rem;
     }
     #root-gutterbones .play-hud-mods-slot {
         min-width: 4.5rem;
@@ -1579,12 +1600,12 @@ const GutterbonesRules = (() => {
             explanationSteps.push({ type, label, value, impact });
         };
         switch(catId) {
-            case 'ONES': valid = true; chips = ((counts[1] || 0) + wilds) * 1; break;
-            case 'TWOS': valid = true; chips = ((counts[2] || 0) + wilds) * 2; break;
-            case 'THREES': valid = true; chips = ((counts[3] || 0) + wilds) * 3; break;
-            case 'FOURS': valid = true; chips = ((counts[4] || 0) + wilds) * 4; break;
-            case 'FIVES': valid = true; chips = ((counts[5] || 0) + wilds) * 5; break;
-            case 'SIXES': valid = true; chips = ((counts[6] || 0) + wilds) * 6; break;
+            case 'ONES': chips = ((counts[1] || 0) + wilds) * 1; valid = chips > 0; break;
+            case 'TWOS': chips = ((counts[2] || 0) + wilds) * 2; valid = chips > 0; break;
+            case 'THREES': chips = ((counts[3] || 0) + wilds) * 3; valid = chips > 0; break;
+            case 'FOURS': chips = ((counts[4] || 0) + wilds) * 4; valid = chips > 0; break;
+            case 'FIVES': chips = ((counts[5] || 0) + wilds) * 5; valid = chips > 0; break;
+            case 'SIXES': chips = ((counts[6] || 0) + wilds) * 6; valid = chips > 0; break;
             case 'TOK': valid = maxCount + wilds >= 3; if (valid) { chips = 20; mult *= 2; } break;
             case 'FOK': valid = maxCount + wilds >= 4; if (valid) { chips = 35; mult *= 3; } break;
             case 'FH': {
@@ -1606,7 +1627,25 @@ const GutterbonesRules = (() => {
                 break;
             }
             case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
-            case 'C': valid = true; chips = sum + 10; mult *= 1.5; break;
+            case 'C': valid = sum > 0; chips = valid ? sum + 10 : 0; if (valid) mult *= 1.5; break;
+        }
+        if (!valid) {
+            const invalidReason = (() => {
+                switch (catId) {
+                    case 'TOK': return 'Triad needs three of a kind.';
+                    case 'FOK': return 'Quad needs four of a kind.';
+                    case 'FH': return 'Full Ride needs three of a kind plus a pair.';
+                    case 'SS': return 'Short Run needs four dice in a straight.';
+                    case 'LS': return 'Long Run needs five dice in a straight.';
+                    case 'Y': return 'Jackpot needs five of a kind.';
+                    case 'ONES': case 'TWOS': case 'THREES': case 'FOURS': case 'FIVES': case 'SIXES':
+                        return `No matching dice for ${categoryName}.`;
+                    case 'C': return 'Slop needs at least one scoring die.';
+                    default: return `${categoryName} did not match this hand.`;
+                }
+            })();
+            pushStep('system', 'INVALID PAYOUT', invalidReason, 0);
+            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason, ...emptySynergyResult() };
         }
         if (['ONES', 'TWOS', 'THREES'].includes(catId)) mult *= 1.5;
         if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 2;
@@ -1618,21 +1657,7 @@ const GutterbonesRules = (() => {
         if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
             mult = Math.min(mult, 2.5);
         }
-        if (!valid) {
-            const invalidReason = (() => {
-                switch (catId) {
-                    case 'TOK': return 'Triad needs three of a kind.';
-                    case 'FOK': return 'Quad needs four of a kind.';
-                    case 'FH': return 'Full Ride needs three of a kind plus a pair.';
-                    case 'SS': return 'Short Run needs four dice in a straight.';
-                    case 'LS': return 'Long Run needs five dice in a straight.';
-                    case 'Y': return 'Jackpot needs five of a kind.';
-                    default: return `${categoryName} did not match this hand.`;
-                }
-            })();
-            pushStep('system', 'INVALID PAYOUT', invalidReason, 0);
-            return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason, ...emptySynergyResult() };
-        }
+        const categoryBaseChips = chips;
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         const categoryMult = mult;
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
@@ -1655,7 +1680,7 @@ const GutterbonesRules = (() => {
         const hasMarkFace = resolved.some((d, i) => !destroyed.has(i) && d.faceId === 'MARK_FACE');
         const categoryMarkEarned = hasMarkFace && !(roundFirstCategories || []).includes(catId);
         const masteryBonus = getHandMasteryBonus(handLevel);
-        if (masteryBonus > 0) {
+        if (masteryBonus > 0 && categoryBaseChips > 0) {
             chips += masteryBonus;
             triggers.push({ name: 'MASTERY', value: `+${masteryBonus}` });
             pushStep('modifier', 'HAND MASTERY', `+${masteryBonus} chips`, masteryBonus);
@@ -2443,16 +2468,16 @@ const GutterbonesRoutes = (() => {
     const ROUND_CURVE_TUNING = Object.freeze({
         earlyMaxRound: 2,
         midMaxRound: 7,
-        early: { pathModWeight: 0.82, flatIncrease: 22 },
-        mid: { pathModWeight: 0.96, flatIncrease: 40 },
-        late: { pathModWeight: 1.04, flatIncrease: 42 }
+        early: { pathModWeight: 0.88, flatIncrease: 28 },
+        mid: { pathModWeight: 1.02, flatIncrease: 52 },
+        late: { pathModWeight: 1.08, flatIncrease: 58 }
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
-        minGrowthRate: 1.1,
-        earlyMaxGrowthRate: 1.22,
-        midMaxGrowthRate: 1.34,
-        lateMaxGrowthRate: 1.36
+        minGrowthRate: 1.16,
+        earlyMaxGrowthRate: 1.32,
+        midMaxGrowthRate: 1.52,
+        lateMaxGrowthRate: 1.58
     });
 
     const INSANE_CONTRACT_MODIFIERS = Object.freeze({
@@ -3434,8 +3459,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const ECONOMY_TUNING = {
         shortageToDebtRatio: 0.82,
-        hustleCashDivisor: 60,
-        hustleCashCap: 6,
+        hustleCashDivisor: 72,
+        hustleCashCap: 5,
         roundClearBaseCash: 8,
         roundClearPerUnusedPlay: 3,
         roundClearInterestPerFive: 1,
@@ -3463,7 +3488,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const SHOP_TUNING = {
         earlyDangerRoundGate: 5,
-        maxAffordableBuffer: 25
+        maxAffordableBuffer: 12,
+        priceScaleFromRound: 1.045
     };
 
     const FIRST_RUN_TUNING = {
@@ -4138,10 +4164,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [verdictColor, setVerdictColor] = useState(null);
         const [impactParticles, setImpactParticles] = useState([]);
         const isCarved = !!(data.faceId && data.faceId !== 'standard');
+        const multFace = data.faceId === 'MULT_FACE';
         const showTumble = rolling && !reducedMotion;
         const faceSrc = rolling
             ? DICE_ART.faces.blank
-            : (isCarved ? DICE_ART.faces.blank : diceStandardFaceSrc(data.value));
+            : ((!isCarved || multFace) ? diceStandardFaceSrc(data.value) : DICE_ART.faces.blank);
         useEffect(() => {
             if (rolling) return;
             const glow = verdictGlowForFace(data.faceId, data.type);
@@ -4186,10 +4213,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
                         <img className="bone-die-img" src={faceSrc} alt="" draggable={false} decoding="async" />
                         {!rolling && isCarved && (
-                            <div className={`bone-carve-overlay border ${data.faceStyle}`}>
-                                <div className="font-serif text-2xl md:text-3xl leading-none text-white drop-shadow">{data.faceLabel.charAt(0)}</div>
-                                <div className="text-[8px] uppercase tracking-tighter text-center leading-none mt-1 hidden sm:block text-white/90">{data.faceLabel}</div>
-                            </div>
+                            multFace ? (
+                                <div className="absolute top-1 right-1 z-10 rounded border border-[#0df] bg-black/85 px-1 py-0.5 font-mono text-[9px] font-bold text-[#0df] shadow-[0_0_8px_rgba(0,221,255,.45)]" aria-hidden>
+                                    +M
+                                </div>
+                            ) : (
+                                <div className={`bone-carve-overlay border ${data.faceStyle}`}>
+                                    <div className="font-serif text-2xl md:text-3xl leading-none text-white drop-shadow">{data.faceLabel.charAt(0)}</div>
+                                    <div className="text-[8px] uppercase tracking-tighter text-center leading-none mt-1 hidden sm:block text-white/90">{data.faceLabel}</div>
+                                </div>
+                            )
                         )}
                     </button>
                 </div>
@@ -4962,7 +4995,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
         const flowDisplay = (Math.round((result.flowMult || 1) * 100) / 100).toFixed(2);
         return (
-            <div className="absolute top-[max(7.5rem,18vh)] md:top-[max(8rem,16vh)] left-1/2 -translate-x-1/2 z-[340] pointer-events-none w-[min(92vw,36rem)]">
+            <div className="absolute top-[max(9.5rem,22vh)] md:top-[max(10rem,20vh)] left-1/2 -translate-x-1/2 z-[280] pointer-events-none w-[min(92vw,36rem)]">
                 <button
                     type="button"
                     onPointerDown={() => onDismiss?.()}
@@ -6970,7 +7003,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted && !audioSettings.skippedAlleyIntro) {
                     setShowFirstRunOverlay(true);
                 }
-                if (!tutorial && !audioSettings.dismissPillPulse) {
+                if (!tutorial && !audioSettings.dismissPillPulse && meta.totalRuns === 0) {
                     setPillCurrencyHint(true);
                     scheduleTimeout(() => setPillCurrencyHint(false), reducedMotion ? 4500 : 6200);
                 }
@@ -7284,7 +7317,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 const stepMs = reducedMotion ? 0 : (SYNERGY_TUNING.juiceStepMs || 150);
                 if (!events.length || reducedMotion) {
                     if (reducedMotion) setChainStepsRevealed(null);
-                    setSynergyChainBanner(null);
+                    if (!events.length) setSynergyChainBanner(null);
                     onDone();
                     return;
                 }
@@ -7310,9 +7343,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 scheduleTimeout(() => {
                     setSynergyLinks([]);
                     setChainStepsRevealed(null);
-                    setSynergyChainBanner(null);
                     onDone();
                 }, sequenceMs);
+                scheduleTimeout(() => setSynergyChainBanner(null), sequenceMs + (reducedMotion ? 80 : 1800));
             };
             const runValidHandJuice = (result, payoutCatId) => {
                 if (['Y', 'LS', 'FH'].includes(payoutCatId)) AudioSystem.categoryStinger(payoutCatId);
@@ -7359,7 +7392,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     scheduleTimeout(() => setPowBurst(false), 700);
                 }
             };
-            if (rolling || rollLockRef.current) {
+            const e2ePendingQueued = typeof e2ePendingDiceRef !== 'undefined' && e2ePendingDiceRef.current;
+            if (!e2ePendingQueued && (rolling || rollLockRef.current)) {
                 pendingPayoutRef.current = catId;
                 return;
             }
@@ -7382,7 +7416,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setUsedCats(prev => [...prev, catId]);
             setHands(h => h - 1);
             setKept([false,false,false,false,false]);
-            setDiscards(persona.pills);
             setHasRolled(false);
             setSwapMode(false);
             setSwapIdx(null);
@@ -7412,6 +7445,129 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 setSynergyChainBanner(null);
             }
             setScoreBreakdown(breakdownPayload);
+            const handsAfterPlay = Math.max(0, handsBeforePlay - 1);
+            let scoreAfter = score;
+            const runStoryOrContinue = (panel, onDone) => {
+                if (typeof playStoryBeat === 'function') playStoryBeat(panel, onDone);
+                else onDone();
+            };
+            const safePhaseTransition = (nextPhase, opts = {}) => {
+                if (typeof transitionToPhase === 'function') transitionToPhase(nextPhase, opts);
+            };
+            const finalizeRoundAfterHand = (settlementCashLocal, projectedCashLocal) => {
+                const quotaCleared = scoreAfter >= currentTarget;
+                if (!quotaCleared && handsAfterPlay <= 0) {
+                    const finalHeat = runStats.totalHeat + (result.valid ? (scoreAfter - score) : 0);
+                    const projectedFlow = result.valid ? Math.min(FLOW_TUNING.maxStreak, flowStreak + 1) : 0;
+                    const analysis = analyzeRunFailure({
+                        score: scoreAfter,
+                        target: currentTarget,
+                        debt,
+                        hands: handsAfterPlay,
+                        history: result.valid ? [...history, { round, total: result.total }] : history,
+                        attempts: usedCats.length,
+                        roundNumber: round,
+                        boss: activeBoss,
+                        flowValue: projectedFlow
+                    });
+                    const lossPayload = { id: Math.random(), ...analysis };
+                    setLossExplanation(lossPayload);
+                    scheduleTimeout(() => setLossExplanation(current => (current?.id === lossPayload.id ? null : current)), reducedMotion ? 6500 : 8500);
+                    setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
+                    setGambleStake(0);
+                    setFixerLine('Quota missed. Keep your chin down.');
+                    setBustActive(true);
+                    awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: settlementCashLocal });
+                    triggerCameraKick('hard');
+                    if (!reducedMotion) setCinematic('bust');
+                    AudioSystem.bust();
+                    const goRapSheet = () => {
+                        dismissScoreOverlays();
+                        setLossExplanation(null);
+                        setPayoutActive(false);
+                        setPowBurst(false);
+                        safePhaseTransition('RAP_SHEET', { waitHeatMs: reducedMotion ? 0 : 420 });
+                        if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 350);
+                    };
+                    const bustDelay = reducedMotion ? 400 : 900;
+                    scheduleTimeout(() => {
+                        runStoryOrContinue(GutterbonesStory?.getBustPanel?.(arcId), goRapSheet);
+                    }, bustDelay);
+                    return;
+                }
+                if (!quotaCleared) return;
+                dismissScoreOverlays();
+                const applyRoundClearCash = () => {
+                    const payout = computeRoundClearPayout(handsAfterPlay, settlementCashLocal);
+                    setRoundClearPayout(payout);
+                    if (payout.total > 0) {
+                        setGold((g) => g + payout.total);
+                        spawnPaperStamp(`ROUND +$${payout.total}`, '#0f766e');
+                    }
+                };
+                if (round >= 10) {
+                    setLossExplanation(null);
+                    setGambleStake(0);
+                    setFixerLine('You cleared the city. Time to disappear.');
+                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + (scoreAfter - score), cash: settlementCashLocal });
+                    AudioSystem.paper();
+                    if (!reducedMotion) setCinematic('victory');
+                    const goVictory = () => {
+                        dismissScoreOverlays();
+                        setPayoutActive(false);
+                        setPowBurst(false);
+                        safePhaseTransition('VICTORY', { waitHeatMs: reducedMotion ? 0 : 420 });
+                        if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 800);
+                    };
+                    scheduleTimeout(() => {
+                        runStoryOrContinue(GutterbonesStory?.getVictoryPanel?.(arcId), goVictory);
+                    }, reducedMotion ? 120 : 480);
+                    return;
+                }
+                if (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current) {
+                    applyRoundClearCash();
+                    generateShop();
+                    setFixerLine('Tutorial round cleared. Welcome to the Back Alley.');
+                    safePhaseTransition('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
+                    if (typeof notifyTutorial === 'function') notifyTutorial('round_clear');
+                    return;
+                }
+                const stake = GutterbonesGamble.baseStake(projectedCashLocal);
+                const allowGamble = round >= GAMBLE_TUNING.minRound && projectedCashLocal >= GAMBLE_TUNING.minStake;
+                applyRoundClearCash();
+                if (handsAfterPlay > 0) {
+                    setFixerLine(`Quota cleared with ${handsAfterPlay} play${handsAfterPlay === 1 ? '' : 's'} unused — cashing out.`);
+                }
+                if (allowGamble) {
+                    setGambleStake(stake);
+                    setFixerLine(`Round ${round} quota cleared. ${pickLine(FIXER_LINES.gamble)}`);
+                    safePhaseTransition('GAMBLE', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
+                } else {
+                    generateShop();
+                    setFixerLine(`Round ${round} quota cleared. Pick a route — bonus cash applies when you hit the streets.`);
+                    safePhaseTransition('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
+                }
+            };
+            const queueFinalizeRound = (settlementCashLocal, projectedCashLocal) => {
+                const gateMin = typeof GutterbonesPresentation !== 'undefined'
+                    ? GutterbonesPresentation.gateMinMs('scoreOverlay', presentationPacing(), reducedMotion)
+                    : 320;
+                const overlayHold = result.valid && typeof GutterbonesPresentation !== 'undefined'
+                    ? Math.max(
+                        gateMin,
+                        GutterbonesPresentation.scoreOverlayLifetimeMs({
+                            result,
+                            reducedMotion,
+                            pacing: presentationPacing(),
+                            synergyTuning: SYNERGY_TUNING
+                        })
+                    )
+                    : gateMin;
+                scheduleTimeout(
+                    () => finalizeRoundAfterHand(settlementCashLocal, projectedCashLocal),
+                    result.valid ? (reducedMotion ? 80 : Math.max(320, overlayHold)) : (reducedMotion ? 60 : 180)
+                );
+            };
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
                 setSynergyState((prev) => {
@@ -7440,6 +7596,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     }
                 }
                 const nextScore = score + heatBanked;
+                scoreAfter = nextScore;
                 setScore(nextScore);
                 const isUpper = ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId);
                 setRunStats((s) => ({
@@ -7524,101 +7681,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }
                 setActiveWager(null);
             }
-            const gained = result.valid ? result.total : 0;
-            const handsAfterPlay = Math.max(0, handsBeforePlay - 1);
-            if (handsAfterPlay <= 0 && score + gained < currentTarget) {
-                const finalHeat = runStats.totalHeat + gained;
-                const projectedFlow = result.valid ? Math.min(FLOW_TUNING.maxStreak, flowStreak + 1) : 0;
-                const analysis = analyzeRunFailure({
-                    score: score + gained,
-                    target: currentTarget,
-                    debt,
-                    hands: handsAfterPlay,
-                    history: result.valid ? [...history, { round, total: result.total }] : history,
-                    attempts: usedCats.length + 1,
-                    roundNumber: round,
-                    boss: activeBoss,
-                    flowValue: projectedFlow
-                });
-                const lossPayload = { id: Math.random(), ...analysis };
-                setLossExplanation(lossPayload);
-                scheduleTimeout(() => setLossExplanation(current => (current?.id === lossPayload.id ? null : current)), reducedMotion ? 6500 : 8500);
-                setRunStats(s => ({ ...s, finalBoss: activeBoss ? activeBoss.name : 'STREET GOONS' }));
-                setGambleStake(0);
-                setFixerLine('Quota missed. Keep your chin down.');
-                setBustActive(true);
-                awardLaunderedCash({ victory: false, totalHeat: finalHeat, cash: settlementCash });
-                triggerCameraKick('hard');
-                if (!reducedMotion) setCinematic('bust');
-                AudioSystem.bust();
-                const goRapSheet = () => {
-                    dismissScoreOverlays();
-                    setLossExplanation(null);
-                    setPayoutActive(false);
-                    setPowBurst(false);
-                    transitionToPhase('RAP_SHEET', { waitHeatMs: reducedMotion ? 0 : 420 });
-                    if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 350);
-                };
-                const bustDelay = reducedMotion ? 400 : 900;
-                scheduleTimeout(() => {
-                    playStoryBeat(GutterbonesStory?.getBustPanel?.(arcId), goRapSheet);
-                }, bustDelay);
-            } else if (handsAfterPlay <= 0) {
-                const quotaCleared = score + gained >= currentTarget;
-                const applyRoundClearCash = () => {
-                    if (!quotaCleared) {
-                        setRoundClearPayout(null);
-                        return;
-                    }
-                    const payout = computeRoundClearPayout(handsAfterPlay, settlementCash);
-                    setRoundClearPayout(payout);
-                    if (payout.total > 0) {
-                        setGold((g) => g + payout.total);
-                        spawnPaperStamp(`ROUND +$${payout.total}`, '#0f766e');
-                    }
-                };
-                if (round >= 10) {
-                    setLossExplanation(null);
-                    setGambleStake(0);
-                    setFixerLine('You cleared the city. Time to disappear.');
-                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + gained, cash: settlementCash });
-                    AudioSystem.paper();
-                    if (!reducedMotion) setCinematic('victory');
-                    const goVictory = () => {
-                        dismissScoreOverlays();
-                        setPayoutActive(false);
-                        setPowBurst(false);
-                        transitionToPhase('VICTORY', { waitHeatMs: reducedMotion ? 0 : 420 });
-                        if (!reducedMotion) scheduleTimeout(() => setCinematic(null), 800);
-                    };
-                    scheduleTimeout(() => {
-                        playStoryBeat(GutterbonesStory?.getVictoryPanel?.(arcId), goVictory);
-                    }, reducedMotion ? 120 : 480);
-                } else {
-                    if (typeof tutorialActiveRef !== 'undefined' && tutorialActiveRef.current && quotaCleared) {
-                        applyRoundClearCash();
-                        generateShop();
-                        setFixerLine('Tutorial round cleared. Welcome to the Back Alley.');
-                        transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
-                        if (typeof notifyTutorial === 'function') notifyTutorial('round_clear');
-                        return;
-                    }
-                    const stake = GutterbonesGamble.baseStake(projectedCash);
-                    const allowGamble = quotaCleared && round >= GAMBLE_TUNING.minRound && projectedCash >= GAMBLE_TUNING.minStake;
-                    if (quotaCleared) applyRoundClearCash();
-                    if (allowGamble) {
-                        setGambleStake(stake);
-                        setFixerLine(`Round ${round} quota cleared. ${pickLine(FIXER_LINES.gamble)}`);
-                        transitionToPhase('GAMBLE', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: true });
-                    } else {
-                        generateShop();
-                        if (quotaCleared) {
-                            setFixerLine(`Round ${round} quota cleared. Pick a route — bonus cash applies when you hit the streets.`);
-                        }
-                        transitionToPhase('SHOP', { waitHeatMs: reducedMotion ? 0 : 520, roundClear: quotaCleared });
-                    }
-                }
-            }
+            queueFinalizeRound(settlementCash, projectedCash);
         };
 
         const leaveGambleForShop = () => {
@@ -7837,6 +7900,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (picks.length < 4 && !picks.some((p) => p.id === offer.id)) picks.unshift(offer);
             });
 
+            const ensureStarterHardware = (deviceId) => {
+                if (round > 4 || inventory.some((i) => i.id === deviceId)) return;
+                const device = DEVISES[deviceId];
+                if (!device || picks.some((p) => p.id === deviceId)) return;
+                if (picks.length >= 4) picks[picks.length - 1] = device;
+                else picks.push(device);
+            };
+            ensureStarterHardware('ENGINE');
+            ensureStarterHardware('LOADED_DIE');
+
             setShopItems(picks.slice(0, 4));
             if (!preserveRefreshes) setShopRefreshes(0);
             if (preservePaths) return;
@@ -7898,8 +7971,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
         const shopListPrice = (item) => {
             const discount = routeModifiers.shopDiscount || 0;
-            if (!discount) return item.cost;
-            return Math.max(1, Math.floor(item.cost * (1 - discount)));
+            const roundScale = Math.pow(SHOP_TUNING.priceScaleFromRound || 1, Math.max(0, round - 1));
+            const scaled = Math.max(1, Math.floor(item.cost * roundScale));
+            if (!discount) return scaled;
+            return Math.max(1, Math.floor(scaled * (1 - discount)));
         };
 
         const handlePurchase = (item) => {
@@ -8225,8 +8300,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             }))
                         ]);
                     },
+                    setQuotaTarget: (n) => {
+                        setTarget(Math.max(1, Math.floor(Number(n) || 1)));
+                    },
+                    skipIntroOverlays: () => {
+                        if (storyFinishRef.current) storyFinishRef.current();
+                        else setStoryBeat(null);
+                        setShowFirstRunOverlay(false);
+                        setPillCurrencyHint(false);
+                    },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
+                        openingSniffPendingRef.current = false;
+                        rollLockRef.current = false;
+                        pendingPayoutRef.current = null;
+                        setRollingSlots(Array(5).fill(false));
+                        setOpeningSniffBanner(null);
                         const next = values.map((val, i) => {
                             const base = dice[i] || makeBone();
                             return {
@@ -8243,7 +8332,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         setDice(next);
                         setHasRolled(true);
                         setKept([false, false, false, false, false]);
-                        executePayout(catId);
+                        scheduleTimeout(() => {
+                            rollLockRef.current = false;
+                            setRollingSlots(Array(5).fill(false));
+                            executePayout(catId);
+                        }, 0);
                         return true;
                     },
                 };
@@ -8418,7 +8511,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         onSkip={exitTutorial}
                     />
                 )}
-                {scoreResolution && phase === 'PLAY' && (
+                {scoreResolution && phase === 'PLAY' && !roundClearCardActive && (
                     <ScoreResolutionOverlay
                         data={scoreResolution}
                         reducedMotion={reducedMotion}
@@ -8426,7 +8519,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         onDismiss={dismissScoreOverlays}
                     />
                 )}
-                {scoreBreakdown && phase === 'PLAY' && (
+                {scoreBreakdown && phase === 'PLAY' && !roundClearCardActive && (
                     <ScoreBreakdownOverlay
                         result={scoreBreakdown}
                         reducedMotion={reducedMotion}
@@ -9220,7 +9313,27 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     />
                                 ))}</div>
                                 </div>
-                                <div className="shop-routes-footer shrink-0 mt-2 pt-2 border-t border-gray-800">
+                                <div data-layout-key="shop-stash-panel" className="shop-stash-panel shop-routes-footer shrink-0 mt-2 pt-2 border-t border-gray-800">
+                                <div className="font-mono text-[10px] text-[#0df] mb-1.5 tracking-wide">STASH {Math.round(stash)}% · spend in the alley</div>
+                                <div className="h-4 bg-black border border-gray-600 rounded overflow-hidden mb-2 grid grid-cols-10 gap-px p-px">
+                                    {Array.from({ length: 10 }, (_, idx) => {
+                                        const filled = stash >= (idx + 1) * 10;
+                                        const segColor = stash >= 80 ? 'bg-white' : stash >= 50 ? 'bg-[#ff007f]' : 'bg-[#0df]';
+                                        return <div key={idx} className={`rounded-sm ${filled ? segColor : 'bg-gray-800'}`} />;
+                                    })}
+                                </div>
+                                <div className="stash-program-grid grid grid-cols-2 gap-1.5 mb-2">
+                                    {PROGRAMS.map((p) => (
+                                        <div
+                                            key={p.id}
+                                            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded border font-mono text-[9px] ${stash >= p.cost ? 'border-[#0df]/50 text-cyan-100 bg-cyan-950/20' : 'border-gray-700 text-gray-500 bg-gray-900/40'}`}
+                                            title={`${p.desc} (alley only)`}
+                                        >
+                                            <span className="font-bold">{p.name}</span>
+                                            <span className="text-[#0df]">{p.cost}%</span>
+                                        </div>
+                                    ))}
+                                </div>
                                 <button
                                     type="button"
                                     disabled={!selectedShopPathId || shopAdvancing}
@@ -9301,7 +9414,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-4 mb-4">
                                 <div className="h-32 md:h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div>
-                                <div className="md:col-span-2 font-mono text-sm md:text-base space-y-1.5">
+                                <div className="md:col-span-2 font-mono text-sm md:text-base rap-sheet-stat-grid">
                                     {[
                                         ['Apprehended', `Round ${round}`],
                                         ['Arresting Unit', runStats.finalBoss || '—', 'text-red-600'],
@@ -9310,10 +9423,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         ['Dirty Cash', `$${gold}`, 'text-green-800'],
                                         ['Laundered', `+$${lastLaundered}`, 'text-green-800']
                                     ].map(([label, value, tone]) => (
-                                        <div key={label} data-layout-key="rap-sheet-stat-row" className="flex items-baseline justify-between gap-4 border-b border-gray-400 border-dashed pb-0.5">
-                                            <span className="text-gray-700 shrink-0">{label}</span>
-                                            <span className={`font-bold text-right ${tone || ''}`}>{value}</span>
-                                        </div>
+                                        <React.Fragment key={label}>
+                                            <div data-layout-key="rap-sheet-stat-row" className="rap-sheet-stat-label border-b border-gray-400 border-dashed pb-0.5">{label}</div>
+                                            <div className={`rap-sheet-stat-value border-b border-gray-400 border-dashed pb-0.5 ${tone || ''}`}>{value}</div>
+                                        </React.Fragment>
                                     ))}
                                 </div>
                             </div>

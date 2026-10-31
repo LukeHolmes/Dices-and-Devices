@@ -111,7 +111,7 @@ test("multi-round — ~2 shop items affordable by round 3, no runaway quota", ()
   const medItems = itemsByR3.length ? median(itemsByR3) : 0;
   assert.ok(medItems >= 1.5, `median items by R3 ${medItems} expected ~2`);
   const r6 = projectRoundTarget(routes, 75, 1, 6);
-  assert.ok(r6 >= 180 && r6 <= 242, `R6 anchor ${r6} should not run away`);
+  assert.ok(r6 >= 290 && r6 <= 320, `R6 anchor ${r6} should not run away`);
 });
 
 test("synergy — tagged pair can produce chain events on Slop", () => {

@@ -200,6 +200,24 @@ const shop = () =>
       },
     ],
   });
+const rapSheetR7 = () =>
+  run({
+    phase: "RAP_SHEET",
+    round: 7,
+    target: 358,
+    score: 280,
+    gold: 18,
+    runStats: {
+      totalHeat: 890,
+      biggestHustle: 210,
+      finalBoss: "THE BOUNCER",
+      build: { primary: "MULT_ENGINE", peakConfidence: 0.72, keyItems: ["ENGINE", "LOADED_DIE"] },
+    },
+    history: [
+      { id: "h1", round: 7, category: "TOK", total: 180, values: [2, 2, 2, 3, 4] },
+    ],
+  });
+
 const rapSheet = () =>
   run({
     phase: "RAP_SHEET",
@@ -294,6 +312,7 @@ module.exports = {
   shopBusy,
   playHeavyHardware,
   rapSheet,
+  rapSheetR7,
   terminal,
   bustLastHand,
   victoryLastHand,

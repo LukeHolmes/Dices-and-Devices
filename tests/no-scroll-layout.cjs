@@ -40,6 +40,7 @@ const SCENARIOS = [
   { id: "carving", label: "The Mod", resume: "carving", action: null },
   { id: "gamble", label: "Double or Nothing", resume: "gamble", action: null },
   { id: "rap_sheet", label: "Rap sheet / bust", resume: "rapSheet", action: null },
+  { id: "rap_sheet_r7", label: "Rap sheet round 7", resume: "rapSheetR7", action: null },
   { id: "safehouse", label: "Safehouse", resume: null, action: "safehouse" },
   { id: "help", label: "Help dossier", resume: "normal", action: "help" },
   { id: "system_menu", label: "System menu", resume: "normal", action: "system" },
@@ -60,6 +61,7 @@ function normalizeFixture(name) {
     carving: fixtures.carving,
     gamble: fixtures.gamble,
     rapSheet: fixtures.rapSheet,
+    rapSheetR7: fixtures.rapSheetR7,
   };
   const builder = builders[name];
   if (!builder) return null;

@@ -74,12 +74,53 @@ test("playtest5 bot — median round 4–6 and ~2 items by round 3", () => {
   }
   const medRound = median(rounds);
   const medItemsR3 = itemsByR3.length ? median(itemsByR3) : 0;
-  assert.ok(medRound >= 4 && medRound <= 8, `median stall round ${medRound} expected ~5–7 with steeper curve`);
+  assert.ok(medRound >= 5 && medRound <= 9, `median stall round ${medRound} expected ~6–7 with steeper curve`);
   assert.ok(medItemsR3 >= 1, `median items by R3 ${medItemsR3} expected >= 1`);
 });
 
 test("playtest5 bot — no runaway quota by round 6", () => {
   const routes = loadRoutes();
   const r6 = projectRoundTarget(routes, 75, 1, 6);
-  assert.ok(r6 >= 180 && r6 <= 242, `R6 anchor ${r6} should stay challenging but not exponential`);
+  assert.ok(r6 >= 290 && r6 <= 320, `R6 anchor ${r6} should stay challenging but not exponential`);
+});
+
+test("playtest10 bot — clear-rate tapers by round (competent sim)", () => {
+  const rng = mulberry32(SEED + 99);
+  const clearsByRound = Array.from({ length: 10 }, () => 0);
+  const attemptsByRound = Array.from({ length: 10 }, () => 0);
+  const RUNS = 200;
+  for (let i = 0; i < RUNS; i += 1) {
+    const routes = loadRoutes();
+    let round = 1;
+    let target = 75;
+    while (round <= 10) {
+      attemptsByRound[round - 1] += 1;
+      const heat = simulateRound({ pills: 3, plays: 4, rng, totalRuns: 3, holdStrategy: true });
+      if (heat >= target) {
+        clearsByRound[round - 1] += 1;
+        round += 1;
+        if (round > 10) break;
+        const out = routes.projectNextRound({
+          path: { id: "LOCAL", mod: 1 },
+          round,
+          target,
+          debt: 0,
+          insaneContract: false,
+          hasLedger: false,
+          personaPlays: 4,
+          personaPills: 3,
+        });
+        target = out.nextTarget;
+      } else {
+        break;
+      }
+    }
+  }
+  const rate = (r) => (attemptsByRound[r] ? clearsByRound[r] / attemptsByRound[r] : 0);
+  assert.ok(rate(0) >= 0.85, `R1 clear ${rate(0)}`);
+  assert.ok(rate(1) >= 0.7, `R2 clear ${rate(1)}`);
+  assert.ok(rate(4) <= 0.92 && rate(4) >= 0.38, `R5 clear ${rate(4)}`);
+  assert.ok(rate(5) <= 0.85 && rate(5) >= 0.15, `R6 clear ${rate(5)}`);
+  assert.ok(rate(6) <= 0.88, `R7 clear ${rate(6)} should taper vs R1`);
+  assert.ok(rate(0) - rate(6) >= 0.08, `clear rate should drop R1→R7 (${rate(0)} vs ${rate(6)})`);
 });

@@ -27,10 +27,10 @@ test("opening balance — quota curve smoothed (R2–R4 steps, R6 anchor)", () =
   const r3 = projectRoundTarget(routes, 75, 1, 3);
   const r4 = projectRoundTarget(routes, 75, 1, 4);
   const r6 = projectRoundTarget(routes, 75, 1, 6);
-  assert.ok(r2 >= 91 && r2 <= 98, `R2 ${r2}`);
-  assert.ok(r3 - r2 >= 26 && r3 - r2 <= 36, `R2→R3 step ${r3 - r2}`);
-  assert.ok(r4 - r3 >= 28 && r4 - r3 <= 40, `R3→R4 step ${r4 - r3}`);
-  assert.ok(r6 >= 180 && r6 <= 242, `R6 anchor ${r6}`);
+  assert.ok(r2 >= 95 && r2 <= 105, `R2 ${r2}`);
+  assert.ok(r3 - r2 >= 45 && r3 - r2 <= 58, `R2→R3 step ${r3 - r2}`);
+  assert.ok(r4 - r3 >= 45 && r4 - r3 <= 58, `R3→R4 step ${r4 - r3}`);
+  assert.ok(r6 >= 290 && r6 <= 320, `R6 anchor ${r6}`);
 });
 
 test("FIRST_RUN_TUNING — first-run opening target matches standard R1 quota", () => {

@@ -117,6 +117,7 @@ test("Informant freezes stash", () => {
     snapshot({ activeBoss: { id: "INFORMANT" }, stash: 20 }),
   );
   g.api.executePayout("C");
+  g.flushTimers();
   assert.equal(g.state("stash"), 20);
   assert.equal(g.state("score"), 37);
 });

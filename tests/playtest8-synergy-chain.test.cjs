@@ -63,6 +63,10 @@ test("e2e — build-tag hardware shows synergy chain overlay on score", async ()
         "gutterbones1977:settings:v1",
         JSON.stringify({ pacing: "normal", reducedMotion: false, tutorialCompleted: true, skippedAlleyIntro: true }),
       );
+      localStorage.setItem(
+        "gutterbones1977:meta:v1",
+        JSON.stringify({ totalRuns: 5, unlockedPersonaIds: ["STREET_RAT"], purchasedUpgradeIds: [] }),
+      );
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForGameReady(page);
@@ -71,13 +75,23 @@ test("e2e — build-tag hardware shows synergy chain overlay on score", async ()
       window.__GB_E2E__.selectFirstPersona();
       window.__GB_E2E__.startNewRun();
     });
-    await page.waitForTimeout(1200);
+    await page.waitForFunction(
+      () => {
+        const s = window.__GB_E2E__?.getState?.();
+        return s && s.phase === "PLAY";
+      },
+      { timeout: 25_000 },
+    );
+    await page.evaluate(() => window.__GB_E2E__.skipIntroOverlays());
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(300);
     await page.evaluate(() => {
+      window.__GB_E2E__.setQuotaTarget(9999);
       window.__GB_E2E__.grantHardware(["ENGINE", "FUSE_BOX"]);
     });
     await page.waitForFunction(() => (document.body.innerText || "").includes("MODS (2)"), { timeout: 5000 });
     await page.evaluate(() => {
-      window.__GB_E2E__.prepareScore("C", [2, 2, 3, 4, 5]);
+      window.__GB_E2E__.prepareScore("TOK", [2, 2, 2, 3, 4]);
     });
     await page.waitForSelector('[data-layout-key="synergy-chain-overlay"]', { timeout: 8000 }).catch(() => null);
     const overlayVisible = await page.evaluate(() => {

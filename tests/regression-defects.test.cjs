@@ -64,7 +64,9 @@ test("GB008: Debt paydown capped to owed debt", () => {
 test("GB009: Terminal award includes hustle, no double lost stake", () => {
   const g = createGame(f.terminal());
   g.api.executePayout("Y");
-  assert.equal(g.state("lastLaundered"), 44);
+  g.flushTimers();
+  g.flushTimers();
+  assert.equal(g.state("lastLaundered"), 43);
 });
 
 test("GB010: Resume preserves gamble stake", () => {
