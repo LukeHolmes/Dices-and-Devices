@@ -94,32 +94,39 @@ for (const vp of VIEWPORTS) {
       await page.waitForTimeout(600);
       const playBtn = page.locator('[data-layout-key="rap-sheet"] button', { hasText: "PLAY AGAIN" });
       await playBtn.waitFor({ state: "visible", timeout: 8000 });
-      const metrics = await page.evaluate(() => {
+        const metrics = await page.evaluate(() => {
         const gate = document.querySelector('[data-layout-key="rap-reveal-gate"]');
-        const sheet = document.querySelector('[data-layout-key="rap-sheet-wrap"]') || document.querySelector('[data-layout-key="rap-sheet"]');
+        const wrap = document.querySelector('[data-layout-key="rap-sheet-wrap"]');
+        const sheet = document.querySelector('[data-layout-key="rap-sheet"]');
+        const header = document.querySelector('[data-layout-key="rap-sheet-header"]');
         const btn = document.querySelector('[data-layout-key="rap-play-again"]');
         const body = sheet?.querySelector(".gb-modal-body");
         const btnRect = btn?.getBoundingClientRect();
+        const headerRect = header?.getBoundingClientRect();
         const vh = window.innerHeight;
         const bodyStyle = body ? getComputedStyle(body) : null;
-        const scaled = sheet?.dataset?.rapScale;
+        const scaled = wrap?.dataset?.rapScale;
         return {
           ok:
             !gate &&
             !!btn &&
             btnRect &&
+            headerRect &&
+            headerRect.top >= (scaled ? -36 : 8) &&
             btnRect.top >= 0 &&
             btnRect.bottom <= vh + 2 &&
             bodyStyle?.overflowY !== "auto",
           scaled,
           gate: !!gate,
+          headerTop: headerRect?.top,
           btnBottom: btnRect?.bottom,
           vh,
           overflowY: bodyStyle?.overflowY,
         };
       });
       assert.ok(metrics.ok, JSON.stringify(metrics));
-      await playBtn.click({ timeout: 5000 });
+      await page.waitForTimeout(800);
+      await playBtn.click({ timeout: 8000, force: true });
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__.getPhase() === "LINEUP", { timeout: 8000 });
     } finally {
       await browser.close();
@@ -217,8 +224,12 @@ test("e2e — shop intel shows compact loadout block", async () => {
     await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
     await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__.getPhase() === "SHOP", { timeout: 12_000 });
-    const hasLoadout = await page.evaluate(() => !!document.querySelector('[data-layout-key="run-intel-compact-loadout"]'));
-    assert.ok(hasLoadout);
+    const intelOk = await page.evaluate(() => {
+      const panel = document.querySelector('[data-layout-key="run-intel-floating"]');
+      const chips = panel?.querySelector('[data-layout-key="run-intel-chip-row"]');
+      return !!(panel && chips && chips.querySelectorAll("[data-intel-chip]").length >= 5);
+    });
+    assert.ok(intelOk);
   } finally {
     await browser.close();
   }

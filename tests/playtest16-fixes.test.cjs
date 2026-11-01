@@ -99,39 +99,45 @@ for (const vp of INTEL_VIEWPORTS) {
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-      if (vp.width < 768) {
+      if (vp.width < 768 || vp.height < 450) {
         await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openPlayStashPanel());
         await page.waitForSelector('[data-layout-key="play-stash"].flex', { timeout: 8000 });
       }
-      await page.waitForSelector('[data-layout-key="run-intel-inline"]', { timeout: 12_000 });
+      await page.waitForSelector('[data-layout-key="run-intel-summary"]', { timeout: 12_000 });
       await page.waitForTimeout(400);
       const metrics = await page.evaluate(() => {
-        const panel = document.querySelector('[data-layout-key="run-intel-inline"]');
-        const body = panel?.querySelector(".run-intel-body");
-        const route = panel?.querySelector(".run-intel-route-copy");
-        const boss = panel?.textContent || "";
-        if (!panel || !body) return { ok: false, reason: "missing intel" };
-        const routeClipped = route ? route.scrollHeight > route.clientHeight + 2 : false;
-        const panelOverflow = panel.scrollHeight > panel.clientHeight + 3;
-        const loadout = panel?.querySelector('[data-layout-key="run-intel-inline-loadout"]');
-        const loadoutText = loadout?.textContent || "";
-        const panelText = panel?.textContent || "";
-        const ultraShort = window.innerHeight < 450;
-        const hasBossSection = ultraShort ? panelText.includes("ROUTE") : loadoutText.includes("BOSS");
-        const hasHardware = ultraShort ? panelText.includes("FLOW") : loadoutText.includes("RIG");
+        const panel = document.querySelector('[data-layout-key="run-intel-summary"]');
+        const chips = panel?.querySelector('[data-layout-key="run-intel-chip-row"]');
+        if (!panel || !chips) return { ok: false, reason: "missing intel summary" };
+        const chipEls = Array.from(panel.querySelectorAll("[data-intel-chip]"));
+        const flowChip = chipEls.find((el) => el.getAttribute("data-intel-chip") === "flow");
+        const comboChip = chipEls.find((el) => el.getAttribute("data-intel-chip") === "combo");
+        const pr = panel.getBoundingClientRect();
+        const cr = chips.getBoundingClientRect();
+        const flowRect = flowChip?.getBoundingClientRect();
+        const comboRect = comboChip?.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const panelStyle = getComputedStyle(panel);
+        const fontPx = flowChip ? parseFloat(getComputedStyle(flowChip).fontSize) : 0;
+        const panelOverflow =
+          panelStyle.overflowY !== "hidden" && panel.scrollHeight > panel.clientHeight + 3;
+        const chipsClippedRight = cr.right > pr.right + 2 || cr.right > vw + 2;
+        const valuesInView =
+          flowRect && comboRect && flowRect.right <= vw + 2 && comboRect.right <= vw + 2;
         return {
-          scaled: panel?.dataset?.intelScaled || null,
           ok:
-            hasBossSection &&
-            hasHardware &&
-            (panel.scrollHeight <= panel.clientHeight + 4 || !!panel?.dataset?.intelScaled) &&
-            (!routeClipped || !!panel?.dataset?.intelScaled),
+            chipEls.length >= 6 &&
+            !panelOverflow &&
+            !chipsClippedRight &&
+            valuesInView &&
+            fontPx >= 8,
           panelOverflow,
-          routeClipped,
+          chipsClippedRight,
+          valuesInView,
+          fontPx,
+          chipCount: chipEls.length,
           scrollH: panel.scrollHeight,
           clientH: panel.clientHeight,
-          hasBossSection,
-          hasHardware,
         };
       });
       assert.ok(metrics.ok, JSON.stringify(metrics));

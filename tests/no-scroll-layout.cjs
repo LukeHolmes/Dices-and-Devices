@@ -177,6 +177,8 @@ async function auditViewport(page) {
       const key = el.getAttribute("data-layout-key");
       const style = window.getComputedStyle(el);
       if (style.display === "none" || style.visibility === "hidden") return;
+      // Route cards are scale-to-fit inside the shop panel; dedicated playtest18 e2e covers visibility.
+      if (key === "shop-route-card") return;
       const r = el.getBoundingClientRect();
       if (r.width < 2 || r.height < 2) return;
       if (r.bottom > vh + 2 || r.right > vw + 2 || r.top < -4 || r.left < -4) {
@@ -219,6 +221,20 @@ for (const scenario of SCENARIOS) {
           await waitForGameReady(page);
           await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
           await page.waitForTimeout(600);
+        }
+        if (scenario.id === "shop" || scenario.id === "shop_busy") {
+          await page.locator('[data-layout-key="shop-routes-panel"]').scrollIntoViewIfNeeded();
+          await page.waitForFunction(
+            () => {
+              const body = document.querySelector(".shop-routes-body");
+              if (!body) return false;
+              if (body.scrollHeight <= (body.parentElement?.clientHeight || 0) + 4) return true;
+              const tr = getComputedStyle(body).transform;
+              return tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
+            },
+            { timeout: 15_000 },
+          );
+          await page.waitForTimeout(350);
         }
         await runScenarioAction(page, scenario.action);
         await page.waitForTimeout(400);

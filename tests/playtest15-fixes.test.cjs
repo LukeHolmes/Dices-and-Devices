@@ -63,11 +63,11 @@ test("source — overlay input guard blocks shop purchases", () => {
   assert.match(html, /data-layout-key="rap-sheet-run-summary"/);
 });
 
-test("source — inline run intel uses scale-to-fit with condensed loadout", () => {
+test("source — inline run intel uses fixed-height chip summary", () => {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-  assert.match(html, /run-intel-panel--inline/);
-  assert.match(html, /run-intel-inline-loadout/);
-  assert.match(html, /minScale: inline \? 0\.42/);
+  assert.match(html, /RunIntelSummary/);
+  assert.match(html, /run-intel-summary--inline/);
+  assert.match(html, /run-intel-chip-row/);
 });
 
 const VIEWPORTS = [{ name: "1280x690", width: 1280, height: 690 }];
@@ -90,31 +90,20 @@ for (const vp of VIEWPORTS) {
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-      await page.waitForSelector('[data-layout-key="run-intel-inline"]', { timeout: 12_000 });
-      await page.waitForFunction(
-        () => {
-          const panel = document.querySelector('[data-layout-key="run-intel-inline"]');
-          const body = panel?.querySelector(".run-intel-body");
-          if (!panel || !body) return false;
-          if (body.scrollHeight <= panel.clientHeight + 2) return true;
-          const tr = getComputedStyle(body).transform;
-          return tr && tr !== "none";
-        },
-        { timeout: 8000 },
-      );
+      await page.waitForSelector('[data-layout-key="run-intel-summary"]', { timeout: 12_000 });
       const metrics = await page.evaluate(() => {
-        const panel = document.querySelector('[data-layout-key="run-intel-inline"]');
-        const body = panel?.querySelector(".run-intel-body");
-        if (!panel || !body) return { ok: false, reason: "no inline intel" };
+        const panel = document.querySelector('[data-layout-key="run-intel-summary"]');
+        const chips = panel?.querySelector('[data-layout-key="run-intel-chip-row"]');
+        if (!panel || !chips) return { ok: false, reason: "no inline intel summary" };
         const style = getComputedStyle(panel);
         const fontPx = parseFloat(style.fontSize) || 0;
         const panelRect = panel.getBoundingClientRect();
-        const bodyRect = body.getBoundingClientRect();
+        const chipsRect = chips.getBoundingClientRect();
         return {
-          scaled: panel?.dataset?.intelScaled || null,
           ok:
-            fontPx >= 9 &&
-            (panel.scrollHeight <= panel.clientHeight + 4 || !!panel?.dataset?.intelScaled),
+            fontPx >= 8 &&
+            style.overflowY === "hidden" &&
+            chipsRect.width <= panelRect.width + 2,
           fontPx,
           scrollH: panel.scrollHeight,
           clientH: panel.clientHeight,
@@ -154,17 +143,26 @@ for (const vp of SHOP_INTEL_VIEWPORTS) {
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-      await page.waitForSelector(".run-intel-route-copy", { timeout: 12_000 });
+      await page.waitForSelector('[data-layout-key="run-intel-floating"]', { timeout: 12_000 });
       const metrics = await page.evaluate(() => {
-        const copy = document.querySelector(".run-intel-route-copy");
-        const panel = document.querySelector(".run-intel-panel:not(.run-intel-panel--inline)");
-        if (!copy || !panel) return { ok: false, reason: "missing intel" };
-        const clippedRight = copy.scrollWidth > copy.clientWidth + 2;
+        const panel = document.querySelector('[data-layout-key="run-intel-floating"]');
+        const chips = panel?.querySelector('[data-layout-key="run-intel-chip-row"]');
+        if (!panel || !chips) return { ok: false, reason: "missing floating intel" };
+        const pr = panel.getBoundingClientRect();
+        const cr = chips.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const routeChip = panel.querySelector('[data-intel-chip="route"]');
+        const routeRect = routeChip?.getBoundingClientRect();
         return {
-          ok: !clippedRight,
-          text: copy.textContent,
-          scrollWidth: copy.scrollWidth,
-          clientWidth: copy.clientWidth,
+          ok:
+            cr.right <= vw + 2 &&
+            pr.right <= vw + 2 &&
+            panel.scrollHeight <= panel.clientHeight + 4 &&
+            !!(routeChip?.textContent || "").includes("ROUTE"),
+          panelRight: pr.right,
+          chipsRight: cr.right,
+          routeText: routeChip?.textContent,
+          vw,
         };
       });
       assert.ok(metrics.ok, JSON.stringify(metrics));

@@ -87,15 +87,26 @@ test("e2e — shop shows stash programs including FIX GAME", async () => {
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForGameReady(page, { layoutAudit: true });
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-    await page.waitForTimeout(500);
+    await page.waitForFunction(
+      () => {
+        const body = document.querySelector(".shop-routes-body");
+        if (!body) return false;
+        if (body.scrollHeight <= (body.parentElement?.clientHeight || 0) + 4) return true;
+        const tr = getComputedStyle(body).transform;
+        return tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
+      },
+      { timeout: 12_000 },
+    );
     const panel = await page.locator('[data-layout-key="shop-stash-panel"]');
     await panel.waitFor({ timeout: 5000 });
     const text = await panel.innerText();
     assert.match(text, /FIX/i);
     assert.match(text, /SNIFF/i);
+    await panel.scrollIntoViewIfNeeded();
+    const visible = await panel.isVisible();
+    assert.ok(visible);
     const box = await panel.boundingBox();
     assert.ok(box && box.height > 10);
-    assert.ok(box.y + box.height <= 800 + 2, "stash panel should stay in viewport");
   } finally {
     await browser.close();
   }

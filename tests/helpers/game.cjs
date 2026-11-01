@@ -180,7 +180,34 @@ function createGame(snapshot = {}, options = {}) {
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
-    dismissScoreOverlays: () => {},
+    pendingRoundFinalizeRef: { current: null },
+    finalizeRoundAfterHandRef: { current: null },
+    scoreOverlayActiveRef: { current: false },
+    attemptRoundFinalizeAfterScore: function attemptRoundFinalizeAfterScore() {
+      const pending = sandbox.pendingRoundFinalizeRef.current;
+      if (!pending) return;
+      if (sandbox.scoreOverlayActiveRef.current) {
+        pending.ready = true;
+        return;
+      }
+      sandbox.pendingRoundFinalizeRef.current = null;
+      sandbox.finalizeRoundAfterHandRef.current?.(
+        pending.settlementCashLocal,
+        pending.projectedCashLocal,
+      );
+    },
+    dismissScoreOverlays: () => {
+      sandbox.scoreOverlayActiveRef.current = false;
+      const pendingFinalize = sandbox.pendingRoundFinalizeRef.current;
+      if (pendingFinalize?.ready) {
+        const { settlementCashLocal, projectedCashLocal } = pendingFinalize;
+        sandbox.pendingRoundFinalizeRef.current = null;
+        sandbox.finalizeRoundAfterHandRef.current?.(
+          settlementCashLocal,
+          projectedCashLocal,
+        );
+      }
+    },
     overlayInputGuardUntilRef: { current: 0 },
   };
   sandbox.setRollLock = (locked) => {

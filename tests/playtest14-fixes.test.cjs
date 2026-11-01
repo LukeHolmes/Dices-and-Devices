@@ -137,14 +137,15 @@ test("shop — stock skew guarantee hook present for tagged offers", () => {
 
 function panelNoScrollMetrics(page) {
   return page.evaluate(() => {
-    const selectors = [".shop-routes-scroll", ".run-intel-panel"];
+    const selectors = [".shop-routes-scroll", '[data-layout-key="run-intel-floating"]'];
     const bad = [];
     for (const sel of selectors) {
       const shell = document.querySelector(sel);
       if (!shell) continue;
       const style = getComputedStyle(shell);
       const overflowScroll = style.overflowY === "auto" || style.overflowY === "scroll";
-      const body = shell.querySelector(".shop-routes-body, .run-intel-body") || shell;
+      const body =
+        shell.querySelector(".shop-routes-body, [data-layout-key=\"run-intel-chip-row\"]") || shell;
       const sr = shell.getBoundingClientRect();
       const br = body.getBoundingClientRect();
       const tr = getComputedStyle(body).transform;
@@ -193,10 +194,12 @@ for (const vp of VIEWPORTS) {
       await page.waitForFunction(
         () => {
           const shopBody = document.querySelector(".shop-routes-body");
-          const intelBody = document.querySelector(".run-intel-panel:not(.run-intel-panel--inline) .run-intel-body");
+          const intelBody = document.querySelector(
+            '[data-layout-key="run-intel-floating"] [data-layout-key="run-intel-chip-row"]',
+          );
           const ready = (el) => {
             if (!el) return true;
-            const shell = el.closest(".shop-routes-scroll, .run-intel-panel");
+            const shell = el.closest('.shop-routes-scroll, [data-layout-key="run-intel-floating"]');
             if (!shell || el.scrollHeight <= shell.clientHeight + 2) return true;
             const tr = getComputedStyle(el).transform;
             return tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";

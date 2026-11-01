@@ -564,6 +564,120 @@
     #root-gutterbones [data-layout-key="rap-sheet"] {
         max-height: min(calc(100dvh - 2 * var(--gb-pad)), 100%);
     }
+    #root-gutterbones [data-layout-key="rap-sheet-archetype"] {
+        overflow: visible;
+        max-height: none;
+    }
+    @media (max-height: 720px) {
+        #root-gutterbones [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
+            margin-bottom: 0.75rem;
+        }
+    }
+    @media (max-height: 420px) {
+        #root-gutterbones [data-layout-key="rap-sheet"] {
+            padding: 0.65rem !important;
+        }
+        #root-gutterbones [data-layout-key="rap-sheet"] .h-32 {
+            height: 4.5rem;
+        }
+    }
+    #root-gutterbones .run-intel-summary {
+        box-sizing: border-box;
+        pointer-events: auto;
+    }
+    #root-gutterbones .run-intel-summary--inline {
+        height: 5.25rem;
+        max-height: 5.25rem;
+        min-height: 5.25rem;
+        overflow: hidden;
+        font-size: 10px;
+        line-height: 1.25;
+    }
+    @media (max-height: 420px) {
+        #root-gutterbones [data-layout-key="play-hud"] {
+            margin-bottom: 0.15rem !important;
+        }
+        #root-gutterbones [data-layout-key="play-hud"] .gb-hud-compact-tight {
+            padding-top: 0.2rem !important;
+            padding-bottom: 0.2rem !important;
+        }
+        #root-gutterbones [data-layout-key="play-hud"] .text-3xl {
+            font-size: 1.35rem !important;
+            line-height: 1.05;
+        }
+        #root-gutterbones [data-layout-key="play-hud"] .relative.mx-3 {
+            min-height: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        #root-gutterbones .play-stash-column .build-indicator-inline {
+            display: none;
+        }
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            flex: 0 0 auto;
+            min-height: 0;
+            max-height: none;
+        }
+        #root-gutterbones .run-intel-summary--inline {
+            height: 3.35rem;
+            max-height: 3.35rem;
+            min-height: 3.35rem;
+            font-size: 9px;
+            padding: 0.2rem 0.35rem;
+        }
+        #root-gutterbones .run-intel-summary--inline > .flex.items-start {
+            margin-bottom: 0.1rem;
+        }
+        #root-gutterbones .run-intel-summary--inline .run-intel-chip {
+            padding: 0.06rem 0.22rem;
+        }
+        #root-gutterbones .run-intel-summary--inline .run-intel-chip-row {
+            flex-wrap: nowrap;
+            overflow: hidden;
+            max-height: 1.65rem;
+        }
+    }
+    #root-gutterbones .run-intel-summary--floating {
+        width: min(92vw, 20rem);
+        max-height: 6.5rem;
+        font-size: 10px;
+    }
+    #root-gutterbones .run-intel-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 0.35rem;
+        align-items: center;
+    }
+    #root-gutterbones .run-intel-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.45);
+        white-space: nowrap;
+        max-width: 100%;
+    }
+    #root-gutterbones .run-intel-chip-label {
+        opacity: 0.65;
+        font-size: 0.85em;
+        letter-spacing: 0.08em;
+    }
+    #root-gutterbones .run-intel-detail-popover {
+        position: absolute;
+        z-index: 90;
+        left: 0;
+        right: 0;
+        top: calc(100% + 0.35rem);
+        max-height: min(42vh, 16rem);
+        overflow: auto;
+        overscroll-behavior: contain;
+    }
+    #root-gutterbones .run-intel-summary--floating .run-intel-detail-popover {
+        right: 0;
+        left: auto;
+        width: min(92vw, 22rem);
+    }
     #root-gutterbones .rap-busted-backdrop--flat {
         background-image: linear-gradient(180deg, rgba(18, 14, 22, 0.35) 0%, rgba(12, 10, 16, 0.25) 50%, rgba(8, 6, 12, 0.4) 100%);
     }
@@ -5045,6 +5159,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
     const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout, jobRound }) => {
+        const shellRef = useRef(null);
         const tryAdvance = (e) => {
             e?.preventDefault?.();
             e?.stopPropagation?.();
@@ -5052,15 +5167,24 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
         const handleKey = (e) => {
             if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+            if (!canContinue) return;
             tryAdvance(e);
         };
+        useEffect(() => {
+            if (!canContinue) return undefined;
+            shellRef.current?.focus?.({ preventScroll: true });
+            const onWindowKey = (e) => handleKey(e);
+            window.addEventListener('keydown', onWindowKey);
+            return () => window.removeEventListener('keydown', onWindowKey);
+        }, [canContinue, onSkip]);
         return (
         <div
+            ref={shellRef}
             role="button"
             tabIndex={0}
             onClick={tryAdvance}
             onKeyDown={handleKey}
-            className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto p-4"
+            className="fixed inset-0 z-[540] flex items-center justify-center bg-black/55 pointer-events-auto p-4 outline-none"
         >
             <div
                 data-layout-key="round-clear-card"
@@ -5504,25 +5628,40 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 body.style.marginBottom = '';
                 let avail = shell.clientHeight;
                 const isInlineIntel = shell.classList.contains('run-intel-panel--inline');
+                const isShopRoutes = shell.classList.contains('shop-routes-scroll');
                 if (isInlineIntel && shell.parentElement) {
                     const parentH = shell.parentElement.clientHeight;
                     const shellH = shell.clientHeight;
                     avail = shellH > 0 ? Math.min(shellH, parentH) : parentH;
+                } else if (isShopRoutes && typeof window !== 'undefined') {
+                    const panel = shell.closest('[data-layout-key="shop-routes-panel"]');
+                    const panelRect = panel?.getBoundingClientRect();
+                    const footer = panel?.querySelector('.shop-routes-footer');
+                    const footerH = footer?.getBoundingClientRect().height || 0;
+                    const margin = 12;
+                    if (panelRect) {
+                        avail = Math.max(80, window.innerHeight - panelRect.top - footerH - margin);
+                        shell.style.maxHeight = `${avail}px`;
+                    }
                 } else if (avail <= 0 && shell.parentElement) {
                     avail = shell.parentElement.clientHeight;
                 }
-                if (!isInlineIntel && typeof window !== 'undefined') {
+                if (!isInlineIntel && !isShopRoutes && typeof window !== 'undefined') {
                     const rect = shell.getBoundingClientRect();
                     const margin = 10;
                     const viewportRoom = window.innerHeight - Math.max(0, rect.top) - margin;
                     if (viewportRoom > 0) avail = Math.min(avail, viewportRoom);
                 }
-                const need = body.scrollHeight;
+                let need = body.scrollHeight;
+                if (isShopRoutes) {
+                    const routeList = body.querySelector(".gb-route-list");
+                    if (routeList) need = routeList.offsetTop + routeList.scrollHeight;
+                }
                 if (avail <= 0 || need <= 0) return;
-                const raw = avail / need;
+                const raw = (avail / need) * (isShopRoutes ? 0.84 : 1);
                 const scale = Math.min(1, Math.max(minScale, raw));
                 if (scale < 0.995) {
-                    body.style.transformOrigin = isInlineIntel ? 'top center' : 'top right';
+                    body.style.transformOrigin = (isInlineIntel || isShopRoutes) ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
                     body.style.width = isInlineIntel ? `${100 / scale}%` : '';
                     const scaledH = Math.ceil(need * scale);
@@ -5531,6 +5670,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     shell.dataset.intelScaled = String(Math.round(scale * 100));
                 } else {
                     shell.style.height = '';
+                    if (isShopRoutes) shell.style.maxHeight = '';
                     delete shell.dataset.intelScaled;
                 }
             };
@@ -5540,6 +5680,100 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (shell.parentElement) ro.observe(shell.parentElement);
             return () => ro.disconnect();
         }, [...deps, enabled, minScale]);
+    };
+
+    const RunIntelSummary = ({
+        flowMultiplier,
+        flowStreakCap = FLOW_TUNING.maxStreak,
+        comboMeter = 0,
+        heatSpikeNextHand = 0,
+        blueprints = [],
+        activeWager,
+        insaneContract,
+        routeEffect,
+        boss,
+        consumables = [],
+        inventory = [],
+        inline = false,
+        floating = false
+    }) => {
+        const [detailOpen, setDetailOpen] = useState(false);
+        const activeBp = blueprints.filter((bp) => !bp.consumed);
+        const routeShort = routeEffect?.name
+            ? routeEffect.name.slice(0, 14)
+            : 'STD';
+        const chips = [
+            { id: 'flow', label: 'FLOW', value: `x${flowMultiplier.toFixed(2)}`, hot: flowMultiplier > 1 },
+            { id: 'combo', label: 'COMBO', value: `${comboMeter}${heatSpikeNextHand > 0 ? `+${heatSpikeNextHand}` : ''}`, hot: comboMeter >= 3 },
+            { id: 'route', label: 'ROUTE', value: routeShort, hot: !!routeEffect },
+            { id: 'boss', label: 'BOSS', value: boss ? boss.name.split(' ')[0] : '—', hot: !!boss },
+            { id: 'rig', label: 'RIG', value: inventory.length ? String(inventory.length) : '0', hot: inventory.length > 0 },
+            { id: 'shot', label: '1-SHOT', value: consumables.length ? String(consumables.length) : '0', hot: consumables.length > 0 },
+            { id: 'bp', label: 'BP', value: activeBp.length ? String(activeBp.length) : '0', hot: activeBp.length > 0 }
+        ];
+        const layoutKey = inline ? 'run-intel-summary' : (floating ? 'run-intel-floating' : 'run-intel-summary');
+        return (
+            <div
+                data-layout-key={layoutKey}
+                className={`run-intel-summary readable-panel rounded-xl border border-gray-800 bg-black/90 text-gray-100 font-mono p-2 pr-2 box-border shadow-lg ${inline ? 'run-intel-summary--inline relative w-full' : 'run-intel-summary--floating fixed bottom-4 right-4 z-[70]'}`}
+            >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="text-[#0df] tracking-[.22em] text-[9px] font-bold shrink-0">RUN INTEL</div>
+                    <button
+                        type="button"
+                        data-layout-key="run-intel-details-toggle"
+                        className="shrink-0 text-[9px] tracking-wider px-1.5 py-0.5 border border-[#0df]/50 text-[#0df] hover:bg-cyan-950/40 rounded"
+                        onClick={() => setDetailOpen((open) => !open)}
+                        aria-expanded={detailOpen}
+                    >
+                        {detailOpen ? 'HIDE' : 'DETAILS'}
+                    </button>
+                </div>
+                <div className="run-intel-chip-row" data-layout-key="run-intel-chip-row">
+                    {chips.map((chip) => (
+                        <span key={chip.id} className={`run-intel-chip${chip.hot ? ' text-[#0df]' : ''}`} data-intel-chip={chip.id}>
+                            <span className="run-intel-chip-label">{chip.label}</span>
+                            <span className="font-bold tabular-nums">{chip.value}</span>
+                        </span>
+                    ))}
+                </div>
+                {detailOpen && (
+                    <div data-layout-key="run-intel-detail-popover" className="run-intel-detail-popover readable-panel rounded-lg border border-[#0df]/40 bg-[#0a0a0c] p-2 text-[10px] leading-snug shadow-xl">
+                        <div className="flex justify-between gap-2"><span className="text-gray-500">FLOW</span><span className="text-[#0df]">x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}</span></div>
+                        <div className="flex justify-between gap-2 mt-1"><span className="text-gray-500">COMBO</span><span>{comboMeter}{heatSpikeNextHand > 0 ? ` · spike +${heatSpikeNextHand}x next` : ''}</span></div>
+                        {activeWager && <div className="mt-1 text-emerald-300">Wager ${activeWager.stake} @ {activeWager.threshold}+</div>}
+                        {insaneContract && <div className="mt-1 text-[#ff9fcf]">Insane contract active</div>}
+                        <div className="mt-2 pt-1 border-t border-gray-800">
+                            <div className="text-gray-500 tracking-wider mb-0.5">ROUTE</div>
+                            {routeEffect ? (
+                                <>
+                                    <div className="text-[#f4d67b] font-bold">{routeEffect.name}</div>
+                                    <div className="text-gray-200">{routeEffect.effects?.join(' / ') || '—'}</div>
+                                </>
+                            ) : (
+                                <div className="text-gray-400">Standard alley path</div>
+                            )}
+                        </div>
+                        <div className="mt-2 pt-1 border-t border-gray-800">
+                            <div className="text-gray-500 mb-0.5">BOSS</div>
+                            <div className={boss ? boss.color : 'text-gray-400'}>{boss ? `${boss.name} — ${boss.desc}` : 'None this round'}</div>
+                        </div>
+                        <div className="mt-2 pt-1 border-t border-gray-800">
+                            <div className="text-gray-500 mb-0.5">RIG</div>
+                            <div className="text-cyan-200">{inventory.length ? inventory.map((i) => i.name).join(', ') : 'None'}</div>
+                        </div>
+                        <div className="mt-2 pt-1 border-t border-gray-800">
+                            <div className="text-gray-500 mb-0.5">ONE-SHOTS</div>
+                            <div className="text-emerald-300">{consumables.length ? consumables.map((c) => c.name).join(', ') : 'None'}</div>
+                        </div>
+                        <div className="mt-2 pt-1 border-t border-gray-800">
+                            <div className="text-gray-500 mb-0.5">BLUEPRINTS</div>
+                            <div className="text-fuchsia-200/90">{activeBp.length ? activeBp.map((bp) => BLUEPRINT_CATALOG[bp.id]?.name || bp.id).join(', ') : 'None'}</div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
     };
 
     const RunIntelPanel = ({ flowMultiplier, flowStreakCap = FLOW_TUNING.maxStreak, comboMeter = 0, heatSpikeNextHand = 0, blueprints = [], activeWager, insaneContract, routeEffect, boss, consumables, inventory = [], upcomingPaths = [], inline = false, compact = false, layoutBump = 0 }) => {
@@ -5688,6 +5922,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         return (
             <button
                 type="button"
+                data-layout-key="shop-route-card"
                 onClick={() => onPick(path)}
                 aria-label={aria}
                 aria-pressed={selected}
@@ -5728,7 +5963,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
         const tier = analysis.confidence >= 0.72 ? 'HIGH' : analysis.confidence >= 0.42 ? 'MED' : 'LOW';
         return (
-            <div className={`${inline ? 'relative w-full' : 'absolute top-16 left-4 z-[82] w-[min(88vw,15rem)]'} rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
+            <div className={`${inline ? 'relative w-full build-indicator-inline' : 'absolute top-16 left-4 z-[82] w-[min(88vw,15rem)]'} rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
                 <div className="tracking-[.22em] text-gray-400 mb-1 font-bold">BUILD INTEL</div>
                 <div className={`${ui.accent} font-bold leading-tight tracking-wide text-sm`}>BUILD: {ui.label}</div>
                 {analysis.secondaryTag && <div className="text-gray-300 mt-1 truncate">TAG: {analysis.secondaryTag}</div>}
@@ -5740,7 +5975,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const RunBuildFootprint = ({ runBuild }) => {
+    const RunBuildFootprint = ({ runBuild, compact = false }) => {
         const primary = runBuild?.primary || BUILD_IDS.UNKNOWN;
         const ui = BUILD_UI[primary] || BUILD_UI[BUILD_IDS.UNKNOWN];
         const tips = BUILD_TIPS[primary] || BUILD_TIPS[BUILD_IDS.UNKNOWN];
@@ -5752,6 +5987,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const meta = itemById(k);
             return meta?.name || meta?.label || k;
         };
+        if (compact) {
+            return (
+                <div data-layout-key="rap-sheet-archetype" className="mt-2 mb-1 border border-black/50 bg-white/45 px-2 py-1.5 rounded font-mono text-[10px] text-left shrink-0">
+                    <span className="tracking-[.22em] text-gray-600 mr-2">ARCHETYPE</span>
+                    <span className={`font-bold ${ui.accent}`}>{ui.label}</span>
+                    {keys.length > 0 && (
+                        <span className="text-gray-800 ml-1">· {keys.slice(0, 2).map(formatKey).join(' / ')}{keys.length > 2 ? ` +${keys.length - 2}` : ''}</span>
+                    )}
+                </div>
+            );
+        }
         return (
             <div className="mt-4 border-2 border-black/70 bg-white/40 p-3 rounded font-mono text-xs text-left overflow-x-hidden">
                 <div className="text-[10px] tracking-[.3em] text-gray-600 mb-2">RUN ARCHETYPE</div>
@@ -6331,6 +6577,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const pendingUnlockMessageRef = useRef(null);
         const scoreBreakdownTimeoutRef = useRef(null);
         const scoreResolutionTimeoutRef = useRef(null);
+        const scoreOverlayActiveRef = useRef(false);
         const nextShopTagRef = useRef(null);
         const routeModifiersRef = useRef({});
         const pendingPhaseTransitionRef = useRef(null);
@@ -6341,7 +6588,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [rapSheetCanContinue, setRapSheetCanContinue] = useState(false);
         const rapSheetSkipRevealGateRef = useRef(false);
         const rapSheetRef = useRef(null);
+        const rapSheetNaturalHeightRef = useRef(0);
+        const rapSheetScaleRef = useRef(1);
         const [rapSheetScale, setRapSheetScale] = useState(1);
+        const [rapSheetNaturalHeight, setRapSheetNaturalHeight] = useState(0);
+
+        useEffect(() => {
+            scoreOverlayActiveRef.current = !!(scoreBreakdown || scoreResolution);
+        }, [scoreBreakdown, scoreResolution]);
+
+        useEffect(() => {
+            rapSheetScaleRef.current = rapSheetScale;
+        }, [rapSheetScale]);
 
         const presentationPacing = () => GutterbonesPresentation.normalizePacing(audioSettings.pacing);
 
@@ -6452,6 +6710,24 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setPayoutInputLock(false);
             armOverlayInputGuard();
             setRollLock(false);
+            scoreOverlayActiveRef.current = false;
+            const pendingFinalize = pendingRoundFinalizeRef.current;
+            if (pendingFinalize?.ready) {
+                const { settlementCashLocal, projectedCashLocal } = pendingFinalize;
+                pendingRoundFinalizeRef.current = null;
+                finalizeRoundAfterHandRef.current?.(settlementCashLocal, projectedCashLocal);
+            }
+        };
+
+        const attemptRoundFinalizeAfterScore = () => {
+            const pending = pendingRoundFinalizeRef.current;
+            if (!pending) return;
+            if (scoreOverlayActiveRef.current) {
+                pending.ready = true;
+                return;
+            }
+            pendingRoundFinalizeRef.current = null;
+            finalizeRoundAfterHandRef.current?.(pending.settlementCashLocal, pending.projectedCashLocal);
         };
 
         const clearTransientJuice = () => {
@@ -6466,6 +6742,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [roundClearCardActive, setRoundClearCardActive] = useState(false);
         const [roundClearPayout, setRoundClearPayout] = useState(null);
         const roundClearPendingRef = useRef(null);
+        const pendingRoundFinalizeRef = useRef(null);
+        const finalizeRoundAfterHandRef = useRef(null);
 
         const computeRoundClearPayout = (handsRemaining, cashHeld) => {
             const base = ECONOMY_TUNING.roundClearBaseCash || 8;
@@ -6642,7 +6920,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             debt,
             shopRefreshes,
             fixerLine
-        ], { enabled: phase === 'SHOP', minScale: 0.72 });
+        ], { enabled: phase === 'SHOP', minScale: 0.22 });
 
         useEffect(() => {
             if (audioSettings.reducedMotionPref !== null) return;
@@ -7496,33 +7774,73 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         useEffect(() => {
             if (phase !== 'RAP_SHEET' || !rapSheetRevealReady) {
                 setRapSheetScale(1);
+                setRapSheetNaturalHeight(0);
+                rapSheetNaturalHeightRef.current = 0;
                 return undefined;
             }
-            const fitRapSheet = () => {
+            const inner = rapSheetRef.current?.querySelector('[data-layout-key="rap-sheet"]');
+            if (!inner) return undefined;
+            const applyFit = () => {
                 const wrap = rapSheetRef.current;
                 if (!wrap) return;
-                const inner = wrap.querySelector('[data-layout-key="rap-sheet"]');
-                if (!inner) return;
-                const pad = Math.max(10, parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) * 0.75;
-                const budget = window.innerHeight - pad * 2;
-                const h = inner.offsetHeight;
-                if (!h || h <= budget) {
+                wrap.style.marginTop = '';
+                const margin = 14;
+                const vh = window.innerHeight;
+                const playBtn = inner.querySelector('[data-layout-key="rap-play-again"]');
+                const naturalH = playBtn
+                    ? Math.ceil(playBtn.offsetTop + playBtn.offsetHeight + 20)
+                    : (inner.scrollHeight || inner.offsetHeight);
+                if (naturalH <= 0) return;
+                rapSheetNaturalHeightRef.current = naturalH;
+                setRapSheetNaturalHeight(naturalH);
+                const minScale = vh < 400 ? 0.22 : vh < 420 ? 0.26 : 0.32;
+                const scale = Math.max(minScale, Math.min(1, ((vh - margin * 2) / naturalH) * 0.92));
+                if (naturalH <= vh - margin * 2) {
                     setRapSheetScale(1);
                     return;
                 }
-                setRapSheetScale(Math.max(0.35, Math.min(1, (budget / h) * 0.94)));
+                setRapSheetScale(scale);
             };
-            fitRapSheet();
-            const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fitRapSheet) : null;
-            if (ro && rapSheetRef.current) ro.observe(rapSheetRef.current);
-            window.addEventListener('resize', fitRapSheet);
-            const id = scheduleTimeout(fitRapSheet, 80);
+            rapSheetNaturalHeightRef.current = 0;
+            rapSheetScaleRef.current = 1;
+            setRapSheetScale(1);
+            applyFit();
+            const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(applyFit) : null;
+            ro?.observe(inner);
+            window.addEventListener('resize', applyFit);
+            const id = scheduleTimeout(applyFit, 120);
+            const id2 = scheduleTimeout(applyFit, 400);
             return () => {
-                window.removeEventListener('resize', fitRapSheet);
+                window.removeEventListener('resize', applyFit);
                 ro?.disconnect();
                 clearScheduledTimeout(id);
+                clearScheduledTimeout(id2);
             };
         }, [phase, rapSheetRevealReady, history.length, showIncarceratedStamp, typedCase]);
+
+        useEffect(() => {
+            if (phase !== 'RAP_SHEET' || !rapSheetRevealReady || rapSheetScale >= 0.999) {
+                if (rapSheetRef.current) rapSheetRef.current.style.marginTop = '';
+                return undefined;
+            }
+            const wrap = rapSheetRef.current;
+            const inner = wrap?.querySelector('[data-layout-key="rap-sheet"]');
+            if (!wrap || !inner) return undefined;
+            const margin = 14;
+            const vh = window.innerHeight;
+            const nudge = () => {
+                wrap.style.marginTop = '';
+                const ir = inner.getBoundingClientRect();
+                if (ir.top < margin) wrap.style.marginTop = `${margin - ir.top}px`;
+            };
+            nudge();
+            const id = scheduleTimeout(nudge, 60);
+            window.addEventListener('resize', nudge);
+            return () => {
+                clearScheduledTimeout(id);
+                window.removeEventListener('resize', nudge);
+            };
+        }, [phase, rapSheetRevealReady, rapSheetScale, history.length, showIncarceratedStamp, typedCase]);
 
         useEffect(() => {
             if (phase !== 'RAP_SHEET' || !showIncarceratedStamp || !pendingUnlockMessageRef.current) return;
@@ -8201,7 +8519,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     ...s,
                     roundsCleared: Math.max(Number(s.roundsCleared) || 0, round)
                 }));
-                dismissScoreOverlays();
                 const applyRoundClearCash = () => {
                     const payout = computeRoundClearPayout(handsAfterPlay, settlementCashLocal);
                     setRoundClearPayout(payout);
@@ -8268,8 +8585,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         })
                     )
                     : gateMin;
+                pendingRoundFinalizeRef.current = {
+                    settlementCashLocal,
+                    projectedCashLocal,
+                    ready: false
+                };
+                finalizeRoundAfterHandRef.current = finalizeRoundAfterHand;
                 scheduleTimeout(
-                    () => finalizeRoundAfterHand(settlementCashLocal, projectedCashLocal),
+                    () => attemptRoundFinalizeAfterScore(),
                     result.valid ? (reducedMotion ? 80 : Math.max(320, overlayHold)) : (reducedMotion ? 60 : 180)
                 );
             };
@@ -9235,6 +9558,23 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setRapSheetCanContinue(true);
                 },
                 openPlayStashPanel: () => setShowMobileStash(true),
+                seedPlayIntelState: (opts = {}) => {
+                    setPhase('PLAY');
+                    setRoundClearCardActive(false);
+                    setScoreBreakdown(null);
+                    setScoreResolution(null);
+                    scoreOverlayActiveRef.current = false;
+                    if (opts.round != null) setRound(Number(opts.round) || 1);
+                    if (opts.hands != null) setHands(Number(opts.hands) || 0);
+                    setHasRolled(opts.hasRolled !== false);
+                    if (opts.stash != null) setStash(Math.min(100, Math.max(0, Number(opts.stash) || 0)));
+                    if (opts.routeEffect) setCurrentRouteEffect(opts.routeEffect);
+                    else if (opts.clearRoute) setCurrentRouteEffect(null);
+                    if (opts.bossId) {
+                        const b = bossById(opts.bossId);
+                        if (b) setActiveBoss(b);
+                    } else if (opts.clearBoss) setActiveBoss(null);
+                },
                 openForfeitRapSheetDemo: () => {
                     setRound(3);
                     setPhase('PLAY');
@@ -9580,7 +9920,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && (
                     <>
                         <BuildIndicator analysis={buildAnalysis} />
-                        <RunIntelPanel
+                        <RunIntelSummary
+                            floating
                             flowMultiplier={flowMultiplier}
                             flowStreakCap={flowStreakCap}
                             comboMeter={synergyState.comboMeter || 0}
@@ -9592,8 +9933,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             boss={activeBoss}
                             consumables={consumables}
                             inventory={inventory}
-                            upcomingPaths={phase === 'SHOP' ? [] : shopRoutePreviews}
-                            compact={phase === 'SHOP'}
                         />
                     </>
                 )}
@@ -10079,7 +10418,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div className="hidden md:flex flex-col gap-2 stash-intel-scroll min-h-0">
                                     <BuildIndicator analysis={buildAnalysis} inline />
-                                    <RunIntelPanel
+                                    <RunIntelSummary
+                                        inline
                                         flowMultiplier={flowMultiplier}
                                         flowStreakCap={flowStreakCap}
                                         comboMeter={synergyState.comboMeter || 0}
@@ -10091,8 +10431,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         boss={activeBoss}
                                         consumables={consumables}
                                         inventory={inventory}
-                                        inline
-                                        layoutBump={openingSniffBanner ? 1 : 0}
                                     />
                                 </div>
                                 <div className="stash-programs-pinned bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl shrink-0 min-h-0 flex flex-col">
@@ -10122,7 +10460,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         </div>
                                     )}
                                     {stash >= 100 && hasRolled && activeBoss?.id !== 'INFORMANT' && (
-                                        <div className="mt-2 font-mono text-[10px] text-[#0df] border border-[#0df]/40 rounded px-2 py-1 bg-cyan-950/30 text-center leading-snug">
+                                        <div data-layout-key="stash-full-banner" className="mt-2 font-mono text-[10px] text-[#0df] border border-[#0df]/40 rounded px-2 py-1 bg-cyan-950/30 text-center leading-snug">
                                             Stash full — spend on a program below (SNIFF reroll, BRIBE quota cut, FIX GAME, LAUNDER debt).
                                         </div>
                                     )}
@@ -10427,18 +10765,25 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     </button>
                 )}
                 {phase === 'RAP_SHEET' && (
-                    <div className="gb-screen items-start justify-center z-[500] relative p-[var(--gb-pad)] overflow-hidden">
+                    <div className="gb-screen items-start justify-center z-[500] relative p-[var(--gb-pad)] pt-4 overflow-hidden">
                         <div className={`rap-busted-backdrop${runStats.finalBoss === 'SELF FORFEIT' ? ' rap-busted-backdrop--flat' : ''}`} aria-hidden></div>
                         <div
                             ref={rapSheetRef}
                             data-layout-key="rap-sheet-wrap"
                             className="w-full max-w-2xl mx-auto"
-                            style={rapSheetScale < 0.999 ? { transform: `scale(${rapSheetScale})`, transformOrigin: 'top center' } : undefined}
                             data-rap-scale={rapSheetScale < 0.999 ? rapSheetScale.toFixed(3) : undefined}
                         >
-                        <div data-layout-key="rap-sheet" className="paper-card paper-card-flat gb-modal-fit bg-[#E2D1B8] w-full p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20" style={{ animation: rapSheetRevealReady ? 'none' : 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards', '--paper-rot': '0deg' }}>
+                        <div
+                            data-layout-key="rap-sheet"
+                            className="paper-card paper-card-flat gb-modal-fit bg-[#E2D1B8] w-full p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20"
+                            style={{
+                                animation: rapSheetRevealReady ? 'none' : 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards',
+                                '--paper-rot': '0deg',
+                                ...(rapSheetScale < 0.999 ? { zoom: rapSheetScale } : {})
+                            }}
+                        >
                             <div className="gb-modal-body pr-1">
-                            <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end"><div className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
+                            <div className="border-b-2 border-black pb-3 mb-6 flex justify-between items-end shrink-0"><div data-layout-key="rap-sheet-header" className="font-serif font-bold text-xl uppercase tracking-widest">N.Y.P.D. Arrest Record</div><div className="font-mono text-red-600 border border-red-600 px-2 font-bold min-w-[120px] text-center">{typedCase}</div></div>
                             <div className="grid md:grid-cols-3 gap-4 mb-4">
                                 <div className="h-32 md:h-40 bg-gray-300 border-2 border-gray-400 p-2 shadow-inner flex items-center justify-center"><PersonaPortrait persona={persona} variant="rap" /></div>
                                 <div className="md:col-span-2 font-mono text-sm md:text-base min-w-0">
@@ -10490,7 +10835,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
                                 <HistoryPanel history={history} />
                             </div>
-                            <RunBuildFootprint runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
+                            <RunBuildFootprint compact runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
                             {dailyShareBanner && (
                                 <div data-layout-key="daily-share-banner" className="mt-3 p-3 border-2 border-[#0df] bg-black/10 font-mono text-xs break-all">
                                     <div className="text-[#0df] mb-1">Daily score copied — share it:</div>
