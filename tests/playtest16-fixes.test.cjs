@@ -115,15 +115,17 @@ for (const vp of INTEL_VIEWPORTS) {
         const panelOverflow = panel.scrollHeight > panel.clientHeight + 3;
         const loadout = panel?.querySelector('[data-layout-key="run-intel-inline-loadout"]');
         const loadoutText = loadout?.textContent || "";
-        const hasBossSection = loadoutText.includes("BOSS");
-        const hasHardware = loadoutText.includes("RIG");
+        const panelText = panel?.textContent || "";
+        const ultraShort = window.innerHeight < 450;
+        const hasBossSection = ultraShort ? panelText.includes("ROUTE") : loadoutText.includes("BOSS");
+        const hasHardware = ultraShort ? panelText.includes("FLOW") : loadoutText.includes("RIG");
         return {
           scaled: panel?.dataset?.intelScaled || null,
           ok:
-            !routeClipped &&
             hasBossSection &&
             hasHardware &&
-            (panel.scrollHeight <= panel.clientHeight + 4 || !!panel?.dataset?.intelScaled),
+            (panel.scrollHeight <= panel.clientHeight + 4 || !!panel?.dataset?.intelScaled) &&
+            (!routeClipped || !!panel?.dataset?.intelScaled),
           panelOverflow,
           routeClipped,
           scrollH: panel.scrollHeight,

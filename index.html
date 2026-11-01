@@ -326,8 +326,8 @@
         flex-shrink: 0;
     }
     #root-gutterbones .play-stash-column .stash-intel-scroll {
-        flex: 1 1 10rem;
-        min-height: 9rem;
+        flex: 1 1 auto;
+        min-height: 0;
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -711,11 +711,29 @@
     }
     @media (max-height: 720px) {
         #root-gutterbones .play-stash-column .stash-intel-scroll {
-            flex: 1 1 8.5rem;
-            min-height: 8rem;
+            flex: 1 1 42%;
+            min-height: 3.75rem;
         }
         #root-gutterbones .play-stash-column .stash-programs-pinned {
-            max-height: 6rem;
+            flex: 0 1 52%;
+            max-height: 52%;
+        }
+    }
+    @media (max-height: 420px) {
+        #root-gutterbones .play-stash-column .stash-programs-pinned {
+            max-height: 4.25rem;
+        }
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            flex: 1 1 38%;
+            min-height: 3.5rem;
+            max-height: 4.75rem;
+        }
+        #root-gutterbones .play-stash-column .run-intel-panel--inline {
+            padding: 0.45rem 0.5rem;
+            font-size: 9px;
+        }
+        #root-gutterbones [data-layout-key="run-intel-inline-loadout"] {
+            display: none;
         }
     }
     @container gutterbones (max-height: 720px) {
@@ -5444,7 +5462,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (scale < 0.995) {
                     body.style.transformOrigin = 'top center';
                     body.style.transform = `scale(${scale})`;
-                    body.style.width = `${100 / scale}%`;
+                    body.style.width = isInlineIntel ? '100%' : `${100 / scale}%`;
                     const scaledH = Math.ceil(need * scale);
                     shell.style.height = `${Math.min(avail, scaledH)}px`;
                     body.style.marginBottom = `${-Math.ceil(need * (1 - scale))}px`;
