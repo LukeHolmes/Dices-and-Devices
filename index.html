@@ -322,15 +322,18 @@
         height: 0;
         display: none;
     }
-    @container gutterbones (max-height: 420px) {
+    @media (max-height: 420px) {
         #root-gutterbones [data-layout-key="run-intel-floating"] {
-            top: 2.75rem;
+            top: 0.35rem;
             bottom: auto;
             right: 0.35rem;
-            width: min(46vw, 15rem);
-            max-height: min(calc(100dvh - 3.25rem), 13.5rem);
-            padding: 0.45rem 0.5rem;
-            font-size: 9px;
+            width: min(42vw, 13.5rem);
+            max-height: calc(100dvh - 0.75rem);
+            padding: 0.35rem 0.45rem;
+            font-size: 8px;
+        }
+        #root-gutterbones [data-layout-key="run-intel-compact-loadout"] div:last-child {
+            display: none;
         }
     }
     #root-gutterbones .stash-programs-pinned {
@@ -5519,9 +5522,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 const raw = avail / need;
                 const scale = Math.min(1, Math.max(minScale, raw));
                 if (scale < 0.995) {
-                    body.style.transformOrigin = 'top center';
+                    body.style.transformOrigin = isInlineIntel ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
-                    body.style.width = isInlineIntel ? '100%' : `${100 / scale}%`;
+                    body.style.width = isInlineIntel ? `${100 / scale}%` : '';
                     const scaledH = Math.ceil(need * scale);
                     shell.style.height = `${Math.min(avail, scaledH)}px`;
                     body.style.marginBottom = `${-Math.ceil(need * (1 - scale))}px`;
