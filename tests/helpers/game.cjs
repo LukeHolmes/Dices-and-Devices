@@ -109,6 +109,7 @@ function createGame(snapshot = {}, options = {}) {
     synergyState: { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 },
     categoryMarkedThisRound: [],
     soldItems: [],
+    runExclusiveShopIds: [],
     shopItems: [],
     ...snapshot,
     Math: Object.assign(Object.create(Math), {

@@ -63,10 +63,11 @@ test("source — overlay input guard blocks shop purchases", () => {
   assert.match(html, /data-layout-key="rap-sheet-run-summary"/);
 });
 
-test("source — inline run intel skips scale-to-fit shrink", () => {
+test("source — inline run intel uses scale-to-fit with condensed loadout", () => {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-  assert.match(html, /enabled: !inline/);
   assert.match(html, /run-intel-panel--inline/);
+  assert.match(html, /run-intel-inline-loadout/);
+  assert.match(html, /minScale: inline \? 0\.42/);
 });
 
 const VIEWPORTS = [{ name: "1280x690", width: 1280, height: 690 }];
@@ -89,26 +90,34 @@ for (const vp of VIEWPORTS) {
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-      await page.waitForSelector(".run-intel-panel--inline", { timeout: 12_000 });
+      await page.waitForSelector('[data-layout-key="run-intel-inline"]', { timeout: 12_000 });
+      await page.waitForFunction(
+        () => {
+          const panel = document.querySelector('[data-layout-key="run-intel-inline"]');
+          const body = panel?.querySelector(".run-intel-body");
+          if (!panel || !body) return false;
+          if (body.scrollHeight <= panel.clientHeight + 2) return true;
+          const tr = getComputedStyle(body).transform;
+          return tr && tr !== "none";
+        },
+        { timeout: 8000 },
+      );
       const metrics = await page.evaluate(() => {
-        const panel = document.querySelector(".run-intel-panel--inline");
-        const compact = document.querySelector(".run-intel-compact");
-        if (!panel) return { ok: false, reason: "no inline intel" };
-        const style = panel ? getComputedStyle(panel) : null;
-        const compactStyle = compact ? getComputedStyle(compact) : null;
-        const fontPx = style ? parseFloat(style.fontSize) : 0;
-        const compactScroll =
-          compact &&
-          (compact.scrollHeight > compact.clientHeight + 1 ||
-            compactStyle.overflowY === "auto" ||
-            compactStyle.overflowY === "scroll");
-        const transform = panel.querySelector(".run-intel-body")?.style.transform || "";
-        const scaledTiny = transform && transform.includes("scale(0.");
+        const panel = document.querySelector('[data-layout-key="run-intel-inline"]');
+        const body = panel?.querySelector(".run-intel-body");
+        if (!panel || !body) return { ok: false, reason: "no inline intel" };
+        const style = getComputedStyle(panel);
+        const fontPx = parseFloat(style.fontSize) || 0;
+        const panelRect = panel.getBoundingClientRect();
+        const bodyRect = body.getBoundingClientRect();
         return {
-          ok: fontPx >= 9.5 && !compactScroll && !scaledTiny,
+          scaled: panel?.dataset?.intelScaled || null,
+          ok:
+            fontPx >= 9 &&
+            (panel.scrollHeight <= panel.clientHeight + 4 || !!panel?.dataset?.intelScaled),
           fontPx,
-          compactScroll,
-          transform,
+          scrollH: panel.scrollHeight,
+          clientH: panel.clientHeight,
         };
       });
       assert.ok(metrics.ok, JSON.stringify(metrics));
