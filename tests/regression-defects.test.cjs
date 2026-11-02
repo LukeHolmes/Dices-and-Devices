@@ -66,6 +66,7 @@ test("GB009: Terminal award includes hustle, no double lost stake", () => {
   g.api.executePayout("Y");
   g.flushTimers();
   g.flushTimers();
+  g.dismissScoreOverlays();
   assert.equal(g.state("lastLaundered"), 43);
 });
 

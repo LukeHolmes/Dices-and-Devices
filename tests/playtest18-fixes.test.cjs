@@ -61,9 +61,9 @@ test("source — playtest 18 hooks present", () => {
 
 test("source — round finalize waits on score overlay ref", () => {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-  assert.match(html, /if \(scoreOverlayActiveRef\.current\)/);
-  assert.match(html, /if \(pendingFinalize\?\.ready\)/);
-  assert.doesNotMatch(html, /pendingFinalize\?\.ready && !scoreBreakdown && !scoreResolution/);
+  assert.match(html, /scoreOverlayActiveRef\.current \|\| !!\(scoreBreakdown \|\| scoreResolution\)/);
+  assert.match(html, /if \(overlayLive\)/);
+  assert.match(html, /pending\.awaitScoreOverlay/);
 });
 
 function intelMetrics(page) {

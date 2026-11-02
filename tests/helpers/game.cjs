@@ -183,11 +183,19 @@ function createGame(snapshot = {}, options = {}) {
     pendingRoundFinalizeRef: { current: null },
     finalizeRoundAfterHandRef: { current: null },
     scoreOverlayActiveRef: { current: false },
+    runMetaAwardedRef: { current: false },
     attemptRoundFinalizeAfterScore: function attemptRoundFinalizeAfterScore() {
       const pending = sandbox.pendingRoundFinalizeRef.current;
       if (!pending) return;
-      if (sandbox.scoreOverlayActiveRef.current) {
+      const overlayLive =
+        sandbox.scoreOverlayActiveRef.current ||
+        !!(sandbox.scoreBreakdown || sandbox.scoreResolution);
+      if (overlayLive) {
         pending.ready = true;
+        return;
+      }
+      if (pending.awaitScoreOverlay) {
+        scheduleTimeout(() => sandbox.attemptRoundFinalizeAfterScore(), 48);
         return;
       }
       sandbox.pendingRoundFinalizeRef.current = null;
@@ -198,6 +206,10 @@ function createGame(snapshot = {}, options = {}) {
     },
     dismissScoreOverlays: () => {
       sandbox.scoreOverlayActiveRef.current = false;
+      sandbox.scoreBreakdown = null;
+      sandbox.scoreResolution = null;
+      pending.delete("scoreBreakdown");
+      pending.delete("scoreResolution");
       const pendingFinalize = sandbox.pendingRoundFinalizeRef.current;
       if (pendingFinalize?.ready) {
         const { settlementCashLocal, projectedCashLocal } = pendingFinalize;
@@ -226,6 +238,7 @@ function createGame(snapshot = {}, options = {}) {
         typeof update === "function" ? update(previous) : update;
       pending.set(key, next);
       if (key === "dailyRunActive") sandbox.dailyRunActive = next;
+      if (key === "scoreBreakdown" || key === "scoreResolution") sandbox[key] = next;
     };
   }
   const context = vm.createContext(sandbox);
@@ -261,6 +274,7 @@ function createGame(snapshot = {}, options = {}) {
       const queued = timers.splice(0);
       queued.forEach((callback) => callback());
     },
+    dismissScoreOverlays: () => sandbox.dismissScoreOverlays(),
   };
 }
 

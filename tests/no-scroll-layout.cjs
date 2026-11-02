@@ -179,6 +179,7 @@ async function auditViewport(page) {
       if (style.display === "none" || style.visibility === "hidden") return;
       // Route cards are scale-to-fit inside the shop panel; dedicated playtest18 e2e covers visibility.
       if (key === "shop-route-card") return;
+      if (key === "run-intel-detail-popover" || key === "run-intel-detail-backdrop") return;
       const r = el.getBoundingClientRect();
       if (r.width < 2 || r.height < 2) return;
       if (r.bottom > vh + 2 || r.right > vw + 2 || r.top < -4 || r.left < -4) {

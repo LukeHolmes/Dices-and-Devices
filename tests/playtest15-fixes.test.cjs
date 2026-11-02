@@ -54,10 +54,10 @@ test("source — score resolution hides mult until mult phase", () => {
   assert.match(html, /multShown != null \? `\$\{multShown\.toFixed\(2\)\}x` : '…'/);
 });
 
-test("source — overlay input guard blocks shop purchases", () => {
+test("source — overlay click-through guard scopes shop purchases", () => {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-  assert.match(html, /overlayInputGuardUntilRef\.current/);
-  assert.match(html, /armOverlayInputGuard/);
+  assert.match(html, /consumeNextClickRef/);
+  assert.match(html, /armClickThroughGuard/);
   assert.match(html, /FORFEIT \/ ABANDON RUN/);
   assert.match(html, /ensureEarlySmellingSalts/);
   assert.match(html, /data-layout-key="rap-sheet-run-summary"/);
