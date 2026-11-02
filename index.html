@@ -581,6 +581,22 @@
             height: 4.5rem;
         }
     }
+    @media (max-height: 450px) and (orientation: landscape) {
+        #root-gutterbones [data-layout-key="rap-sheet-wrap"] {
+            padding-top: 0.25rem;
+            align-items: flex-start;
+        }
+        #root-gutterbones [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
+            margin-bottom: 0.35rem;
+            padding-bottom: 0.35rem;
+        }
+        #root-gutterbones [data-layout-key="rap-sheet-archetype"] {
+            margin-top: 0.15rem;
+            margin-bottom: 0.15rem;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+    }
     #root-gutterbones .run-intel-summary {
         box-sizing: border-box;
         pointer-events: auto;
@@ -662,6 +678,13 @@
             z-index: 6;
             background: linear-gradient(180deg, rgba(26, 26, 26, 0) 0%, #1a1a1a 14%, #1a1a1a 100%);
             padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
+        }
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-routes-unscaled {
+            margin-bottom: 0.15rem;
+            padding-bottom: 0.15rem;
+        }
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-next-job-header {
+            font-size: 0.75rem !important;
         }
         #root-gutterbones .title-actions-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5756,8 +5779,56 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     if (routeList) need = routeList.offsetTop + routeList.scrollHeight;
                 }
                 if (avail <= 0 || need <= 0) return;
-                const raw = (avail / need) * (isShopRoutes ? 0.84 : 1);
-                const scale = Math.min(1, Math.max(minScale, raw));
+                let shopFit = 0.84;
+                if (isShopRoutes && typeof window !== 'undefined' && window.innerHeight < 450) {
+                    shopFit = window.innerWidth > window.innerHeight ? 0.52 : 0.72;
+                    if (window.innerWidth > window.innerHeight) {
+                        avail = Math.min(avail, Math.max(96, window.innerHeight * 0.34));
+                    }
+                }
+                let raw = (avail / need) * (isShopRoutes ? shopFit : 1);
+                if (isShopRoutes && typeof window !== 'undefined') {
+                    const panel = shell.closest('[data-layout-key="shop-routes-panel"]');
+                    const footer = panel?.querySelector('.shop-routes-footer');
+                    const panelTop = panel?.getBoundingClientRect().top ?? shell.getBoundingClientRect().top;
+                    const footerH = footer?.getBoundingClientRect().height || 0;
+                    const margin = 8;
+                    const viewportRoom = Math.max(72, window.innerHeight - panelTop - footerH - margin);
+                    const routeList = body.querySelector('.gb-route-list');
+                    const needBottom = routeList
+                        ? routeList.offsetTop + routeList.scrollHeight
+                        : need;
+                    if (needBottom > 0 && viewportRoom > 0) {
+                        const viewportCap = (viewportRoom / needBottom) * (window.innerHeight < 450 ? 0.96 : 0.9);
+                        raw = Math.min(raw, viewportCap);
+                    }
+                }
+                const scaleFloor = isShopRoutes && typeof window !== 'undefined'
+                    && window.innerHeight < 450 && window.innerWidth > window.innerHeight
+                    ? Math.min(minScale, 0.12)
+                    : minScale;
+                let scale = Math.min(1, Math.max(scaleFloor, raw));
+                if (isShopRoutes && typeof window !== 'undefined') {
+                    const cards = body.querySelectorAll('[data-layout-key="shop-route-card"]');
+                    const lastCard = cards.length ? cards[cards.length - 1] : null;
+                    const footer = shell.closest('[data-layout-key="shop-routes-panel"]')?.querySelector('.shop-routes-footer');
+                    const footerTop = footer?.getBoundingClientRect().top ?? window.innerHeight;
+                    const budget = Math.min(window.innerHeight - 6, footerTop - 4);
+                    if (lastCard && budget > 0) {
+                        let trial = scale;
+                        for (let i = 0; i < 12; i += 1) {
+                            body.style.transformOrigin = 'top center';
+                            body.style.transform = `scale(${trial})`;
+                            const lb = lastCard.getBoundingClientRect().bottom;
+                            if (lb <= budget) {
+                                scale = trial;
+                                break;
+                            }
+                            trial = Math.max(scaleFloor, trial * 0.88);
+                            scale = trial;
+                        }
+                    }
+                }
                 if (scale < 0.995) {
                     body.style.transformOrigin = (isInlineIntel || isShopRoutes) ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
@@ -7105,8 +7176,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
         };
 
-        const beginRoundClearCard = (nextPhase, waitHeatMs = 0, { bumpJobRound = true } = {}) => {
-            if (score < currentTarget) return;
+        const beginRoundClearCard = (nextPhase, waitHeatMs = 0, { bumpJobRound = true, quotaScore, skipQuotaCheck = false } = {}) => {
+            if (!skipQuotaCheck) {
+                const effectiveScore = quotaScore != null ? quotaScore : score;
+                if (effectiveScore < currentTarget) return;
+            }
             clearTransientJuice();
             setPaperStamps([]);
             roundClearPendingRef.current = { nextPhase, waitHeatMs, bumpJobRound: !!bumpJobRound };
@@ -7128,7 +7202,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (roundClearCardActive) return;
             pendingPhaseTransitionRef.current = null;
             if (pending.roundClear) {
-                beginRoundClearCard(pending.nextPhase, pending.waitHeatMs || 0);
+                const clearOpts = { quotaScore: pending.quotaScore };
+                if (pending.bumpJobRound != null) clearOpts.bumpJobRound = !!pending.bumpJobRound;
+                beginRoundClearCard(pending.nextPhase, pending.waitHeatMs || 0, clearOpts);
                 return;
             }
             runPhaseTransition(pending.nextPhase, {
@@ -7137,12 +7213,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             });
         };
 
-        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false, bumpJobRound = false } = {}) => {
+        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false, bumpJobRound = !!roundClear, quotaScore } = {}) => {
             pendingPhaseTransitionRef.current = {
                 nextPhase,
                 waitHeatMs,
                 roundClear: !!roundClear,
-                bumpJobRound: !!bumpJobRound
+                bumpJobRound: !!bumpJobRound,
+                quotaScore
             };
             tryRunPendingPhaseTransition();
         };
@@ -8124,8 +8201,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (naturalH <= 0) return;
                 rapSheetNaturalHeightRef.current = naturalH;
                 setRapSheetNaturalHeight(naturalH);
-                const minScale = vh < 400 ? 0.22 : vh < 420 ? 0.26 : 0.32;
-                const scale = Math.max(minScale, Math.min(1, ((vh - margin * 2) / naturalH) * 0.92));
+                const landscapeShort = vh < 450 && window.innerWidth > window.innerHeight;
+                const minScale = vh < 400 ? 0.2 : vh < 420 ? 0.24 : landscapeShort ? 0.22 : 0.32;
+                const fitFactor = landscapeShort ? 0.72 : 0.92;
+                const scale = Math.max(minScale, Math.min(1, ((vh - margin * 2) / naturalH) * fitFactor));
                 if (naturalH <= vh - margin * 2) {
                     setRapSheetScale(1);
                     return;
@@ -8162,7 +8241,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const nudge = () => {
                 wrap.style.marginTop = '';
                 const ir = inner.getBoundingClientRect();
-                if (ir.top < margin) wrap.style.marginTop = `${margin - ir.top}px`;
+                let shift = 0;
+                if (ir.top < margin) shift += margin - ir.top;
+                if (ir.bottom > vh - margin) shift += vh - margin - ir.bottom;
+                if (Math.abs(shift) > 0.5) wrap.style.marginTop = `${shift}px`;
             };
             nudge();
             const id = scheduleTimeout(nudge, 60);
@@ -9736,19 +9818,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setPlaysRemaining: (n) => setHands(Math.max(1, Math.floor(Number(n) || 1))),
                     forceRoundWin: () => {
                         if (phase !== "PLAY") return false;
-                        setScore(target);
+                        const quotaMet = Math.max(score, currentTarget);
+                        setScore(quotaMet);
                         setHands(0);
                         const payout = computeRoundClearPayout(0, gold);
                         setRoundClearPayout(payout);
                         if (payout.total > 0) setGold((g) => g + payout.total);
                         const allowGamble = round >= GAMBLE_TUNING.minRound && gold >= GAMBLE_TUNING.minStake;
-                        if (allowGamble) {
-                            setGambleStake(GutterbonesGamble.baseStake(gold));
-                            transitionToPhase("GAMBLE", { roundClear: true, waitHeatMs: 0 });
-                        } else {
-                            generateShop();
-                            transitionToPhase("SHOP", { roundClear: true, waitHeatMs: 0 });
-                        }
+                        scheduleTimeout(() => {
+                            if (allowGamble) {
+                                setGambleStake(GutterbonesGamble.baseStake(gold));
+                                transitionToPhase("GAMBLE", { roundClear: true, waitHeatMs: 0, quotaScore: quotaMet });
+                            } else {
+                                generateShop();
+                                transitionToPhase("SHOP", { roundClear: true, waitHeatMs: 0, quotaScore: quotaMet });
+                            }
+                        }, 0);
                         return true;
                     },
                     grantHardware: (ids = []) => {
@@ -9887,7 +9972,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         layoutKey: 'mechanic-toast'
                     });
                 },
-                openRoundClear: () => beginRoundClearCard('SHOP', 0, { bumpJobRound: false }),
+                openRoundClear: () => {
+                    clearTransientJuice();
+                    setPaperStamps([]);
+                    roundClearPendingRef.current = { nextPhase: 'SHOP', waitHeatMs: 0, bumpJobRound: false };
+                    setRoundClearCardActive(true);
+                    setRoundClearCanContinue(false);
+                    scheduleTimeout(
+                        () => {
+                            setRoundClearCanContinue(true);
+                            if (roundClearContinueQueuedRef.current) finishRoundClearCard(true);
+                        },
+                        GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion)
+                    );
+                },
                 openRapSheet: () => {
                     setRound(9);
                     setPhase('RAP_SHEET');
@@ -10044,16 +10142,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 armPendingRoundFinalizeDemo: () => {
                     setRound(3);
                     setPhase('PLAY');
+                    setHands(Math.max(hands, 2));
+                    const quotaMet = Math.max(score, currentTarget + 1);
+                    setScore(quotaMet);
                     setRoundClearCardActive(false);
                     pendingRoundFinalizeRef.current = {
                         settlementCashLocal: gold,
                         projectedCashLocal: gold,
                         ready: false,
                         awaitScoreOverlay: true,
-                        overlaySeen: false
+                        overlaySeen: false,
+                        quotaMet
                     };
                     finalizeRoundAfterHandRef.current = () => {
-                        if (!roundClearCardActive) beginRoundClearCard('SHOP', 0, { bumpJobRound: false });
+                        if (!roundClearCardActive) {
+                            beginRoundClearCard('SHOP', 0, { bumpJobRound: false, quotaScore: quotaMet });
+                        }
                     };
                 },
                 runAttemptRoundFinalizeDemo: () => attemptRoundFinalizeAfterScore(),
@@ -10123,7 +10227,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     scoreOverlayActiveRef.current = true;
                     setScoreOverlayCanDismiss(true);
                 },
-                openRoundClearDemo: () => beginRoundClearCard('SHOP', 0, { bumpJobRound: false }),
+                openRoundClearDemo: () => {
+                    clearTransientJuice();
+                    setPaperStamps([]);
+                    roundClearPendingRef.current = { nextPhase: 'SHOP', waitHeatMs: 0, bumpJobRound: false };
+                    setRoundClearCardActive(true);
+                    setRoundClearCanContinue(false);
+                    scheduleTimeout(
+                        () => {
+                            setRoundClearCanContinue(true);
+                            if (roundClearContinueQueuedRef.current) finishRoundClearCard(true);
+                        },
+                        GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion)
+                    );
+                },
                 measureScoreHudOverlap: () => {
                     const hud = document.querySelector('[data-layout-key="play-hud"]');
                     const panel = document.querySelector('[data-layout-key="score-breakdown-overlay"]')

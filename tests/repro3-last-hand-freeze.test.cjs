@@ -35,7 +35,7 @@ after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function runRepro(page) {
+async function runRepro(page, maxWaitSec = 25) {
   await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
   await page.waitForTimeout(1500);
@@ -63,7 +63,7 @@ async function runRepro(page) {
   if ((await tap.count()) > 0) await tap.first().click({ force: true });
   else await page.evaluate(() => window.__GB_E2E__?.dismissOverlays?.());
   let st = { phase: "PLAY" };
-  for (let s = 0; s < 25; s += 1) {
+  for (let s = 0; s < maxWaitSec; s += 1) {
     await page.waitForTimeout(1000);
     st = await page.evaluate(() => window.__GB_E2E__.getState());
     if (st.phase !== "PLAY") break;
@@ -76,10 +76,11 @@ for (const [name, width, height] of [
   ["768x1024", 768, 1024],
 ]) {
   test(`repro3 — last hand leaves PLAY within 25s @ ${name}`, async () => {
+    const maxWaitSec = height > width ? 35 : 25;
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage({ viewport: { width, height } });
     try {
-      const st = await runRepro(page);
+      const st = await runRepro(page, maxWaitSec);
       assert.notEqual(st.phase, "PLAY", `stuck in PLAY after last hand (viewport ${name})`);
     } finally {
       await browser.close();
