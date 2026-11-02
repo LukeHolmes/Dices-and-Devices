@@ -199,16 +199,6 @@ for (const vp of VIEWPORTS) {
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
       await page.locator('[data-layout-key="shop-routes-panel"]').scrollIntoViewIfNeeded();
       await page.waitForSelector('[data-layout-key="shop-route-card"]', { timeout: 12_000 });
-      await page.waitForFunction(
-        () => {
-          const body = document.querySelector(".shop-routes-body");
-          if (!body) return false;
-          if (body.scrollHeight <= (body.parentElement?.clientHeight || 0) + 4) return true;
-          const tr = getComputedStyle(body).transform;
-          return tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
-        },
-        { timeout: 15_000 },
-      );
       if (vp.width < 900 || vp.height < 450) await page.waitForTimeout(600);
       let metrics = { ok: false };
       for (let attempt = 0; attempt < 3 && !metrics.ok; attempt += 1) {
@@ -218,20 +208,22 @@ for (const vp of VIEWPORTS) {
         const vh = window.innerHeight;
         const vw = window.innerWidth;
         const body = document.querySelector(".shop-routes-body");
-        const scaled =
-          body
-          && getComputedStyle(body).transform !== "none"
-          && getComputedStyle(body).transform !== "matrix(1, 0, 0, 1, 0, 0)";
-        const minCardH = scaled ? 10 : 24;
+        const tr = body ? getComputedStyle(body).transform : "none";
+        const scale =
+          tr && tr !== "none" && tr.startsWith("matrix")
+            ? parseFloat(tr.split("(")[1].split(",")[0])
+            : 1;
+        const minCardH = 32;
         const bad = cards.map((card, idx) => {
           const r = card.getBoundingClientRect();
-          if (r.height < minCardH) return { idx, reason: "too short", h: r.height, scaled };
+          if (r.height < minCardH) return { idx, reason: "too short", h: r.height, scale };
           if (r.bottom > vh + 2) return { idx, reason: "below viewport", bottom: r.bottom, vh };
           if (r.right > vw + 2) return { idx, reason: "clipped right", right: r.right, vw };
           if (r.top < -4) return { idx, reason: "above viewport", top: r.top };
           return null;
         }).filter(Boolean);
-        return { ok: cards.length >= 3 && bad.length === 0, cardCount: cards.length, bad };
+        if (scale < 0.59) bad.push({ idx: -1, reason: "scale too low", scale });
+        return { ok: cards.length >= 1 && bad.length === 0, cardCount: cards.length, bad, scale };
       });
       }
       assert.ok(metrics.ok, JSON.stringify(metrics));
@@ -320,7 +312,7 @@ test("e2e — round clear Enter and Space advance", async () => {
 test("source — queueFinalizeRound defers until score overlays clear", () => {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   assert.match(html, /queueFinalizeRound/);
-  assert.match(html, /pending\.ready = true/);
+  assert.match(html, /completePendingRoundFinalize/);
   assert.match(html, /scoreOverlayActiveRef\.current/);
-  assert.match(html, /if \(pendingFinalize\?\.ready\)/);
+  assert.match(html, /attemptRoundFinalizeAfterScore/);
 });

@@ -144,6 +144,8 @@
         --gb-die: clamp(2.35rem, 7.2vmin, 6rem);
         --gb-pad: clamp(0.35rem, 1.6vmin, 1.25rem);
         --gb-title: clamp(1.75rem, 6vmin, 4.5rem);
+        --gb-min-font: clamp(11px, 2.6vmin, 14px);
+        --gb-min-tap: 32px;
         --t-fast: 120ms;
         --t-med: 240ms;
         --t-slow: 400ms;
@@ -209,6 +211,18 @@
         border-radius: 999px;
         border: 1px solid rgba(0, 0, 0, 0.35);
     }
+    #root-gutterbones button,
+    #root-gutterbones a[href],
+    #root-gutterbones summary,
+    #root-gutterbones [role="button"] {
+        min-width: var(--gb-min-tap);
+        min-height: var(--gb-min-tap);
+    }
+    #root-gutterbones .text-\[10px\],
+    #root-gutterbones .text-\[9px\],
+    #root-gutterbones .text-\[8px\] {
+        font-size: var(--gb-min-font) !important;
+    }
     #root-gutterbones .gb-route-list {
         display: flex;
         flex-direction: column;
@@ -219,6 +233,27 @@
         overscroll-behavior: contain;
         padding-right: 0.25rem;
         scrollbar-width: none;
+    }
+    #root-gutterbones .shop-route-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.35rem;
+        flex-shrink: 0;
+    }
+    #root-gutterbones .shop-route-pagination button {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.35rem 0.75rem;
+        font-size: var(--gb-min-font);
+    }
+    #root-gutterbones [data-layout-key="shop-route-card"].shop-route-card--compact {
+        padding: 0.65rem 0.75rem;
+    }
+    #root-gutterbones [data-layout-key="shop-route-card"].shop-route-card--compact .font-bold.text-xl {
+        font-size: 1rem;
+        line-height: 1.2;
     }
     #root-gutterbones .gb-route-list::-webkit-scrollbar {
         width: 0;
@@ -653,6 +688,24 @@
         }
     }
     @media (max-height: 450px) {
+        #root-gutterbones[data-phase="SHOP"] .build-indicator-root,
+        #root-gutterbones[data-phase="SHOP"] .tutorial-coach-root {
+            pointer-events: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .build-indicator-root {
+            top: auto !important;
+            bottom: max(5.5rem, env(safe-area-inset-bottom, 0px));
+            left: 0.35rem !important;
+            width: min(42vw, 9rem) !important;
+            opacity: 0.92;
+            z-index: 290 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .tutorial-coach-card {
+            top: auto !important;
+            bottom: max(0.35rem, env(safe-area-inset-bottom, 0px)) !important;
+            max-height: 38dvh;
+            overflow: hidden;
+        }
         #root-gutterbones [data-layout-key="run-intel-floating"] {
             display: none !important;
         }
@@ -670,6 +723,31 @@
             min-height: 0;
             max-height: 48dvh;
         }
+        @media (min-width: 640px) {
+            #root-gutterbones [data-layout-key="shop-layout"] {
+                flex-direction: row !important;
+                align-items: stretch;
+            }
+            #root-gutterbones [data-layout-key="shop-layout"] > [data-tutorial="shop-panel"] {
+                flex: 1 1 52%;
+                max-height: 100%;
+            }
+            #root-gutterbones [data-layout-key="shop-routes-panel"] {
+                flex: 1 1 48%;
+                max-height: 100%;
+            }
+            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-fixter-line,
+            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-debt-warning,
+            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence,
+            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-debt,
+            #root-gutterbones [data-layout-key="shop-stash-panel"] .stash-program-grid {
+                display: none !important;
+            }
+            #root-gutterbones [data-layout-key="shop-stash-panel"] {
+                padding-top: 0.25rem !important;
+                margin-top: 0 !important;
+            }
+        }
         #root-gutterbones [data-layout-key="shop-stash-panel"],
         #root-gutterbones .shop-routes-footer {
             flex-shrink: 0;
@@ -685,6 +763,12 @@
         }
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-next-job-header {
             font-size: 0.75rem !important;
+        }
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence {
+            display: none;
+        }
+        #root-gutterbones [data-tutorial="shop-panel"] > p.text-xs {
+            display: none;
         }
         #root-gutterbones .title-actions-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -715,9 +799,9 @@
             gap: 0.2rem;
         }
         #root-gutterbones .play-stash-column .stash-program-grid button {
-            min-height: 2.1rem;
-            font-size: 8px;
-            line-height: 1.1;
+            min-height: 2rem;
+            font-size: var(--gb-min-font);
+            line-height: 1.15;
         }
         #root-gutterbones .run-intel-summary--inline.run-intel-collapsed {
             height: 1.9rem;
@@ -5224,7 +5308,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             : null;
         const hudFocus = step.focus === 'heat-quota' || step.focus === 'roll-btn';
-        const captionOnTop = hudFocus || (cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.48 : 400));
+        const shopFocus = step.focus === 'shop-panel';
+        const captionOnTop = shopFocus
+            ? false
+            : (hudFocus || (cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.48 : 400)));
         const cardClass = captionOnTop
             ? 'tutorial-coach-card absolute top-[max(6.5rem,env(safe-area-inset-top))] left-3 right-3 md:left-6 md:right-auto md:max-w-sm'
             : 'tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md';
@@ -5642,8 +5729,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     const LossExplanationOverlay = ({ data, reducedMotion, onDismiss }) => {
         if (!data) return null;
         return (
-            <div className="absolute inset-x-0 bottom-5 z-[590] pointer-events-none px-4 flex justify-center">
-                <div className={`readable-panel border-red-600/80 rounded-xl p-5 w-[min(96vw,48rem)] pointer-events-auto ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+            <div className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[590] pointer-events-none px-4 flex justify-center">
+                <div className={`readable-panel border-red-600/80 rounded-xl p-5 w-[min(96vw,48rem)] pointer-events-auto max-h-[min(42dvh,22rem)] overflow-y-auto ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
                     <div className="font-marker text-4xl md:text-5xl text-red-300 text-center mb-2">YOU LOST BECAUSE...</div>
                     <div className="font-mono text-center text-red-100 text-base md:text-lg mb-4 leading-relaxed">{data.primaryReason}</div>
                     {data.contributors?.length > 0 && (
@@ -5663,7 +5750,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         </div>
                     )}
                     {onDismiss && (
-                        <button type="button" onClick={onDismiss} className="mt-4 w-full py-2 border border-red-400/60 text-red-100 font-mono text-xs tracking-widest hover:bg-red-950/40">
+                        <button type="button" onClick={onDismiss} className="mt-4 w-full py-3 min-h-[44px] border border-red-400/60 text-red-100 font-mono text-xs tracking-widest hover:bg-red-950/40">
                             DISMISS
                         </button>
                     )}
@@ -5775,60 +5862,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }
                 let need = body.scrollHeight;
                 if (isShopRoutes) {
-                    const routeList = body.querySelector(".gb-route-list");
-                    if (routeList) need = routeList.offsetTop + routeList.scrollHeight;
+                    body.style.transform = 'none';
+                    body.style.width = '';
+                    body.style.marginBottom = '';
+                    body.style.removeProperty('--shop-route-scale');
+                    shell.style.height = '';
+                    shell.style.maxHeight = '';
+                    return;
                 }
                 if (avail <= 0 || need <= 0) return;
-                let shopFit = 0.84;
-                if (isShopRoutes && typeof window !== 'undefined' && window.innerHeight < 450) {
-                    shopFit = window.innerWidth > window.innerHeight ? 0.52 : 0.72;
-                    if (window.innerWidth > window.innerHeight) {
-                        avail = Math.min(avail, Math.max(96, window.innerHeight * 0.34));
-                    }
-                }
-                let raw = (avail / need) * (isShopRoutes ? shopFit : 1);
-                if (isShopRoutes && typeof window !== 'undefined') {
-                    const panel = shell.closest('[data-layout-key="shop-routes-panel"]');
-                    const footer = panel?.querySelector('.shop-routes-footer');
-                    const panelTop = panel?.getBoundingClientRect().top ?? shell.getBoundingClientRect().top;
-                    const footerH = footer?.getBoundingClientRect().height || 0;
-                    const margin = 8;
-                    const viewportRoom = Math.max(72, window.innerHeight - panelTop - footerH - margin);
-                    const routeList = body.querySelector('.gb-route-list');
-                    const needBottom = routeList
-                        ? routeList.offsetTop + routeList.scrollHeight
-                        : need;
-                    if (needBottom > 0 && viewportRoom > 0) {
-                        const viewportCap = (viewportRoom / needBottom) * (window.innerHeight < 450 ? 0.96 : 0.9);
-                        raw = Math.min(raw, viewportCap);
-                    }
-                }
-                const scaleFloor = isShopRoutes && typeof window !== 'undefined'
-                    && window.innerHeight < 450 && window.innerWidth > window.innerHeight
-                    ? Math.min(minScale, 0.12)
-                    : minScale;
+                let raw = avail / need;
+                const scaleFloor = minScale;
                 let scale = Math.min(1, Math.max(scaleFloor, raw));
-                if (isShopRoutes && typeof window !== 'undefined') {
-                    const cards = body.querySelectorAll('[data-layout-key="shop-route-card"]');
-                    const lastCard = cards.length ? cards[cards.length - 1] : null;
-                    const footer = shell.closest('[data-layout-key="shop-routes-panel"]')?.querySelector('.shop-routes-footer');
-                    const footerTop = footer?.getBoundingClientRect().top ?? window.innerHeight;
-                    const budget = Math.min(window.innerHeight - 6, footerTop - 4);
-                    if (lastCard && budget > 0) {
-                        let trial = scale;
-                        for (let i = 0; i < 12; i += 1) {
-                            body.style.transformOrigin = 'top center';
-                            body.style.transform = `scale(${trial})`;
-                            const lb = lastCard.getBoundingClientRect().bottom;
-                            if (lb <= budget) {
-                                scale = trial;
-                                break;
-                            }
-                            trial = Math.max(scaleFloor, trial * 0.88);
-                            scale = trial;
-                        }
-                    }
-                }
                 if (scale < 0.995) {
                     body.style.transformOrigin = (isInlineIntel || isShopRoutes) ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
@@ -6191,7 +6236,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const RouteChoiceCard = ({ path, projection, onPick, selected = false }) => {
+    const RouteChoiceCard = ({ path, projection, onPick, selected = false, compact = false }) => {
         const quota = projection?.nextTargetDisplay ?? projection?.nextTarget;
         const aria = `${path.name}, next quota about ${quota}${path.boss ? `, boss ${path.boss.name}` : ''}${projection?.nextHands ? `, ${projection.nextHands} plays` : ''}${selected ? ', selected' : ''}`;
         return (
@@ -6201,10 +6246,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 onClick={() => onPick(path)}
                 aria-label={aria}
                 aria-pressed={selected}
-                className={`w-full h-auto min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all shrink-0 ${path.color} ${selected ? 'ring-2 ring-[#0df] bg-cyan-950/35 border-[#0df]/70' : ''}`}
+                className={`w-full h-auto min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all shrink-0 ${compact ? 'shop-route-card--compact' : ''} ${path.color} ${selected ? 'ring-2 ring-[#0df] bg-cyan-950/35 border-[#0df]/70' : ''}`}
             >
-                <div className="font-bold text-xl uppercase tracking-wider">{path.name}</div>
-                <div className="text-xs opacity-70 mt-1 font-mono">{path.desc}</div>
+                <div className={`font-bold uppercase tracking-wider ${compact ? 'text-base' : 'text-xl'}`}>{path.name}</div>
+                <div className="text-xs opacity-70 mt-1 font-mono line-clamp-2">{path.desc}</div>
                 {projection && (
                     <div className="mt-2 font-mono text-sm text-yellow-200">
                         Next quota: <span className="font-bold text-white">~{quota}</span>
@@ -6215,14 +6260,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         )}
                     </div>
                 )}
-                {projection?.effectLines?.length > 0 && (
+                {!compact && projection?.effectLines?.length > 0 && (
                     <ul className="mt-2 space-y-0.5 text-[10px] font-mono text-gray-300 list-disc list-inside">
                         {projection.effectLines.slice(0, 5).map((line, idx) => (
                             <li key={idx}>{line}</li>
                         ))}
                     </ul>
                 )}
-                {path.boss && (
+                {!compact && path.boss && (
                     <div className="mt-3 pt-2 border-t border-current flex gap-2 items-start text-[10px] font-bold font-mono">
                         <BossPortrait boss={path.boss} variant="intel" />
                         <div className="min-w-0">
@@ -6238,7 +6283,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
         const tier = analysis.confidence >= 0.72 ? 'HIGH' : analysis.confidence >= 0.42 ? 'MED' : 'LOW';
         return (
-            <div className={`${inline ? 'relative w-full build-indicator-inline' : 'absolute top-16 left-4 z-[82] w-[min(88vw,15rem)]'} rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
+            <div className={`build-indicator-root ${inline ? 'relative w-full build-indicator-inline' : 'absolute top-16 left-4 z-[82] w-[min(88vw,15rem)]'} rounded-xl readable-panel ${ui.border} px-3 py-3 font-mono text-xs pointer-events-none`}>
                 <div className="tracking-[.22em] text-gray-400 mb-1 font-bold">BUILD INTEL</div>
                 <div className={`${ui.accent} font-bold leading-tight tracking-wide text-sm`}>BUILD: {ui.label}</div>
                 {analysis.secondaryTag && <div className="text-gray-300 mt-1 truncate">TAG: {analysis.secondaryTag}</div>}
@@ -6406,10 +6451,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <button onClick={onSettings} className="w-full py-3 bg-black/60 border-4 border-gray-600 text-gray-100 hover:border-[#0df] active:translate-y-0.5">SETTINGS</button>
                     <button onClick={onCredits} className="w-full py-3 bg-black/40 border-4 border-gray-700 text-gray-300 hover:border-[#ff007f] active:translate-y-0.5">CREDITS</button>
                 </div>
-                <div className="font-mono text-[9px] tracking-[0.18em] text-[#d6b85c]/60">
-                    <a href="https://lukeholmes.github.io/" target="_blank" rel="noopener noreferrer" className="text-[#0df] hover:text-white underline underline-offset-4">lukeholmes.github.io</a>
+                <div className="font-mono text-xs tracking-[0.12em] text-[#d6b85c]/60">
+                    <a href="https://lukeholmes.github.io/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-[32px] px-1 text-[#0df] hover:text-white underline underline-offset-4">lukeholmes.github.io</a>
                     {' · '}
-                    <a href="https://coldforge.tech/" target="_blank" rel="noopener noreferrer" className="text-[#0df] hover:text-white underline underline-offset-4">coldforge.tech</a>
+                    <a href="https://coldforge.tech/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-[32px] px-1 text-[#0df] hover:text-white underline underline-offset-4">coldforge.tech</a>
                 </div>
             </div>
         </div>
@@ -6703,6 +6748,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [flowStreak, setFlowStreak] = useState(0);
         const [shopItems, setShopItems] = useState([]);
         const [shopRefreshes, setShopRefreshes] = useState(0);
+        const [shopRoutePage, setShopRoutePage] = useState(0);
+        const [shopRoutesPerPage, setShopRoutesPerPage] = useState(3);
         const [paths, setPaths] = useState([]);
         const [selectedShopPathId, setSelectedShopPathId] = useState(null);
         const shopAdvanceLockRef = useRef(false);
@@ -6967,21 +7014,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const pendingFinalize = pendingRoundFinalizeRef.current;
             const overlaysClear = !scoreBreakdown && !scoreResolution && !scoreOverlayActiveRef.current;
             if (pendingFinalize && finalizeRoundAfterHandRef.current && overlaysClear) {
-                pendingRoundFinalizeRef.current = null;
-                finalizeRoundAfterHandRef.current(
-                    pendingFinalize.settlementCashLocal,
-                    pendingFinalize.projectedCashLocal
-                );
+                completePendingRoundFinalize();
             } else if (
                 (pendingRoundFinalizeRef.current?.handsAfterPlay != null
                     ? pendingRoundFinalizeRef.current.handsAfterPlay <= 0
                     : hands <= 0)
-                && score < currentTarget
                 && finalizeRoundAfterHandRef.current
                 && overlaysClear
             ) {
-                pendingRoundFinalizeRef.current = null;
-                finalizeRoundAfterHandRef.current(gold, gold);
+                completePendingRoundFinalize();
             }
             if (phase === 'PLAY' && hands <= 0) {
                 armLastHandRecoveryWatchdog();
@@ -7014,11 +7055,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 return;
             }
             if (scoreResolution && pendingScoreBreakdownRef.current) {
-                const midRoundStillPlaying = hands > 0 && score < currentTarget;
+                const pendingMeta = pendingRoundFinalizeRef.current;
+                const playsLeft = pendingMeta?.handsAfterPlay != null ? pendingMeta.handsAfterPlay : hands;
+                const effectiveScore = pendingMeta?.scoreAfterPlay != null ? pendingMeta.scoreAfterPlay : score;
+                const quotaTarget = pendingMeta?.quotaTarget != null ? pendingMeta.quotaTarget : currentTarget;
+                const midRoundStillPlaying = playsLeft > 0 && effectiveScore < quotaTarget;
                 const skipBreakdownForRoundEnd =
                     !midRoundStillPlaying
                     && roundEndTransitionArmedRef.current
-                    && (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current);
+                    && (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current || playsLeft <= 0);
                 if (!midRoundStillPlaying && !skipBreakdownForRoundEnd) {
                     scoreOverlayDismissQueuedRef.current = true;
                     setScoreResolution(null);
@@ -7069,26 +7114,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (pendingRoundFinalizeRef.current) {
                 pendingRoundFinalizeRef.current.overlaySeen = true;
             }
-            const pendingFinalize = pendingRoundFinalizeRef.current;
-            if (pendingFinalize?.ready) {
-                const { settlementCashLocal, projectedCashLocal } = pendingFinalize;
-                pendingRoundFinalizeRef.current = null;
-                clearLastHandRecoveryWatchdog();
-                finalizeRoundAfterHandRef.current?.(settlementCashLocal, projectedCashLocal);
-            } else if (
-                pendingFinalize
-                && roundEndTransitionArmedRef.current
-                && !scoreBreakdown
-                && !scoreResolution
-            ) {
-                pendingFinalize.ready = true;
-                pendingRoundFinalizeRef.current = null;
-                clearLastHandRecoveryWatchdog();
-                finalizeRoundAfterHandRef.current?.(
-                    pendingFinalize.settlementCashLocal,
-                    pendingFinalize.projectedCashLocal
-                );
+            if (pendingRoundFinalizeRef.current && roundEndTransitionArmedRef.current) {
+                scheduleTimeout(() => attemptRoundFinalizeAfterScore(), 0);
             }
+        };
+
+        const completePendingRoundFinalize = () => {
+            const pending = pendingRoundFinalizeRef.current;
+            if (!pending) return;
+            pendingRoundFinalizeRef.current = null;
+            clearLastHandRecoveryWatchdog();
+            finalizeRoundAfterHandRef.current?.(pending.settlementCashLocal, pending.projectedCashLocal);
         };
 
         const attemptRoundFinalizeAfterScore = () => {
@@ -7097,29 +7133,36 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const playsLeft = pending.handsAfterPlay != null ? pending.handsAfterPlay : hands;
             const lastHandRunOut = playsLeft <= 0;
             const overlayLive = scoreOverlayActiveRef.current || !!(scoreBreakdown || scoreResolution);
-            if (lastHandRunOut && overlayLive && score < currentTarget) {
-                setScoreOverlayCanDismiss(true);
+
+            if (lastHandRunOut && overlayLive) {
+                if (!scoreOverlayCanDismiss) setScoreOverlayCanDismiss(true);
+                scoreOverlayDismissQueuedRef.current = true;
+                applyQueuedScoreOverlayDismiss();
                 dismissScoreOverlays(true);
             }
-            const overlayLiveAfterDismiss = scoreOverlayActiveRef.current || !!(scoreBreakdown || scoreResolution);
-            if (overlayLiveAfterDismiss && !(lastHandRunOut && score < currentTarget)) {
-                pending.ready = true;
-                pending.overlaySeen = true;
+
+            const overlayStillLive = scoreOverlayActiveRef.current || !!(scoreBreakdown || scoreResolution);
+            const overlayLiveAfterDismiss = overlayStillLive;
+
+            if (lastHandRunOut && overlayLiveAfterDismiss) {
+                scheduleTimeout(() => attemptRoundFinalizeAfterScore(), 48);
+                return;
+            }
+
+            if (!lastHandRunOut && overlayStillLive) {
                 if (
                     (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current)
                     && (scoreOverlayCanDismiss || roundEndTransitionArmedRef.current)
                 ) {
                     applyQueuedScoreOverlayDismiss();
                 }
-                return;
+                if (pending.awaitScoreOverlay && !pending.overlaySeen) {
+                    scheduleTimeout(() => attemptRoundFinalizeAfterScore(), 48);
+                    return;
+                }
             }
-            if (pending.awaitScoreOverlay && !pending.overlaySeen) {
-                scheduleTimeout(() => attemptRoundFinalizeAfterScore(), 48);
-                return;
-            }
-            pendingRoundFinalizeRef.current = null;
-            clearLastHandRecoveryWatchdog();
-            finalizeRoundAfterHandRef.current?.(pending.settlementCashLocal, pending.projectedCashLocal);
+
+            completePendingRoundFinalize();
         };
 
         const clearTransientJuice = () => {
@@ -7136,6 +7179,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const roundClearPendingRef = useRef(null);
         const pendingRoundFinalizeRef = useRef(null);
         const finalizeRoundAfterHandRef = useRef(null);
+        const runScoreRef = useRef(0);
+        const runTargetRef = useRef(75);
+        const runHandsRef = useRef(0);
+        const bossIntroActiveRef = useRef(false);
 
         const computeRoundClearPayout = (handsRemaining, cashHeld) => {
             const base = ECONOMY_TUNING.roundClearBaseCash || 8;
@@ -7171,6 +7218,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const displayJobRound = (_phaseName, roundNum) => Math.max(1, Number(roundNum) || 1);
 
         const finishRoundClearCard = (force = false) => {
+            const quotaScore = roundClearPendingRef.current?.quotaScore;
+            const quotaTarget = roundClearPendingRef.current?.quotaTarget;
+            const effectiveScore = quotaScore != null ? quotaScore : score;
+            const effectiveTarget = quotaTarget != null ? quotaTarget : currentTarget;
+            if (effectiveScore < effectiveTarget) {
+                setRoundClearCardActive(false);
+                setRoundClearCanContinue(false);
+                roundClearPendingRef.current = null;
+                return;
+            }
             if (!force && !roundClearCanContinue) {
                 roundClearContinueQueuedRef.current = true;
                 return;
@@ -7189,14 +7246,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
         };
 
-        const beginRoundClearCard = (nextPhase, waitHeatMs = 0, { bumpJobRound = true, quotaScore, skipQuotaCheck = false } = {}) => {
+        const beginRoundClearCard = (nextPhase, waitHeatMs = 0, { bumpJobRound = true, quotaScore, quotaTarget, skipQuotaCheck = false } = {}) => {
             if (!skipQuotaCheck) {
                 const effectiveScore = quotaScore != null ? quotaScore : score;
-                if (effectiveScore < currentTarget) return;
+                const effectiveTarget = quotaTarget != null ? quotaTarget : currentTarget;
+                if (effectiveScore < effectiveTarget) return;
             }
             clearTransientJuice();
             setPaperStamps([]);
-            roundClearPendingRef.current = { nextPhase, waitHeatMs, bumpJobRound: !!bumpJobRound };
+            roundClearPendingRef.current = {
+                nextPhase,
+                waitHeatMs,
+                bumpJobRound: !!bumpJobRound,
+                quotaScore: quotaScore != null ? quotaScore : score,
+                quotaTarget: quotaTarget != null ? quotaTarget : currentTarget
+            };
             setRoundClearCardActive(true);
             setRoundClearCanContinue(false);
             scheduleTimeout(
@@ -7211,11 +7275,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const tryRunPendingPhaseTransition = () => {
             const pending = pendingPhaseTransitionRef.current;
             if (!pending) return;
-            if (scoreBreakdown || scoreResolution || bossIntro) return;
+            if (scoreOverlayActiveRef.current || bossIntroActiveRef.current) return;
             if (roundClearCardActive) return;
             pendingPhaseTransitionRef.current = null;
             if (pending.roundClear) {
-                const clearOpts = { quotaScore: pending.quotaScore };
+                const clearOpts = { quotaScore: pending.quotaScore, quotaTarget: pending.quotaTarget };
                 if (pending.bumpJobRound != null) clearOpts.bumpJobRound = !!pending.bumpJobRound;
                 beginRoundClearCard(pending.nextPhase, pending.waitHeatMs || 0, clearOpts);
                 return;
@@ -7226,19 +7290,28 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             });
         };
 
-        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false, bumpJobRound = !!roundClear, quotaScore } = {}) => {
+        const transitionToPhase = (nextPhase, { waitHeatMs = 0, roundClear = false, bumpJobRound = !!roundClear, quotaScore, quotaTarget } = {}) => {
             pendingPhaseTransitionRef.current = {
                 nextPhase,
                 waitHeatMs,
                 roundClear: !!roundClear,
                 bumpJobRound: !!bumpJobRound,
-                quotaScore
+                quotaScore,
+                quotaTarget
             };
             tryRunPendingPhaseTransition();
         };
 
+        const queueRoundClearTransition = (nextPhase, { waitHeatMs = 0, bumpJobRound = true, quotaScore, quotaTarget } = {}) => {
+            if (scoreOverlayActiveRef.current || bossIntroActiveRef.current) {
+                transitionToPhase(nextPhase, { waitHeatMs, roundClear: true, bumpJobRound, quotaScore, quotaTarget });
+                return;
+            }
+            beginRoundClearCard(nextPhase, waitHeatMs, { bumpJobRound: !!bumpJobRound, quotaScore, quotaTarget });
+        };
+
         useEffect(() => {
-            if (scoreBreakdown || scoreResolution || bossIntro || roundClearCardActive) return;
+            if (scoreOverlayActiveRef.current || bossIntroActiveRef.current || roundClearCardActive) return;
             tryRunPendingPhaseTransition();
         }, [scoreBreakdown?.id, scoreResolution?.id, bossIntro, roundClearCardActive, phase]);
 
@@ -7295,6 +7368,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const currentTarget = getBossAdjustedTarget(target, activeBoss, round);
+        runScoreRef.current = score;
+        runTargetRef.current = currentTarget;
+        runHandsRef.current = hands;
+        bossIntroActiveRef.current = !!bossIntro;
         const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
         const scoreOverlayOpen = !!(scoreBreakdown || scoreResolution);
         scoreOverlayLockRef.current = scoreOverlayOpen;
@@ -7317,16 +7394,32 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
 
-        usePanelScaleToFit(shopRoutesShellRef, shopRoutesBodyRef, [
-            phase,
-            paths?.length,
-            shopItems?.length,
-            round,
-            inventory?.length,
-            debt,
-            shopRefreshes,
-            fixerLine
-        ], { enabled: phase === 'SHOP', minScale: 0.22 });
+        useEffect(() => {
+            if (phase !== 'SHOP') return undefined;
+            const computeRoutesPerPage = () => {
+                const h = window.innerHeight;
+                const w = window.innerWidth;
+                const landscapePhone = w > h && h < 500;
+                const routeCount = Math.max(1, paths?.length || 1);
+                if (landscapePhone || h < 420 || h <= 1024) setShopRoutesPerPage(1);
+                else if (h <= 1100) setShopRoutesPerPage(Math.min(2, routeCount));
+                else setShopRoutesPerPage(Math.min(3, routeCount));
+            };
+            computeRoutesPerPage();
+            window.addEventListener('resize', computeRoutesPerPage);
+            return () => window.removeEventListener('resize', computeRoutesPerPage);
+        }, [phase, paths?.length]);
+
+        useEffect(() => {
+            if (phase === 'SHOP') setShopRoutePage(0);
+        }, [phase, paths?.length, round]);
+
+        useEffect(() => {
+            const rootEl = document.getElementById('root-gutterbones');
+            if (!rootEl) return;
+            if (phase) rootEl.dataset.phase = phase;
+            else delete rootEl.dataset.phase;
+        }, [phase]);
 
         useEffect(() => {
             if (audioSettings.reducedMotionPref !== null) return;
@@ -8221,10 +8314,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 rapSheetNaturalHeightRef.current = naturalH;
                 setRapSheetNaturalHeight(naturalH);
                 const landscapeShort = vh < 450 && window.innerWidth > window.innerHeight;
-                const minScale = vh < 400 ? 0.2 : vh < 420 ? 0.24 : landscapeShort ? 0.22 : 0.32;
-                const fitFactor = landscapeShort ? 0.72 : 0.92;
+                const minScale = landscapeShort ? 0.5 : vh < 420 ? 0.62 : 0.72;
+                const fitFactor = landscapeShort ? 0.74 : 0.94;
                 const scale = Math.max(minScale, Math.min(1, ((vh - margin * 2) / naturalH) * fitFactor));
-                if (naturalH <= vh - margin * 2) {
+                if (!landscapeShort && naturalH <= vh - margin * 2) {
                     setRapSheetScale(1);
                     return;
                 }
@@ -8259,11 +8352,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const vh = window.innerHeight;
             const nudge = () => {
                 wrap.style.marginTop = '';
+                wrap.style.paddingTop = '';
                 const ir = inner.getBoundingClientRect();
                 let shift = 0;
                 if (ir.top < margin) shift += margin - ir.top;
                 if (ir.bottom > vh - margin) shift += vh - margin - ir.bottom;
+                const maxUp = Math.max(0, ir.top - margin);
+                if (shift < 0) shift = Math.max(shift, -maxUp);
                 if (Math.abs(shift) > 0.5) wrap.style.marginTop = `${shift}px`;
+                const header = inner.querySelector('[data-layout-key="rap-sheet-header"]');
+                if (header) {
+                    const hr = header.getBoundingClientRect();
+                    if (hr.top < margin) {
+                        wrap.style.paddingTop = `${Math.ceil(margin - hr.top)}px`;
+                    }
+                }
             };
             nudge();
             const id = scheduleTimeout(nudge, 60);
@@ -8728,6 +8831,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         }, [phase, storyBeat, dice.length, reducedMotion]);
 
         const executePayout = (catId) => {
+            const quotaTargetAtPlay = runTargetRef.current;
+            const scoreAtPlay = runScoreRef.current;
+            const handsBeforePlay = runHandsRef.current;
             if (typeof notifyTutorial === 'function') notifyTutorial('payout');
             if (typeof tutorialPayoutCountRef !== 'undefined') tutorialPayoutCountRef.current += 1;
             const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
@@ -8847,7 +8953,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const e2ePending = typeof e2ePendingDiceRef !== "undefined" ? e2ePendingDiceRef.current : null;
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
-            const handsBeforePlay = hands;
             const result = calculateScore(catId, diceForScore);
             const wager = activeWager;
             let wagerNet = 0;
@@ -8900,22 +9005,30 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 runValidHandJuice(pending.result, pending.catId, { skipResolution: true });
             };
             const handsAfterPlay = Math.max(0, handsBeforePlay - 1);
-            let scoreAfter = score;
+            let scoreAfter = scoreAtPlay;
             const runStoryOrContinue = (panel, onDone) => {
                 if (typeof playStoryBeat === 'function') playStoryBeat(panel, onDone);
                 else onDone();
             };
             const safePhaseTransition = (nextPhase, opts = {}) => {
-                if (typeof transitionToPhase === 'function') transitionToPhase(nextPhase, opts);
+                if (typeof transitionToPhase !== 'function') return;
+                const merged = { ...opts };
+                if (merged.roundClear && merged.quotaScore == null) merged.quotaScore = scoreAfter;
+                if (merged.roundClear && merged.quotaTarget == null) merged.quotaTarget = quotaTargetAtPlay;
+                if (merged.roundClear) {
+                    queueRoundClearTransition(nextPhase, merged);
+                    return;
+                }
+                transitionToPhase(nextPhase, merged);
             };
             const finalizeRoundAfterHand = (settlementCashLocal, projectedCashLocal) => {
-                const quotaCleared = scoreAfter >= currentTarget;
+                const quotaCleared = scoreAfter >= quotaTargetAtPlay;
                 if (!quotaCleared && handsAfterPlay <= 0) {
-                    const finalHeat = runStats.totalHeat + (result.valid ? (scoreAfter - score) : 0);
+                    const finalHeat = runStats.totalHeat + (result.valid ? (scoreAfter - scoreAtPlay) : 0);
                     const projectedFlow = result.valid ? Math.min(FLOW_TUNING.maxStreak, flowStreak + 1) : 0;
                     const analysis = analyzeRunFailure({
                         score: scoreAfter,
-                        target: currentTarget,
+                        target: quotaTargetAtPlay,
                         debt,
                         hands: handsAfterPlay,
                         history: result.valid ? [...history, { round, total: result.total }] : history,
@@ -8966,7 +9079,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setLossExplanation(null);
                     setGambleStake(0);
                     setFixerLine('You cleared the city. Time to disappear.');
-                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + (scoreAfter - score), cash: settlementCashLocal });
+                    awardLaunderedCash({ victory: true, totalHeat: runStats.totalHeat + (scoreAfter - scoreAtPlay), cash: settlementCashLocal });
                     AudioSystem.paper();
                     if (!reducedMotion) setCinematic('victory');
                     const goVictory = () => {
@@ -9028,6 +9141,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     awaitScoreOverlay,
                     overlaySeen: false,
                     handsAfterPlay,
+                    scoreAfterPlay: scoreAfter,
+                    quotaTarget: quotaTargetAtPlay,
                     firstAttemptAt: null
                 };
                 finalizeRoundAfterHandRef.current = finalizeRoundAfterHand;
@@ -9060,8 +9175,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 }));
                 let heatBanked = result.total;
                 let overkillCash = 0;
-                if (round === 1 && currentTarget > 0) {
-                    const heatCap = Math.floor(currentTarget * (ECONOMY_TUNING.round1HeatCapRatio || 1.22));
+                if (round === 1 && quotaTargetAtPlay > 0) {
+                    const heatCap = Math.floor(quotaTargetAtPlay * (ECONOMY_TUNING.round1HeatCapRatio || 1.22));
                     if (result.total > heatCap) {
                         overkillCash = Math.min(
                             ECONOMY_TUNING.round1OverkillCashCap || 12,
@@ -9099,7 +9214,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (activeBoss?.id !== 'INFORMANT') {
                     let gain = Math.min(
                         ECONOMY_TUNING.stashFillCap,
-                        (result.total / currentTarget) * 100 * ECONOMY_TUNING.stashFillRate
+                        (result.total / quotaTargetAtPlay) * 100 * ECONOMY_TUNING.stashFillRate
                     );
                     if (inventory.some(i => i.id === 'BURNER_PHONE') && !hardwareDisabled) gain *= 1.5;
                     if (persona.id === 'HUSTLER') gain *= 0.5;
@@ -9846,7 +9961,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     goLineup: () => setPhase("LINEUP"),
                     selectFirstPersona: () => setPersonaIdx(0),
                     startNewRun: () => beginContract({ tutorial: false }),
-                    setPlaysRemaining: (n) => setHands(Math.max(1, Math.floor(Number(n) || 1))),
+                    setPlaysRemaining: (n) => setHands(Math.max(0, Math.floor(Number(n) || 0))),
+                    setScore: (n) => setScore(Math.max(0, Math.floor(Number(n) || 0))),
                     forceRoundWin: () => {
                         if (phase !== "PLAY") return false;
                         const quotaMet = Math.max(score, currentTarget);
@@ -10004,18 +10120,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     });
                 },
                 openRoundClear: () => {
-                    clearTransientJuice();
-                    setPaperStamps([]);
-                    roundClearPendingRef.current = { nextPhase: 'SHOP', waitHeatMs: 0, bumpJobRound: false };
-                    setRoundClearCardActive(true);
-                    setRoundClearCanContinue(false);
-                    scheduleTimeout(
-                        () => {
-                            setRoundClearCanContinue(true);
-                            if (roundClearContinueQueuedRef.current) finishRoundClearCard(true);
-                        },
-                        GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion)
-                    );
+                    beginRoundClearCard('SHOP', 0, {
+                        bumpJobRound: false,
+                        skipQuotaCheck: params.get('layoutAudit') === '1',
+                        quotaScore: score
+                    });
                 },
                 openRapSheet: () => {
                     setRound(9);
@@ -10349,7 +10458,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
                 {inRunPhase && (
-                    <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-1 border border-gray-600 bg-black/70 text-[10px] font-mono tracking-widest hover:border-[#ff007f]">
+                    <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-2 min-h-[44px] min-w-[44px] border border-gray-600 bg-black/70 text-xs font-mono tracking-widest hover:border-[#ff007f]">
                         SYSTEM
                     </button>
                 )}
@@ -10499,7 +10608,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {showHelpOverlay && inRunPhase && (
                     <HelpOverlay onClose={() => setShowHelpOverlay(false)} onReplayTutorial={replayTutorialRun} />
                 )}
-                {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && (
+                {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && phase !== 'SHOP' && (
                     <>
                         <BuildIndicator analysis={buildAnalysis} />
                         <RunIntelSummary
@@ -10763,7 +10872,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                             <button
                                                 onClick={() => toggleMechanicPopup('pills')}
                                                 onBlur={dismissMechanicPopup}
-                                                className="w-4 h-4 rounded-full border border-cyan-500/60 text-cyan-300 text-[10px] leading-none hover:border-cyan-300 hover:text-cyan-100"
+                                                className="min-w-[32px] min-h-[32px] w-8 h-8 rounded-full border border-cyan-500/60 text-cyan-300 text-xs leading-none hover:border-cyan-300 hover:text-cyan-100 flex items-center justify-center"
                                                 aria-label="Show pills mechanic details"
                                             >
                                                 ?
@@ -11162,7 +11271,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 ? <span className="block text-sm text-red-300 font-normal">IOU ${debt}</span> : null}</div></div></div>
-                                <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
+                                <p className="text-xs font-mono text-amber-200/85 mb-2 leading-snug line-clamp-2 md:line-clamp-none">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
                                     <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
                                         Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
@@ -11188,7 +11297,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
                                         <div className="flex items-start gap-3 mb-2">{isFace ? <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-xs font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
-                                        <button type="button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop w-full py-2 bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono text-xs tracking-wide disabled:opacity-50">{buyLabel}</button>
+                                        <button type="button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop w-full py-3 min-h-[44px] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono text-xs tracking-wide disabled:opacity-50">{buyLabel}</button>
                                     </div>;
                                 })}</div>
                             </div>
@@ -11196,15 +11305,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
                                 <div ref={shopRoutesBodyRef} className="shop-routes-body">
                                 <div className="shop-routes-unscaled flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-70">ROUND {displayJobRound('SHOP', round)}</div></div>
-                                <div className="mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
-                                <div className="mb-4 border border-gray-800 rounded p-3 bg-black/40">
+                                <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
+                                <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
-                                    <button onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-2 px-3 border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    <button onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-3 px-3 min-h-[44px] border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
                                         <span>REFRESH STOCK</span>
                                         <span>${shopRefreshCost}</span>
                                     </button>
                                     <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
-                                    <div className="mt-3 border-t border-gray-800 pt-3">
+                                    <div className="mt-3 border-t border-gray-800 pt-3 shop-options-fence max-h-[5.5rem] overflow-hidden">
                                         <div className="font-mono text-[10px] text-gray-400 mb-2">FENCE HARDWARE</div>
                                         {inventory.length === 0 ? (
                                             <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
@@ -11213,7 +11322,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                                 {inventory.map(item => (
                                                     <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
                                                         <span className="font-mono text-[10px] text-gray-200 truncate">{item.name}</span>
-                                                        <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-1 font-mono text-[10px] hover:bg-green-900/30">
+                                                        <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-2 min-h-[44px] font-mono text-xs hover:bg-green-900/30">
                                                             SELL ${getHardwareSellValue(item)}
                                                         </button>
                                                     </div>
@@ -11221,28 +11330,65 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mt-3 border-t border-gray-800 pt-3">
+                                    <div className="mt-3 border-t border-gray-800 pt-3 shop-options-debt">
                                         <div className="font-mono text-[10px] text-red-300 mb-2">DEBT CONTROL</div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-700 text-red-300 font-mono text-[10px] hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
+                                            <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
                                                 PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
                                             </button>
-                                            <button onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={debt <= 0 || gold <= 0} className="py-1 px-2 border border-red-500 text-red-200 font-mono text-[10px] hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                                            <button onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={debt <= 0 || gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
                                                 CLEAR ${debtClearCashNeeded}
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                {debt > 0 && <div className="bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
-                                <div className="gb-route-list flex-1 min-h-0">{paths.map(p => (
-                                    <RouteChoiceCard
-                                        key={p.id}
-                                        path={p}
-                                        projection={projectPath(p)}
-                                        onPick={selectShopPath}
-                                        selected={selectedShopPathId === p.id}
-                                    />
-                                ))}</div>
+                                {debt > 0 && <div className="shop-debt-warning bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
+                                {(() => {
+                                    const perPage = Math.max(1, shopRoutesPerPage || 1);
+                                    const pageCount = Math.max(1, Math.ceil((paths?.length || 0) / perPage));
+                                    const safePage = Math.min(shopRoutePage, pageCount - 1);
+                                    const visiblePaths = (paths || []).slice(safePage * perPage, safePage * perPage + perPage);
+                                    const routeCompact = perPage <= 1 || shopRoutesPerPage <= 1;
+                                    return (
+                                        <>
+                                            {pageCount > 1 && (
+                                                <div className="shop-route-pagination" data-layout-key="shop-route-pagination">
+                                                    <button
+                                                        type="button"
+                                                        aria-label="Previous route page"
+                                                        disabled={safePage <= 0}
+                                                        onClick={() => setShopRoutePage((p) => Math.max(0, p - 1))}
+                                                        className="border border-gray-600 text-gray-200 font-mono disabled:opacity-40"
+                                                    >
+                                                        ←
+                                                    </button>
+                                                    <div className="font-mono text-xs text-gray-400 tracking-wider">
+                                                        ROUTE {safePage + 1}/{pageCount}
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        aria-label="Next route page"
+                                                        disabled={safePage >= pageCount - 1}
+                                                        onClick={() => setShopRoutePage((p) => Math.min(pageCount - 1, p + 1))}
+                                                        className="border border-gray-600 text-gray-200 font-mono disabled:opacity-40"
+                                                    >
+                                                        →
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div className="gb-route-list flex-1 min-h-0">{visiblePaths.map(p => (
+                                                <RouteChoiceCard
+                                                    key={p.id}
+                                                    path={p}
+                                                    projection={projectPath(p)}
+                                                    onPick={selectShopPath}
+                                                    selected={selectedShopPathId === p.id}
+                                                    compact={routeCompact}
+                                                />
+                                            ))}</div>
+                                        </>
+                                    );
+                                })()}
                                 </div>
                                 </div>
                                 <div data-layout-key="shop-stash-panel" className="shop-stash-panel shop-routes-footer shrink-0 mt-2 pt-2 border-t border-gray-800">

@@ -23,7 +23,8 @@ test("source — last-hand recovery watchdog", () => {
 
 test("source — round clear gated on quota", () => {
   assert.match(html, /beginRoundClearCard[\s\S]*if \(!skipQuotaCheck\)/);
-  assert.match(html, /effectiveScore < currentTarget\) return/);
+  assert.match(html, /effectiveScore < effectiveTarget\) return/);
+  assert.match(html, /quotaTarget/);
 });
 
 test("source — cash display never negative", () => {
