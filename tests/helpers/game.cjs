@@ -184,6 +184,12 @@ function createGame(snapshot = {}, options = {}) {
     finalizeRoundAfterHandRef: { current: null },
     scoreOverlayActiveRef: { current: false },
     runMetaAwardedRef: { current: false },
+    roundEndTransitionArmedRef: { current: false },
+    scoreOverlayEarlyDismissRef: { current: false },
+    scoreOverlayDismissQueuedRef: { current: false },
+    armLastHandRecoveryWatchdog: () => {},
+    clearLastHandRecoveryWatchdog: () => {},
+    applyQueuedScoreOverlayDismiss: () => sandbox.dismissScoreOverlays(true),
     attemptRoundFinalizeAfterScore: function attemptRoundFinalizeAfterScore() {
       const pending = sandbox.pendingRoundFinalizeRef.current;
       if (!pending) return;
@@ -192,9 +198,10 @@ function createGame(snapshot = {}, options = {}) {
         !!(sandbox.scoreBreakdown || sandbox.scoreResolution);
       if (overlayLive) {
         pending.ready = true;
+        pending.overlaySeen = true;
         return;
       }
-      if (pending.awaitScoreOverlay) {
+      if (pending.awaitScoreOverlay && !pending.overlaySeen) {
         scheduleTimeout(() => sandbox.attemptRoundFinalizeAfterScore(), 48);
         return;
       }
@@ -239,6 +246,7 @@ function createGame(snapshot = {}, options = {}) {
       pending.set(key, next);
       if (key === "dailyRunActive") sandbox.dailyRunActive = next;
       if (key === "scoreBreakdown" || key === "scoreResolution") sandbox[key] = next;
+      if (key === "hands") sandbox.hands = next;
     };
   }
   const context = vm.createContext(sandbox);
