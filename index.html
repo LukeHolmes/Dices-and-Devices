@@ -6965,14 +6965,26 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             attemptRoundFinalizeAfterScore();
             const pendingFinalize = pendingRoundFinalizeRef.current;
-            if (pendingFinalize && finalizeRoundAfterHandRef.current) {
-                if (!scoreBreakdown && !scoreResolution && !scoreOverlayActiveRef.current) {
-                    pendingRoundFinalizeRef.current = null;
-                    finalizeRoundAfterHandRef.current(
-                        pendingFinalize.settlementCashLocal,
-                        pendingFinalize.projectedCashLocal
-                    );
-                }
+            const overlaysClear = !scoreBreakdown && !scoreResolution && !scoreOverlayActiveRef.current;
+            if (pendingFinalize && finalizeRoundAfterHandRef.current && overlaysClear) {
+                pendingRoundFinalizeRef.current = null;
+                finalizeRoundAfterHandRef.current(
+                    pendingFinalize.settlementCashLocal,
+                    pendingFinalize.projectedCashLocal
+                );
+            } else if (
+                (pendingRoundFinalizeRef.current?.handsAfterPlay != null
+                    ? pendingRoundFinalizeRef.current.handsAfterPlay <= 0
+                    : hands <= 0)
+                && score < currentTarget
+                && finalizeRoundAfterHandRef.current
+                && overlaysClear
+            ) {
+                pendingRoundFinalizeRef.current = null;
+                finalizeRoundAfterHandRef.current(gold, gold);
+            }
+            if (phase === 'PLAY' && hands <= 0) {
+                armLastHandRecoveryWatchdog();
             }
         };
 
@@ -7082,7 +7094,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const attemptRoundFinalizeAfterScore = () => {
             const pending = pendingRoundFinalizeRef.current;
             if (!pending) return;
-            const lastHandRunOut = hands <= 0;
+            const playsLeft = pending.handsAfterPlay != null ? pending.handsAfterPlay : hands;
+            const lastHandRunOut = playsLeft <= 0;
             const overlayLive = scoreOverlayActiveRef.current || !!(scoreBreakdown || scoreResolution);
             if (lastHandRunOut && overlayLive && score < currentTarget) {
                 setScoreOverlayCanDismiss(true);
@@ -7746,6 +7759,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const playStoryBeat = (panel, onDone) => {
             if (!panel || !panel.src) {
                 onDone?.();
+                return;
+            }
+            const e2eMode = typeof window !== 'undefined'
+                && new URLSearchParams(window.location.search).get('e2e') === '1';
+            if (e2eMode) {
+                scheduleTimeout(() => onDone?.(), 0);
                 return;
             }
             storyFinishRef.current = () => {
@@ -9007,6 +9026,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     projectedCashLocal,
                     ready: false,
                     awaitScoreOverlay,
+                    overlaySeen: false,
+                    handsAfterPlay,
                     firstAttemptAt: null
                 };
                 finalizeRoundAfterHandRef.current = finalizeRoundAfterHand;
@@ -9800,6 +9821,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         selectedShopPathId,
                         roundClearVisible: !!roundClearCardActive,
                         roundClearCanContinue: !!roundClearCanContinue,
+                    }),
+                    debugStuck: () => ({
+                        hasFinalizeRef: !!finalizeRoundAfterHandRef.current,
+                        pendingFinalize: !!pendingRoundFinalizeRef.current,
+                        overlayActive: !!scoreOverlayActiveRef.current,
+                        breakdown: !!scoreBreakdown,
+                        resolution: !!scoreResolution,
+                        bustActive: !!bustActive,
+                        storyBeat: !!storyBeat,
+                        roundEndArmed: !!roundEndTransitionArmedRef.current,
                     }),
                     dismissOverlays: () => {
                         setScoreOverlayCanDismiss(true);
