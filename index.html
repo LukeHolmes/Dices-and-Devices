@@ -636,6 +636,79 @@
             max-height: 1.65rem;
         }
     }
+    @media (max-height: 450px) {
+        #root-gutterbones [data-layout-key="run-intel-floating"] {
+            display: none !important;
+        }
+        #root-gutterbones [data-layout-key="shop-layout"] {
+            flex-direction: column !important;
+            gap: 0.35rem;
+        }
+        #root-gutterbones [data-layout-key="shop-layout"] > [data-tutorial="shop-panel"] {
+            flex: 1 1 48%;
+            min-height: 0;
+            max-height: 50dvh;
+        }
+        #root-gutterbones [data-layout-key="shop-routes-panel"] {
+            flex: 0 0 auto;
+            min-height: 0;
+            max-height: 48dvh;
+        }
+        #root-gutterbones [data-layout-key="shop-stash-panel"],
+        #root-gutterbones .shop-routes-footer {
+            flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 6;
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0) 0%, #1a1a1a 14%, #1a1a1a 100%);
+            padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
+        }
+        #root-gutterbones .title-actions-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.3rem;
+        }
+        #root-gutterbones [data-layout-key="title-screen"] {
+            gap: 0.35rem;
+            justify-content: center;
+            max-height: calc(100dvh - 2 * var(--gb-pad));
+        }
+        #root-gutterbones [data-layout-key="title-screen"] p.font-mono.text-sm {
+            display: none;
+        }
+        #root-gutterbones .lineup-persona-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.25rem;
+        }
+        #root-gutterbones .lineup-persona-card .lineup-portrait {
+            height: clamp(2.5rem, 11vmin, 4rem);
+        }
+        #root-gutterbones [data-layout-key="rap-play-again"] {
+            position: sticky;
+            bottom: 0;
+            z-index: 4;
+        }
+        #root-gutterbones .play-stash-column .stash-program-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.2rem;
+        }
+        #root-gutterbones .play-stash-column .stash-program-grid button {
+            min-height: 2.1rem;
+            font-size: 8px;
+            line-height: 1.1;
+        }
+        #root-gutterbones .run-intel-summary--inline.run-intel-collapsed {
+            height: 1.9rem;
+            min-height: 1.9rem;
+            max-height: 1.9rem;
+        }
+        #root-gutterbones .run-intel-summary--inline.run-intel-collapsed .run-intel-chip-row {
+            display: none;
+        }
+        #root-gutterbones [data-layout-key="play-hud"] .gb-play-dock {
+            padding-top: 0.15rem;
+            padding-bottom: 0.15rem;
+        }
+    }
     #root-gutterbones .run-intel-summary--floating {
         width: min(92vw, 20rem);
         max-height: 6.5rem;
@@ -5543,11 +5616,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
-    const LossExplanationOverlay = ({ data, reducedMotion }) => {
+    const LossExplanationOverlay = ({ data, reducedMotion, onDismiss }) => {
         if (!data) return null;
         return (
             <div className="absolute inset-x-0 bottom-5 z-[590] pointer-events-none px-4 flex justify-center">
-                <div className={`readable-panel border-red-600/80 rounded-xl p-5 w-[min(96vw,48rem)] ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+                <div className={`readable-panel border-red-600/80 rounded-xl p-5 w-[min(96vw,48rem)] pointer-events-auto ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
                     <div className="font-marker text-4xl md:text-5xl text-red-300 text-center mb-2">YOU LOST BECAUSE...</div>
                     <div className="font-mono text-center text-red-100 text-base md:text-lg mb-4 leading-relaxed">{data.primaryReason}</div>
                     {data.contributors?.length > 0 && (
@@ -5565,6 +5638,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 {data.tips.slice(0, 2).map((tip, idx) => <div key={`${tip}-${idx}`}>- {tip}</div>)}
                             </div>
                         </div>
+                    )}
+                    {onDismiss && (
+                        <button type="button" onClick={onDismiss} className="mt-4 w-full py-2 border border-red-400/60 text-red-100 font-mono text-xs tracking-widest hover:bg-red-950/40">
+                            DISMISS
+                        </button>
                     )}
                 </div>
             </div>
@@ -5804,6 +5882,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         floating = false
     }) => {
         const [detailOpen, setDetailOpen] = useState(false);
+        const [inlineCollapsed, setInlineCollapsed] = useState(() => (
+            typeof window !== 'undefined' && window.matchMedia('(max-height: 450px)').matches
+        ));
         const anchorRef = useRef(null);
         const activeBp = blueprints.filter((bp) => !bp.consumed);
         const routeShort = abbrevRouteChipName(routeEffect?.name);
@@ -5857,10 +5938,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             <div
                 ref={anchorRef}
                 data-layout-key={layoutKey}
-                className={`run-intel-summary readable-panel rounded-xl border border-gray-800 bg-black/90 text-gray-100 font-mono p-2 pr-2 box-border shadow-lg ${inline ? 'run-intel-summary--inline relative w-full' : 'run-intel-summary--floating fixed bottom-4 right-4 z-[70]'}`}
+                className={`run-intel-summary readable-panel rounded-xl border border-gray-800 bg-black/90 text-gray-100 font-mono p-2 pr-2 box-border shadow-lg ${inline ? `run-intel-summary--inline relative w-full${inlineCollapsed ? ' run-intel-collapsed' : ''}` : 'run-intel-summary--floating fixed bottom-4 right-4 z-[70]'}`}
             >
                 <div className="flex items-start justify-between gap-2 mb-1">
                     <div className="text-[#0df] tracking-[.22em] text-[9px] font-bold shrink-0">RUN INTEL</div>
+                    <div className="flex gap-1 shrink-0">
+                        {inline && (
+                            <button
+                                type="button"
+                                data-layout-key="run-intel-collapse-toggle"
+                                className="text-[9px] tracking-wider px-1.5 py-0.5 border border-gray-600 text-gray-300 hover:bg-gray-900 rounded"
+                                onClick={() => setInlineCollapsed((c) => !c)}
+                                aria-expanded={!inlineCollapsed}
+                            >
+                                {inlineCollapsed ? 'SHOW' : 'HIDE'}
+                            </button>
+                        )}
                     <button
                         type="button"
                         data-layout-key="run-intel-details-toggle"
@@ -5870,6 +5963,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     >
                         {detailOpen ? 'HIDE' : 'DETAILS'}
                     </button>
+                    </div>
                 </div>
                 <div className="run-intel-chip-row" data-layout-key="run-intel-chip-row">
                     {chips.map((chip) => (
@@ -6551,6 +6645,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [runExclusiveShopIds, setRunExclusiveShopIds] = useState([]);
         const [shopAdvancing, setShopAdvancing] = useState(false);
         const scoreOverlayDismissQueuedRef = useRef(false);
+        const scoreOverlayEarlyDismissRef = useRef(false);
+        const roundEndTransitionArmedRef = useRef(false);
+        const lastHandRecoveryWatchdogRef = useRef(null);
         const roundClearContinueQueuedRef = useRef(false);
         const [screenTransitionFast, setScreenTransitionFast] = useState(false);
         const [synergyChainBanner, setSynergyChainBanner] = useState(null);
@@ -6770,33 +6867,97 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             overlayInputGuardUntilRef.current = 0;
         };
 
+        const applyQueuedScoreOverlayDismiss = () => {
+            if (!scoreOverlayDismissQueuedRef.current && !scoreOverlayEarlyDismissRef.current) return;
+            if (!(scoreBreakdown || scoreResolution)) return;
+            if (!roundEndTransitionArmedRef.current && !scoreOverlayCanDismiss) return;
+            if (!scoreOverlayCanDismiss && !roundEndTransitionArmedRef.current) return;
+            dismissScoreOverlays(true);
+        };
+
+        const clearLastHandRecoveryWatchdog = () => {
+            if (lastHandRecoveryWatchdogRef.current != null) {
+                clearScheduledTimeout(lastHandRecoveryWatchdogRef.current);
+                lastHandRecoveryWatchdogRef.current = null;
+            }
+        };
+
+        const recoverLastHandStuckState = () => {
+            if (phase !== 'PLAY') return;
+            if (roundClearCardActive || bustActive) return;
+            if (bossIntro || storyBeat) return;
+            scoreOverlayDismissQueuedRef.current = true;
+            scoreOverlayEarlyDismissRef.current = true;
+            if (scoreBreakdown || scoreResolution) {
+                if (!scoreOverlayCanDismiss) setScoreOverlayCanDismiss(true);
+                dismissScoreOverlays(true);
+            }
+            attemptRoundFinalizeAfterScore();
+            const pendingFinalize = pendingRoundFinalizeRef.current;
+            if (pendingFinalize && finalizeRoundAfterHandRef.current) {
+                if (!scoreBreakdown && !scoreResolution && !scoreOverlayActiveRef.current) {
+                    pendingRoundFinalizeRef.current = null;
+                    finalizeRoundAfterHandRef.current(
+                        pendingFinalize.settlementCashLocal,
+                        pendingFinalize.projectedCashLocal
+                    );
+                }
+            }
+        };
+
+        const armLastHandRecoveryWatchdog = () => {
+            clearLastHandRecoveryWatchdog();
+            lastHandRecoveryWatchdogRef.current = scheduleTimeout(() => {
+                lastHandRecoveryWatchdogRef.current = null;
+                if (phase !== 'PLAY') return;
+                if (roundClearCardActive || bustActive || phase === 'SHOP' || phase === 'RAP_SHEET' || phase === 'VICTORY') return;
+                recoverLastHandStuckState();
+            }, 1500);
+        };
+
         const requestScoreOverlayDismiss = () => {
             if (!(scoreBreakdown || scoreResolution)) return;
             scoreOverlayDismissQueuedRef.current = true;
-            if (!scoreOverlayCanDismiss) setScoreOverlayCanDismiss(true);
-            dismissScoreOverlays(true);
+            scoreOverlayEarlyDismissRef.current = true;
+            if (scoreOverlayCanDismiss || roundEndTransitionArmedRef.current) {
+                applyQueuedScoreOverlayDismiss();
+            }
         };
 
         const dismissScoreOverlays = (force = false) => {
             if (!force && !scoreOverlayCanDismiss && (scoreBreakdown || scoreResolution)) {
                 scoreOverlayDismissQueuedRef.current = true;
+                scoreOverlayEarlyDismissRef.current = true;
                 return;
             }
             if (scoreResolution && pendingScoreBreakdownRef.current) {
                 const midRoundStillPlaying = hands > 0 && score < currentTarget;
-                if (!midRoundStillPlaying) {
-                    scoreOverlayDismissQueuedRef.current = false;
+                const skipBreakdownForRoundEnd =
+                    !midRoundStillPlaying
+                    && roundEndTransitionArmedRef.current
+                    && (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current);
+                if (!midRoundStillPlaying && !skipBreakdownForRoundEnd) {
+                    scoreOverlayDismissQueuedRef.current = true;
                     setScoreResolution(null);
                     setPaperStamps([]);
                     const pendingBreakdown = pendingScoreBreakdownRef.current;
                     pendingScoreBreakdownRef.current = null;
                     setScoreBreakdown(pendingBreakdown);
+                    scoreOverlayActiveRef.current = true;
                     flushPendingHandJuiceRef.current?.();
                     setScoreOverlayCanDismiss(false);
+                    if (scoreOverlayEarlyDismissRef.current && roundEndTransitionArmedRef.current) {
+                        scheduleTimeout(() => applyQueuedScoreOverlayDismiss(), 0);
+                    }
                     return;
                 }
-                pendingScoreBreakdownRef.current = null;
-                flushPendingHandJuiceRef.current?.();
+                if (skipBreakdownForRoundEnd) {
+                    pendingScoreBreakdownRef.current = null;
+                    flushPendingHandJuiceRef.current?.();
+                } else {
+                    pendingScoreBreakdownRef.current = null;
+                    flushPendingHandJuiceRef.current?.();
+                }
             }
             scoreOverlayDismissQueuedRef.current = false;
             if (scoreBreakdownTimeoutRef.current != null) {
@@ -6821,28 +6982,59 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             armClickThroughGuard();
             setRollLock(false);
             scoreOverlayActiveRef.current = false;
+            scoreOverlayEarlyDismissRef.current = false;
+            if (pendingRoundFinalizeRef.current) {
+                pendingRoundFinalizeRef.current.overlaySeen = true;
+            }
             const pendingFinalize = pendingRoundFinalizeRef.current;
             if (pendingFinalize?.ready) {
                 const { settlementCashLocal, projectedCashLocal } = pendingFinalize;
                 pendingRoundFinalizeRef.current = null;
+                clearLastHandRecoveryWatchdog();
                 finalizeRoundAfterHandRef.current?.(settlementCashLocal, projectedCashLocal);
+            } else if (
+                pendingFinalize
+                && roundEndTransitionArmedRef.current
+                && !scoreBreakdown
+                && !scoreResolution
+            ) {
+                pendingFinalize.ready = true;
+                pendingRoundFinalizeRef.current = null;
+                clearLastHandRecoveryWatchdog();
+                finalizeRoundAfterHandRef.current?.(
+                    pendingFinalize.settlementCashLocal,
+                    pendingFinalize.projectedCashLocal
+                );
             }
         };
 
         const attemptRoundFinalizeAfterScore = () => {
             const pending = pendingRoundFinalizeRef.current;
             if (!pending) return;
+            const lastHandRunOut = hands <= 0;
             const overlayLive = scoreOverlayActiveRef.current || !!(scoreBreakdown || scoreResolution);
-            if (overlayLive) {
+            if (lastHandRunOut && overlayLive && score < currentTarget) {
+                setScoreOverlayCanDismiss(true);
+                dismissScoreOverlays(true);
+            }
+            const overlayLiveAfterDismiss = scoreOverlayActiveRef.current || !!(scoreBreakdown || scoreResolution);
+            if (overlayLiveAfterDismiss && !(lastHandRunOut && score < currentTarget)) {
                 pending.ready = true;
                 pending.overlaySeen = true;
+                if (
+                    (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current)
+                    && (scoreOverlayCanDismiss || roundEndTransitionArmedRef.current)
+                ) {
+                    applyQueuedScoreOverlayDismiss();
+                }
                 return;
             }
-            if (pending.awaitScoreOverlay) {
+            if (pending.awaitScoreOverlay && !pending.overlaySeen) {
                 scheduleTimeout(() => attemptRoundFinalizeAfterScore(), 48);
                 return;
             }
             pendingRoundFinalizeRef.current = null;
+            clearLastHandRecoveryWatchdog();
             finalizeRoundAfterHandRef.current?.(pending.settlementCashLocal, pending.projectedCashLocal);
         };
 
@@ -6875,6 +7067,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const runPhaseTransition = (nextPhase, { waitHeatMs = 0, fast = false, bumpJobRound = false } = {}) => {
             const outMs = fast || screenTransitionFast ? (reducedMotion ? 80 : 90) : (reducedMotion ? 150 : 260);
             const inMs = fast || screenTransitionFast ? (reducedMotion ? 90 : 120) : (reducedMotion ? 150 : 320);
+            roundEndTransitionArmedRef.current = false;
+            clearLastHandRecoveryWatchdog();
             if (fast) setScreenTransitionFast(true);
             setScreenTransition('out');
             scheduleTimeout(() => {
@@ -6912,6 +7106,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
 
         const beginRoundClearCard = (nextPhase, waitHeatMs = 0, { bumpJobRound = true } = {}) => {
+            if (score < currentTarget) return;
             clearTransientJuice();
             setPaperStamps([]);
             roundClearPendingRef.current = { nextPhase, waitHeatMs, bumpJobRound: !!bumpJobRound };
@@ -6951,6 +7146,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             };
             tryRunPendingPhaseTransition();
         };
+
+        useEffect(() => {
+            if (scoreBreakdown || scoreResolution || bossIntro || roundClearCardActive) return;
+            tryRunPendingPhaseTransition();
+        }, [scoreBreakdown?.id, scoreResolution?.id, bossIntro, roundClearCardActive, phase]);
 
         const scheduleTimeout = (fn, ms) => {
             const id = window.setTimeout(() => {
@@ -7406,9 +7606,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const minHold = GutterbonesPresentation.gateMinMs('scoreOverlay', presentationPacing(), reducedMotion);
             const minId = scheduleTimeout(() => {
                 setScoreOverlayCanDismiss(true);
-                if (scoreOverlayDismissQueuedRef.current) {
-                    scoreOverlayDismissQueuedRef.current = false;
-                    dismissScoreOverlays();
+                if (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current) {
+                    applyQueuedScoreOverlayDismiss();
                 }
             }, minHold);
             if (scoreBreakdownTimeoutRef.current != null) {
@@ -7451,11 +7650,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (!root) return;
             root.dataset.scoreOverlayOpen = (scoreBreakdown || scoreResolution) ? '1' : '0';
         }, [scoreBreakdown, scoreResolution]);
-
-        useEffect(() => {
-            if (scoreBreakdown || scoreResolution || bossIntro || roundClearCardActive) return;
-            tryRunPendingPhaseTransition();
-        }, [scoreBreakdown, scoreResolution, bossIntro, roundClearCardActive]);
 
         useEffect(() => {
             const swallowClickThrough = (e) => {
@@ -7849,7 +8043,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const tick = (ts) => {
                 const p = Math.min(1, (ts - start) / dur);
                 const eased = 1 - Math.pow(1 - p, 2);
-                setDisplayGold(Math.round(from + (to - from) * eased));
+                setDisplayGold(Math.max(0, Math.round(from + (to - from) * eased)));
                 if (p < 1) goldAnimRef.current = requestAnimationFrame(tick);
             };
             goldAnimRef.current = requestAnimationFrame(tick);
@@ -8725,7 +8919,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         })
                     )
                     : gateMin;
-                const awaitScoreOverlay = !!(result.valid || result.total > 0 || useResolutionGate);
+                const awaitScoreOverlay = handsAfterPlay > 0 && !!(result.valid || result.total > 0 || useResolutionGate);
                 pendingRoundFinalizeRef.current = {
                     settlementCashLocal,
                     projectedCashLocal,
@@ -8734,10 +8928,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     firstAttemptAt: null
                 };
                 finalizeRoundAfterHandRef.current = finalizeRoundAfterHand;
-                scheduleTimeout(
-                    () => attemptRoundFinalizeAfterScore(),
-                    result.valid ? (reducedMotion ? 80 : Math.max(320, overlayHold)) : (reducedMotion ? 60 : 180)
-                );
+                roundEndTransitionArmedRef.current = true;
+                if (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current) {
+                    scheduleTimeout(() => applyQueuedScoreOverlayDismiss(), 0);
+                }
+                if (handsAfterPlay <= 0) {
+                    armLastHandRecoveryWatchdog();
+                }
+                const finalizeDelay = handsAfterPlay <= 0
+                    ? (reducedMotion ? 80 : 160)
+                    : (result.valid ? (reducedMotion ? 80 : Math.max(320, overlayHold)) : (reducedMotion ? 60 : 180));
+                scheduleTimeout(() => attemptRoundFinalizeAfterScore(), finalizeDelay);
             };
             if (result.valid) {
                 setFixerLine(result.total >= 220 ? 'That was a statement hand.' : pickLine(FIXER_LINES.hit));
@@ -8924,7 +9125,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             if (!canPlaceWager) return;
             if (stake <= 0 || gold < stake) return;
             maybeShowContextTip('TIP_FIRST_SIDE_BET', 'tipSeenSideBet');
-            setGold(g => g - stake);
+            setGold(g => Math.max(0, g - stake));
             setActiveWager({ stake, threshold: wagerThreshold });
             setFixerLine(`Side bet locked: $${stake} on ${wagerThreshold}+ heat.`);
             spawnPaperStamp('SIDE BET', '#0f766e');
@@ -10097,7 +10298,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         chainStepsRevealed={chainStepsRevealed}
                     />
                 )}
-                {lossExplanation && phase === 'PLAY' && <LossExplanationOverlay data={lossExplanation} reducedMotion={reducedMotion} />}
+                {lossExplanation && phase === 'PLAY' && (
+                    <LossExplanationOverlay
+                        data={lossExplanation}
+                        reducedMotion={reducedMotion}
+                        onDismiss={() => setLossExplanation(null)}
+                    />
+                )}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} unlockedPersonaIds={meta.unlockedPersonaIds} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
@@ -10401,7 +10608,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 </div>
                             <div className="flex gap-3 md:gap-6 text-right items-start">
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
-                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> (-{debt})</span>}</div></div>
+                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> · IOU ${debt}</span>}</div></div>
                                     <div className="relative" onMouseLeave={dismissMechanicPopup}>
                                         <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
                                             <span>PILLS</span>
@@ -10806,7 +11013,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         <div className="shop-counting-cash-backdrop scene-backdrop-fade" aria-hidden></div>
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
-                                <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${displayGold}</div></div></div>
+                                <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 ? <span className="block text-sm text-red-300 font-normal">IOU ${debt}</span> : null}</div></div></div>
                                 <p className="text-[10px] font-mono text-amber-200/85 mb-2 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
                                     <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
