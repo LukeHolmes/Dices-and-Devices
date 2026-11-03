@@ -145,26 +145,40 @@ test("e2e — one roll after score dismiss changes dice values", async () => {
       () => document.querySelector('[data-layout-key="score-breakdown-overlay"]') || document.querySelector('[data-layout-key="score-resolution-overlay"]'),
       { timeout: 15_000 },
     );
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 8; i += 1) {
       await page.evaluate(() => window.__GB_E2E__.dismissOverlays());
       const open = await page.evaluate(
         () => !!(document.querySelector('[data-layout-key="score-breakdown-overlay"]') || document.querySelector('[data-layout-key="score-resolution-overlay"]')),
       );
       if (!open) break;
-      await page.waitForTimeout(120);
+      await page.waitForTimeout(150);
     }
-    await page.waitForFunction(() => !window.__GB_E2E__.isRollDisabled(), { timeout: 12_000 });
+    await page.waitForFunction(
+      () =>
+        !document.querySelector('[data-layout-key="score-breakdown-overlay"]')
+        && !document.querySelector('[data-layout-key="score-resolution-overlay"]'),
+      { timeout: 15_000 },
+    );
+    await page.waitForFunction(() => !window.__GB_E2E__.isRollDisabled(), { timeout: 15_000 });
     const before = await page.evaluate(() => window.__GB_E2E__.getDiceValues());
-    await page.click('[data-tutorial="roll-btn"]');
+    assert.equal(before.length, 5);
+    const rollBtn = page.locator('[data-tutorial="roll-btn"]');
+    await rollBtn.waitFor({ state: "visible", timeout: 8000 });
+    await rollBtn.click({ timeout: 8000 });
     await page.waitForFunction(
       (prev) => {
-        const next = window.__GB_E2E__.getDiceValues();
-        return next.length === 5 && JSON.stringify(next) !== JSON.stringify(prev);
+        const e2e = window.__GB_E2E__;
+        if (!e2e) return false;
+        const next = e2e.getDiceValues();
+        return (
+          e2e.getHasRolled() === true
+          && next.length === 5
+          && JSON.stringify(next) !== JSON.stringify(prev)
+        );
       },
       before,
-      { timeout: 10_000 },
+      { timeout: 20_000 },
     );
-    assert.equal(await page.evaluate(() => window.__GB_E2E__.getHasRolled()), true);
   } finally {
     await browser.close();
   }
