@@ -366,6 +366,33 @@ const playRaidRound9 = () =>
     activeBossId: "THE_RAID",
   });
 
+const shopAfterCarve = () => {
+  const busy = shopBusy();
+  return run({
+    phase: "SHOP",
+    round: busy.round,
+    gold: busy.gold,
+    target: busy.target,
+    stash: busy.stash,
+    shopItems: busy.shopItems,
+    paths: busy.paths,
+    carvingDie: null,
+    selectedItem: null,
+  });
+};
+
+const playStashOpen844 = () =>
+  run({
+    phase: "PLAY",
+    round: 3,
+    score: 12,
+    target: 110,
+    hands: 4,
+    stash: 55,
+    hasRolled: true,
+    dice: dice([3, 4, 5, 2, 6]),
+  });
+
 module.exports = {
   bone,
   dice,
@@ -388,4 +415,6 @@ module.exports = {
   bossCases,
   shopLandscape161,
   playRaidRound9,
+  shopAfterCarve,
+  playStashOpen844,
 };
