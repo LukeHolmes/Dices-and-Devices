@@ -121,8 +121,8 @@ test("round clear card stays visible at least gate minimum before continue", asy
     await page.waitForSelector('[data-layout-key="round-clear-card"]', { timeout: 5000 });
     await page.waitForFunction(
       () => {
-        const el = document.querySelector('[data-layout-key="round-clear-card"]');
-        return el && el.innerText.includes("TAP TO CONTINUE");
+        const btn = document.querySelector('[data-layout-key="round-clear-continue"]');
+        return btn && !btn.disabled;
       },
       { timeout: minMs + 4000 },
     );
