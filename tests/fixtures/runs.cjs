@@ -338,6 +338,34 @@ const bossCases = [
   ["INFORMANT", 130],
   ["THE_RAID", 179],
 ];
+
+const shopLandscape161 = () => {
+  const busy = shopBusy();
+  return run({
+    phase: "SHOP",
+    round: 9,
+    gold: 161,
+    target: 179,
+    stash: 22,
+    shopItems: busy.shopItems,
+    paths: busy.paths,
+    inventory: [{ id: "ENGINE", name: "The Engine", instanceId: "hw-fixture" }],
+  });
+};
+
+const playRaidRound9 = () =>
+  run({
+    phase: "PLAY",
+    round: 9,
+    gold: 161,
+    target: 179,
+    score: 40,
+    hands: 3,
+    hasRolled: true,
+    dice: dice([2, 2, 2, 3, 4]),
+    activeBossId: "THE_RAID",
+  });
+
 module.exports = {
   bone,
   dice,
@@ -358,4 +386,6 @@ module.exports = {
   bustLastHand,
   victoryLastHand,
   bossCases,
+  shopLandscape161,
+  playRaidRound9,
 };

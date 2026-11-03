@@ -625,7 +625,7 @@
     }
     @media (max-height: 520px) and (orientation: landscape) {
         #root-gutterbones .payout-sheet-rows {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
         }
         #root-gutterbones .payout-sheet-rows .score-row-fixed,
         #root-gutterbones .payout-sheet-rows .locked-payout-row {
@@ -857,9 +857,17 @@
         }
     }
     @media (max-height: 450px) {
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block,
         #root-gutterbones[data-phase="SHOP"] .shop-fixter-line,
-        #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
+        #root-gutterbones[data-phase="SHOP"] .shop-debt-warning,
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence,
+        #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+            margin-bottom: 0.35rem !important;
+            padding: 0.45rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block .mt-3:not(:first-of-type) {
             display: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
@@ -1124,6 +1132,52 @@
     #root-gutterbones .boss-intro-card .boss-intro-quota {
         color: #fecaca;
     }
+    #root-gutterbones [data-layout-key="boss-intro-overlay"] {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 250;
+    }
+    #root-gutterbones .boss-intro-fit-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: min(96vw, 32rem);
+        max-height: calc(100dvh - max(1rem, env(safe-area-inset-top, 0px)) - max(1rem, env(safe-area-inset-bottom, 0px)));
+        transform-origin: center center;
+    }
+    #root-gutterbones .boss-intro-card {
+        max-height: calc(100dvh - 2rem);
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    #root-gutterbones [data-layout-key="shop-refresh-stock"] {
+        min-height: 2.75rem !important;
+        flex-shrink: 0;
+    }
+    #root-gutterbones .payout-row-collapsed {
+        display: none !important;
+    }
+    #root-gutterbones [data-layout-key="payout-sheet-more"] {
+        flex: 0 0 auto;
+        min-height: 2rem;
+        font-size: var(--gb-min-font);
+    }
+    @media (max-height: 450px) {
+        #root-gutterbones .boss-intro-card {
+            padding: 0.85rem !important;
+        }
+        #root-gutterbones .boss-intro-card h2 {
+            font-size: 1.65rem !important;
+            line-height: 1.05;
+            min-height: 1.75rem !important;
+            margin-bottom: 0.35rem !important;
+        }
+        #root-gutterbones .boss-intro-card .boss-intro-desc {
+            font-size: 11px;
+            line-height: 1.25;
+        }
+    }
     #root-gutterbones .rap-busted-backdrop--flat {
         background-image: linear-gradient(180deg, rgba(18, 14, 22, 0.35) 0%, rgba(12, 10, 16, 0.25) 50%, rgba(8, 6, 12, 0.4) 100%);
     }
@@ -1353,6 +1407,10 @@
     }
     @keyframes lossExplanationIn {
         0% { transform: scale(1.08); opacity: 0; }
+        100% { transform: none; opacity: 1; }
+    }
+    @keyframes paperRevealIn {
+        0% { transform: scale(1.04); opacity: 0; }
         100% { transform: none; opacity: 1; }
     }
     @keyframes cashFall {
@@ -1681,6 +1739,10 @@
       background-size: cover;
       background-position: center 42%;
       background-repeat: no-repeat;
+    }
+    #root-gutterbones .rap-sheet-screen {
+      max-height: 100dvh;
+      box-sizing: border-box;
     }
     #root-gutterbones .rap-busted-backdrop {
       position: absolute;
@@ -5185,8 +5247,84 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         );
     };
 
+    const PayoutSheetRows = ({ children }) => {
+        const containerRef = useRef(null);
+        const [moreCount, setMoreCount] = useState(0);
+        useLayoutEffect(() => {
+            const container = containerRef.current;
+            if (!container) return undefined;
+            const fit = () => {
+                const rows = Array.from(container.querySelectorAll('[data-payout-row]'));
+                rows.forEach((row) => row.classList.remove('payout-row-collapsed'));
+                setMoreCount(0);
+                if (!rows.length) return;
+                const cr = container.getBoundingClientRect();
+                const limit = cr.bottom - 1;
+                const moreReserve = 34;
+                let firstOverflow = rows.length;
+                for (let i = 0; i < rows.length; i += 1) {
+                    const br = rows[i].getBoundingClientRect();
+                    if (br.bottom > limit + 0.5) {
+                        firstOverflow = i;
+                        break;
+                    }
+                }
+                if (firstOverflow >= rows.length) return;
+                let hideFrom = firstOverflow;
+                while (hideFrom >= 0) {
+                    for (let i = hideFrom; i < rows.length; i += 1) {
+                        rows[i].classList.toggle('payout-row-collapsed', i >= hideFrom);
+                    }
+                    let fits = true;
+                    for (let i = 0; i < hideFrom; i += 1) {
+                        const br = rows[i].getBoundingClientRect();
+                        if (br.bottom > limit - moreReserve + 0.5) {
+                            fits = false;
+                            break;
+                        }
+                    }
+                    if (fits) {
+                        setMoreCount(rows.length - hideFrom);
+                        return;
+                    }
+                    hideFrom -= 1;
+                }
+                rows.forEach((row, idx) => row.classList.toggle('payout-row-collapsed', idx > 0));
+                setMoreCount(Math.max(0, rows.length - 1));
+            };
+            fit();
+            const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+            ro?.observe(container);
+            window.addEventListener('resize', fit);
+            const id = window.setTimeout(fit, 80);
+            const id2 = window.setTimeout(fit, 240);
+            return () => {
+                window.removeEventListener('resize', fit);
+                ro?.disconnect();
+                window.clearTimeout(id);
+                window.clearTimeout(id2);
+            };
+        });
+        return (
+            <div ref={containerRef} className="payout-sheet-rows min-h-0 flex-1">
+                {children}
+                {moreCount > 0 && (
+                    <div
+                        data-layout-key="payout-sheet-more"
+                        data-payout-row="more"
+                        className="score-row-fixed w-full flex justify-center items-center py-1 px-2 border-b border-dashed border-gray-400 text-gray-700 font-mono pointer-events-none"
+                    >
+                        +{moreCount} more
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun }) => (
         <div
+            data-payout-row={cat.id}
+            data-layout-key={`payout-row-${cat.id}`}
             className="locked-payout-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed border-gray-400 text-xs md:text-base opacity-55 cursor-not-allowed min-h-[2rem]"
             aria-disabled="true"
             title={runsUntil > 0 ? `Unlocks after ${unlockAtRun} completed runs (${runsUntil} to go)` : `Unlocks after ${unlockAtRun} completed runs`}
@@ -5223,6 +5361,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
         return (
             <button
+                data-payout-row={id}
+                data-layout-key={`payout-row-${id}`}
                 onClick={() => onScore(id)}
                 onMouseEnter={() => { setHover(true); setPreview(true); }}
                 onMouseLeave={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); }}
@@ -5265,6 +5405,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     const BossIntro = ({ boss, target, onDone, reducedMotion, canContinue }) => {
         const [typed, setTyped] = useState('');
         const [showDesc, setShowDesc] = useState(false);
+        const cardRef = useRef(null);
+        const [fitScale, setFitScale] = useState(1);
         useEffect(() => {
             if (!boss) return undefined;
             if (reducedMotion) {
@@ -5301,6 +5443,31 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             window.addEventListener('keydown', onKey);
             return () => window.removeEventListener('keydown', onKey);
         }, [boss, canContinue, onDone]);
+        useLayoutEffect(() => {
+            if (!boss) {
+                setFitScale(1);
+                return undefined;
+            }
+            const fit = () => {
+                const card = cardRef.current;
+                if (!card) return;
+                const pad = 14;
+                const vh = window.innerHeight;
+                const natural = card.scrollHeight || card.offsetHeight;
+                if (natural <= 0) return;
+                const scale = Math.max(0.46, Math.min(1, (vh - pad * 2) / natural));
+                setFitScale(scale < 0.995 ? scale : 1);
+            };
+            fit();
+            window.addEventListener('resize', fit);
+            const id = window.setTimeout(fit, 60);
+            const id2 = window.setTimeout(fit, 280);
+            return () => {
+                window.removeEventListener('resize', fit);
+                window.clearTimeout(id);
+                window.clearTimeout(id2);
+            };
+        }, [boss, canContinue, showDesc, typed, target]);
         if (!boss) return null;
         const microByBoss = {
             LOAN_SHARK: 'IOUs flutter onto the table.',
@@ -5310,41 +5477,49 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             BOUNCER: 'Quota stamp slams into place.',
             THE_RAID: 'Sirens drown out the alley.'
         };
-        return (
+        const overlay = (
             <button
                 type="button"
                 data-layout-key="boss-intro-overlay"
                 onClick={() => { if (canContinue) onDone(); }}
-                className="absolute inset-0 z-[250] flex items-center justify-center overflow-hidden bg-transparent border-0 p-0 cursor-pointer"
+                className="fixed inset-0 z-[250] flex items-center justify-center overflow-hidden bg-transparent border-0 p-0 cursor-pointer px-[max(0.5rem,env(safe-area-inset-left))]"
             >
                 <div className="boss-intro-backdrop pointer-events-none" aria-hidden></div>
                 <div className="absolute inset-0 bg-black/55 pointer-events-none z-[1]"></div>
                 {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top z-[2] pointer-events-none"></div>}
                 {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom z-[2] pointer-events-none"></div>}
-                <div className="boss-intro-card border-4 border-red-700 bg-[#141018] p-8 max-w-lg text-center shadow-2xl relative overflow-hidden z-[3] pointer-events-none" style={{ animation: 'bossIntro .35s ease-out forwards' }}>
-                    <BossPortrait boss={boss} variant="intro" />
-                    <div className="boss-intro-turf-label font-mono tracking-[.4em] text-xs mb-3">TURF WAR</div>
-                    <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem] drop-shadow-[0_1px_0_rgba(0,0,0,0.85)]`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
-                    <p className={`boss-intro-desc font-mono transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
-                    <p className="boss-intro-quota font-mono text-xs mt-3">Quota: {target}</p>
-                    <p className="font-mono text-[10px] text-red-200 mt-2">{microByBoss[boss.id]}</p>
-                    <p className="font-mono text-[10px] text-gray-400 mt-4 tracking-[.28em]">{canContinue ? 'TAP TO CONTINUE' : '…'}</p>
-                    {canContinue && (
-                        <button
-                            type="button"
-                            data-layout-key="boss-intro-continue"
-                            className="boss-intro-continue mt-4 w-full min-h-[44px] px-4 py-2 border-2 border-red-500 bg-red-950/60 text-red-100 font-mono text-sm tracking-widest pointer-events-auto"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDone();
-                            }}
-                        >
-                            CONTINUE
-                        </button>
-                    )}
+                <div className="boss-intro-fit-wrap relative z-[3] pointer-events-none" style={fitScale < 0.995 ? { zoom: fitScale } : undefined}>
+                    <div
+                        ref={cardRef}
+                        className="boss-intro-card border-4 border-red-700 bg-[#141018] p-8 w-full text-center shadow-2xl relative overflow-hidden"
+                        style={{ animation: reducedMotion ? 'none' : 'bossIntro .35s ease-out forwards' }}
+                    >
+                        <BossPortrait boss={boss} variant="intro" />
+                        <div className="boss-intro-turf-label font-mono tracking-[.4em] text-xs mb-3">TURF WAR</div>
+                        <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem] drop-shadow-[0_1px_0_rgba(0,0,0,0.85)]`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
+                        <p className={`boss-intro-desc font-mono transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
+                        <p className="boss-intro-quota font-mono text-xs mt-3">Quota: {target}</p>
+                        <p className="font-mono text-[10px] text-red-200 mt-2">{microByBoss[boss.id]}</p>
+                        <p className="font-mono text-[10px] text-gray-400 mt-4 tracking-[.28em]">{canContinue ? 'TAP TO CONTINUE' : '…'}</p>
+                        {canContinue && (
+                            <button
+                                type="button"
+                                data-layout-key="boss-intro-continue"
+                                className="boss-intro-continue mt-4 w-full min-h-[44px] px-4 py-2 border-2 border-red-500 bg-red-950/60 text-red-100 font-mono text-sm tracking-widest pointer-events-auto"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDone();
+                                }}
+                            >
+                                CONTINUE
+                            </button>
+                        )}
+                    </div>
                 </div>
             </button>
         );
+        const host = typeof document !== 'undefined' ? document.getElementById('root-gutterbones') : null;
+        return host ? ReactDOM.createPortal(overlay, host) : overlay;
     };
 
     const RiskBadges = ({ item }) => {
@@ -6009,16 +6184,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const LossExplanationOverlay = ({ data, reducedMotion, onDismiss }) => {
         const panelRef = useRef(null);
+        const overlayRef = useRef(null);
         useLayoutEffect(() => {
             if (!data) return undefined;
             const clamp = () => {
                 const panel = panelRef.current;
+                const overlay = overlayRef.current;
                 if (!panel) return;
-                const pad = 8;
+                const pad = Math.max(14, 12);
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
                 panel.style.marginLeft = '';
                 panel.style.marginTop = '';
+                if (overlay) {
+                    overlay.style.paddingLeft = '';
+                    overlay.style.paddingRight = '';
+                }
                 const r = panel.getBoundingClientRect();
                 let dx = 0;
                 let dy = 0;
@@ -6028,19 +6209,27 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (r.bottom > vh - pad) dy = vh - pad - r.bottom;
                 if (Math.abs(dx) > 0.5) panel.style.marginLeft = `${dx}px`;
                 if (Math.abs(dy) > 0.5) panel.style.marginTop = `${dy}px`;
+                const dismiss = panel.querySelector('[data-layout-key="loss-explanation-dismiss"]');
+                if (dismiss) {
+                    const dr = dismiss.getBoundingClientRect();
+                    if (dr.left < pad) panel.style.marginLeft = `${(parseFloat(panel.style.marginLeft) || 0) + (pad - dr.left)}px`;
+                    if (dr.right > vw - pad) panel.style.marginLeft = `${(parseFloat(panel.style.marginLeft) || 0) + (vw - pad - dr.right)}px`;
+                }
             };
             clamp();
             window.addEventListener('resize', clamp);
             const id = window.requestAnimationFrame(clamp);
+            const id2 = window.requestAnimationFrame(() => window.requestAnimationFrame(clamp));
             return () => {
                 window.removeEventListener('resize', clamp);
                 window.cancelAnimationFrame(id);
+                window.cancelAnimationFrame(id2);
             };
         }, [data?.id]);
         if (!data) return null;
         const host = typeof document !== 'undefined' ? document.body : null;
         const overlay = (
-            <div data-layout-key="loss-explanation-overlay" className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[590] pointer-events-none px-[max(0.5rem,env(safe-area-inset-left))] flex justify-center max-h-[calc(100dvh-0.75rem)]">
+            <div ref={overlayRef} data-layout-key="loss-explanation-overlay" className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[590] pointer-events-none px-[max(12px,env(safe-area-inset-left,0px))] pr-[max(12px,env(safe-area-inset-right,0px))] flex justify-center max-h-[calc(100dvh-0.75rem)] box-border">
                 <div
                     ref={panelRef}
                     data-layout-key="loss-explanation-panel"
@@ -6182,15 +6371,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     const viewportRoom = window.innerHeight - Math.max(0, rect.top) - margin;
                     if (viewportRoom > 0) avail = Math.min(avail, viewportRoom);
                 }
+                const unscaledBlock = isShopRoutes ? shell.querySelector('.shop-routes-unscaled') : null;
+                const unscaledH = unscaledBlock?.offsetHeight || 0;
                 let need = body.scrollHeight;
                 if (avail <= 0 || need <= 0) return;
-                let raw = avail / need;
+                const routesAvail = Math.max(48, avail - unscaledH);
+                let raw = routesAvail / need;
                 const scaleFloor = minScale;
                 let scale = Math.min(1, Math.max(scaleFloor, raw));
-                if (isShopRoutes && need > avail + 2 && scale >= 0.995) {
-                    scale = Math.max(scaleFloor, avail / need);
+                if (isShopRoutes && need > routesAvail + 2 && scale >= 0.995) {
+                    scale = Math.max(scaleFloor, routesAvail / need);
                 }
-                const needsScale = scale < 0.999 || (isShopRoutes && need > avail + 1);
+                const needsScale = scale < 0.999 || (isShopRoutes && need > routesAvail + 1);
                 if (needsScale) {
                     body.style.transformOrigin = (isInlineIntel || isShopRoutes) ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
@@ -6203,10 +6395,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         body.style.marginBottom = `${-Math.ceil(need * (1 - scale))}px`;
                     }
                     const scaledH = Math.ceil(need * scale);
-                    shell.style.height = `${Math.min(avail, scaledH)}px`;
+                    const totalH = unscaledH + scaledH;
+                    shell.style.height = `${Math.min(avail, totalH)}px`;
                     shell.dataset.intelScaled = String(Math.round(scale * 100));
                 } else {
-                    shell.style.height = '';
+                    shell.style.height = unscaledH + need > 0 ? `${Math.min(avail, unscaledH + need)}px` : '';
                     body.style.marginBottom = '';
                     if (isShopRoutes) {
                         body.style.width = '';
@@ -6296,12 +6489,23 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 />
                 <div
                     data-layout-key="run-intel-detail-popover"
-                    className="run-intel-detail-popover readable-panel rounded-lg border border-[#0df]/40 bg-[#0a0a0c] p-2 text-[11px] leading-snug shadow-xl"
+                    className="run-intel-detail-popover readable-panel rounded-lg border border-[#0df]/40 bg-[#0a0a0c] p-2 text-[11px] leading-snug shadow-xl flex flex-col"
                     style={{ top: pos.top, left: pos.left, width: pos.width, maxHeight: pos.maxHeight, zIndex: 9900 }}
                     role="dialog"
                     aria-modal="true"
                 >
-                    {children}
+                    <div className="flex items-center justify-between gap-2 shrink-0 mb-1 pb-1 border-b border-gray-800">
+                        <span className="font-mono text-[10px] tracking-[.28em] text-[#0df]">DETAILS</span>
+                        <button
+                            type="button"
+                            data-layout-key="run-intel-detail-close"
+                            onClick={onClose}
+                            className="min-h-[44px] min-w-[44px] px-3 py-1.5 border border-gray-600 text-gray-200 font-mono text-[11px] tracking-wider hover:bg-gray-900 rounded"
+                        >
+                            CLOSE
+                        </button>
+                    </div>
+                    <div className="min-h-0 overflow-auto flex-1">{children}</div>
                 </div>
             </>,
             host
@@ -8784,6 +8988,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         wrap.style.marginTop = `${(parseFloat(wrap.style.marginTop) || 0) + vh - margin - fr.bottom}px`;
                     }
                 }
+                const backdrop = document.querySelector('[data-layout-key="rap-sheet-backdrop"]');
+                if (backdrop) {
+                    const br = backdrop.getBoundingClientRect();
+                    if (br.top < margin) {
+                        wrap.style.marginTop = `${(parseFloat(wrap.style.marginTop) || 0) + (margin - br.top)}px`;
+                    }
+                }
+                const screen = document.querySelector('[data-layout-key="rap-sheet-screen"]');
+                if (screen) {
+                    const sr = screen.getBoundingClientRect();
+                    if (sr.top < margin) {
+                        screen.style.marginTop = `${margin - sr.top}px`;
+                    } else {
+                        screen.style.marginTop = '';
+                    }
+                }
             };
             nudge();
             const id = scheduleTimeout(nudge, 60);
@@ -10694,7 +10914,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 },
                 openBossIntro: () => {
                     const boss = bossById('LOAN_SHARK');
-                    if (boss) setBossIntro(boss);
+                    if (boss) {
+                        setBossIntroCanContinue(true);
+                        setBossIntro(boss);
+                    }
+                },
+                openBossIntroFor: (bossId = 'LOAN_SHARK') => {
+                    setPhase('PLAY');
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    const boss = bossById(bossId);
+                    if (boss) {
+                        setBossIntroCanContinue(true);
+                        setBossIntro(boss);
+                    }
                 },
                 pushToast: (payload) => pushToast(payload),
                 getPhase: () => phase,
@@ -11437,7 +11670,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 min-w-0 overflow-hidden">
                             <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 min-w-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
-                                <div className="payout-sheet-rows min-h-0">
+                                <PayoutSheetRows>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     const availableSet = new Set(unlockInfo.available);
@@ -11483,7 +11716,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     if (unlockInfo.locked.length) rows.push(<CategoryUnlockFooter key="cat-unlock" meta={meta} />);
                                     return rows;
                                 })()}
-                                </div>
+                                </PayoutSheetRows>
                             </div>
                             <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 min-w-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
@@ -11794,7 +12027,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
-                                    <button onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-3 px-3 min-h-[44px] border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    <button type="button" data-layout-key="shop-refresh-stock" onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-3 px-3 min-h-[44px] border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
                                         <span>REFRESH STOCK</span>
                                         <span>${shopRefreshCost}</span>
                                     </button>
@@ -11981,8 +12214,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     </button>
                 )}
                 {phase === 'RAP_SHEET' && (
-                    <div className="gb-screen items-start justify-center z-[500] relative p-[var(--gb-pad)] pt-4 overflow-hidden">
-                        <div className={`rap-busted-backdrop${runStats.finalBoss === 'SELF FORFEIT' ? ' rap-busted-backdrop--flat' : ''}`} aria-hidden></div>
+                    <div data-layout-key="rap-sheet-screen" className="gb-screen rap-sheet-screen items-center justify-center z-[500] relative p-[var(--gb-pad)] pt-4 overflow-hidden">
+                        <div data-layout-key="rap-sheet-backdrop" className={`rap-busted-backdrop${runStats.finalBoss === 'SELF FORFEIT' ? ' rap-busted-backdrop--flat' : ''}`} aria-hidden></div>
                         <div
                             ref={rapSheetRef}
                             data-layout-key="rap-sheet-wrap"
@@ -11993,7 +12226,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             data-layout-key="rap-sheet"
                             className="paper-card paper-card-flat gb-modal-fit bg-[#E2D1B8] w-full p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20"
                             style={{
-                                animation: rapSheetRevealReady ? 'none' : 'stampSlam .4s cubic-bezier(.25,1,.5,1) forwards',
+                                animation: rapSheetRevealReady || reducedMotion ? 'none' : 'paperRevealIn .4s cubic-bezier(.25,1,.5,1) forwards',
                                 '--paper-rot': '0deg',
                                 ...(rapSheetScale < 0.999 ? { zoom: rapSheetScale } : {})
                             }}
