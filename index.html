@@ -145,6 +145,7 @@
         --gb-pad: clamp(0.35rem, 1.6vmin, 1.25rem);
         --gb-title: clamp(1.75rem, 6vmin, 4.5rem);
         --gb-min-font: clamp(11px, 2.6vmin, 14px);
+        --gb-micro-font: clamp(11px, 2.2vmin, 12px);
         --gb-min-tap: 32px;
         --t-fast: 120ms;
         --t-med: 240ms;
@@ -476,8 +477,39 @@
         overflow: hidden;
         overscroll-behavior: contain;
     }
+    #root-gutterbones [data-layout-key="shop-routes-panel"] {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
     #root-gutterbones .shop-routes-footer {
         flex-shrink: 0;
+        position: relative;
+        z-index: 8;
+        pointer-events: auto;
+        isolation: isolate;
+    }
+    #root-gutterbones .shop-routes-scroll {
+        z-index: 12;
+        position: relative;
+    }
+    #root-gutterbones .shop-routes-body {
+        position: relative;
+        z-index: 1;
+    }
+    #root-gutterbones .shop-routes-footer button {
+        pointer-events: auto;
+    }
+    #root-gutterbones .carving-exit-slot {
+        position: absolute;
+        top: max(0.35rem, env(safe-area-inset-top, 0px));
+        right: max(0.35rem, env(safe-area-inset-right, 0px));
+        pointer-events: none;
+    }
+    #root-gutterbones .shop-options-block button,
+    #root-gutterbones .shop-options-fence button {
+        min-height: 2.75rem !important;
+        font-size: var(--gb-min-font) !important;
     }
     #root-gutterbones .score-explanation-panel {
         max-height: none;
@@ -561,7 +593,7 @@
         flex: 0 0 auto;
         min-height: 2rem;
     }
-    @media (max-height: 820px), (max-height: 520px) and (orientation: landscape) {
+    @media (max-height: 1100px) {
         #root-gutterbones .payout-sheet-rows {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -591,9 +623,35 @@
             font-size: 11px !important;
         }
     }
+    @media (max-height: 520px) and (orientation: landscape) {
+        #root-gutterbones .payout-sheet-rows {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        #root-gutterbones .payout-sheet-rows .score-row-fixed,
+        #root-gutterbones .payout-sheet-rows .locked-payout-row {
+            min-height: 2rem;
+            max-height: 2rem;
+            padding-top: 0.1rem;
+            padding-bottom: 0.1rem;
+        }
+    }
     #root-gutterbones .round-clear-continue-btn {
         min-height: 2.75rem;
         font-size: var(--gb-min-font);
+    }
+    #root-gutterbones [data-layout-key="carving-exit"] {
+        position: fixed !important;
+        top: max(0.35rem, env(safe-area-inset-top, 0px)) !important;
+        bottom: auto !important;
+        right: max(0.5rem, env(safe-area-inset-right, 0px)) !important;
+        left: auto !important;
+        z-index: 450;
+    }
+    #root-gutterbones [data-layout-key="carving-layout"] {
+        padding-top: 2.75rem;
+    }
+    #root-gutterbones [data-layout-key="rap-play-again"] {
+        min-height: 2.75rem;
     }
     #root-gutterbones .gb-brand-title {
         max-width: 100%;
@@ -770,7 +828,38 @@
             max-height: 1.65rem;
         }
     }
+    @media (min-width: 640px) and (max-height: 900px) {
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-fixter-line,
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-debt-warning,
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence,
+        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-debt,
+        #root-gutterbones [data-layout-key="shop-stash-panel"] .stash-program-grid {
+            display: none !important;
+        }
+        #root-gutterbones [data-layout-key="shop-stash-panel"],
+        #root-gutterbones .shop-routes-footer {
+            position: relative !important;
+            bottom: auto !important;
+        }
+        #root-gutterbones [data-layout-key="shop-stash-panel"] {
+            padding-top: 0.25rem !important;
+            margin-top: 0 !important;
+        }
+    }
     @media (max-height: 450px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block,
+        #root-gutterbones[data-phase="SHOP"] .shop-fixter-line,
+        #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            margin-top: 0 !important;
+            padding-top: 0.15rem !important;
+            border-top-width: 1px !important;
+        }
         #root-gutterbones[data-phase="SHOP"] .build-indicator-root,
         #root-gutterbones[data-phase="SHOP"] .tutorial-coach-root {
             pointer-events: none;
@@ -826,17 +915,6 @@
             #root-gutterbones [data-layout-key="shop-routes-panel"] {
                 flex: 1 1 48%;
                 max-height: 100%;
-            }
-            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-fixter-line,
-            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-debt-warning,
-            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence,
-            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-debt,
-            #root-gutterbones [data-layout-key="shop-stash-panel"] .stash-program-grid {
-                display: none !important;
-            }
-            #root-gutterbones [data-layout-key="shop-stash-panel"] {
-                padding-top: 0.25rem !important;
-                margin-top: 0 !important;
             }
         }
         #root-gutterbones [data-layout-key="shop-stash-panel"],
@@ -931,6 +1009,8 @@
         left: auto !important;
         width: min(18rem, calc(100vw - 1rem)) !important;
         max-width: calc(100vw - 1rem) !important;
+        transform: translateX(0);
+        contain: layout;
         max-height: 6.5rem;
         font-size: var(--gb-min-font);
         box-sizing: border-box;
@@ -938,9 +1018,38 @@
     #root-gutterbones [data-layout-key="run-intel-summary"] {
         max-width: 100%;
         overflow: hidden;
+        box-sizing: border-box;
+    }
+    #root-gutterbones .run-intel-summary-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.25rem 0.35rem;
+        align-items: center;
+        width: 100%;
+        max-width: 100%;
+    }
+    #root-gutterbones .run-intel-summary-head-actions {
+        grid-column: 2;
+        justify-self: end;
     }
     #root-gutterbones [data-layout-key="run-intel-details-toggle"] {
         max-width: 100%;
+        box-sizing: border-box;
+    }
+    #root-gutterbones .run-intel-summary--inline,
+    #root-gutterbones [data-layout-key="run-intel-summary"] {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    #root-gutterbones [data-layout-key="play-stash"] .stash-intel-scroll {
+        max-width: 100%;
+        overflow: hidden;
+    }
+    #root-gutterbones .gb-screen.z-40 {
+        overflow-x: clip;
+        max-width: 100vw;
+        box-sizing: border-box;
     }
     #root-gutterbones .run-intel-chip-row {
         display: flex;
@@ -2691,8 +2800,8 @@ const GutterbonesTutorial = (() => {
         {
             id: 'shop',
             advance: 'ack',
-            focus: 'shop-panel',
-            caption: 'Back Alley shop: grab hardware, carve faces, or pocket cash. When you are set, pick a route and keep climbing.'
+            focus: 'shop-routes',
+            caption: 'Back Alley shop: grab hardware, carve faces, or pocket cash. When you are set, pick a route and hit the streets.'
         }
     ]);
 
@@ -5404,7 +5513,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 'dice-lane': '[data-tutorial="dice-lane"]',
                 'payout-sheet': '[data-tutorial="payout-sheet"]',
                 'heat-quota': '[data-tutorial="heat-quota"]',
-                'shop-panel': '[data-tutorial="shop-panel"]'
+                'shop-panel': '[data-tutorial="shop-panel"]',
+                'shop-routes': '[data-layout-key="shop-routes-panel"]'
             }[step.focus];
             const measure = () => {
                 const el = sel ? document.querySelector(sel) : null;
@@ -5435,11 +5545,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             }
             : null;
         const hudFocus = step.focus === 'heat-quota' || step.focus === 'roll-btn';
-        const shopFocus = step.focus === 'shop-panel';
+        const shopFocus = step.focus === 'shop-panel' || step.focus === 'shop-routes';
         const captionOnTop = shopFocus
-            ? false
+            ? true
             : (hudFocus || (cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.48 : 400)));
-        const cardClass = captionOnTop
+        const cardClass = shopFocus
+            ? 'tutorial-coach-card absolute top-[max(5.25rem,env(safe-area-inset-top))] left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:max-w-md'
+            : captionOnTop
             ? 'tutorial-coach-card absolute top-[max(6.5rem,env(safe-area-inset-top))] left-3 right-3 md:left-6 md:right-auto md:max-w-sm'
             : 'tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md';
         const maskId = 'gb-tutorial-spot-mask';
@@ -5978,13 +6090,17 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     avail = shellH > 0 ? Math.min(shellH, parentH) : parentH;
                 } else if (isShopRoutes && typeof window !== 'undefined') {
                     const panel = shell.closest('[data-layout-key="shop-routes-panel"]');
-                    const panelRect = panel?.getBoundingClientRect();
+                    shell.style.flex = '1 1 auto';
+                    shell.style.minHeight = '0';
+                    shell.style.overflow = 'hidden';
+                    const shellH = shell.clientHeight;
+                    const panelH = panel?.clientHeight || 0;
                     const footer = panel?.querySelector('.shop-routes-footer');
                     const footerH = footer?.getBoundingClientRect().height || 0;
-                    const margin = 12;
-                    if (panelRect) {
-                        avail = Math.max(80, window.innerHeight - panelRect.top - footerH - margin);
-                        shell.style.maxHeight = `${avail}px`;
+                    const panelRoom = panelH > 0 ? Math.max(72, panelH - footerH - 8) : 0;
+                    avail = shellH > 0 ? shellH : panelRoom;
+                    if (panelRoom > 0) {
+                        shell.style.maxHeight = `${panelRoom}px`;
                     }
                 } else if (avail <= 0 && shell.parentElement) {
                     avail = shell.parentElement.clientHeight;
@@ -6003,19 +6119,26 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (isShopRoutes && need > avail + 2 && scale >= 0.995) {
                     scale = Math.max(scaleFloor, avail / need);
                 }
-                if (scale < 0.995) {
+                const needsScale = scale < 0.999 || (isShopRoutes && need > avail + 1);
+                if (needsScale) {
                     body.style.transformOrigin = (isInlineIntel || isShopRoutes) ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
-                    body.style.width = isInlineIntel ? `${100 / scale}%` : '';
-                    if (isShopRoutes) body.style.setProperty('--shop-route-scale', String(scale));
+                    body.style.width = isInlineIntel ? `${100 / scale}%` : (isShopRoutes ? `${100 / scale}%` : '');
+                    if (isShopRoutes) {
+                        body.style.setProperty('--shop-route-scale', String(scale));
+                        body.style.marginBottom = '';
+                        body.style.pointerEvents = 'auto';
+                    } else {
+                        body.style.marginBottom = `${-Math.ceil(need * (1 - scale))}px`;
+                    }
                     const scaledH = Math.ceil(need * scale);
                     shell.style.height = `${Math.min(avail, scaledH)}px`;
-                    body.style.marginBottom = `${-Math.ceil(need * (1 - scale))}px`;
                     shell.dataset.intelScaled = String(Math.round(scale * 100));
                 } else {
                     shell.style.height = '';
+                    body.style.marginBottom = '';
                     if (isShopRoutes) {
-                        shell.style.maxHeight = '';
+                        body.style.width = '';
                         body.style.removeProperty('--shop-route-scale');
                     }
                     delete shell.dataset.intelScaled;
@@ -6025,6 +6148,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             const ro = new ResizeObserver(fit);
             ro.observe(shell);
             if (shell.parentElement) ro.observe(shell.parentElement);
+            const panel = shell.closest?.('[data-layout-key="shop-routes-panel"]');
+            const footer = panel?.querySelector?.('.shop-routes-footer');
+            if (footer) ro.observe(footer);
             return () => ro.disconnect();
         }, [...deps, enabled, minScale]);
     };
@@ -6185,14 +6311,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 data-layout-key={layoutKey}
                 className={`run-intel-summary readable-panel rounded-xl border border-gray-800 bg-black/90 text-gray-100 font-mono p-2 pr-2 box-border shadow-lg ${inline ? `run-intel-summary--inline relative w-full${inlineCollapsed ? ' run-intel-collapsed' : ''}` : (floating ? 'run-intel-summary--floating fixed bottom-4 right-4 z-[70]' : 'run-intel-summary--dock relative z-[70] w-full max-w-full')}`}
             >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="text-[#0df] tracking-[.22em] text-[9px] font-bold shrink-0">RUN INTEL</div>
-                    <div className="flex gap-1 shrink-0">
+                <div className="run-intel-summary-head mb-1 min-w-0 w-full max-w-full box-border">
+                    <div className="text-[#0df] tracking-[.18em] text-[11px] font-bold min-w-0 truncate">RUN INTEL</div>
+                    <div className="run-intel-summary-head-actions flex gap-1 justify-end flex-wrap max-w-full">
                         {inline && (
                             <button
                                 type="button"
                                 data-layout-key="run-intel-collapse-toggle"
-                                className="text-[9px] tracking-wider px-1.5 py-0.5 border border-gray-600 text-gray-300 hover:bg-gray-900 rounded"
+                                className="text-[11px] tracking-wider px-1.5 py-0.5 min-h-[32px] border border-gray-600 text-gray-300 hover:bg-gray-900 rounded"
                                 onClick={() => setInlineCollapsed((c) => !c)}
                                 aria-expanded={!inlineCollapsed}
                             >
@@ -6202,7 +6328,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <button
                         type="button"
                         data-layout-key="run-intel-details-toggle"
-                        className="shrink-0 text-[9px] tracking-wider px-1.5 py-0.5 border border-[#0df]/50 text-[#0df] hover:bg-cyan-950/40 rounded"
+                        className="text-[11px] tracking-wider px-1.5 py-0.5 min-h-[32px] max-w-full border border-[#0df]/50 text-[#0df] hover:bg-cyan-950/40 rounded"
                         onClick={() => setDetailOpen((open) => !open)}
                         aria-expanded={detailOpen}
                     >
@@ -7551,7 +7677,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             shopItems?.length,
             round,
             shopRefreshCost
-        ], { enabled: phase === 'SHOP', minScale: 0.48 });
+        ], { enabled: phase === 'SHOP', minScale: typeof window !== 'undefined' && window.innerHeight < 450 ? 0.36 : 0.48 });
 
         useEffect(() => {
             if (phase !== 'SHOP') return undefined;
@@ -10809,10 +10935,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {showHelpOverlay && inRunPhase && (
                     <HelpOverlay onClose={() => setShowHelpOverlay(false)} onReplayTutorial={replayTutorialRun} />
                 )}
-                {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && phase !== 'SHOP' && (
+                {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && phase !== 'SHOP' && phase !== 'CARVING' && (
                     <BuildIndicator analysis={buildAnalysis} />
                 )}
-                {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && phase !== 'RAP_SHEET' && phase !== 'VICTORY' && (
+                {inRunPhase && phase !== 'PLAY' && phase !== 'GAMBLE' && phase !== 'SHOP' && phase !== 'CARVING' && phase !== 'RAP_SHEET' && phase !== 'VICTORY' && (
                     <RunIntelSummary
                         floating
                         flowMultiplier={flowMultiplier}
@@ -11504,8 +11630,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             </div>
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
-                                <div ref={shopRoutesBodyRef} className="shop-routes-body">
-                                <div className="shop-routes-unscaled flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-70">ROUND {displayJobRound('SHOP', round)}</div></div>
+                                <div className="shop-routes-unscaled shrink-0">
+                                <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-70">ROUND {displayJobRound('SHOP', round)}</div></div>
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
@@ -11544,6 +11670,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </div>
                                 </div>
                                 {debt > 0 && <div className="shop-debt-warning bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
+                                </div>
+                                <div ref={shopRoutesBodyRef} className="shop-routes-body min-h-0 flex-1 flex flex-col">
                                 {(() => {
                                     const perPage = Math.max(1, shopRoutesPerPage || 1);
                                     const pageCount = Math.max(1, Math.ceil((paths?.length || 0) / perPage));
@@ -11630,7 +11758,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {phase === 'CARVING' && (
                     <div className="gb-screen items-center justify-center z-[400] relative p-[var(--gb-pad)]">
                         <div className="carving-mod-backdrop scene-backdrop-fade" aria-hidden></div>
-                        <div className="absolute top-[max(0.35rem,env(safe-area-inset-top))] right-[max(0.35rem,env(safe-area-inset-right))] z-20">
+                        <div className="carving-exit-slot z-20 pointer-events-none">
                             <button
                                 type="button"
                                 data-layout-key="carving-exit"
@@ -11639,7 +11767,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     setSelectedItem(null);
                                     transitionToPhase('SHOP');
                                 }}
-                                className="px-4 py-2 min-h-[44px] border-2 border-[#0df] bg-black/85 text-[#0df] font-mono text-xs tracking-widest hover:bg-cyan-950/50"
+                                className="carving-exit-btn pointer-events-auto px-4 py-2 min-h-[44px] border-2 border-[#0df] bg-black/85 text-[#0df] font-mono text-xs tracking-widest hover:bg-cyan-950/50"
                             >
                                 RETURN TO SHOP
                             </button>
