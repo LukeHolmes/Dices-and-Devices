@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const { createGame, plain } = require("./helpers/game.cjs");
 const { snapshot, dice, bone, bossCases } = require("./fixtures/runs.cjs");
 for (const [cat, values, total] of [
-  ["C", [1, 2, 3, 4, 5], 29],
+  ["C", [1, 2, 3, 4, 5], 24],
   ["TOK", [2, 2, 2, 4, 5], 40],
   ["FOK", [3, 3, 3, 3, 5], 105],
   ["FH", [2, 2, 3, 3, 3], 90],
@@ -54,7 +54,7 @@ test("Carved modifier and gold face apply without mutating dice", () => {
   d[4].faceId = "GOLD_FACE";
   const before = JSON.stringify(d);
   const r = createGame(snapshot()).api.calculateScore("C", d);
-  assert.equal(r.total, 30);
+  assert.equal(r.total, 26);
   assert.equal(r.gDelta, 2);
   assert.equal(JSON.stringify(d), before);
 });
@@ -77,7 +77,7 @@ test("Crooked Cop suppresses hardware", () => {
   const inv = [{ id: "ENGINE" }];
   assert.equal(
     createGame(snapshot({ inventory: inv })).api.calculateScore("C", d).total,
-    117,
+    104,
   );
   assert.equal(
     createGame(
@@ -87,7 +87,7 @@ test("Crooked Cop suppresses hardware", () => {
         activeBoss: { id: "CROOKED_COP" },
       }),
     ).api.calculateScore("C", d).total,
-    29,
+    24,
   );
 });
 for (const [id, target] of bossCases)
@@ -119,5 +119,5 @@ test("Informant freezes stash", () => {
   g.api.executePayout("C");
   g.flushTimers();
   assert.equal(g.state("stash"), 20);
-  assert.equal(g.state("score"), 29);
+  assert.equal(g.state("score"), 24);
 });

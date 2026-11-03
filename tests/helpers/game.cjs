@@ -109,11 +109,13 @@ function createGame(snapshot = {}, options = {}) {
     synergyState: { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 },
     categoryMarkedThisRound: [],
     soldItems: [],
+    runExclusiveShopIds: [],
     shopItems: [],
     ...snapshot,
     Math: Object.assign(Object.create(Math), {
       random: options.random || (() => 0.99),
     }),
+    performance: { now: () => Date.now() },
     console: { warn: (...args) => warnings.push(args), log: noOp },
     window: {
       localStorage: {
@@ -149,7 +151,12 @@ function createGame(snapshot = {}, options = {}) {
     payoutInputLock: false,
     scoreBreakdown: null,
     scoreResolution: null,
+    bossIntro: null,
+    storyBeat: null,
+    roundClearCardActive: false,
+    lossExplanation: null,
     rollLockRef: { current: false },
+    rollLocked: false,
     e2ePendingDiceRef: { current: null },
     pendingScoreBreakdownRef: { current: null },
     pendingHandJuiceRef: { current: null },
@@ -168,11 +175,63 @@ function createGame(snapshot = {}, options = {}) {
     sacrificePlayPenaltyRef: { current: 0 },
     sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],
+    pillRunBonus: 0,
     pillBursts: [],
     scoreBreakdownTimeoutRef: { current: null },
     scoreResolutionTimeoutRef: { current: null },
     pendingUnlockMessageRef: { current: null },
-    dismissScoreOverlays: () => {},
+    pendingRoundFinalizeRef: { current: null },
+    finalizeRoundAfterHandRef: { current: null },
+    scoreOverlayActiveRef: { current: false },
+    runMetaAwardedRef: { current: false },
+    roundEndTransitionArmedRef: { current: false },
+    scoreOverlayEarlyDismissRef: { current: false },
+    scoreOverlayDismissQueuedRef: { current: false },
+    armLastHandRecoveryWatchdog: () => {},
+    clearLastHandRecoveryWatchdog: () => {},
+    applyQueuedScoreOverlayDismiss: () => sandbox.dismissScoreOverlays(true),
+    attemptRoundFinalizeAfterScore: function attemptRoundFinalizeAfterScore() {
+      const pending = sandbox.pendingRoundFinalizeRef.current;
+      if (!pending) return;
+      const overlayLive =
+        sandbox.scoreOverlayActiveRef.current ||
+        !!(sandbox.scoreBreakdown || sandbox.scoreResolution);
+      if (overlayLive) {
+        pending.ready = true;
+        pending.overlaySeen = true;
+        return;
+      }
+      if (pending.awaitScoreOverlay && !pending.overlaySeen) {
+        scheduleTimeout(() => sandbox.attemptRoundFinalizeAfterScore(), 48);
+        return;
+      }
+      sandbox.pendingRoundFinalizeRef.current = null;
+      sandbox.finalizeRoundAfterHandRef.current?.(
+        pending.settlementCashLocal,
+        pending.projectedCashLocal,
+      );
+    },
+    dismissScoreOverlays: () => {
+      sandbox.scoreOverlayActiveRef.current = false;
+      sandbox.scoreBreakdown = null;
+      sandbox.scoreResolution = null;
+      pending.delete("scoreBreakdown");
+      pending.delete("scoreResolution");
+      const pendingFinalize = sandbox.pendingRoundFinalizeRef.current;
+      if (pendingFinalize?.ready) {
+        const { settlementCashLocal, projectedCashLocal } = pendingFinalize;
+        sandbox.pendingRoundFinalizeRef.current = null;
+        sandbox.finalizeRoundAfterHandRef.current?.(
+          settlementCashLocal,
+          projectedCashLocal,
+        );
+      }
+    },
+    overlayInputGuardUntilRef: { current: 0 },
+  };
+  sandbox.setRollLock = (locked) => {
+    sandbox.rollLocked = !!locked;
+    sandbox.rollLockRef.current = !!locked;
   };
   for (const setter of new Set(actions.match(/\bset[A-Z]\w*/g))) {
     const key = setter[3].toLowerCase() + setter.slice(4);
@@ -186,6 +245,8 @@ function createGame(snapshot = {}, options = {}) {
         typeof update === "function" ? update(previous) : update;
       pending.set(key, next);
       if (key === "dailyRunActive") sandbox.dailyRunActive = next;
+      if (key === "scoreBreakdown" || key === "scoreResolution") sandbox[key] = next;
+      if (key === "hands") sandbox.hands = next;
     };
   }
   const context = vm.createContext(sandbox);
@@ -221,6 +282,7 @@ function createGame(snapshot = {}, options = {}) {
       const queued = timers.splice(0);
       queued.forEach((callback) => callback());
     },
+    dismissScoreOverlays: () => sandbox.dismissScoreOverlays(),
   };
 }
 
