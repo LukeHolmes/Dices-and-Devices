@@ -92,7 +92,7 @@ for (const vp of VIEWPORTS) {
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openForfeitRapSheetDemo());
       await page.waitForSelector('[data-layout-key="rap-sheet"]', { timeout: 12_000 });
       await page.waitForTimeout(600);
-      const playBtn = page.locator('[data-layout-key="rap-sheet"] button', { hasText: "PLAY AGAIN" });
+      const playBtn = page.locator('[data-layout-key="rap-play-again"]');
       await playBtn.waitFor({ state: "visible", timeout: 8000 });
         const metrics = await page.evaluate(() => {
         const gate = document.querySelector('[data-layout-key="rap-reveal-gate"]');
