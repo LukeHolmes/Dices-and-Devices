@@ -318,6 +318,7 @@
     }
     #root-gutterbones .play-stash-column {
         max-height: 100%;
+        min-width: 0;
         overflow: hidden;
     }
     #root-gutterbones .run-intel-compact {
@@ -11148,8 +11149,8 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 )}
                             </div>
                         </div>
-                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 overflow-hidden">
-                            <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
+                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 min-w-0 overflow-hidden">
+                            <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 min-w-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
                                 <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
                                 <div className="payout-sheet-rows min-h-0">
                                 {(() => {
@@ -11199,7 +11200,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                 })()}
                                 </div>
                             </div>
-                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 min-w-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
@@ -11305,7 +11306,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     </button>
                                 </div>
                             </div>
-                            <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-2 min-h-0 overflow-hidden pr-1 md:!flex play-stash-column`}>
+                            <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-2 min-h-0 min-w-0 overflow-hidden pr-1 md:!flex play-stash-column`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div className="hidden md:flex flex-col gap-2 stash-intel-scroll min-h-0">
                                     <BuildIndicator analysis={buildAnalysis} inline />
