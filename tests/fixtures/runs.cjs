@@ -236,6 +236,27 @@ const rapSheetHistory3 = () =>
     },
   });
 
+const rapSheetHistory8 = () =>
+  run({
+    phase: "RAP_SHEET",
+    round: 9,
+    gold: 6,
+    history: Array.from({ length: 8 }, (_, i) => ({
+      id: `h${i + 1}`,
+      round: i + 1,
+      category: i % 2 === 0 ? "TOK" : "C",
+      total: 35 + i * 12,
+      values: [2, 2, 2, 3, 4],
+      triggers: [],
+    })),
+    runStats: {
+      totalHeat: 640,
+      biggestHustle: 140,
+      finalBoss: "THE BOUNCER",
+      build: { primary: "MULT_ENGINE", peakConfidence: 0.55, keyItems: ["ENGINE"] },
+    },
+  });
+
 const rapSheet = () =>
   run({
     phase: "RAP_SHEET",
@@ -331,6 +352,7 @@ module.exports = {
   playHeavyHardware,
   rapSheet,
   rapSheetHistory3,
+  rapSheetHistory8,
   rapSheetR7,
   terminal,
   bustLastHand,

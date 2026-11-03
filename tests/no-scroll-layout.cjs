@@ -42,6 +42,8 @@ const SCENARIOS = [
   { id: "gamble", label: "Double or Nothing", resume: "gamble", action: null },
   { id: "rap_sheet", label: "Rap sheet / bust", resume: "rapSheet", action: null },
   { id: "rap_sheet_r7", label: "Rap sheet round 7", resume: "rapSheetR7", action: null },
+  { id: "rap_sheet_history8", label: "Rap sheet long history footer", resume: "rapSheetHistory8", action: null },
+  { id: "loss_explanation", label: "Loss explanation dismiss", resume: "normal", action: "lossExplanation" },
   { id: "safehouse", label: "Safehouse", resume: null, action: "safehouse" },
   { id: "help", label: "Help dossier", resume: "normal", action: "help" },
   { id: "system_menu", label: "System menu", resume: "normal", action: "system" },
@@ -63,6 +65,7 @@ function normalizeFixture(name) {
     gamble: fixtures.gamble,
     rapSheet: fixtures.rapSheet,
     rapSheetR7: fixtures.rapSheetR7,
+    rapSheetHistory8: fixtures.rapSheetHistory8,
   };
   const builder = builders[name];
   if (!builder) return null;
@@ -145,6 +148,7 @@ async function runScenarioAction(page, action) {
   if (action === "settings") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSettings());
   if (action === "toast") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openMechanicToast());
   if (action === "scoreBreakdown") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openScoreBreakdownDemo());
+  if (action === "lossExplanation") await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLossExplanationDemo());
   if (action === "safehouse") {
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openLineup());
     await page.getByRole("button", { name: "SAFEHOUSE", exact: true }).click();
@@ -248,6 +252,10 @@ for (const scenario of SCENARIOS) {
           await page.waitForTimeout(350);
         }
         await runScenarioAction(page, scenario.action);
+        if (scenario.id.startsWith("rap_sheet")) {
+          await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.finishRapReveal?.());
+          await page.waitForTimeout(350);
+        }
         await page.waitForTimeout(400);
         const audit = await auditViewport(page);
         const shotPath = path.join(ARTIFACT_DIR, `${scenario.id}-${vp.name}.png`);

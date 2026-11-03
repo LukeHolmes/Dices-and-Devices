@@ -641,11 +641,21 @@
     }
     #root-gutterbones [data-layout-key="carving-exit"] {
         position: fixed !important;
-        top: max(0.35rem, env(safe-area-inset-top, 0px)) !important;
+        top: max(0px, max(0.35rem, env(safe-area-inset-top, 0px))) !important;
         bottom: auto !important;
         right: max(0.5rem, env(safe-area-inset-right, 0px)) !important;
         left: auto !important;
         z-index: 450;
+        margin: 0;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet-footer"] {
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(18, 17, 19, 0) 0%, rgba(18, 17, 19, 0.88) 35%, rgba(18, 17, 19, 0.96) 100%);
+    }
+    #root-gutterbones [data-layout-key="loss-explanation-panel"] {
+        box-sizing: border-box;
+        max-width: min(96vw, 48rem);
+        width: 100%;
     }
     #root-gutterbones [data-layout-key="carving-layout"] {
         padding-top: 2.75rem;
@@ -1341,6 +1351,10 @@
         0% { transform: scale(2.5) rotate(15deg); opacity: 0; }
         100% { transform: scale(1) rotate(-2deg); opacity: 1; }
     }
+    @keyframes lossExplanationIn {
+        0% { transform: scale(1.08); opacity: 0; }
+        100% { transform: none; opacity: 1; }
+    }
     @keyframes cashFall {
         0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 1; }
         100% { transform: translateY(110vh) rotate(720deg) translateX(var(--tx)); opacity: 0; }
@@ -1835,7 +1849,11 @@
       box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
       backdrop-filter: blur(8px);
     }
-    #root-gutterbones .mechanic-popover { border: 2px solid rgba(0, 221, 255, 0.65); background: rgba(4, 12, 22, 0.98); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.72); border-radius: 10px; padding: 12px; }
+    #root-gutterbones .mechanic-popover { border: 2px solid rgba(0, 221, 255, 0.65); background: rgba(4, 12, 22, 0.98); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.72); border-radius: 10px; padding: 12px; box-sizing: border-box; max-width: min(18rem, calc(100vw - 1.25rem)); }
+    #root-gutterbones [data-layout-key="mechanic-popover-hud"] {
+        width: min(18rem, calc(100vw - 1rem));
+        max-width: min(18rem, calc(100vw - 1rem));
+    }
     #root-gutterbones .mechanic-popover-list { max-height: 168px; overflow-y: auto; }
     #root-gutterbones .cash-bill.near { animation: cashNear 1.55s linear forwards; }
     #root-gutterbones .cash-bill.mid { animation: cashMid 2.5s linear forwards; }
@@ -5337,7 +5355,12 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
 
     const RAP_SHEET_HISTORY_VISIBLE = 6;
 
-    const HistoryPanel = ({ history }) => {
+    const rapSheetHistoryMoreCount = (history) => {
+        const reversed = [...(history || [])].reverse();
+        return Math.max(0, reversed.length - RAP_SHEET_HISTORY_VISIBLE);
+    };
+
+    const HistoryPanel = ({ history, hideMoreLine = false }) => {
         const reversed = [...history].reverse();
         const shown = reversed.slice(0, RAP_SHEET_HISTORY_VISIBLE);
         const moreCount = Math.max(0, reversed.length - shown.length);
@@ -5355,7 +5378,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         <span className="rap-sheet-history-score">{h.total}</span>
                     </div>
                 ))}
-                {moreCount > 0 && (
+                {moreCount > 0 && !hideMoreLine && (
                     <div data-layout-key="rap-sheet-history-more" className="text-[10px] opacity-70 tracking-wide pt-0.5">
                         +{moreCount} more hand{moreCount === 1 ? '' : 's'} this run
                     </div>
@@ -5985,10 +6008,44 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     };
 
     const LossExplanationOverlay = ({ data, reducedMotion, onDismiss }) => {
+        const panelRef = useRef(null);
+        useLayoutEffect(() => {
+            if (!data) return undefined;
+            const clamp = () => {
+                const panel = panelRef.current;
+                if (!panel) return;
+                const pad = 8;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                panel.style.marginLeft = '';
+                panel.style.marginTop = '';
+                const r = panel.getBoundingClientRect();
+                let dx = 0;
+                let dy = 0;
+                if (r.left < pad) dx = pad - r.left;
+                if (r.right > vw - pad) dx = vw - pad - r.right;
+                if (r.top < pad) dy = pad - r.top;
+                if (r.bottom > vh - pad) dy = vh - pad - r.bottom;
+                if (Math.abs(dx) > 0.5) panel.style.marginLeft = `${dx}px`;
+                if (Math.abs(dy) > 0.5) panel.style.marginTop = `${dy}px`;
+            };
+            clamp();
+            window.addEventListener('resize', clamp);
+            const id = window.requestAnimationFrame(clamp);
+            return () => {
+                window.removeEventListener('resize', clamp);
+                window.cancelAnimationFrame(id);
+            };
+        }, [data?.id]);
         if (!data) return null;
-        return (
-            <div className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[590] pointer-events-none px-4 flex justify-center max-h-[calc(100dvh-0.75rem)]">
-                <div className={`readable-panel border-red-600/80 rounded-xl p-4 md:p-5 w-[min(96vw,48rem)] pointer-events-auto max-h-[min(38dvh,20rem)] overflow-hidden flex flex-col ${reducedMotion ? '' : 'animate-[stampSlam_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}>
+        const host = typeof document !== 'undefined' ? document.body : null;
+        const overlay = (
+            <div data-layout-key="loss-explanation-overlay" className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[590] pointer-events-none px-[max(0.5rem,env(safe-area-inset-left))] flex justify-center max-h-[calc(100dvh-0.75rem)]">
+                <div
+                    ref={panelRef}
+                    data-layout-key="loss-explanation-panel"
+                    className={`readable-panel border-red-600/80 rounded-xl p-4 md:p-5 pointer-events-auto max-h-[min(38dvh,20rem)] overflow-hidden flex flex-col ${reducedMotion ? '' : 'animate-[lossExplanationIn_.24s_cubic-bezier(.25,1,.5,1)_forwards]'}`}
+                >
                     <div className="overflow-hidden flex-1 min-h-0">
                     <div className="font-marker text-4xl md:text-5xl text-red-300 text-center mb-2">YOU LOST BECAUSE...</div>
                     <div className="font-mono text-center text-red-100 text-base md:text-lg mb-4 leading-relaxed">{data.primaryReason}</div>
@@ -6010,13 +6067,14 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     )}
                     </div>
                     {onDismiss && (
-                        <button type="button" onClick={onDismiss} className="mt-3 shrink-0 w-full py-3 min-h-[44px] border border-red-400/60 text-red-100 font-mono text-xs tracking-widest hover:bg-red-950/40">
+                        <button type="button" data-layout-key="loss-explanation-dismiss" onClick={onDismiss} className="mt-3 shrink-0 w-full py-3 min-h-[44px] border border-red-400/60 text-red-100 font-mono text-xs tracking-widest hover:bg-red-950/40">
                             DISMISS
                         </button>
                     )}
                 </div>
             </div>
         );
+        return host ? ReactDOM.createPortal(overlay, host) : overlay;
     };
 
 
@@ -7147,6 +7205,9 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         const [devSmokeResults, setDevSmokeResults] = useState([]);
         const [fixerLine, setFixerLine] = useState(pickLine(FIXER_LINES.start));
         const [activeMechanicPopup, setActiveMechanicPopup] = useState(null);
+        const mechanicPillsAnchorRef = useRef(null);
+        const mechanicPopoverRef = useRef(null);
+        const [mechanicPopoverHudStyle, setMechanicPopoverHudStyle] = useState(null);
         const [cameraKick, setCameraKick] = useState('');
         const prevTotalRunsRef = useRef(meta.totalRuns);
         const lastMechanicPopupRef = useRef({ key: '', at: 0 });
@@ -7646,6 +7707,40 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         };
         const toggleMechanicPopup = (popupId) => setActiveMechanicPopup((current) => (current === popupId ? null : popupId));
         const dismissMechanicPopup = () => setActiveMechanicPopup(null);
+        useLayoutEffect(() => {
+            if (activeMechanicPopup !== 'pills') {
+                setMechanicPopoverHudStyle(null);
+                return undefined;
+            }
+            const place = () => {
+                const anchor = mechanicPillsAnchorRef.current;
+                const pop = mechanicPopoverRef.current;
+                if (!anchor || !pop) return;
+                const pad = 8;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const width = Math.min(288, vw - pad * 2);
+                const ar = anchor.getBoundingClientRect();
+                let left = ar.right - width;
+                left = Math.max(pad, Math.min(left, vw - width - pad));
+                let top = ar.bottom + 8;
+                const maxH = Math.min(240, vh - top - pad);
+                if (maxH < 80 && ar.top > pad + 96) {
+                    top = Math.max(pad, ar.top - Math.min(240, ar.top - pad) - 8);
+                }
+                setMechanicPopoverHudStyle({
+                    position: 'fixed',
+                    left,
+                    top,
+                    width,
+                    maxHeight: Math.max(96, Math.min(240, vh - top - pad)),
+                    zIndex: 140
+                });
+            };
+            place();
+            window.addEventListener('resize', place);
+            return () => window.removeEventListener('resize', place);
+        }, [activeMechanicPopup, phase]);
 
         const getBossAdjustedTarget = (baseTarget, boss, roundNum) => {
             return GutterbonesRoutes.applyBossAdjustedTarget(baseTarget, boss, roundNum);
@@ -8621,19 +8716,18 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (!wrap) return;
                 wrap.style.marginTop = '';
                 const margin = 14;
+                const footerReserve = 92;
                 const vh = window.innerHeight;
-                const playBtn = inner.querySelector('[data-layout-key="rap-play-again"]');
-                const naturalH = playBtn
-                    ? Math.ceil(playBtn.offsetTop + playBtn.offsetHeight + 20)
-                    : (inner.scrollHeight || inner.offsetHeight);
+                const naturalH = inner.scrollHeight || inner.offsetHeight;
                 if (naturalH <= 0) return;
                 rapSheetNaturalHeightRef.current = naturalH;
                 setRapSheetNaturalHeight(naturalH);
                 const landscapeShort = vh < 450 && window.innerWidth > window.innerHeight;
                 const minScale = landscapeShort ? 0.5 : vh < 420 ? 0.62 : 0.72;
                 const fitFactor = landscapeShort ? 0.74 : 0.94;
-                const scale = Math.max(minScale, Math.min(1, ((vh - margin * 2) / naturalH) * fitFactor));
-                if (!landscapeShort && naturalH <= vh - margin * 2) {
+                const avail = vh - margin * 2 - footerReserve;
+                const scale = Math.max(minScale, Math.min(1, (avail / naturalH) * fitFactor));
+                if (!landscapeShort && naturalH <= avail) {
                     setRapSheetScale(1);
                     return;
                 }
@@ -8683,11 +8777,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         wrap.style.paddingTop = `${Math.ceil(margin - hr.top + 4)}px`;
                     }
                 }
-                const playBtn = inner.querySelector('[data-layout-key="rap-play-again"]');
-                if (playBtn) {
-                    const pr = playBtn.getBoundingClientRect();
-                    if (pr.bottom > vh - margin) {
-                        wrap.style.marginTop = `${(parseFloat(wrap.style.marginTop) || 0) + vh - margin - pr.bottom}px`;
+                const footer = document.querySelector('[data-layout-key="rap-sheet-footer"]');
+                if (footer) {
+                    const fr = footer.getBoundingClientRect();
+                    if (fr.bottom > vh - margin) {
+                        wrap.style.marginTop = `${(parseFloat(wrap.style.marginTop) || 0) + vh - margin - fr.bottom}px`;
                     }
                 }
             };
@@ -10451,6 +10545,44 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         layoutKey: 'mechanic-toast'
                     });
                 },
+                openMechanicPillsPopover: () => {
+                    setPhase('PLAY');
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setActiveMechanicPopup('pills');
+                },
+                openLossExplanationDemo: () => {
+                    setPhase('PLAY');
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setLossExplanation({
+                        id: `audit-loss-${Date.now()}`,
+                        primaryReason: 'You missed the street quota before your plays ran out.',
+                        contributors: ['Heat spikes from the boss modifier', 'Low mult on late hands'],
+                        tips: ['Bank heat earlier in the round', 'Upgrade mult before round 4']
+                    });
+                },
+                measureLayoutKeysInViewport: (keys) => {
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const pad = 0;
+                    const bad = [];
+                    keys.forEach((key) => {
+                        document.querySelectorAll(`[data-layout-key="${key}"]`).forEach((el) => {
+                            const style = window.getComputedStyle(el);
+                            if (style.display === 'none' || style.visibility === 'hidden') return;
+                            const r = el.getBoundingClientRect();
+                            if (r.width < 1 || r.height < 1) {
+                                bad.push({ key, reason: 'zero size', rect: { top: r.top, left: r.left, bottom: r.bottom, right: r.right, w: r.width, h: r.height } });
+                                return;
+                            }
+                            if (r.top < pad || r.left < pad || r.bottom > vh || r.right > vw) {
+                                bad.push({ key, reason: 'outside viewport', top: r.top, left: r.left, bottom: r.bottom, right: r.right, vw, vh });
+                            }
+                        });
+                    });
+                    return { ok: bad.length === 0, bad, vw, vh };
+                },
                 openRoundClear: () => {
                     const quotaMet = Math.max(score, currentTarget);
                     setScore(quotaMet);
@@ -10902,6 +11034,20 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                         onDismiss={() => setLossExplanation(null)}
                     />
                 )}
+                {phase === 'CARVING' && (
+                    <button
+                        type="button"
+                        data-layout-key="carving-exit"
+                        onClick={() => {
+                            setCarvingDie(null);
+                            setSelectedItem(null);
+                            transitionToPhase('SHOP');
+                        }}
+                        className="carving-exit-btn pointer-events-auto px-4 py-2 min-h-[44px] border-2 border-[#0df] bg-black/85 text-[#0df] font-mono text-xs tracking-widest hover:bg-cyan-950/50"
+                    >
+                        RETURN TO SHOP
+                    </button>
+                )}
                 {showLorePanel && <CaseFilesPanel tab={loreTab} onChangeTab={setLoreTab} onClose={() => setShowLorePanel(false)} unlockedPersonaIds={meta.unlockedPersonaIds} />}
                 {showSystemMenu && inRunPhase && (
                     <SystemMenu
@@ -11206,7 +11352,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             <div className="flex gap-3 md:gap-6 text-right items-start">
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
                                     <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> · IOU ${debt}</span>}</div></div>
-                                    <div className="relative" onMouseLeave={dismissMechanicPopup}>
+                                    <div className="relative" ref={mechanicPillsAnchorRef} onMouseLeave={dismissMechanicPopup}>
                                         <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
                                             <span>PILLS</span>
                                             <button
@@ -11220,7 +11366,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         </div>
                                         <div key={pillCountTick} className={`hud-pill-count text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''} ${pillCountTick ? 'pill-count-tick' : ''}`}>{discards}</div>
                                         {activeMechanicPopup === 'pills' && (
-                                            <div className="mechanic-popover absolute right-0 top-full mt-2 w-72 text-left z-[140]">
+                                            <div ref={mechanicPopoverRef} data-layout-key="mechanic-popover-hud" className="mechanic-popover text-left overflow-auto" style={mechanicPopoverHudStyle || { position: 'fixed', left: 8, top: 8, width: 288, zIndex: 140 }}>
                                                 <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
                                                 <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
                                                 {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
@@ -11771,20 +11917,6 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {phase === 'CARVING' && (
                     <div className="gb-screen items-center justify-center z-[400] relative p-[var(--gb-pad)]">
                         <div className="carving-mod-backdrop scene-backdrop-fade" aria-hidden></div>
-                        <div className="carving-exit-slot z-20 pointer-events-none">
-                            <button
-                                type="button"
-                                data-layout-key="carving-exit"
-                                onClick={() => {
-                                    setCarvingDie(null);
-                                    setSelectedItem(null);
-                                    transitionToPhase('SHOP');
-                                }}
-                                className="carving-exit-btn pointer-events-auto px-4 py-2 min-h-[44px] border-2 border-[#0df] bg-black/85 text-[#0df] font-mono text-xs tracking-widest hover:bg-cyan-950/50"
-                            >
-                                RETURN TO SHOP
-                            </button>
-                        </div>
                         <div data-layout-key="carving-layout" className="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
                             <div className="w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
@@ -11917,7 +12049,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                             </div>
                             <div data-layout-key="rap-sheet-history" className="border border-black p-3 bg-white/50 mb-3 flex flex-col shrink-0 overflow-visible">
                                 <div className="font-mono text-xs opacity-70 mb-2 shrink-0">Hand History:</div>
-                                <HistoryPanel history={history} />
+                                <HistoryPanel history={history} hideMoreLine />
                             </div>
                             <RunBuildFootprint compact runBuild={{ ...DEFAULT_RUN_BUILD, ...(runStats.build || {}) }} />
                             {dailyShareBanner && (
@@ -11926,10 +12058,22 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     {dailyShareBanner}
                                 </div>
                             )}
-                            <button data-layout-key="rap-play-again" onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="shrink-0 mt-2 px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
                             </div>
                         </div>
                         </div>
+                        {rapSheetRevealReady && (
+                            <div
+                                data-layout-key="rap-sheet-footer"
+                                className="fixed inset-x-0 bottom-0 z-[510] px-[var(--gb-pad)] pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 flex flex-col gap-1.5 max-w-2xl mx-auto w-full"
+                            >
+                                {rapSheetHistoryMoreCount(history) > 0 && (
+                                    <div data-layout-key="rap-sheet-history-more" className="pointer-events-auto text-center font-mono text-[11px] text-[#e8e6e1] tracking-wide py-1">
+                                        +{rapSheetHistoryMoreCount(history)} more hand{rapSheetHistoryMoreCount(history) === 1 ? '' : 's'} this run
+                                    </div>
+                                )}
+                                <button data-layout-key="rap-play-again" type="button" onClick={() => { setBustActive(false); setPhase('LINEUP'); }} className="pointer-events-auto shrink-0 px-8 py-3 min-h-[44px] bg-white text-black font-bold font-mono border-2 border-black hover:bg-red-600 hover:text-white transition-colors w-full">PLAY AGAIN</button>
+                            </div>
+                        )}
                     </div>
                 )}
 
