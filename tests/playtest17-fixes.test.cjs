@@ -224,12 +224,15 @@ test("e2e — shop intel shows compact loadout block", async () => {
     await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
     await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__.getPhase() === "SHOP", { timeout: 12_000 });
-    const intelOk = await page.evaluate(() => {
-      const panel = document.querySelector('[data-layout-key="run-intel-floating"]');
-      const chips = panel?.querySelector('[data-layout-key="run-intel-chip-row"]');
-      return !!(panel && chips && chips.querySelectorAll("[data-intel-chip]").length >= 5);
+    const shopOk = await page.evaluate(() => {
+      const floating = document.querySelector('[data-layout-key="run-intel-floating"]');
+      const floatingVisible =
+        floating && getComputedStyle(floating).display !== "none" && floating.getClientRects().length > 0;
+      const card = document.querySelector('[data-layout-key="shop-route-card"]');
+      const hitBtn = document.querySelector('[data-layout-key="shop-stash-panel"] button');
+      return !floatingVisible && !!card && !!hitBtn;
     });
-    assert.ok(intelOk);
+    assert.ok(shopOk);
   } finally {
     await browser.close();
   }

@@ -143,25 +143,26 @@ for (const vp of SHOP_INTEL_VIEWPORTS) {
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-      await page.waitForSelector('[data-layout-key="run-intel-floating"]', { timeout: 12_000 });
+      await page.waitForSelector('[data-layout-key="shop-route-card"]', { timeout: 12_000 });
       const metrics = await page.evaluate(() => {
-        const panel = document.querySelector('[data-layout-key="run-intel-floating"]');
-        const chips = panel?.querySelector('[data-layout-key="run-intel-chip-row"]');
-        if (!panel || !chips) return { ok: false, reason: "missing floating intel" };
-        const pr = panel.getBoundingClientRect();
-        const cr = chips.getBoundingClientRect();
+        const floating = document.querySelector('[data-layout-key="run-intel-floating"]');
+        if (floating && getComputedStyle(floating).display !== "none") {
+          return { ok: false, reason: "floating intel must not cover shop routes" };
+        }
+        const card = document.querySelector('[data-layout-key="shop-route-card"]');
+        if (!card) return { ok: false, reason: "missing route card" };
+        const r = card.getBoundingClientRect();
+        const cx = r.x + r.width / 2;
+        const cy = r.y + r.height / 2;
+        const hit = document.elementFromPoint(cx, cy);
+        const tappable = !!(hit && (hit === card || card.contains(hit)));
         const vw = window.innerWidth;
-        const routeChip = panel.querySelector('[data-intel-chip="route"]');
-        const routeRect = routeChip?.getBoundingClientRect();
+        const routeText = (card.innerText || "").replace(/\s+/g, " ");
         return {
-          ok:
-            cr.right <= vw + 2 &&
-            pr.right <= vw + 2 &&
-            panel.scrollHeight <= panel.clientHeight + 4 &&
-            !!(routeChip?.textContent || "").includes("ROUTE"),
-          panelRight: pr.right,
-          chipsRight: cr.right,
-          routeText: routeChip?.textContent,
+          ok: tappable && r.right <= vw + 2 && /ROUTE|ALLEY|QUOTA/i.test(routeText),
+          tappable,
+          cardRight: r.right,
+          routeText,
           vw,
         };
       });

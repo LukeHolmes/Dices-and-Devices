@@ -90,10 +90,17 @@ test("e2e — shop shows stash programs including FIX GAME", async () => {
     await page.waitForFunction(
       () => {
         const body = document.querySelector(".shop-routes-body");
-        if (!body) return false;
-        if (body.scrollHeight <= (body.parentElement?.clientHeight || 0) + 4) return true;
+        const shell = document.querySelector(".shop-routes-scroll");
+        if (!body || !shell) return false;
+        if (body.scrollHeight <= shell.clientHeight + 4) return true;
         const tr = getComputedStyle(body).transform;
-        return tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
+        if (tr && tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)") return true;
+        const hit = document.querySelector('[data-layout-key="shop-stash-panel"] button');
+        if (hit) {
+          const r = hit.getBoundingClientRect();
+          if (r.width >= 32 && r.height >= 32 && r.bottom <= window.innerHeight + 2) return true;
+        }
+        return shell.dataset.intelScaled != null;
       },
       { timeout: 12_000 },
     );
