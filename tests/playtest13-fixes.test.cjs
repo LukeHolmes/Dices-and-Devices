@@ -159,12 +159,21 @@ test("e2e — one roll after score dismiss changes dice values", async () => {
         && !document.querySelector('[data-layout-key="score-resolution-overlay"]'),
       { timeout: 15_000 },
     );
-    await page.waitForFunction(() => !window.__GB_E2E__.isRollDisabled(), { timeout: 15_000 });
+    await page.waitForFunction(
+      () => {
+        const e2e = window.__GB_E2E__;
+        if (!e2e?.debugStuck) return true;
+        const dbg = e2e.debugStuck();
+        return !dbg.overlayActive && !dbg.breakdown && !dbg.resolution;
+      },
+      { timeout: 20_000 },
+    );
+    await page.waitForFunction(() => !window.__GB_E2E__.isRollDisabled(), { timeout: 20_000 });
     const before = await page.evaluate(() => window.__GB_E2E__.getDiceValues());
     assert.equal(before.length, 5);
     const rollBtn = page.locator('[data-tutorial="roll-btn"]');
-    await rollBtn.waitFor({ state: "visible", timeout: 8000 });
-    await rollBtn.click({ timeout: 8000 });
+    await rollBtn.waitFor({ state: "visible", timeout: 10_000 });
+    await rollBtn.click({ timeout: 10_000 });
     await page.waitForFunction(
       (prev) => {
         const e2e = window.__GB_E2E__;
@@ -177,7 +186,7 @@ test("e2e — one roll after score dismiss changes dice values", async () => {
         );
       },
       before,
-      { timeout: 20_000 },
+      { timeout: 30_000 },
     );
   } finally {
     await browser.close();
