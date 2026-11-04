@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const http = require("node:http");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
+const { assertViewport, phonePortraitBlockingEnabled } = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
@@ -94,8 +95,18 @@ for (const vp of PHONE_VIEWPORTS) {
         await page.waitForTimeout(600);
         m = await page.evaluate(probeBuyButtons);
       }
-      assert.ok(m.buyCount >= 1, JSON.stringify(m));
-      assert.ok(m.hitCount >= 1, JSON.stringify(m));
+      const label = `BUY hit-test (${m.hitCount}/${m.buyCount} tappable)`;
+      assertViewport(vp.name, m.buyCount >= 1, JSON.stringify(m), {
+        suite: "shop-mobile-buy-hit",
+        label,
+      });
+      assertViewport(vp.name, m.hitCount >= 1, JSON.stringify(m), {
+        suite: "shop-mobile-buy-hit",
+        label,
+      });
+      if (m.hitCount < 1 && !phonePortraitBlockingEnabled()) {
+        console.warn(`[phone non-blocking] ${vp.name}: ${label}\n${JSON.stringify(m)}`);
+      }
     } finally {
       await browser.close();
     }

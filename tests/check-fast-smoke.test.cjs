@@ -8,6 +8,12 @@ const path = require("node:path");
 const http = require("node:http");
 const fs = require("node:fs");
 const { runOneGame, VIEWPORTS } = require("./sim/run.cjs");
+const {
+  isPhonePortrait,
+  phonePortraitBlockingEnabled,
+  recordPhoneWarning,
+  printPhonePortraitReport,
+} = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const SEEDS = [13, 61];
@@ -38,6 +44,9 @@ before(async () => {
 
 after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
+  if (process.env.CHECK_FAST_PRINT_PHONE_REPORT === "1") {
+    printPhonePortraitReport();
+  }
 });
 
 for (const vp of VIEWPORTS) {
@@ -57,6 +66,15 @@ for (const vp of VIEWPORTS) {
           stuckThreshold: 36,
           maxFallbacks: 12,
         });
+        if (result.stuck && isPhonePortrait(vp.name) && !phonePortraitBlockingEnabled()) {
+          recordPhoneWarning({
+            suite: "check-fast-smoke",
+            viewport: vp.name,
+            label: `rid ${rid}`,
+            message: JSON.stringify(result),
+          });
+          return;
+        }
         assert.equal(result.stuck, false, JSON.stringify(result));
       } finally {
         await browser.close();

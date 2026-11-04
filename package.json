@@ -16,7 +16,7 @@
     "test:known-issues": "node tests/known-issues.cjs --strict",
     "test:layout": "node --test --test-timeout=120000 tests/no-scroll-layout.cjs",
     "sim": "node tests/sim/run.cjs",
-    "check:fast": "npm test && npm run test:layout && node --test tests/check-fast-smoke.test.cjs",
+    "check:fast": "node scripts/check-fast-report.cjs",
     "check": "npm test && npm run test:layout && npm run audit:known-issues",
     "check:parity": "node tests/parity.cjs",
     "check:release": "npm run check",

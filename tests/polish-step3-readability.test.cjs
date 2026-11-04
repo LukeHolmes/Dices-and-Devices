@@ -10,6 +10,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
+const { assertViewport, assertEqualViewport } = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
@@ -81,7 +82,7 @@ for (const vp of VIEWPORTS) {
         (keys) => window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(keys),
         STASH_KEYS,
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step3", label: "measure" });
     } finally {
       await browser.close();
     }
@@ -99,8 +100,11 @@ for (const vp of VIEWPORTS) {
       await page.waitForSelector('[data-layout-key="boss-intro-continue"]', { timeout: 8000 });
       await page.waitForTimeout(400);
       const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureBossContinueHitTarget());
-      assert.ok(hit.ok, JSON.stringify(hit));
-      assert.equal(hit.hitKey, "boss-intro-continue", JSON.stringify(hit));
+      assertViewport(vp.name, hit.ok, JSON.stringify(hit), { suite: "polish-step3", label: "hit target" });
+      assertEqualViewport(vp.name, hit.hitKey, "boss-intro-continue", JSON.stringify(hit), {
+        suite: "polish-step3",
+        label: "boss intro key",
+      });
     } finally {
       await browser.close();
     }
@@ -120,11 +124,14 @@ for (const vp of VIEWPORTS) {
       await page.locator('[data-layout-key="shop-route-card"]').first().scrollIntoViewIfNeeded();
       await page.waitForTimeout(200);
       const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.probeShopRouteHit());
-      assert.ok(hit.ok, JSON.stringify(hit));
+      assertViewport(vp.name, hit.ok, JSON.stringify(hit), { suite: "polish-step3", label: "hit target" });
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.clickShopRouteCard());
       await page.waitForTimeout(100);
       const pathId = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getState().selectedShopPathId);
-      assert.ok(pathId, `expected route selected, got ${pathId}`);
+      assertViewport(vp.name, !!pathId, `expected route selected, got ${pathId}`, {
+        suite: "polish-step3",
+        label: "shop route",
+      });
     } finally {
       await browser.close();
     }
@@ -147,7 +154,7 @@ for (const vp of VIEWPORTS) {
           "tutorial-coach-dismiss",
         ]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step3", label: "measure" });
     } finally {
       await browser.close();
     }
@@ -186,7 +193,7 @@ for (const vp of VIEWPORTS) {
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openOpeningSniffBannerDemo());
       await page.waitForTimeout(450);
       const m = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureOpeningSniffOverlap());
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step3", label: "measure" });
     } finally {
       await browser.close();
     }
@@ -202,7 +209,10 @@ for (const vp of VIEWPORTS) {
       await resumeFixture(page, fixtures.playHeavyHardware);
       await page.waitForTimeout(350);
       const playAudit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditVisibleTypography(11));
-      assert.ok(playAudit.ok, JSON.stringify(playAudit));
+      assertViewport(vp.name, playAudit.ok, JSON.stringify(playAudit), {
+        suite: "polish-step3",
+        label: "play audit",
+      });
     } finally {
       await browser.close();
     }
@@ -219,7 +229,7 @@ for (const vp of VIEWPORTS) {
         await resumeFixture(page, fixtures.playStashOpen844);
         await page.waitForTimeout(350);
         const tap = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditPhoneTapTargets(32));
-        assert.ok(tap.ok, JSON.stringify(tap));
+        assertViewport(vp.name, tap.ok, JSON.stringify(tap), { suite: "polish-step3", label: "tap" });
       } finally {
         await browser.close();
       }

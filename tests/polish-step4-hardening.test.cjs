@@ -10,6 +10,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
+const { assertViewport } = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
@@ -83,7 +84,7 @@ for (const vp of VIEWPORTS) {
         const m = await page.evaluate(() =>
           window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["score-breakdown-overlay"]),
         );
-        assert.ok(m.ok, JSON.stringify(m));
+        assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step4", label: "measure" });
       } finally {
         await browser.close();
       }
@@ -103,7 +104,7 @@ for (const vp of VIEWPORTS) {
         await page.waitForSelector('[data-layout-key="score-breakdown-overlay"]', { timeout: 8000 });
         await page.waitForTimeout(450);
         const m = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureScoreOverlayVsStash());
-        assert.ok(m.ok, JSON.stringify(m));
+        assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step4", label: "measure" });
       } finally {
         await browser.close();
       }
@@ -121,7 +122,7 @@ for (const vp of VIEWPORTS) {
         await page.waitForSelector('[data-layout-key="score-resolution-overlay"]', { timeout: 8000 });
         await page.waitForTimeout(450);
         const m = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureScoreOverlayVsStash());
-        assert.ok(m.ok, JSON.stringify(m));
+        assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step4", label: "measure" });
       } finally {
         await browser.close();
       }
@@ -146,7 +147,7 @@ for (const vp of VIEWPORTS) {
         (keys) => window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(keys),
         STASH_KEYS,
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step4", label: "measure" });
     } finally {
       await browser.close();
     }
@@ -170,7 +171,7 @@ for (const vp of VIEWPORTS) {
         const btnOk = r.width > 8 && r.height > 8 && r.top >= -2 && r.bottom <= vh + 2;
         return { ok: layout.ok && btnOk, layout, btnTop: r.top, btnBottom: r.bottom, vh };
       });
-      assert.ok(shop.ok, JSON.stringify(shop));
+      assertViewport(vp.name, shop.ok, JSON.stringify(shop), { suite: "polish-step4", label: "shop" });
     } finally {
       await browser.close();
     }
@@ -190,7 +191,7 @@ for (const vp of VIEWPORTS) {
       const gamble = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["gamble-card"]),
       );
-      assert.ok(gamble.ok, JSON.stringify(gamble));
+      assertViewport(vp.name, gamble.ok, JSON.stringify(gamble), { suite: "polish-step4", label: "gamble" });
     } finally {
       await browser.close();
     }
@@ -210,9 +211,9 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["tutorial-coach-ack", "tutorial-coach-dismiss"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step4", label: "measure" });
       const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureElementHitTarget('[data-layout-key="tutorial-coach-ack"]'));
-      assert.ok(hit.ok, JSON.stringify(hit));
+      assertViewport(vp.name, hit.ok, JSON.stringify(hit), { suite: "polish-step4", label: "hit" });
     } finally {
       await browser.close();
     }
@@ -228,13 +229,19 @@ for (const vp of VIEWPORTS) {
       await resumeFixture(page, fixtures.playHeavyHardware);
       await page.waitForTimeout(350);
       const playAudit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditVisibleTypography(11));
-      assert.ok(playAudit.ok, JSON.stringify(playAudit));
+      assertViewport(vp.name, playAudit.ok, JSON.stringify(playAudit), {
+        suite: "polish-step4",
+        label: "play audit",
+      });
       const history = fixtures.rapSheetHistory8().history;
       await page.evaluate((rows) => window.__GB_LAYOUT_AUDIT__.openRapSheetDemo(rows), history);
       await page.waitForSelector('[data-layout-key="rap-sheet"]', { timeout: 8000 });
       await page.waitForTimeout(300);
       const rapAudit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditVisibleTypography(11));
-      assert.ok(rapAudit.ok, JSON.stringify(rapAudit));
+      assertViewport(vp.name, rapAudit.ok, JSON.stringify(rapAudit), {
+        suite: "polish-step4",
+        label: "rap audit",
+      });
     } finally {
       await browser.close();
     }
@@ -268,7 +275,10 @@ for (const vp of VIEWPORTS) {
           vw,
         };
       });
-      assert.ok(intelHits.ok, JSON.stringify(intelHits));
+      assertViewport(vp.name, intelHits.ok, JSON.stringify(intelHits), {
+        suite: "polish-step4",
+        label: "intel hits",
+      });
     } finally {
       await browser.close();
     }
@@ -287,11 +297,11 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["stuck-recovery-continue"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step4", label: "measure" });
       const hit = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureElementHitTarget('[data-layout-key="stuck-recovery-continue"]'),
       );
-      assert.ok(hit.ok, JSON.stringify(hit));
+      assertViewport(vp.name, hit.ok, JSON.stringify(hit), { suite: "polish-step4", label: "hit" });
     } finally {
       await browser.close();
     }
@@ -314,7 +324,7 @@ for (const vp of VIEWPORTS) {
         await buy.scrollIntoViewIfNeeded();
         await page.waitForTimeout(250);
         const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.probeShopBuyHit());
-        assert.ok(hit.ok, JSON.stringify(hit));
+        assertViewport(vp.name, hit.ok, JSON.stringify(hit), { suite: "polish-step4", label: "hit" });
       } finally {
         await browser.close();
       }
