@@ -117,6 +117,8 @@ for (const vp of VIEWPORTS) {
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.returnFromCarvingToShop());
       await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__.getPhase() === "SHOP", { timeout: 8000 });
       await page.waitForTimeout(400);
+      await page.locator('[data-layout-key="shop-route-card"]').first().scrollIntoViewIfNeeded();
+      await page.waitForTimeout(200);
       const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.probeShopRouteHit());
       assert.ok(hit.ok, JSON.stringify(hit));
       await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.clickShopRouteCard());

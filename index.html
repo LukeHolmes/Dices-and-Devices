@@ -203,6 +203,17 @@
         overscroll-behavior: none;
         scrollbar-width: none;
     }
+    @media (max-width: 430px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            overflow-y: auto;
+            max-height: min(42vh, 16rem);
+            scrollbar-width: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-btn-shop {
+            position: relative;
+            z-index: 8;
+        }
+    }
     #root-gutterbones[data-phase="SHOP"] .shop-items-panel::-webkit-scrollbar {
         width: 0;
         height: 0;
@@ -795,7 +806,7 @@
             display: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            flex: 1 1 auto;
+            flex: 0 1 auto !important;
             min-height: 0;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-route-pagination {
@@ -845,6 +856,36 @@
             max-height: 1.65rem;
         }
     }
+    @media (min-width: 768px) and (max-height: 820px) {
+        #root-gutterbones .play-stash-column .stash-hardware-panel,
+        #root-gutterbones .play-stash-column .build-indicator-root {
+            display: none !important;
+        }
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            flex: 0 0 auto;
+            max-height: 3.35rem;
+            overflow: hidden;
+            position: relative;
+            z-index: 12;
+            margin-bottom: 0.5rem;
+        }
+        #root-gutterbones .run-intel-summary--inline.run-intel-collapsed {
+            max-height: 2.85rem;
+            min-height: 2.85rem;
+        }
+        #root-gutterbones .play-stash-column .stash-programs-pinned {
+            position: relative;
+            z-index: 2;
+            flex: 1 1 auto;
+            min-height: 0;
+            margin-top: 0.15rem !important;
+            padding-top: 0.35rem !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        #root-gutterbones .play-stash-column .stash-programs-pinned > .flex.items-center.justify-center.gap-2 {
+            display: none !important;
+        }
+    }
     @media (min-width: 640px) and (max-height: 780px) {
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-fixter-line,
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-debt-warning,
@@ -888,6 +929,11 @@
         #root-gutterbones[data-phase="SHOP"] .build-indicator-root,
         #root-gutterbones[data-phase="SHOP"] .tutorial-coach-root {
             pointer-events: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .tutorial-coach-card,
+        #root-gutterbones[data-phase="SHOP"] .tutorial-coach-card button,
+        #root-gutterbones[data-phase="SHOP"] .tutorial-coach-skip {
+            pointer-events: auto;
         }
         #root-gutterbones[data-phase="SHOP"] .build-indicator-root {
             top: auto !important;
@@ -1098,6 +1144,8 @@
         align-content: flex-start;
         max-height: 2.85rem;
         overflow: hidden;
+        position: relative;
+        z-index: 1;
     }
     #root-gutterbones .run-intel-summary--inline .run-intel-chip-row {
         display: grid;
@@ -1446,6 +1494,280 @@
     @container gutterbones (max-height: 720px) {
         #root-gutterbones .play-stash-column .stash-hardware-panel { min-height: 5rem; }
         #root-gutterbones .play-stash-column .stash-program-grid button { padding-top: 0.35rem; padding-bottom: 0.35rem; }
+    }
+    /* Polish step 4: score overlays above stash when open */
+    #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-breakdown-overlay"],
+    #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-resolution-overlay"] {
+        position: fixed !important;
+        top: auto !important;
+        bottom: calc(var(--gb-play-stash-reserve, 10rem) + max(0.35rem, env(safe-area-inset-bottom, 0px))) !important;
+        left: max(0.45rem, env(safe-area-inset-left, 0px)) !important;
+        right: max(0.45rem, env(safe-area-inset-right, 0px)) !important;
+        width: auto !important;
+        max-width: min(36rem, calc(100vw - 1rem)) !important;
+        margin-inline: auto;
+        transform: none !important;
+        max-height: min(12rem, calc(100dvh - var(--gb-play-stash-reserve, 10rem) - 4.5rem)) !important;
+        z-index: 265;
+    }
+    #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-breakdown-overlay"] .score-explanation-panel,
+    #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-resolution-overlay"] button {
+        max-height: min(11rem, calc(100dvh - var(--gb-play-stash-reserve, 10rem) - 5rem)) !important;
+        overflow-y: auto;
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-breakdown-overlay"],
+        #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-resolution-overlay"] {
+            top: max(4.25rem, env(safe-area-inset-top, 0px)) !important;
+            bottom: auto !important;
+            max-height: min(42vh, 14rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            flex-direction: column !important;
+            min-height: 0;
+            max-height: calc(100dvh - 2 * var(--gb-pad, 0.35rem));
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] > [data-tutorial="shop-panel"] {
+            flex: 1 1 auto !important;
+            min-height: 11.5rem !important;
+            max-height: min(52dvh, 19.5rem) !important;
+            position: relative;
+            z-index: 12;
+            overflow: hidden;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            flex: 1 1 auto !important;
+            min-height: 7.5rem !important;
+            max-height: none !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            flex: 0 1 auto !important;
+            max-height: min(46dvh, calc(100dvh - 13.5rem)) !important;
+            overflow-y: auto !important;
+            position: relative;
+            z-index: 6;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            pointer-events: none;
+            margin-top: 0.15rem !important;
+            padding-top: 0.15rem !important;
+            border-top-width: 1px !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] button {
+            pointer-events: auto;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            padding-bottom: 7.5rem;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-btn-shop {
+            z-index: 16 !important;
+            isolation: isolate;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+            position: relative;
+            z-index: 18;
+            pointer-events: auto;
+        }
+    }
+    /* Polish step 4: short landscape — shop/gamble fit */
+    @media (max-height: 420px) and (orientation: landscape) {
+        #root-gutterbones [data-layout-key="score-breakdown-overlay"],
+        #root-gutterbones [data-layout-key="score-resolution-overlay"] {
+            position: fixed !important;
+            top: auto !important;
+            bottom: calc(var(--gb-play-stash-reserve, 8.75rem) + max(0.35rem, env(safe-area-inset-bottom, 0px))) !important;
+            left: max(0.45rem, env(safe-area-inset-left, 0px)) !important;
+            right: max(0.45rem, env(safe-area-inset-right, 0px)) !important;
+            width: auto !important;
+            max-width: min(36rem, calc(100vw - 1rem)) !important;
+            margin-inline: auto;
+            transform: none !important;
+            max-height: min(10.5rem, calc(100dvh - var(--gb-play-stash-reserve, 8.75rem) - 4.5rem)) !important;
+            z-index: 265;
+        }
+        #root-gutterbones [data-layout-key="score-breakdown-overlay"] .score-explanation-panel,
+        #root-gutterbones [data-layout-key="score-resolution-overlay"] button {
+            max-height: min(10rem, calc(100dvh - var(--gb-play-stash-reserve, 8.75rem) - 5rem)) !important;
+            overflow-y: auto;
+            padding-top: 0.45rem !important;
+            padding-bottom: 0.45rem !important;
+        }
+        #root-gutterbones[data-score-overlay-open="1"] .play-stash-column .stash-hardware-panel,
+        #root-gutterbones[data-score-overlay-open="1"] .play-stash-column .stash-intel-scroll {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="PLAY"] .play-stash-column {
+            justify-content: flex-end;
+        }
+        #root-gutterbones[data-phase="PLAY"] .play-stash-column .stash-programs-pinned {
+            margin-top: auto;
+            flex: 0 0 auto;
+            z-index: 280;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            max-height: calc(100dvh - 0.5rem);
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            max-height: min(36vh, 8.25rem);
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel::-webkit-scrollbar {
+            display: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+            min-height: 4.5rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            max-height: calc(100dvh - 0.35rem) !important;
+            overflow: hidden;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-btn-shop {
+            position: relative;
+            z-index: 5;
+        }
+        #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"] {
+            max-height: calc(100dvh - 1rem);
+            overflow: hidden;
+        }
+        #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"] .gb-modal-body {
+            max-height: calc(100dvh - 2.5rem);
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .tutorial-coach-card {
+            position: fixed !important;
+            top: max(0.35rem, env(safe-area-inset-top, 0px)) !important;
+            bottom: auto !important;
+            left: max(0.45rem, env(safe-area-inset-left, 0px)) !important;
+            right: max(0.45rem, env(safe-area-inset-right, 0px)) !important;
+            width: auto !important;
+            max-width: min(24rem, calc(100vw - 1rem)) !important;
+            transform: none !important;
+            max-height: min(7.5rem, calc(100dvh - 0.75rem));
+            overflow-y: auto;
+            z-index: 960 !important;
+        }
+    }
+    @media (max-height: 420px) and (min-width: 720px) {
+        #root-gutterbones [data-layout-key="side-wager-row"],
+        #root-gutterbones [data-layout-key="play-hud"] .gb-play-dock {
+            display: none !important;
+        }
+        #root-gutterbones [data-layout-key="play-hud"] .relative.mx-3 {
+            display: none !important;
+            min-height: 0 !important;
+        }
+        #root-gutterbones [data-layout-key="play-hud"] {
+            margin-bottom: 0.1rem !important;
+        }
+        #root-gutterbones .play-stash-column {
+            position: relative;
+            z-index: 6;
+        }
+        #root-gutterbones .play-stash-column .run-intel-summary--inline {
+            position: relative;
+            z-index: 14;
+        }
+        #root-gutterbones .run-intel-summary-head-actions {
+            z-index: 20;
+        }
+    }
+    #root-gutterbones .tutorial-coach-root {
+        z-index: 950;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-phase="SHOP"] .tutorial-coach-root {
+        z-index: 1200;
+    }
+    #root-gutterbones[data-phase="SHOP"] .gb-screen.z-40,
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+        z-index: 1;
+        isolation: isolate;
+    }
+    #root-gutterbones .tutorial-coach-card,
+    #root-gutterbones .tutorial-coach-skip,
+    #root-gutterbones .tutorial-coach-root button {
+        pointer-events: auto;
+    }
+    #root-gutterbones .run-intel-summary-head-actions {
+        position: relative;
+        z-index: 12;
+        pointer-events: auto;
+    }
+    #root-gutterbones .run-intel-summary--inline {
+        position: relative;
+        z-index: 8;
+        isolation: isolate;
+    }
+    #root-gutterbones .play-stash-column .stash-programs-pinned {
+        pointer-events: none;
+    }
+    #root-gutterbones .play-stash-column .stash-program-grid button,
+    #root-gutterbones .play-stash-column .stash-programs-pinned > button {
+        pointer-events: auto;
+    }
+    #root-gutterbones [data-layout-key="run-intel-collapse-toggle"],
+    #root-gutterbones [data-layout-key="run-intel-details-toggle"] {
+        position: relative;
+        z-index: 25;
+        pointer-events: auto !important;
+    }
+    #root-gutterbones [data-layout-key="play-stash"] {
+        pointer-events: none;
+    }
+    #root-gutterbones [data-layout-key="play-stash"] button,
+    #root-gutterbones [data-layout-key="play-stash"] [role="button"],
+    #root-gutterbones [data-layout-key="play-stash"] a[href] {
+        pointer-events: auto;
+    }
+    #root-gutterbones .score-row-fixed.gb-payout-row-btn {
+        font-size: max(12px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones .score-row-fixed .payout-lv-badge {
+        font-size: var(--gb-min-font) !important;
+    }
+    #root-gutterbones .rap-sheet-stat-table td,
+    #root-gutterbones .rap-sheet-stat-table th,
+    #root-gutterbones .rap-sheet-stat-value,
+    #root-gutterbones .rap-sheet-stat-label {
+        font-size: max(11px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones .round-clear-card,
+    #root-gutterbones [data-layout-key="round-clear-card"] {
+        font-size: max(11px, 1rem);
+    }
+    #root-gutterbones [data-layout-key="stuck-recovery-overlay"] {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"] {
+        max-height: calc(100dvh - 1rem);
+        overflow: hidden;
+    }
+    #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"] .gb-modal-body {
+        max-height: calc(100dvh - 2.5rem);
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
+    #root-gutterbones [data-layout-key="play-hud"] .text-\[10px\].opacity-50,
+    #root-gutterbones .gb-play-dock .font-mono.text-\[9px\] {
+        font-size: max(11px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones .gb-play-dock .gb-tappable-label {
+        font-size: max(12px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones [data-layout-key="round-clear-card"] *,
+    #root-gutterbones .round-clear-card * {
+        font-size: max(11px, 1em) !important;
     }
     #root-gutterbones { font-family: Georgia, serif; }
     #root-gutterbones .font-marker { font-family: Impact, "Arial Black", sans-serif; }
@@ -2774,6 +3096,25 @@ const GutterbonesRules = (() => {
         if (normalized.selectedShopPathId != null && typeof normalized.selectedShopPathId !== 'string') {
             normalized.selectedShopPathId = null;
         }
+        const finiteInt = (n, fallback = 0) => {
+            const v = Number(n);
+            if (!Number.isFinite(v)) return fallback;
+            return Math.floor(v);
+        };
+        const finiteNum = (n, fallback = 0) => {
+            const v = Number(n);
+            return Number.isFinite(v) ? v : fallback;
+        };
+        normalized.gold = Math.max(0, finiteInt(normalized.gold, 0));
+        normalized.debt = Math.max(0, finiteInt(normalized.debt, 0));
+        normalized.score = Math.max(0, finiteInt(normalized.score, 0));
+        normalized.target = Math.max(1, finiteInt(normalized.target, 85));
+        normalized.stash = Math.min(100, Math.max(0, finiteNum(normalized.stash, 0)));
+        normalized.hands = Math.max(0, finiteInt(normalized.hands, 0));
+        normalized.discards = Math.max(0, finiteInt(normalized.discards, 0));
+        if (typeof normalized.version !== 'number' || Number.isNaN(normalized.version) || normalized.version < 1) {
+            normalized.version = 1;
+        }
         return normalized;
     };
 
@@ -3850,6 +4191,131 @@ const GutterbonesPresentation = (() => {
     });
 })();
 if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesPresentation;
+</script>
+
+<script id="gutterbones-hardening">
+const GutterbonesHardening = (() => {
+    const finiteInt = (n, fallback = 0) => {
+        const v = Number(n);
+        if (!Number.isFinite(v)) return fallback;
+        return Math.floor(v);
+    };
+    const finiteNum = (n, fallback = 0) => {
+        const v = Number(n);
+        return Number.isFinite(v) ? v : fallback;
+    };
+    const sanitizeMoneyFields = (run) => {
+        if (!run || typeof run !== 'object') return run;
+        return {
+            ...run,
+            gold: Math.max(0, finiteInt(run.gold, 0)),
+            debt: Math.max(0, finiteInt(run.debt, 0)),
+            score: Math.max(0, finiteInt(run.score, 0)),
+            target: Math.max(1, finiteInt(run.target, 85)),
+            stash: Math.min(100, Math.max(0, finiteNum(run.stash, 0)))
+        };
+    };
+    const sanitizeScoreResult = (result) => {
+        if (!result || typeof result !== 'object') return result;
+        const chips = finiteInt(result.chips, 0);
+        const mult = Math.max(0.01, finiteNum(result.mult, 1));
+        const flowMult = Math.max(0.01, finiteNum(result.flowMult, 1));
+        const total = finiteInt(result.total, Math.round(chips * mult * flowMult));
+        return { ...result, chips, mult, flowMult, total };
+    };
+    const OVERLAY_IDS = Object.freeze([
+        'bossIntro',
+        'scoreBreakdown',
+        'scoreResolution',
+        'roundClear',
+        'lossExplanation',
+        'systemMenu',
+        'helpOverlay',
+        'tutorialCoach',
+        'firstRun',
+        'stuckRecovery'
+    ]);
+    let activeOverlay = null;
+    const log = (msg, detail) => {
+        if (typeof console !== 'undefined') console.warn('[GutterbonesScreenGuard]', msg, detail ?? '');
+    };
+    const requestOverlay = (id) => {
+        if (!OVERLAY_IDS.includes(id)) return true;
+        if (activeOverlay && activeOverlay !== id) {
+            log('reject overlay', { active: activeOverlay, requested: id });
+            return false;
+        }
+        activeOverlay = id;
+        return true;
+    };
+    const clearOverlay = (id) => {
+        if (!id || activeOverlay === id) activeOverlay = null;
+    };
+    const ILLEGAL_PHASE = Object.freeze([
+        ['TITLE', 'CARVING'],
+        ['TITLE', 'GAMBLE'],
+        ['RAP_SHEET', 'CARVING']
+    ]);
+    const overlayHasDom = (id) => {
+        if (typeof document === 'undefined') return false;
+        const map = {
+            scoreBreakdown: '[data-layout-key="score-breakdown-overlay"]',
+            scoreResolution: '[data-layout-key="score-resolution-overlay"]',
+            bossIntro: '[data-layout-key="boss-intro-overlay"]',
+            stuckRecovery: '[data-layout-key="stuck-recovery-overlay"]'
+        };
+        const sel = map[id];
+        if (!sel) return false;
+        const el = document.querySelector(sel);
+        if (!el) return false;
+        const st = window.getComputedStyle(el);
+        return st.display !== 'none' && st.visibility !== 'hidden' && el.getClientRects().length > 0;
+    };
+    const requestPhase = (next, prev) => {
+        if (activeOverlay && activeOverlay !== 'stuckRecovery') {
+            const canVerifyDom = typeof document !== 'undefined' && typeof document.querySelector === 'function';
+            if (canVerifyDom && !overlayHasDom(activeOverlay)) {
+                activeOverlay = null;
+            } else {
+                log('reject phase change while overlay active', { overlay: activeOverlay, next, prev });
+                return false;
+            }
+        }
+        const blocked = ILLEGAL_PHASE.some(([a, b]) => prev === a && next === b);
+        if (blocked) {
+            log('reject illegal phase transition', { prev, next });
+            return false;
+        }
+        return true;
+    };
+    const syncExclusiveOverlay = (states) => {
+        const active = OVERLAY_IDS.filter((id) => states[id]);
+        if (active.length <= 1) {
+            activeOverlay = active[0] || null;
+            return states;
+        }
+        const winner = active[active.length - 1];
+        log('collapse duplicate overlays', { active, winner });
+        activeOverlay = winner;
+        const next = { ...states };
+        OVERLAY_IDS.forEach((id) => {
+            if (id !== winner) next[id] = false;
+        });
+        return next;
+    };
+    return Object.freeze({
+        finiteInt,
+        finiteNum,
+        sanitizeMoneyFields,
+        sanitizeScoreResult,
+        requestOverlay,
+        clearOverlay,
+        requestPhase,
+        syncExclusiveOverlay,
+        getActiveOverlay: () => activeOverlay
+    });
+})();
+if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHardening;
 </script>
 
 <script type="text/babel">
@@ -4968,7 +5434,15 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
         RUN_SAVE_VERSION, RUN_PHASES, WAGER_TUNING, DEFAULT_RUN_BUILD, BUILD_IDS
     });
 
-    const loadSavedRun = () => normalizeSavedRun(loadJson(STORAGE_KEYS.run));
+    const loadSavedRun = () => {
+        const raw = loadJson(STORAGE_KEYS.run);
+        const normalized = normalizeSavedRun(raw);
+        if (raw && !normalized) {
+            console.warn('[GutterbonesSave] Corrupt run save discarded');
+            clearSavedRun();
+        }
+        return normalized;
+    };
     const saveSavedRun = (run) => saveJson(STORAGE_KEYS.run, { ...run, version: RUN_SAVE_VERSION });
     const clearSavedRun = () => {
         try { window.localStorage?.removeItem(STORAGE_KEYS.run); } catch (err) { console.warn('Unable to clear saved run', err); }
@@ -5433,7 +5907,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 title={titleParts.join(' — ')}
                 aria-label={titleParts.length ? `${cat.name}. ${titleParts.join(' ')}` : cat.name}
                 style={postRollReveal ? { animationDelay: `${postRollDelayMs}ms` } : undefined}
-                className={`score-row score-row-fixed w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}`}
+                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}`}
             >
                 {bustTipOpen && bustHint && (
                     <span className="absolute left-2 right-2 -top-1 z-20 translate-y-[-100%] bg-red-950 border border-red-500/70 text-red-100 text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none">{bustHint}</span>
@@ -5441,7 +5915,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 {hover && rowCanScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex items-center gap-1 min-w-0 truncate max-w-[72%]">
                     <span className="truncate">{cat.name}</span>
-                    <span className="text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
+                    <span className="payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
                     {masteryBonus > 0 && (
                         <span className="text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
                     )}
@@ -5853,13 +6327,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             ? true
             : (hudFocus || (cutout && cutout.top + cutout.height > (typeof window !== 'undefined' ? window.innerHeight * 0.48 : 400)));
         const cardClass = shopFocus
-            ? 'tutorial-coach-card absolute top-[max(5.25rem,env(safe-area-inset-top))] left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:max-w-md'
+            ? 'tutorial-coach-card fixed top-[max(0.35rem,env(safe-area-inset-top))] left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] md:left-1/2 md:-translate-x-1/2 md:max-w-md md:right-auto md:w-[min(24rem,calc(100vw-1.5rem))]'
             : captionOnTop
             ? 'tutorial-coach-card absolute top-[max(6.5rem,env(safe-area-inset-top))] left-3 right-3 md:left-6 md:right-auto md:max-w-sm'
             : 'tutorial-coach-card absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 md:left-auto md:right-6 md:max-w-md';
         const maskId = 'gb-tutorial-spot-mask';
-        return (
-            <div className="tutorial-coach-root" aria-live="polite">
+        const coachTree = (
+            <div className={`tutorial-coach-root${shopFocus ? ' fixed inset-0 z-[1200]' : ''}`} aria-live="polite">
                 {cutout ? (
                     <>
                         <svg className="tutorial-coach-mask" aria-hidden>
@@ -5909,6 +6383,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 </div>
             </div>
         );
+        if (shopFocus && typeof document !== 'undefined') {
+            return ReactDOM.createPortal(coachTree, document.body);
+        }
+        return coachTree;
     };
 
     const RoundClearTitleCard = ({ onSkip, reducedMotion, canContinue, payout, jobRound }) => {
@@ -6642,7 +7120,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     }) => {
         const [detailOpen, setDetailOpen] = useState(false);
         const [inlineCollapsed, setInlineCollapsed] = useState(() => (
-            typeof window !== 'undefined' && window.matchMedia('(max-height: 450px)').matches
+            typeof window !== 'undefined' && window.matchMedia('(max-height: 820px)').matches
         ));
         const anchorRef = useRef(null);
         const activeBp = blueprints.filter((bp) => !bp.consumed);
@@ -6700,13 +7178,13 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 className={`run-intel-summary readable-panel rounded-xl border border-gray-800 bg-black/90 text-gray-100 font-mono p-2 pr-2 box-border shadow-lg ${inline ? `run-intel-summary--inline relative w-full${inlineCollapsed ? ' run-intel-collapsed' : ''}` : (floating ? 'run-intel-summary--floating fixed bottom-4 right-4 z-[70]' : 'run-intel-summary--dock relative z-[70] w-full max-w-full')}`}
             >
                 <div className="run-intel-summary-head mb-1 min-w-0 w-full max-w-full box-border">
-                    <div className="text-[#0df] tracking-[.18em] text-[11px] font-bold min-w-0 truncate">RUN INTEL</div>
+                    <div className="text-[#0df] tracking-[.18em] text-[length:max(12px,var(--gb-min-font))] font-bold min-w-0 truncate">RUN INTEL</div>
                     <div className="run-intel-summary-head-actions flex gap-1 justify-end flex-wrap max-w-full">
                         {inline && (
                             <button
                                 type="button"
                                 data-layout-key="run-intel-collapse-toggle"
-                                className="text-[11px] tracking-wider px-1.5 py-0.5 min-h-[32px] border border-gray-600 text-gray-300 hover:bg-gray-900 rounded"
+                                className="gb-tappable-label text-[11px] tracking-wider px-1.5 py-0.5 min-h-[var(--gb-min-tap)] border border-gray-600 text-gray-300 hover:bg-gray-900 rounded relative z-[13]"
                                 onClick={() => setInlineCollapsed((c) => !c)}
                                 aria-expanded={!inlineCollapsed}
                             >
@@ -6716,7 +7194,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <button
                         type="button"
                         data-layout-key="run-intel-details-toggle"
-                        className="text-[11px] tracking-wider px-1.5 py-0.5 min-h-[32px] max-w-full border border-[#0df]/50 text-[#0df] hover:bg-cyan-950/40 rounded"
+                        className="gb-tappable-label text-[11px] tracking-wider px-1.5 py-0.5 min-h-[var(--gb-min-tap)] max-w-full border border-[#0df]/50 text-[#0df] hover:bg-cyan-950/40 rounded relative z-[13]"
                         onClick={() => setDetailOpen((open) => !open)}
                         aria-expanded={detailOpen}
                     >
@@ -7364,7 +7842,16 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
     );
 
     function App() {
-        const [phase, setPhase] = useState('TITLE');
+        const [phase, setPhaseState] = useState('TITLE');
+        const setPhase = (next) => {
+            setPhaseState((prev) => {
+                const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
+                if (guard && !guard.requestPhase(next, prev)) return prev;
+                return next;
+            });
+        };
+        const [stuckRecoveryVisible, setStuckRecoveryVisible] = useState(false);
+        const stuckIdleTicksRef = useRef(0);
         const [personaIdx, setPersonaIdx] = useState(0);
         const [persona, setPersona] = useState(PERSONAS[0]);
         const [round, setRound] = useState(1);
@@ -7758,6 +8245,10 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setRollLock(false);
             scoreOverlayActiveRef.current = false;
             scoreOverlayEarlyDismissRef.current = false;
+            if (typeof GutterbonesHardening !== 'undefined') {
+                GutterbonesHardening.clearOverlay('scoreBreakdown');
+                GutterbonesHardening.clearOverlay('scoreResolution');
+            }
             if (pendingRoundFinalizeRef.current) {
                 pendingRoundFinalizeRef.current.overlaySeen = true;
             }
@@ -8570,17 +9061,92 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 document.documentElement.style.setProperty('--gb-score-panel-top', `${topPx}px`);
                 document.documentElement.style.setProperty('--gb-chain-banner-top', `${Math.ceil(bottom + 4)}px`);
                 document.documentElement.style.setProperty('--gb-sniff-banner-top', `${Math.ceil(bottom + 6)}px`);
+                const stashPin = document.querySelector('.play-stash-column .stash-programs-pinned');
+                const vh = window.innerHeight;
+                const scoreOpen = !!(scoreBreakdown || scoreResolution);
+                if (stashPin && (vh < 450 || scoreOpen)) {
+                    const sr = stashPin.getBoundingClientRect();
+                    const reserve = Math.max(0, vh - sr.top + 8);
+                    document.documentElement.style.setProperty('--gb-play-stash-reserve', `${Math.ceil(reserve)}px`);
+                } else {
+                    document.documentElement.style.setProperty('--gb-play-stash-reserve', '0px');
+                }
             };
             measureHudLayout();
             window.addEventListener('resize', measureHudLayout);
             return () => window.removeEventListener('resize', measureHudLayout);
-        }, [phase, activeBoss?.id, fixerLine, round, hands, discards, gold, activeWager, insaneContract, synergyChainBanner]);
+        }, [phase, activeBoss?.id, fixerLine, round, hands, discards, gold, activeWager, insaneContract, synergyChainBanner, scoreBreakdown?.id, scoreResolution?.id, showMobileStash]);
 
         useEffect(() => {
             const root = document.getElementById('root-gutterbones');
             if (!root) return;
             root.dataset.scoreOverlayOpen = (scoreBreakdown || scoreResolution) ? '1' : '0';
         }, [scoreBreakdown, scoreResolution]);
+
+        useEffect(() => {
+            const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
+            if (!guard) return;
+            if (bossIntro) guard.requestOverlay('bossIntro');
+            else guard.clearOverlay('bossIntro');
+        }, [bossIntro]);
+
+        useEffect(() => {
+            const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
+            if (!guard) return;
+            if (scoreBreakdown) guard.requestOverlay('scoreBreakdown');
+            else guard.clearOverlay('scoreBreakdown');
+        }, [scoreBreakdown?.id]);
+
+        useEffect(() => {
+            const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
+            if (!guard) return;
+            if (scoreResolution) guard.requestOverlay('scoreResolution');
+            else guard.clearOverlay('scoreResolution');
+        }, [scoreResolution?.id]);
+
+        useEffect(() => {
+            if (!inRunPhase || runClosed || phase === 'RAP_SHEET' || phase === 'VICTORY' || phase === 'TITLE') {
+                stuckIdleTicksRef.current = 0;
+                if (stuckRecoveryVisible) setStuckRecoveryVisible(false);
+                return undefined;
+            }
+            const hasVisibleAdvance = () => {
+                const selectors = [
+                    '[data-tutorial="roll-btn"]:not([disabled])',
+                    '[data-layout-key="round-clear-continue"]:not([disabled])',
+                    '[data-layout-key="boss-intro-continue"]',
+                    '[data-layout-key="shop-route-card"]',
+                    '[data-layout-key="shop-buy-button"]:not([disabled])',
+                    '[data-layout-key="tutorial-coach-ack"]',
+                    '[data-layout-key="tutorial-coach-dismiss"]',
+                    '[data-layout-key="stuck-recovery-continue"]',
+                    '.round-clear-continue-btn:not([disabled])'
+                ];
+                const vh = window.innerHeight;
+                return selectors.some((sel) => {
+                    const el = document.querySelector(sel);
+                    if (!el) return false;
+                    const st = window.getComputedStyle(el);
+                    if (st.display === 'none' || st.visibility === 'hidden') return false;
+                    const r = el.getBoundingClientRect();
+                    return r.width > 8 && r.height > 8 && r.top >= -2 && r.bottom <= vh + 2;
+                });
+            };
+            const tick = () => {
+                if (hasVisibleAdvance()) {
+                    stuckIdleTicksRef.current = 0;
+                    return;
+                }
+                stuckIdleTicksRef.current += 1;
+                if (stuckIdleTicksRef.current >= 5) {
+                    const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
+                    if (guard?.requestOverlay('stuckRecovery')) setStuckRecoveryVisible(true);
+                }
+            };
+            tick();
+            const id = window.setInterval(tick, 1000);
+            return () => window.clearInterval(id);
+        }, [phase, inRunPhase, runClosed, stuckRecoveryVisible, roundClearCardActive, bossIntro, scoreBreakdown?.id, scoreResolution?.id, shopAdvancing, hands, hasRolled, showSystemMenu]);
 
         useEffect(() => {
             const swallowClickThrough = (e) => {
@@ -9710,13 +10276,21 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 if (['Y', 'LS', 'FH'].includes(payoutCatId)) AudioSystem.categoryStinger(payoutCatId);
                 else if ((result.chainDepth || 0) >= 2) AudioSystem.chainStep(0, 'multi');
                 if (result.total >= 120 && !skipResolution) {
-                    const resolutionPayload = {
-                        id: Math.random(),
-                        chips: result.chips,
-                        mult: result.mult,
-                        flowMult: result.flowMult || 1,
-                        total: result.total
-                    };
+                    const resolutionPayload = typeof GutterbonesHardening !== 'undefined'
+                        ? GutterbonesHardening.sanitizeScoreResult({
+                            id: Math.random(),
+                            chips: result.chips,
+                            mult: result.mult,
+                            flowMult: result.flowMult || 1,
+                            total: result.total
+                        })
+                        : {
+                            id: Math.random(),
+                            chips: result.chips,
+                            mult: result.mult,
+                            flowMult: result.flowMult || 1,
+                            total: result.total
+                        };
                     if (scoreResolutionTimeoutRef.current != null) {
                         clearScheduledTimeout(scoreResolutionTimeoutRef.current);
                     }
@@ -9786,17 +10360,29 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
             setHasRolled(false);
             setSwapMode(false);
             setSwapIdx(null);
-            const breakdownPayload = {
-                id: Math.random(),
-                categoryName: result.categoryName || CATEGORIES[catId]?.name || catId,
-                chips: result.chips || 0,
-                mult: result.mult || 0,
-                flowMult: result.flowMult || 1,
-                total: result.total || 0,
-                explanationSteps: result.explanationSteps || [],
-                chainDepth: result.chainDepth || 0,
-                synergyEvents: result.synergyEvents || []
-            };
+            const breakdownPayload = typeof GutterbonesHardening !== 'undefined'
+                ? GutterbonesHardening.sanitizeScoreResult({
+                    id: Math.random(),
+                    categoryName: result.categoryName || CATEGORIES[catId]?.name || catId,
+                    chips: result.chips || 0,
+                    mult: result.mult || 0,
+                    flowMult: result.flowMult || 1,
+                    total: result.total || 0,
+                    explanationSteps: result.explanationSteps || [],
+                    chainDepth: result.chainDepth || 0,
+                    synergyEvents: result.synergyEvents || []
+                })
+                : {
+                    id: Math.random(),
+                    categoryName: result.categoryName || CATEGORIES[catId]?.name || catId,
+                    chips: result.chips || 0,
+                    mult: result.mult || 0,
+                    flowMult: result.flowMult || 1,
+                    total: result.total || 0,
+                    explanationSteps: result.explanationSteps || [],
+                    chainDepth: result.chainDepth || 0,
+                    synergyEvents: result.synergyEvents || []
+                };
             if (scoreBreakdownTimeoutRef.current != null) {
                 clearScheduledTimeout(scoreBreakdownTimeoutRef.current);
             }
@@ -11209,6 +11795,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setShowSettingsPanel(false);
                     setShowSystemMenu(false);
                     setPhase('PLAY');
+                    setShowMobileStash(false);
                     setHands(4);
                     setHasRolled(true);
                     setRoundClearCardActive(false);
@@ -11239,6 +11826,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                 },
                 openScoreResolutionDemo: () => {
                     setPhase('PLAY');
+                    setShowMobileStash(false);
                     setRound(3);
                     setRoundClearCardActive(false);
                     setScore(480);
@@ -11312,8 +11900,11 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     if (r.width < 1 || r.height < 1) return { ok: false, reason: 'zero rect', selector };
                     const cx = r.left + r.width / 2;
                     const cy = r.top + r.height / 2;
-                    const hit = document.elementFromPoint(cx, cy);
-                    const ok = !!(hit && (hit === el || el.contains(hit)));
+                    const stack = typeof document.elementsFromPoint === 'function'
+                        ? document.elementsFromPoint(cx, cy)
+                        : [document.elementFromPoint(cx, cy)].filter(Boolean);
+                    const hit = stack[0] || null;
+                    const ok = stack.some((node) => node === el || el.contains(node));
                     return {
                         ok,
                         selector,
@@ -11325,7 +11916,58 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     };
                 },
                 measureBossContinueHitTarget: () => window.__GB_LAYOUT_AUDIT__.measureElementHitTarget('[data-layout-key="boss-intro-continue"]'),
-                probeShopRouteHit: () => window.__GB_LAYOUT_AUDIT__.measureElementHitTarget('[data-layout-key="shop-route-card"]'),
+                probeShopRouteHit: () => {
+                    const el = document.querySelector('[data-layout-key="shop-route-card"]');
+                    const panel = document.querySelector('[data-layout-key="shop-routes-panel"]');
+                    const scroll = panel?.querySelector('.shop-routes-scroll');
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const nudgeScroll = () => {
+                        if (!el) return;
+                        const er = el.getBoundingClientRect();
+                        if (scroll) {
+                            const sr = scroll.getBoundingClientRect();
+                            if (er.bottom > sr.bottom - 6) scroll.scrollTop += er.bottom - sr.bottom + 16;
+                            if (er.top < sr.top + 6) scroll.scrollTop -= sr.top - er.top + 16;
+                        }
+                        if (panel) {
+                            const pr = panel.getBoundingClientRect();
+                            const er2 = el.getBoundingClientRect();
+                            if (er2.bottom > pr.bottom - 6) panel.scrollTop += er2.bottom - pr.bottom + 16;
+                            if (er2.top < pr.top + 6) panel.scrollTop -= pr.top - er2.top + 16;
+                        }
+                        const er3 = el.getBoundingClientRect();
+                        if (er3.bottom > vh - 6 || er3.top < 6) {
+                            try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (_) { /* noop */ }
+                        }
+                    };
+                    nudgeScroll();
+                    nudgeScroll();
+                    if (!el) return { ok: false, reason: 'missing shop-route-card' };
+                    const r = el.getBoundingClientRect();
+                    const cx = Math.min(vw - 4, Math.max(4, r.left + r.width / 2));
+                    const sampleYs = [
+                        r.top + r.height / 2,
+                        r.top + Math.min(r.height - 8, 20),
+                        r.bottom - 8
+                    ].map((y) => Math.min(vh - 4, Math.max(4, y)));
+                    let hit = null;
+                    let cy = sampleYs[0];
+                    const ok = sampleYs.some((y) => {
+                        cy = y;
+                        const stack = document.elementsFromPoint(cx, y);
+                        hit = stack[0] || null;
+                        return stack.some((node) => node === el || el.contains(node));
+                    });
+                    return {
+                        ok,
+                        selector: '[data-layout-key="shop-route-card"]',
+                        cx,
+                        cy,
+                        hitKey: hit?.getAttribute?.('data-layout-key'),
+                        hitClass: (hit?.className || '').toString().slice(0, 80)
+                    };
+                },
                 returnFromCarvingToShop: () => {
                     setPhase('CARVING');
                     setScreenTransition('out');
@@ -11341,6 +11983,105 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     setTutorialActive(true);
                     setTutorialStepIndex(stepIndex);
                     setPhase(phaseHint);
+                },
+                openTutorialCoachShop: () => {
+                    setTutorialActive(true);
+                    setTutorialStepIndex(8);
+                    setPhase('SHOP');
+                },
+                openGambleDemo: () => {
+                    setPhase('GAMBLE');
+                    setRound(3);
+                    setGambleStake(5);
+                },
+                probeShopBuyHit: () => {
+                    const el = document.querySelector('[data-layout-key="shop-buy-button"]');
+                    if (!el) return { ok: false, reason: 'missing shop-buy-button' };
+                    const r = el.getBoundingClientRect();
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const cx = Math.min(vw - 4, Math.max(4, r.left + r.width / 2));
+                    const sampleYs = [
+                        r.top + r.height / 2,
+                        r.top + Math.min(r.height - 6, 24),
+                        r.bottom - 6
+                    ].map((y) => Math.min(vh - 4, Math.max(4, y)));
+                    let hit = null;
+                    let cy = sampleYs[0];
+                    const ok = sampleYs.some((y) => {
+                        cy = y;
+                        const stack = document.elementsFromPoint(cx, y);
+                        hit = stack[0] || null;
+                        return stack.some((node) => node === el || el.contains(node));
+                    });
+                    return {
+                        ok,
+                        selector: '[data-layout-key="shop-buy-button"]',
+                        cx,
+                        cy,
+                        hitKey: hit?.getAttribute?.('data-layout-key'),
+                        hitClass: (hit?.className || '').toString().slice(0, 80)
+                    };
+                },
+                probeRunIntelHideHit: () => window.__GB_LAYOUT_AUDIT__.measureElementHitTarget('[data-layout-key="run-intel-collapse-toggle"]'),
+                probeRunIntelDetailsHit: () => window.__GB_LAYOUT_AUDIT__.measureElementHitTarget('[data-layout-key="run-intel-details-toggle"]'),
+                measureScoreOverlayVsStash: () => {
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const panel = document.querySelector('[data-layout-key="score-breakdown-overlay"]')
+                        || document.querySelector('[data-layout-key="score-resolution-overlay"]');
+                    const stashKeys = ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER'];
+                    const stashEls = stashKeys.flatMap((key) => Array.from(document.querySelectorAll(`[data-layout-key="${key}"]`)));
+                    if (!panel) return { ok: true, skipped: true, reason: 'no score overlay' };
+                    const pr = panel.getBoundingClientRect();
+                    const badStash = [];
+                    const overlaps = [];
+                    stashEls.forEach((el) => {
+                        const st = window.getComputedStyle(el);
+                        if (st.display === 'none' || st.visibility === 'hidden') return;
+                        const sr = el.getBoundingClientRect();
+                        if (sr.width < 2 || sr.height < 2) return;
+                        const key = el.getAttribute('data-layout-key');
+                        if (sr.bottom > vh + 2 || sr.top < -4) {
+                            badStash.push({ key, top: sr.top, bottom: sr.bottom, vh });
+                        }
+                        const hit = !(pr.bottom <= sr.top + 4 || pr.top >= sr.bottom - 4 || pr.right <= sr.left + 4 || pr.left >= sr.right - 4);
+                        if (hit) overlaps.push(key);
+                    });
+                    return {
+                        ok: badStash.length === 0 && overlaps.length === 0,
+                        badStash,
+                        overlaps,
+                        panelBottom: pr.bottom,
+                        vh,
+                        vw
+                    };
+                },
+                countOffscreenLayoutKeys: () => {
+                    const root = document.getElementById('root-gutterbones');
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const bad = [];
+                    root?.querySelectorAll('[data-layout-key]').forEach((el) => {
+                        const key = el.getAttribute('data-layout-key');
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden') return;
+                        if (key === 'shop-route-card') return;
+                        if (key === 'run-intel-detail-popover' || key === 'run-intel-detail-backdrop') return;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2 || r.height < 2) return;
+                        if (r.bottom > vh + 2 || r.right > vw + 2 || r.top < -4 || r.left < -4) {
+                            bad.push({ key, top: r.top, bottom: r.bottom, left: r.left, right: r.right });
+                        }
+                    });
+                    return { count: bad.length, bad: bad.slice(0, 24), vh, vw };
+                },
+                getScreenGuardState: () => (typeof GutterbonesHardening !== 'undefined'
+                    ? { activeOverlay: GutterbonesHardening.getActiveOverlay() }
+                    : { activeOverlay: null }),
+                triggerStuckRecoveryDemo: () => {
+                    if (typeof GutterbonesHardening !== 'undefined') GutterbonesHardening.requestOverlay('stuckRecovery');
+                    setStuckRecoveryVisible(true);
                 },
                 openOpeningSniffBannerDemo: () => {
                     setPhase('PLAY');
@@ -11472,6 +12213,33 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                     <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-2 min-h-[44px] min-w-[44px] border border-gray-600 bg-black/70 text-xs font-mono tracking-widest hover:border-[#ff007f]">
                         SYSTEM
                     </button>
+                )}
+                {stuckRecoveryVisible && (
+                    <div data-layout-key="stuck-recovery-overlay" className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true">
+                        <div className="readable-panel border-2 border-[#0df] bg-[#121113]/95 p-4 max-w-sm w-full font-mono text-center shadow-2xl">
+                            <p className="text-gray-200 text-sm mb-3 leading-snug">This run looks stuck. Continue to clear overlays and restore controls.</p>
+                            <button
+                                type="button"
+                                data-layout-key="stuck-recovery-continue"
+                                className="gb-tappable-label w-full py-3 min-h-[var(--gb-min-tap)] border-2 border-[#0df] bg-cyan-950/40 text-[#0df] font-bold tracking-widest"
+                                onClick={() => {
+                                    stuckIdleTicksRef.current = 0;
+                                    setStuckRecoveryVisible(false);
+                                    if (typeof GutterbonesHardening !== 'undefined') GutterbonesHardening.clearOverlay('stuckRecovery');
+                                    forceClearPresentationOverlays();
+                                    setBossIntro(null);
+                                    setShowSystemMenu(false);
+                                    setShowHelpOverlay(false);
+                                    shopAdvanceLockRef.current = false;
+                                    setShopAdvancing(false);
+                                    pendingPhaseTransitionRef.current = null;
+                                    setScreenTransition(null);
+                                }}
+                            >
+                                CONTINUE
+                            </button>
+                        </div>
+                    </div>
                 )}
                 {payoutActive && <CashRain count={payoutCount} reducedMotion={reducedMotion} />}
                 {bustActive && <div className="absolute inset-0 z-[200] bg-red-600/20 animate-pulse pointer-events-none"></div>}
@@ -11917,7 +12685,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
                                 </div>
                             </div>
-                            <div className="px-3 md:px-4 pb-2 border-t border-gray-800 pt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                            <div data-layout-key="side-wager-row" className="px-3 md:px-4 pb-2 border-t border-gray-800 pt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                                 <div className="font-mono text-[9px] text-gray-400 min-w-0 truncate">
                                     {activeWager ? (
                                         <span>SIDE BET ${activeWager.stake} · need {activeWager.threshold}+ · win +${GutterbonesRoutes.sideBetPayout(activeWager.stake, WAGER_TUNING.payoutMultiplier)}{hasRolled && bestPreviewHeat != null ? ` · best ${bestPreviewHeat}` : ''}</span>
@@ -11938,7 +12706,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                                 aria-disabled={disabled}
                                                 aria-label={disabled ? `Bet $${stake}, win +$${winPayout}, ${disabledReason}` : `Bet $${stake}, win +$${winPayout} if ${wagerThreshold} plus heat`}
                                                 title={disabled ? disabledReason : undefined}
-                                                className="px-2 py-1 min-h-[36px] border border-emerald-700/70 text-emerald-300 bg-emerald-950/20 font-mono text-[9px] hover:bg-emerald-900/30 disabled:opacity-35 disabled:cursor-not-allowed"
+                                                className="gb-tappable-label px-2 py-1 min-h-[var(--gb-min-tap)] border border-emerald-700/70 text-emerald-300 bg-emerald-950/20 font-mono hover:bg-emerald-900/30 disabled:opacity-35 disabled:cursor-not-allowed"
                                             >
                                                 ${stake} → +${winPayout}
                                             </button>
@@ -12322,7 +13090,7 @@ if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesP
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
                                         <div className="flex items-start gap-3 mb-2">{isFace ? <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-xs font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
-                                        <button type="button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop w-full py-3 min-h-[44px] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono text-xs tracking-wide disabled:opacity-50">{buyLabel}</button>
+                                        <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50">{buyLabel}</button>
                                     </div>;
                                 })}</div>
                             </div>

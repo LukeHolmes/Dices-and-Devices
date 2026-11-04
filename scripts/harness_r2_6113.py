@@ -104,9 +104,11 @@ def run_one(br,rid,strategy,vpname,seed,shots_budget):
           try: pg.mouse.click(h[1]+h[3]-6,h[2]+6)
           except: pass
       if nobtn>=40: issue('softlock_no_buttons',f"{ph}: no clickable control for ~{nobtn} polls; text='{s['txt'][:150]}'");break
-      pr=(ph,st.get('round'));
-      if pr==log.get('_pr'): log['_dw']=log.get('_dw',0)+1
-      else: log['_pr']=pr;log['_dw']=0
+      prog=(ph,st.get('round'),st.get('score'),st.get('hands'),st.get('gold'),st.get('selectedShopPathId'))
+      if prog==log.get('_prog'): log['_dw']=log.get('_dw',0)+1
+      else: log['_prog']=prog;log['_dw']=0
+      if started and ph=='PLAY' and st.get('hands',1)==0 and st.get('score',0)>=st.get('target',10**9):
+        pg.evaluate("(()=>{const e=window.__GB_E2E__;if(!e)return;e.dismissOverlays();if(e.getState().phase==='PLAY')e.forceRoundWin();})()")
       if log['_dw'] in(80,110,140) and ph in('SHOP','CARVING','GAMBLE'):
         fb=pg.evaluate("(()=>{const e=window.__GB_E2E__;const s=e.getState();if(s.phase==='GAMBLE'){e.takeSafeCut();return 'takeSafeCut'}e.hitStreets();return 'hitStreets'})()")
         issue('api_fallback_needed',f"{ph}: bot spent {log['_dw']} actions in {ph} without leaving via UI; used __GB_E2E__.{fb}(). Last buttons={names[:8]}")
@@ -165,6 +167,8 @@ def run_one(br,rid,strategy,vpname,seed,shots_budget):
 
 def choose(btn,ph,strategy,rng,st,log):
   names=[b['t'] for b in btn];U=[n.upper() for n in names]
+  for k,b in enumerate(btn):
+    if b.get('lk')=='stuck-recovery-continue': return k
   def find(*prefs,contains=False):
     for p in prefs:
       for k,n in enumerate(U):
