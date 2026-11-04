@@ -8764,7 +8764,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 if (w < 420 || h <= 390) setShopItemsPerPage(Math.min(3, count));
                 else if (w < 768 || h < 700) setShopItemsPerPage(Math.min(4, count));
-                else if (h < 820) setShopItemsPerPage(Math.min(6, count));
+                else if (h < 820) setShopItemsPerPage(Math.min(4, count));
                 else setShopItemsPerPage(count);
             };
             computeItemsPerPage();
