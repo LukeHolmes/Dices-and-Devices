@@ -195,6 +195,7 @@ async function main() {
   async function worker() {
     const context = await browser.newContext();
     const page = await context.newPage();
+    page.setDefaultTimeout(120_000);
     page.__baseUrl = baseUrl;
     const booted = { value: false };
     while (true) {
