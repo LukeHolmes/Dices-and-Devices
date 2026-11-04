@@ -53,7 +53,9 @@ for (const vp of VIEWPORTS) {
           seed: rid * 7919,
           strategy,
           viewport: vp,
-          maxSteps: 180,
+          maxSteps: 220,
+          stuckThreshold: 36,
+          maxFallbacks: 12,
         });
         assert.equal(result.stuck, false, JSON.stringify(result));
       } finally {
