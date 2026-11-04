@@ -22,7 +22,7 @@ const VIEWPORTS = [
 const STRATEGIES = ["random", "greedy", "edge", "rapid"];
 
 function parseArgs(argv) {
-  const out = { games: 2000, maxSteps: 220, port: 0, parallel: 6 };
+  const out = { games: 2000, maxSteps: 60, port: 0, parallel: 16 };
   for (const arg of argv) {
     if (arg.startsWith("--games=")) out.games = Number(arg.slice(8)) || out.games;
     else if (arg.startsWith("--max-steps=")) out.maxSteps = Number(arg.slice(12)) || out.maxSteps;
