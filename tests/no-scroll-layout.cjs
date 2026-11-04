@@ -29,8 +29,6 @@ const VIEWPORTS = [
   { name: "390x844", width: 390, height: 844 },
 ];
 
-test.setDefaultTimeout(120_000);
-
 const SCENARIOS = [
   { id: "title_screen", label: "Title screen", resume: null, action: null },
   { id: "lineup", label: "Operator lineup", resume: null, action: "lineup" },

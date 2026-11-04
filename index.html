@@ -294,7 +294,7 @@
         display: none;
     }
     #root-gutterbones .shop-routes-scroll {
-        flex: 1 1 auto;
+        flex: 0 1 auto;
         min-height: 0;
         overflow: hidden;
         display: flex;
@@ -813,9 +813,27 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="run-intel-floating"] {
             display: none !important;
         }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            gap: 0.65rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            max-height: min(48dvh, calc(100dvh - 16.5rem)) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            max-height: 10.5rem !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+            min-height: 4.85rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            max-height: min(38dvh, calc(100dvh - 20rem)) !important;
+        }
     }
     @media (max-width: 420px) and (max-height: 680px) {
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block,
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-fence,
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-debt,
         #root-gutterbones[data-phase="SHOP"] .shop-fixter-line,
         #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
             display: none !important;
@@ -842,7 +860,7 @@
             padding: 0.5rem 0.85rem !important;
         }
     }
-    @media (max-height: 820px) {
+    @media (min-width: 821px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             max-height: min(58dvh, calc(100dvh - 11rem)) !important;
         }
@@ -899,6 +917,17 @@
             flex-wrap: nowrap;
             overflow: hidden;
             max-height: 1.65rem;
+        }
+    }
+    @media (min-width: 768px) and (max-width: 820px) and (min-height: 900px) {
+        #root-gutterbones [data-layout-key="play-alley"] {
+            min-height: 17rem;
+            flex: 1 1 17rem;
+        }
+        #root-gutterbones [data-tutorial="roll-btn"] {
+            position: relative;
+            z-index: 40;
+            flex-shrink: 0;
         }
     }
     @media (min-width: 768px) and (max-height: 820px) {
@@ -1583,27 +1612,35 @@
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.35rem));
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] [data-tutorial="shop-panel"] {
-            flex: 0 1 auto !important;
-            min-height: 9.5rem !important;
-            max-height: min(36dvh, 14.5rem) !important;
+            flex: 1 1 auto !important;
+            min-height: 12rem !important;
+            max-height: min(52dvh, calc(100dvh - 17.5rem)) !important;
             position: relative;
-            z-index: 12;
+            z-index: 22;
             overflow: hidden;
+            isolation: isolate;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
             flex: 1 1 auto !important;
             min-height: 7.5rem !important;
-            max-height: none !important;
+            max-height: min(38dvh, 14rem) !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            flex: 1 1 auto !important;
-            max-height: min(58dvh, calc(100dvh - 15.5rem)) !important;
-            min-height: 13rem !important;
+            flex: 0 1 auto !important;
+            max-height: min(42dvh, calc(100dvh - 18rem)) !important;
+            min-height: 0 !important;
             overflow-y: auto !important;
             position: relative;
-            z-index: 14;
+            z-index: 8;
+            pointer-events: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] button,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] [data-layout-key="shop-route-card"],
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-route-pagination button,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-options-block {
+            pointer-events: auto;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
             display: none !important;
@@ -1636,8 +1673,7 @@
             overflow-x: hidden;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            flex: 1 1 auto;
-            min-height: 8rem;
+            flex: 0 1 auto;
             max-height: none;
             overflow: hidden;
         }
@@ -1651,8 +1687,15 @@
             z-index: 4;
             margin-top: auto;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
-            max-height: min(36dvh, 14.5rem) !important;
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] .shop-items-shell {
+            flex: 1 1 auto;
+            min-height: 0;
+            position: relative;
+            z-index: 6;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] > .flex.justify-between.items-end.mb-4 {
+            flex-shrink: 0;
+            pointer-events: none;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -1673,8 +1716,13 @@
             max-height: min(38vh, 13rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-btn-shop {
-            z-index: 16 !important;
+            z-index: 24 !important;
             isolation: isolate;
+            pointer-events: auto;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            position: relative;
+            z-index: 20;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
             position: relative;
@@ -8205,6 +8253,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const routeModifiersRef = useRef({});
         const pendingPhaseTransitionRef = useRef(null);
         const jobRoundBumpGuardRef = useRef(null);
+        const phaseTransitionSeqRef = useRef(0);
         const [roundClearCanContinue, setRoundClearCanContinue] = useState(false);
         const [bossIntroCanContinue, setBossIntroCanContinue] = useState(false);
         const [scoreOverlayCanDismiss, setScoreOverlayCanDismiss] = useState(false);
@@ -8513,7 +8562,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             return { base, unused, unusedPlays, interest, total: base + unused + interest };
         };
 
-        const runPhaseTransition = (nextPhase, { waitHeatMs = 0, fast = false, bumpJobRound = false } = {}) => {
+        const applyJobRoundBumpIfNeeded = (shouldBump) => {
+            if (!shouldBump) return;
+            setRound((r) => {
+                const guard = jobRoundBumpGuardRef.current;
+                if (guard != null && r > guard) return r;
+                return r + 1;
+            });
+            jobRoundBumpGuardRef.current = null;
+        };
+
+        const runPhaseTransition = (nextPhase, { waitHeatMs = 0, fast = false } = {}) => {
+            const seq = ++phaseTransitionSeqRef.current;
             const outMs = fast || screenTransitionFast ? (reducedMotion ? 80 : 90) : (reducedMotion ? 150 : 260);
             const inMs = fast || screenTransitionFast ? (reducedMotion ? 90 : 120) : (reducedMotion ? 150 : 320);
             roundEndTransitionArmedRef.current = false;
@@ -8521,19 +8581,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (fast) setScreenTransitionFast(true);
             setScreenTransition('out');
             scheduleTimeout(() => {
+                if (seq !== phaseTransitionSeqRef.current) return;
                 clearTransientJuice();
                 dismissScoreOverlays(true);
-                if (bumpJobRound) {
-                    setRound((r) => {
-                        const guard = jobRoundBumpGuardRef.current;
-                        if (guard != null && r > guard) return r;
-                        return r + 1;
-                    });
-                    jobRoundBumpGuardRef.current = null;
-                }
                 setPhase(nextPhase);
                 setScreenTransition('in');
                 scheduleTimeout(() => {
+                    if (seq !== phaseTransitionSeqRef.current) return;
                     setScreenTransition(null);
                     setScreenTransitionFast(false);
                 }, inMs);
@@ -8566,9 +8620,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             roundClearPendingRef.current = null;
             if (pending) {
                 if (pending.bumpJobRound) jobRoundBumpGuardRef.current = round;
+                applyJobRoundBumpIfNeeded(!!pending.bumpJobRound);
                 runPhaseTransition(pending.nextPhase, {
-                    waitHeatMs: pending.waitHeatMs || 0,
-                    bumpJobRound: !!pending.bumpJobRound
+                    waitHeatMs: pending.waitHeatMs || 0
                 });
             }
         };
@@ -8635,9 +8689,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 beginRoundClearCard(pending.nextPhase, pending.waitHeatMs || 0, clearOpts);
                 return;
             }
+            if (pending.bumpJobRound) jobRoundBumpGuardRef.current = round;
+            applyJobRoundBumpIfNeeded(!!pending.bumpJobRound);
             runPhaseTransition(pending.nextPhase, {
-                waitHeatMs: pending.waitHeatMs || 0,
-                bumpJobRound: !!pending.bumpJobRound
+                waitHeatMs: pending.waitHeatMs || 0
             });
         };
 
