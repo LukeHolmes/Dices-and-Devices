@@ -37,7 +37,9 @@ function chooseInner(btn, ph, strategy, rng, st, log) {
   let k = find("CONTINUE", "NEXT", "GOT IT", "DISMISS");
   if (k != null && ph !== "SHOP") return k;
   if (ph === "PLAY") {
-    const cats = btn.map((b, i) => (b.t.includes(" LV") ? i : -1)).filter((i) => i >= 0);
+    const cats = btn
+      .map((b, i) => (/\bLV\d/i.test(b.t) || (b.lk && b.lk.startsWith("payout-row-")) ? i : -1))
+      .filter((i) => i >= 0);
     const roll = find("ROLL");
     if (cats.length) {
       const vals = cats.map((i) => {

@@ -1,12 +1,23 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const log = { _shopclicks: 0 };
+  const log = { _shopclicks: 0, _paytab: 0 };
   let fallbacks = 0;
   let stuck = 0;
   let lastSig = null;
   let maxRound = 1;
   let lastRound = 1;
   let started = false;
+
+  const mulberry32 = (a) => {
+    return () => {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const rng = mulberry32((Number(seed) || 1) >>> 0);
 
   localStorage.removeItem("gutterbones1977:run:v1");
 
@@ -29,7 +40,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const el = document.elementFromPoint(cx, cy);
       if (!(el && (b === el || b.contains(el)))) continue;
       b.setAttribute("data-pt", String(i));
-      out.push({ i, t, lk: b.getAttribute("data-layout-key") || "" });
+      out.push({ i, t, lk: b.getAttribute("data-layout-key") || "", pr: b.getAttribute("data-payout-row") || "" });
       i++;
     }
     const st = window.__GB_E2E__ ? window.__GB_E2E__.getState() : null;
@@ -40,6 +51,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     const m = String(t).match(/(\d+)\s*$/);
     return m ? Number(m[1]) : null;
   };
+
+  const isCatRow = (b) => /\bLV\d/i.test(b.t) || (b.lk && b.lk.startsWith("payout-row-") && b.pr && b.pr !== "more");
 
   const chooseInner = (btn, ph, st) => {
     const U = btn.map((b) => b.t.toUpperCase());
@@ -56,27 +69,45 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       return null;
     };
     if (ph === "TITLE") return find("PLAY");
-    if (ph === "LINEUP") return find("NEW RUN");
+    if (ph === "LINEUP") {
+      if (strategy === "edge" && rng() < 0.25) {
+        const c = U.map((n, k) => (n.includes("N.Y.P.D.") ? k : -1)).filter((x) => x >= 0);
+        if (c.length) return c[Math.floor(rng() * c.length)];
+      }
+      return find("NEW RUN");
+    }
     if (ph === "RAP_SHEET" || ph === "VICTORY") return null;
     let k = find("CONTINUE", "NEXT", "GOT IT", "DISMISS");
     if (k != null && ph !== "SHOP") return k;
     if (ph === "PLAY") {
-      const cats = btn.map((b, i) => (b.t.includes(" LV") ? i : -1)).filter((x) => x >= 0);
+      const cats = btn.map((b, i) => (isCatRow(b) ? i : -1)).filter((x) => x >= 0);
       const roll = find("ROLL");
       if (cats.length) {
         const vals = cats.map((i) => [(U[i].includes("BUST") ? -1 : num(btn[i].t) || 0), i]);
         vals.sort((a, b) => b[0] - a[0]);
         const need = Math.max(0, (st.target || 0) - (st.score || 0)) / Math.max(1, st.hands || 1);
+        if (strategy === "random") {
+          if (rng() < 0.25 && roll != null) return roll;
+          return cats[Math.floor(rng() * cats.length)];
+        }
+        if (strategy === "rapid") return cats[Math.floor(rng() * cats.length)] ?? roll;
         if (vals[0][0] >= need * 0.8 || roll == null) return vals[0][1];
         return roll;
       }
-      return roll;
+      if (roll != null) return roll;
+      const t = log._paytab || 0;
+      log._paytab = t + 1;
+      k = findContains(t % 2 ? "PAYOUTS" : "ALLEY");
+      if (k != null) return k;
+      return null;
     }
     if (ph === "SHOP") {
       const buys = btn.map((b, i) => (b.t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
       const hit = findContains("HIT THE STREETS");
       const routes = btn.map((b, i) => (U[i].includes("NEXT QUOTA") ? i : -1)).filter((x) => x >= 0);
-      if (routes.length && !st.selectedShopPathId && (log._shopclicks || 0) % 8 >= 3) return routes[0];
+      if (routes.length && !st.selectedShopPathId && (log._shopclicks || 0) % 8 >= 3) {
+        return strategy !== "greedy" ? routes[Math.floor(rng() * routes.length)] : routes[0];
+      }
       log._shopclicks = (log._shopclicks || 0) + 1;
       if (strategy === "greedy" && buys.length && log._shopclicks % 8 < 4) return buys[0];
       if (hit != null && log._shopclicks % 8 >= 4) return hit;
@@ -86,23 +117,89 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       k = findContains("TAKE", "SAFE");
       if (k != null) return k;
     }
+    if (ph === "CARVING") {
+      k = findContains("RETURN TO SHOP", "BACK TO BONES");
+      if (k != null) return k;
+      const bone = btn.findIndex((b) => /BONE \d/i.test(b.t));
+      if (bone >= 0) return bone;
+      const face = btn.findIndex((b) => /FACE \d/i.test(b.t));
+      if (face >= 0) return face;
+      return btn.length ? 0 : null;
+    }
     return btn.length ? 0 : null;
   };
 
   const choose = (btn, ph, st) => {
+    const U = btn.map((b) => b.t.toUpperCase());
     for (let k = 0; k < btn.length; k++) if (btn[k].lk === "stuck-recovery-continue") return k;
-    for (const p of ["TAP TO CONTINUE", "CLEARED"]) {
-      for (let k = 0; k < btn.length; k++) if (btn[k].t.toUpperCase().includes(p)) return k;
+    for (const p of ["TAP TO CONTINUE", "SKIP — STRAIGHT", "CLEARED"]) {
+      for (let k = 0; k < U.length; k++) if (U[k].includes(p)) return k;
     }
     return chooseInner(btn, ph, st);
+  };
+
+  const e2eUnstick = (ph) => {
+    const e = window.__GB_E2E__;
+    if (!e) return false;
+    try {
+      e.skipIntroOverlays?.();
+      e.dismissBossIntro?.();
+      e.dismissOverlays?.();
+    } catch (err) {
+      return false;
+    }
+    if (ph === "CARVING") {
+      const exit = document.querySelector('[data-layout-key="carving-exit"]');
+      if (exit) {
+        exit.click();
+        return true;
+      }
+      const tile = document.querySelector("button.carving-die-tile");
+      if (tile) {
+        tile.click();
+        return true;
+      }
+      return false;
+    }
+    if (ph !== "PLAY") return false;
+    const hasRolled = e.getHasRolled?.();
+    if (!hasRolled) {
+      if (!e.isRollDisabled?.()) {
+        const rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
+        if (rollBtn) {
+          rollBtn.click();
+          return true;
+        }
+      }
+      e.rollOnce?.();
+      return true;
+    }
+    if (innerWidth < 900) {
+      const tabs = document.querySelectorAll("button.gb-tappable-label");
+      for (const tab of tabs) {
+        if ((tab.innerText || "").toUpperCase().includes("PAYOUTS")) {
+          tab.click();
+          break;
+        }
+      }
+    }
+    const rows = [...document.querySelectorAll('button[data-payout-row]:not([disabled])')].filter(
+      (r) => r.getAttribute("data-payout-row") !== "more",
+    );
+    if (rows.length) {
+      rows[0].click();
+      return true;
+    }
+    return false;
   };
 
   try {
     window.__GB_E2E__.goLineup();
     window.__GB_E2E__.selectFirstPersona();
     window.__GB_E2E__.startNewRun();
+    window.__GB_E2E__.skipIntroOverlays?.();
   } catch (e) {
-    return { stuck: true, reason: "boot_failed", detail: String(e), seed, strategy };
+    return { stuck: true, reason: "boot_failed", detail: String(e), seed, strategy, steps: 0, maxRound: 1 };
   }
   await wait(400);
 
@@ -112,16 +209,32 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (ph === "PLAY") started = true;
     if (st && st.round > maxRound) maxRound = st.round;
     if (started && st && st.round != null && st.round < lastRound) {
-      return { stuck: true, reason: "round_regression", maxRound, phase: ph, seed, strategy, steps: step };
+      return {
+        stuck: true,
+        reason: "round_regression",
+        maxRound,
+        phase: ph,
+        seed,
+        strategy,
+        steps: step,
+      };
     }
     if (st && st.round != null) lastRound = st.round;
 
     if (ph === "VICTORY" || ph === "RAP_SHEET") {
-      return { stuck: false, outcome: ph === "VICTORY" ? "WIN" : "BUST", maxRound, phase: ph, seed, strategy, steps: step };
+      return {
+        stuck: false,
+        outcome: ph === "VICTORY" ? "WIN" : "BUST",
+        maxRound,
+        phase: ph,
+        seed,
+        strategy,
+        steps: step + 1,
+      };
     }
 
     const names = btn.map((b) => b.t);
-    const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 10)]);
+    const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
     stuck = sig === lastSig ? stuck + 1 : 0;
     lastSig = sig;
 
@@ -136,7 +249,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") window.__GB_E2E__.hitStreets();
       else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
-      else window.__GB_E2E__.dismissOverlays();
+      else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;
       if (fallbacks > maxFallbacks) {
         return {
@@ -155,8 +268,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       continue;
     }
 
-    const pick = choose(btn, ph, st || {});
-    if (pick != null) {
+    let pick = choose(btn, ph, st || {});
+    if (pick == null && ph === "PLAY") e2eUnstick(ph);
+    else if (pick != null) {
       const b = document.querySelector('[data-pt="' + pick + '"]');
       if (b) b.click();
     }
@@ -165,7 +279,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   const final = window.__GB_E2E__.getState();
   return {
-    stuck: false,
+    stuck: true,
+    reason: "incomplete",
+    detail: "max_steps:" + maxSteps + ",phase:" + final.phase,
     outcome: "INCOMPLETE:" + final.phase,
     maxRound,
     phase: final.phase,

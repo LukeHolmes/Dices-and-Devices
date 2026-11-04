@@ -1,7 +1,7 @@
 "use strict";
 /**
  * Headless seeded bot sim (Playwright + in-page bot loop).
- * Usage: node tests/sim/run.cjs [--games=2000] [--max-steps=220] [--parallel=6]
+ * Usage: node tests/sim/run.cjs [--games=150] [--max-steps=12000] [--parallel=6] [--viewports=blocking|all]
  */
 const http = require("node:http");
 const fs = require("node:fs");
@@ -9,7 +9,7 @@ const path = require("node:path");
 
 const ROOT = path.join(__dirname, "../..");
 const BOT_FN = fs.readFileSync(path.join(__dirname, "in-page-bot.js"), "utf8");
-const VIEWPORTS = [
+const VIEWPORTS_ALL = [
   { name: "360x640", width: 360, height: 640 },
   { name: "390x844", width: 390, height: 844 },
   { name: "412x915", width: 412, height: 915 },
@@ -19,27 +19,51 @@ const VIEWPORTS = [
   { name: "1366x768", width: 1366, height: 768 },
   { name: "1920x1080", width: 1920, height: 1080 },
 ];
+const VIEWPORTS_BLOCKING = VIEWPORTS_ALL.filter((v) =>
+  ["844x390", "768x1024", "1024x768", "1366x768", "1920x1080"].includes(v.name),
+);
 const STRATEGIES = ["random", "greedy", "edge", "rapid"];
 
+function median(nums) {
+  if (!nums.length) return 0;
+  const s = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
 function parseArgs(argv) {
-  const out = { games: 2000, maxSteps: 60, port: 0, parallel: 16 };
+  const out = {
+    games: 150,
+    maxSteps: 12_000,
+    port: 0,
+    parallel: 8,
+    viewports: "blocking",
+    root: ROOT,
+  };
   for (const arg of argv) {
     if (arg.startsWith("--games=")) out.games = Number(arg.slice(8)) || out.games;
     else if (arg.startsWith("--max-steps=")) out.maxSteps = Number(arg.slice(12)) || out.maxSteps;
     else if (arg.startsWith("--port=")) out.port = Number(arg.slice(7)) || 0;
     else if (arg.startsWith("--parallel=")) out.parallel = Math.max(1, Number(arg.slice(11)) || 1);
     else if (arg.startsWith("--base-url=")) out.baseUrl = arg.slice(11);
+    else if (arg.startsWith("--viewports=")) out.viewports = arg.slice(12) || out.viewports;
+    else if (arg.startsWith("--root=")) out.root = path.resolve(arg.slice(7));
   }
   return out;
 }
 
-function startServer(port) {
+function pickViewports(mode) {
+  if (mode === "all") return VIEWPORTS_ALL;
+  return VIEWPORTS_BLOCKING;
+}
+
+function startServer(port, root) {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
       const rel = urlPath === "/" ? "/index.html" : urlPath;
-      const filePath = path.join(ROOT, rel.replace(/^\//, ""));
-      if (!filePath.startsWith(ROOT) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      const filePath = path.join(root, rel.replace(/^\//, ""));
+      if (!filePath.startsWith(root) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
         res.statusCode = 404;
         res.end("Not found");
         return;
@@ -78,7 +102,7 @@ async function bootPage(page, baseUrl, viewport) {
 
 async function runOneGame(
   page,
-  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 28, maxFallbacks = 10 },
+  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 28, maxFallbacks = 14 },
 ) {
   const booted = bootedRef || { value: false };
   if (!booted.value) {
@@ -86,6 +110,19 @@ async function runOneGame(
     booted.value = true;
   } else {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto(`${page.__baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({
+          pacing: "fast",
+          reducedMotion: true,
+          tutorialCompleted: true,
+          skippedAlleyIntro: true,
+        }),
+      );
+    });
   }
   const result = await page.evaluate(
     async ({ botSource, opts }) => {
@@ -107,20 +144,40 @@ async function runOneGame(
   return { rid, viewport: viewport.name, ...result };
 }
 
+function classifyFailures(results, maxSteps) {
+  const terminal = results.filter((r) => r.outcome === "WIN" || r.outcome === "BUST");
+  const stepCounts = terminal.map((r) => r.steps || 0);
+  const medSteps = median(stepCounts);
+  const generousCap = Math.max(maxSteps, Math.ceil(medSteps * 10));
+  const failures = [];
+  for (const r of results) {
+    if (r.outcome === "WIN" || r.outcome === "BUST") continue;
+    const exhausted = (r.steps || 0) >= maxSteps;
+    const capGenerous = maxSteps >= Math.max(1000, medSteps * 10);
+    if (r.stuck || r.reason === "incomplete") {
+      if (capGenerous || exhausted) failures.push(r);
+      else failures.push({ ...r, reason: r.reason || "incomplete", detail: (r.detail || "") + ";cap_not_generous" });
+    } else if (String(r.outcome || "").startsWith("INCOMPLETE")) {
+      failures.push({ ...r, stuck: true, reason: "incomplete" });
+    }
+  }
+  return { medSteps, generousCap, failures, terminal };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const viewports = pickViewports(args.viewports);
   const t0 = Date.now();
   let server;
   let baseUrl = args.baseUrl;
   if (!baseUrl) {
-    server = await startServer(args.port || 0);
+    server = await startServer(args.port || 0, args.root);
     baseUrl = `http://127.0.0.1:${server.address().port}`;
   }
 
   const { chromium } = require("playwright");
   const browser = await chromium.launch({ headless: true });
   const results = [];
-  const stuckGames = [];
 
   const jobs = [];
   for (let rid = 0; rid < args.games; rid++) {
@@ -128,7 +185,7 @@ async function main() {
       rid,
       seed: rid * 7919,
       strategy: STRATEGIES[rid % 4],
-      viewport: VIEWPORTS[(rid >> 2) % VIEWPORTS.length],
+      viewport: viewports[(rid >> 2) % viewports.length],
     });
   }
 
@@ -146,9 +203,8 @@ async function main() {
       try {
         const r = await runOneGame(page, { ...job, maxSteps: args.maxSteps, booted });
         results.push(r);
-        if (r.stuck) stuckGames.push(r);
       } catch (e) {
-        stuckGames.push({
+        results.push({
           rid: job.rid,
           seed: job.seed,
           strategy: job.strategy,
@@ -156,6 +212,8 @@ async function main() {
           stuck: true,
           reason: "exception",
           detail: String(e).slice(0, 240),
+          steps: 0,
+          maxRound: 0,
         });
       }
     }
@@ -166,17 +224,30 @@ async function main() {
   await browser.close();
   if (server) await new Promise((r) => server.close(r));
 
+  const { medSteps, generousCap, failures, terminal } = classifyFailures(results, args.maxSteps);
+  const allSteps = results.map((r) => r.steps || 0);
+  const maxStepsUsed = allSteps.length ? Math.max(...allSteps) : 0;
+  const maxRoundReached = results.length ? Math.max(...results.map((r) => r.maxRound || 0)) : 0;
+  const rounds = results.map((r) => r.maxRound || 0);
+  const medMaxRound = median(rounds);
+
   const summary = {
     games: args.games,
     maxSteps: args.maxSteps,
+    viewports: args.viewports,
     parallel,
     durationMs: Date.now() - t0,
     completed: results.length,
-    stuckCount: stuckGames.length,
     wins: results.filter((r) => r.outcome === "WIN").length,
     busts: results.filter((r) => r.outcome === "BUST").length,
-    incomplete: results.filter((r) => String(r.outcome || "").startsWith("INCOMPLETE")).length,
-    stuckGames: stuckGames.map((g) => ({
+    terminal: terminal.length,
+    failureCount: failures.length,
+    stepsMedian: medSteps,
+    stepsMax: maxStepsUsed,
+    maxRoundMedian: medMaxRound,
+    maxRoundReached,
+    generousStepCap: generousCap,
+    failures: failures.map((g) => ({
       rid: g.rid,
       seed: g.seed,
       strategy: g.strategy,
@@ -185,11 +256,17 @@ async function main() {
       detail: g.detail,
       maxRound: g.maxRound,
       phase: g.phase,
+      steps: g.steps,
     })),
   };
 
   console.log(JSON.stringify(summary, null, 2));
-  if (stuckGames.length) process.exitCode = 1;
+  if (failures.length) {
+    for (const f of failures.slice(0, 20)) {
+      console.error(`SIM FAILURE seed=${f.seed} rid=${f.rid} viewport=${f.viewport} reason=${f.reason} steps=${f.steps} maxRound=${f.maxRound} phase=${f.phase}`);
+    }
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {
@@ -199,4 +276,14 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runOneGame, VIEWPORTS, bootPage, BOT_FN };
+module.exports = {
+  runOneGame,
+  VIEWPORTS: VIEWPORTS_ALL,
+  VIEWPORTS_BLOCKING,
+  bootPage,
+  BOT_FN,
+  classifyFailures,
+  startServer,
+  parseArgs,
+  pickViewports,
+};

@@ -1526,10 +1526,38 @@
         }
     }
     @media (max-height: 420px) {
-        #root-gutterbones .play-stash-column .stash-intel-scroll {
+        #root-gutterbones [data-layout-key="play-stash"].fixed {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones [data-layout-key="play-stash"].fixed .stash-intel-scroll {
+            position: sticky;
+            top: 0;
+            z-index: 3;
             flex: 0 0 auto;
-            max-height: 2.15rem;
+            max-height: 2rem;
             min-height: 0;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.96);
+        }
+        #root-gutterbones .run-intel-summary--inline,
+        #root-gutterbones .run-intel-summary--inline.run-intel-collapsed {
+            height: 1.75rem;
+            min-height: 1.75rem;
+            max-height: 1.75rem;
+            overflow: hidden;
+            padding: 0.06rem 0.28rem;
+        }
+        #root-gutterbones .run-intel-summary--inline .run-intel-summary-head {
+            margin-bottom: 0;
+        }
+        #root-gutterbones .run-intel-summary--inline .run-intel-summary-head-actions {
+            display: none;
+        }
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            flex: 0 0 auto !important;
+            max-height: 2.15rem;
+            min-height: 0 !important;
             overflow: hidden;
         }
         #root-gutterbones .play-stash-column .stash-hardware-panel {
