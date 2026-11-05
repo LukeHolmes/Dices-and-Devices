@@ -113,9 +113,13 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       if (hit != null && log._shopclicks % 8 >= 4) return hit;
       return hit != null ? hit : buys[0] != null ? buys[0] : null;
     }
-    if (ph === "GAMBLE" && strategy === "greedy") {
-      k = findContains("TAKE", "SAFE");
+    if (ph === "GAMBLE") {
+      k = findContains("TAKE", "SAFE", "SKIP", "LEAVE", "CASH OUT");
       if (k != null) return k;
+      if (strategy === "edge" && rng() < 0.15) {
+        k = findContains("DOUBLE", "RISK");
+        if (k != null) return k;
+      }
     }
     if (ph === "CARVING") {
       k = findContains("RETURN TO SHOP", "BACK TO BONES");
@@ -233,6 +237,16 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       };
     }
 
+    if (ph === "GAMBLE") {
+      const safeBtn = [...document.querySelectorAll("button")].find((b) =>
+        (b.innerText || b.getAttribute("aria-label") || "").toUpperCase().includes("TAKE SAFE CUT"),
+      );
+      if (safeBtn) safeBtn.click();
+      else window.__GB_E2E__.takeSafeCut?.();
+      await wait(100);
+      continue;
+    }
+
     const names = btn.map((b) => b.t);
     const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
     stuck = sig === lastSig ? stuck + 1 : 0;
@@ -248,6 +262,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (stuck >= stuckThreshold) {
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") window.__GB_E2E__.hitStreets();
+      else if (s.phase === "GAMBLE") window.__GB_E2E__.takeSafeCut?.();
       else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;
