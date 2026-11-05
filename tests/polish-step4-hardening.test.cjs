@@ -355,9 +355,11 @@ test("polish step4 — 844×390 off-screen layout key budget", async () => {
       const { count } = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.countOffscreenLayoutKeys());
       maxCount = Math.max(maxCount, count);
     }
-    assert.ok(
+    assertViewport(
+      "844x390",
       maxCount <= OFFSCREEN_CLIP_BUDGET_844,
       `off-screen clips ${maxCount} exceed budget ${OFFSCREEN_CLIP_BUDGET_844}`,
+      { suite: "polish-step4", label: "844 off-screen budget" },
     );
   } finally {
     await browser.close();

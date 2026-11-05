@@ -16,7 +16,7 @@ Then open `http://localhost:8080/index.html` in Chrome.
 
 ### Lint / Test / Build
 
-Run `npm run check` using Node 22+; no install is needed. **Phone portrait** (360×640, 390×844, 412×915) layout/smoke checks are **non-blocking** by default (`PHONE_PORTRAIT_BLOCKING=0`). Set `PHONE_PORTRAIT_BLOCKING=1` to fail on those viewports again. Blocking layout/smoke viewports: 844×390, 768×1024, 1024×768, 1366×768, 1920×1080. `npm run check:fast` prints a `phone (non-blocking)` warning section via `scripts/check-fast-report.cjs`. Pure rules live in the inline `gutterbones-rules` script and JSX remains in the Babel block. Tests execute production helpers and selected action bodies. Known-issue audit success means existing failures were reproduced, not fixed. See `docs/testing.md` for strict checks, limitations, and the browser checklist. There is no build or linter step.
+Run `npm run check` using Node 22+; no install is needed. **Phone portrait** (360×640, 390×844, 412×915) and **landscape phone** (844×390) layout/smoke checks are **non-blocking** by default (`PHONE_PORTRAIT_BLOCKING=0`). Set `PHONE_PORTRAIT_BLOCKING=1` to fail on those viewports again. **Blocking** layout/smoke viewports: 768×1024, 1024×768, 1366×768, 1920×1080. `npm run check:fast` prints a `phone (non-blocking)` warning section via `scripts/check-fast-report.cjs`. Pure rules live in the inline `gutterbones-rules` script and JSX remains in the Babel block. Tests execute production helpers and selected action bodies. Known-issue audit success means existing failures were reproduced, not fixed. See `docs/testing.md` for strict checks, limitations, and the browser checklist. There is no build or linter step.
 
 ### Key gotchas
 

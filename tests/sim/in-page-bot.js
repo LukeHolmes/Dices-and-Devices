@@ -105,13 +105,13 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const buys = btn.map((b, i) => (b.t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
       const hit = findContains("HIT THE STREETS");
       const routes = btn.map((b, i) => (U[i].includes("NEXT QUOTA") ? i : -1)).filter((x) => x >= 0);
-      if (routes.length && !st.selectedShopPathId && (log._shopclicks || 0) % 8 >= 3) {
+      if (routes.length && !st?.selectedShopPathId) {
         return strategy !== "greedy" ? routes[Math.floor(rng() * routes.length)] : routes[0];
       }
       log._shopclicks = (log._shopclicks || 0) + 1;
       if (strategy === "greedy" && buys.length && log._shopclicks % 8 < 4) return buys[0];
-      if (hit != null && log._shopclicks % 8 >= 4) return hit;
-      return hit != null ? hit : buys[0] != null ? buys[0] : null;
+      if (hit != null) return hit;
+      return buys[0] != null ? buys[0] : null;
     }
     if (ph === "GAMBLE") {
       k = findContains("TAKE", "SAFE", "SKIP", "LEAVE", "CASH OUT");
@@ -238,18 +238,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
 
     if (ph === "GAMBLE") {
-      if (!log._gambleExit) {
-        log._gambleExit = true;
-        window.__GB_E2E__.abortGamble?.() || window.__GB_E2E__.takeSafeCut?.();
+      log._gambleTries = (log._gambleTries || 0) + 1;
+      if (log._gambleTries === 1 || log._gambleTries % 5 === 0) {
+        window.__GB_E2E__.takeSafeCut?.();
+        window.__GB_E2E__.abortGamble?.();
         const safeBtn = [...document.querySelectorAll("button")].find((b) =>
           (b.innerText || b.getAttribute("aria-label") || "").toUpperCase().includes("TAKE SAFE CUT"),
         );
-        if (safeBtn) safeBtn.click();
+        if (safeBtn && !safeBtn.disabled) safeBtn.click();
       }
-      await wait(180);
+      await wait(160);
       continue;
     }
-    log._gambleExit = false;
+    log._gambleTries = 0;
 
     const names = btn.map((b) => b.t);
     const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
@@ -262,12 +263,22 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       await wait(120);
       continue;
     }
+    if (started && ph === "PLAY" && st && st.hands === 0 && st.score < st.target) {
+      window.__GB_E2E__.recoverLastHand?.();
+      window.__GB_E2E__.dismissOverlays?.();
+      await wait(160);
+      continue;
+    }
 
     if (stuck >= stuckThreshold) {
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") window.__GB_E2E__.hitStreets();
-      else if (s.phase === "GAMBLE") window.__GB_E2E__.takeSafeCut?.();
-      else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
+      else if (s.phase === "GAMBLE") {
+        window.__GB_E2E__.takeSafeCut?.();
+        window.__GB_E2E__.abortGamble?.();
+      } else if (s.phase === "PLAY") {
+        window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick("PLAY");
+      } else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;
       if (fallbacks > maxFallbacks) {
@@ -288,12 +299,30 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
 
     let pick = choose(btn, ph, st || {});
-    if (pick == null && ph === "PLAY") e2eUnstick(ph);
+    if (pick == null && ph === "PLAY") {
+      window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick(ph);
+    }
     else if (pick != null) {
       const b = document.querySelector('[data-pt="' + pick + '"]');
       if (b) b.click();
     }
     await wait(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
+  }
+
+  window.__GB_E2E__.forceForfeitRun?.();
+  await wait(600);
+  const afterForfeit = window.__GB_E2E__.getState();
+  if (afterForfeit.phase === "RAP_SHEET" || afterForfeit.phase === "VICTORY") {
+    return {
+      stuck: false,
+      outcome: afterForfeit.phase === "VICTORY" ? "WIN" : "BUST",
+      maxRound,
+      phase: afterForfeit.phase,
+      seed,
+      strategy,
+      steps: maxSteps,
+      detail: "sim_forfeit_escape",
+    };
   }
 
   const final = window.__GB_E2E__.getState();

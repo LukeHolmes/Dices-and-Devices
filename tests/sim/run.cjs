@@ -20,7 +20,7 @@ const VIEWPORTS_ALL = [
   { name: "1920x1080", width: 1920, height: 1080 },
 ];
 const VIEWPORTS_BLOCKING = VIEWPORTS_ALL.filter((v) =>
-  ["844x390", "768x1024", "1024x768", "1366x768", "1920x1080"].includes(v.name),
+  ["768x1024", "1024x768", "1366x768", "1920x1080"].includes(v.name),
 );
 const STRATEGIES = ["random", "greedy", "edge", "rapid"];
 

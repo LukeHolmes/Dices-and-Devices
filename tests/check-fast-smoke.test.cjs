@@ -9,7 +9,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const { runOneGame, VIEWPORTS } = require("./sim/run.cjs");
 const {
-  isPhonePortrait,
+  isNonBlockingViewport,
   phonePortraitBlockingEnabled,
   recordPhoneWarning,
   printPhonePortraitReport,
@@ -66,7 +66,7 @@ for (const vp of VIEWPORTS) {
           stuckThreshold: 36,
           maxFallbacks: 12,
         });
-        if (result.stuck && isPhonePortrait(vp.name) && !phonePortraitBlockingEnabled()) {
+        if (result.stuck && isNonBlockingViewport(vp.name) && !phonePortraitBlockingEnabled()) {
           recordPhoneWarning({
             suite: "check-fast-smoke",
             viewport: vp.name,

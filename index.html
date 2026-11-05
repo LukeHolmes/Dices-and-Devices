@@ -6198,7 +6198,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 const vh = window.innerHeight;
                 const natural = card.scrollHeight || card.offsetHeight;
                 if (natural <= 0) return;
-                const scale = Math.max(0.46, Math.min(1, (vh - pad * 2) / natural));
+                const scale = Math.max(0.38, Math.min(1, (vh - pad * 2) / natural));
                 setFitScale(scale < 0.995 ? scale : 1);
             };
             fit();
@@ -11119,11 +11119,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         const leaveGambleForShop = () => {
+            if (phase === 'SHOP' && !screenTransition) return;
+            if (phase !== 'GAMBLE') return;
             dismissScoreOverlays();
             pendingPhaseTransitionRef.current = null;
+            phaseTransitionSeqRef.current += 1;
+            setScreenTransition(null);
+            setScreenTransitionFast(false);
             setGambleStake(0);
             generateShop();
-            runPhaseTransition('SHOP');
+            shopAdvanceLockRef.current = false;
+            setShopAdvancing(false);
+            runPhaseTransition('SHOP', { fast: true, waitHeatMs: 0 });
         };
 
         const resolveGambleBlueprint = () => {
@@ -11805,15 +11812,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const path = paths.find((p) => p.id === id);
                         if (path) selectShopPath(path);
                     },
-                    hitStreets: () => commitShopAdvance(),
+                    hitStreets: () => {
+                        if (phase !== 'SHOP') return false;
+                        if (!selectedShopPathId && paths.length >= 1) {
+                            selectShopPath(paths[0]);
+                        }
+                        commitShopAdvance();
+                        return true;
+                    },
                     takeSafeCut: () => resolveGamble(false),
                     abortGamble: () => {
                         if (phase !== "GAMBLE") return false;
-                        dismissScoreOverlays();
-                        pendingPhaseTransitionRef.current = null;
-                        setGambleStake(0);
-                        generateShop();
-                        runPhaseTransition("SHOP");
+                        leaveGambleForShop();
                         return true;
                     },
                     goLineup: () => setPhase("LINEUP"),
@@ -11890,6 +11900,52 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         }
                     },
                     rollOnce: () => rollBones(),
+                    recoverLastHand: () => {
+                        recoverLastHandStuckState();
+                        return true;
+                    },
+                    forceForfeitRun: () => {
+                        if (phase !== 'PLAY' && phase !== 'SHOP' && phase !== 'GAMBLE') return false;
+                        forfeitRun();
+                        return true;
+                    },
+                    scoreFirstPayoutRow: () => {
+                        if (phase !== 'PLAY' || rolling) return false;
+                        if (!hasRolled) {
+                            const rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
+                            if (rollBtn) {
+                                rollBones();
+                                return true;
+                            }
+                        }
+                        if (typeof window !== 'undefined' && window.innerWidth < 900) {
+                            const tabs = document.querySelectorAll('button.gb-tappable-label');
+                            for (const tab of tabs) {
+                                if ((tab.innerText || '').toUpperCase().includes('PAYOUTS')) {
+                                    tab.click();
+                                    break;
+                                }
+                            }
+                        }
+                        const pickRow = () => {
+                            const rows = [...document.querySelectorAll('button[data-payout-row]:not([disabled])')].filter(
+                                (r) => r.getAttribute('data-payout-row') !== 'more',
+                            );
+                            if (rows.length) {
+                                rows[0].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                                rows[0].click();
+                                return true;
+                            }
+                            return false;
+                        };
+                        if (pickRow()) return true;
+                        const more = document.querySelector('[data-layout-key="payout-sheet-more"]');
+                        if (more && !more.disabled) {
+                            more.click();
+                            return pickRow() || true;
+                        }
+                        return false;
+                    },
                     measureRapSheetStatAlignment: () => {
                         const rows = Array.from(document.querySelectorAll('[data-layout-key="rap-sheet-stat-row"]'));
                         if (!rows.length) return { ok: false, reason: 'no rows' };

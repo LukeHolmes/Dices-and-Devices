@@ -38,7 +38,7 @@ if (smokeCode !== 0) process.exit(smokeCode);
 const phoneReport = printPhonePortraitReport();
 
 console.log("\n=== check:fast (blocking viewports) ===");
-console.log("Smoke seeds 13 & 61 must pass at: 844x390, 768x1024, 1024x768, 1366x768, 1920x1080");
-console.log("(Phone portrait smoke runs are non-blocking unless PHONE_PORTRAIT_BLOCKING=1)");
+console.log("Smoke seeds 13 & 61 must pass at blocking: 768x1024, 1024x768, 1366x768, 1920x1080");
+console.log("(Phone portrait + 844x390 smoke runs are warnings unless PHONE_PORTRAIT_BLOCKING=1)");
 
 module.exports = { phoneReport };

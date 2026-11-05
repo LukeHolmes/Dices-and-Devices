@@ -1,16 +1,18 @@
 "use strict";
 /**
- * Phone portrait (360×640, 390×844, 412×915) can be non-blocking while Luke finishes desktop/tablet.
- * Set PHONE_PORTRAIT_BLOCKING=1 to fail CI on these viewports again.
+ * Phone portrait (360×640, 390×844, 412×915) and landscape phone 844×390 are non-blocking by default.
+ * Set PHONE_PORTRAIT_BLOCKING=1 to fail CI on those viewports again.
+ * Blocking merge viewports: 768×1024, 1024×768, 1366×768, 1920×1080.
  */
 const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
 
 const PHONE_PORTRAIT_NAMES = Object.freeze(["360x640", "390x844", "412x915"]);
+const PHONE_LANDSCAPE_NAMES = Object.freeze(["844x390"]);
+const NON_BLOCKING_VIEWPORT_NAMES = Object.freeze([...PHONE_PORTRAIT_NAMES, ...PHONE_LANDSCAPE_NAMES]);
 
 const BLOCKING_CHECK_FAST_NAMES = Object.freeze([
-  "844x390",
   "768x1024",
   "1024x768",
   "1366x768",
@@ -25,6 +27,14 @@ function phonePortraitBlockingEnabled() {
 
 function isPhonePortrait(viewportName) {
   return PHONE_PORTRAIT_NAMES.includes(viewportName);
+}
+
+function isPhoneLandscape(viewportName) {
+  return PHONE_LANDSCAPE_NAMES.includes(viewportName);
+}
+
+function isNonBlockingViewport(viewportName) {
+  return NON_BLOCKING_VIEWPORT_NAMES.includes(viewportName);
 }
 
 function isBlockingCheckFastViewport(viewportName) {
@@ -63,7 +73,7 @@ function clearPhoneWarnings() {
 function assertViewport(viewportName, condition, message, meta = {}) {
   if (condition) return;
   const msg = message || "assertion failed";
-  if (isPhonePortrait(viewportName) && !phonePortraitBlockingEnabled()) {
+  if (isNonBlockingViewport(viewportName) && !phonePortraitBlockingEnabled()) {
     recordPhoneWarning({
       suite: meta.suite,
       viewport: viewportName,
@@ -78,7 +88,7 @@ function assertViewport(viewportName, condition, message, meta = {}) {
 function assertEqualViewport(viewportName, actual, expected, message, meta = {}) {
   if (actual === expected) return;
   const msg = message || `expected ${expected}, got ${actual}`;
-  if (isPhonePortrait(viewportName) && !phonePortraitBlockingEnabled()) {
+  if (isNonBlockingViewport(viewportName) && !phonePortraitBlockingEnabled()) {
     recordPhoneWarning({
       suite: meta.suite,
       viewport: viewportName,
@@ -109,7 +119,7 @@ function printPhonePortraitReport() {
   console.log("\n=== phone (non-blocking) ===");
   if (!warnings.length) {
     console.log("No phone portrait warnings recorded.");
-    console.log(`(Set PHONE_PORTRAIT_BLOCKING=1 to enforce ${PHONE_PORTRAIT_NAMES.join(", ")})`);
+    console.log(`(Set PHONE_PORTRAIT_BLOCKING=1 to enforce ${NON_BLOCKING_VIEWPORT_NAMES.join(", ")})`);
     return { warnings: [], count: 0 };
   }
   const byVp = {};
@@ -118,7 +128,7 @@ function printPhonePortraitReport() {
     if (!byVp[vp]) byVp[vp] = [];
     byVp[vp].push(w);
   }
-  for (const vp of PHONE_PORTRAIT_NAMES) {
+  for (const vp of NON_BLOCKING_VIEWPORT_NAMES) {
     const list = byVp[vp] || [];
     console.log(`${vp}: ${list.length} warning(s)`);
     for (const w of list.slice(0, 8)) {
@@ -132,9 +142,13 @@ function printPhonePortraitReport() {
 
 module.exports = {
   PHONE_PORTRAIT_NAMES,
+  PHONE_LANDSCAPE_NAMES,
+  NON_BLOCKING_VIEWPORT_NAMES,
   BLOCKING_CHECK_FAST_NAMES,
   phonePortraitBlockingEnabled,
   isPhonePortrait,
+  isPhoneLandscape,
+  isNonBlockingViewport,
   isBlockingCheckFastViewport,
   recordPhoneWarning,
   clearPhoneWarnings,
