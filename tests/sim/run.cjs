@@ -204,6 +204,9 @@ async function main() {
       try {
         const r = await runOneGame(page, { ...job, maxSteps: args.maxSteps, booted });
         results.push(r);
+        process.stderr.write(
+          `sim ${results.length}/${args.games} rid=${r.rid} outcome=${r.outcome || r.reason} steps=${r.steps} maxRound=${r.maxRound}\n`,
+        );
       } catch (e) {
         results.push({
           rid: job.rid,
