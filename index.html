@@ -1551,7 +1551,7 @@
         #root-gutterbones .run-intel-summary--inline .run-intel-summary-head {
             margin-bottom: 0;
         }
-        #root-gutterbones .run-intel-summary--inline .run-intel-summary-head-actions {
+        #root-gutterbones [data-layout-key="play-stash"].fixed .run-intel-summary--inline .run-intel-summary-head-actions {
             display: none;
         }
         #root-gutterbones .play-stash-column .stash-intel-scroll {
@@ -1843,6 +1843,22 @@
         }
     }
     @media (max-height: 420px) and (min-width: 720px) {
+        #root-gutterbones .play-stash-column .run-intel-summary--inline,
+        #root-gutterbones .play-stash-column .run-intel-summary--inline.run-intel-collapsed {
+            height: 2.15rem;
+            min-height: 2.15rem;
+            max-height: 2.15rem;
+            padding: 0.08rem 0.3rem;
+        }
+        #root-gutterbones .play-stash-column .run-intel-summary--inline .run-intel-summary-head-actions {
+            display: flex;
+        }
+        #root-gutterbones .play-stash-column .run-intel-summary--inline .run-intel-summary-head-actions button {
+            min-height: 1.35rem;
+            padding: 0.04rem 0.35rem;
+            font-size: 9px;
+            line-height: 1.1;
+        }
         #root-gutterbones [data-layout-key="side-wager-row"],
         #root-gutterbones [data-layout-key="play-hud"] .gb-play-dock {
             display: none !important;
