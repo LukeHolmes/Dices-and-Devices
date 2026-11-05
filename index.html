@@ -11791,6 +11791,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     hitStreets: () => commitShopAdvance(),
                     takeSafeCut: () => resolveGamble(false),
+                    abortGamble: () => {
+                        if (phase !== "GAMBLE") return false;
+                        dismissScoreOverlays();
+                        pendingPhaseTransitionRef.current = null;
+                        setGambleStake(0);
+                        generateShop();
+                        runPhaseTransition("SHOP");
+                        return true;
+                    },
                     goLineup: () => setPhase("LINEUP"),
                     selectFirstPersona: () => setPersonaIdx(0),
                     startNewRun: () => beginContract({ tutorial: false }),

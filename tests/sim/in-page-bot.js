@@ -1,6 +1,6 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const log = { _shopclicks: 0, _paytab: 0 };
+  const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
   let lastSig = null;
@@ -238,14 +238,18 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
 
     if (ph === "GAMBLE") {
-      const safeBtn = [...document.querySelectorAll("button")].find((b) =>
-        (b.innerText || b.getAttribute("aria-label") || "").toUpperCase().includes("TAKE SAFE CUT"),
-      );
-      if (safeBtn) safeBtn.click();
-      else window.__GB_E2E__.takeSafeCut?.();
-      await wait(100);
+      if (!log._gambleExit) {
+        log._gambleExit = true;
+        window.__GB_E2E__.abortGamble?.() || window.__GB_E2E__.takeSafeCut?.();
+        const safeBtn = [...document.querySelectorAll("button")].find((b) =>
+          (b.innerText || b.getAttribute("aria-label") || "").toUpperCase().includes("TAKE SAFE CUT"),
+        );
+        if (safeBtn) safeBtn.click();
+      }
+      await wait(180);
       continue;
     }
+    log._gambleExit = false;
 
     const names = btn.map((b) => b.t);
     const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
