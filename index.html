@@ -11570,6 +11570,37 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             ? paths.map((p) => ({ ...p, _projection: projectPath(p) }))
             : [];
 
+        const resolveShopAdvancePath = () => {
+            let path = paths.find((p) => p.id === selectedShopPathId);
+            if (path) return path;
+            if (!paths?.length) return null;
+            if (paths.length === 1) return paths[0];
+            const bossPath = paths.find((p) => p.boss)
+                || paths.find((p) => /TURF|RAID|BOSS/i.test(String(p.name || '')))
+                || paths.find((p) => p.id === 'BOSS');
+            if (round >= 8 && bossPath) return bossPath;
+            return paths[0];
+        };
+
+        const clearShopAdvanceLock = () => {
+            shopAdvanceLockRef.current = false;
+            setShopAdvancing(false);
+            phaseTransitionSeqRef.current += 1;
+            setScreenTransition(null);
+            setScreenTransitionFast(false);
+            pendingPhaseTransitionRef.current = null;
+        };
+
+        const beginShopAdvance = (path) => {
+            if (phase !== 'SHOP' || !path) return false;
+            if (shopAdvanceLockRef.current) clearShopAdvanceLock();
+            setSelectedShopPathId(path.id);
+            shopAdvanceLockRef.current = true;
+            setShopAdvancing(true);
+            handleAdvanceCore(path);
+            return true;
+        };
+
         const selectShopPath = (path) => {
             if (phase !== 'SHOP' || shopAdvanceLockRef.current || !path) return;
             setSelectedShopPathId(path.id);
@@ -11577,19 +11608,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         const commitShopAdvance = () => {
-            if (phase !== 'SHOP' || shopAdvanceLockRef.current) return;
-            let path = paths.find((p) => p.id === selectedShopPathId);
-            if (!path && paths.length === 1) {
-                path = paths[0];
-                setSelectedShopPathId(path.id);
-            }
+            if (phase !== 'SHOP') return;
+            const path = resolveShopAdvancePath();
             if (!path) {
                 setFixerLine('Pick a route card first, then hit the streets.');
                 return;
             }
-            shopAdvanceLockRef.current = true;
-            setShopAdvancing(true);
-            handleAdvanceCore(path);
+            beginShopAdvance(path);
         };
 
         const handleAdvanceCore = (path) => {
@@ -11814,11 +11839,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     hitStreets: () => {
                         if (phase !== 'SHOP') return false;
-                        if (!selectedShopPathId && paths.length >= 1) {
-                            selectShopPath(paths[0]);
+                        const path = resolveShopAdvancePath();
+                        if (!path) return false;
+                        return beginShopAdvance(path);
+                    },
+                    clickShopRouteCard: () => {
+                        const card = document.querySelector('[data-layout-key="shop-route-card"]');
+                        if (card) {
+                            card.click();
+                            return true;
                         }
-                        commitShopAdvance();
-                        return true;
+                        const path = resolveShopAdvancePath();
+                        if (path) {
+                            selectShopPath(path);
+                            return true;
+                        }
+                        return false;
                     },
                     takeSafeCut: () => resolveGamble(false),
                     abortGamble: () => {

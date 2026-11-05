@@ -104,13 +104,18 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (ph === "SHOP") {
       const buys = btn.map((b, i) => (b.t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
       const hit = findContains("HIT THE STREETS");
-      const routes = btn.map((b, i) => (U[i].includes("NEXT QUOTA") ? i : -1)).filter((x) => x >= 0);
+      const routes = btn.map((b, i) =>
+        b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1,
+      ).filter((x) => x >= 0);
       if (routes.length && !st?.selectedShopPathId) {
         return strategy !== "greedy" ? routes[Math.floor(rng() * routes.length)] : routes[0];
       }
       log._shopclicks = (log._shopclicks || 0) + 1;
-      if (strategy === "greedy" && buys.length && log._shopclicks % 8 < 4) return buys[0];
-      if (hit != null) return hit;
+      if (strategy === "greedy" && buys.length && !st?.selectedShopPathId && log._shopclicks % 6 < 2) {
+        return buys[0];
+      }
+      if (hit != null && (st?.selectedShopPathId || !routes.length)) return hit;
+      if (routes.length) return routes[0];
       return buys[0] != null ? buys[0] : null;
     }
     if (ph === "GAMBLE") {
@@ -272,7 +277,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     if (stuck >= stuckThreshold) {
       const s = window.__GB_E2E__.getState();
-      if (s.phase === "SHOP") window.__GB_E2E__.hitStreets();
+      if (s.phase === "SHOP") {
+        window.__GB_E2E__.clickShopRouteCard?.();
+        window.__GB_E2E__.hitStreets();
+      }
       else if (s.phase === "GAMBLE") {
         window.__GB_E2E__.takeSafeCut?.();
         window.__GB_E2E__.abortGamble?.();

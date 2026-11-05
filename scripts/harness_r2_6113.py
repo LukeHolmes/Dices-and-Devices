@@ -109,6 +109,8 @@ def run_one(br,rid,strategy,vpname,seed,shots_budget):
       else: log['_prog']=prog;log['_dw']=0
       if started and ph=='PLAY' and st.get('hands',1)==0 and st.get('score',0)>=st.get('target',10**9):
         pg.evaluate("(()=>{const e=window.__GB_E2E__;if(!e)return;e.dismissOverlays();if(e.getState().phase==='PLAY')e.forceRoundWin();})()")
+      if started and ph=='PLAY' and st.get('hands',1)==0 and st.get('score',0)<st.get('target',10**9):
+        pg.evaluate("(()=>{const e=window.__GB_E2E__;if(!e)return;e.recoverLastHand?.();e.dismissOverlays();})()")
       if log['_dw'] in(80,110,140) and ph in('SHOP','CARVING','GAMBLE'):
         fb=pg.evaluate("(()=>{const e=window.__GB_E2E__;const s=e.getState();if(s.phase==='GAMBLE'){e.takeSafeCut();return 'takeSafeCut'}e.hitStreets();return 'hitStreets'})()")
         issue('api_fallback_needed',f"{ph}: bot spent {log['_dw']} actions in {ph} without leaving via UI; used __GB_E2E__.{fb}(). Last buttons={names[:8]}")
@@ -120,7 +122,7 @@ def run_one(br,rid,strategy,vpname,seed,shots_budget):
         hk=[b for b in btn if b['t'].upper() in('HIDE','CLOSE','RESUME HUSTLE','COPY THAT','GOT IT')]
         if hk: pg.mouse.click(hk[0]['x'],hk[0]['y'])
         if stuck>=20 or nobtn>=30:
-          fb=pg.evaluate("(()=>{const e=window.__GB_E2E__;const s=e.getState();if(s.phase==='SHOP'){if(!s.selectedShopPathId)e.selectRoute&&0;e.hitStreets();return 'hitStreets'}if(s.roundClearVisible){e.finishRoundClear();return 'finishRoundClear'}e.dismissOverlays();return 'dismissOverlays'})()")
+          fb=pg.evaluate("(()=>{const e=window.__GB_E2E__;const s=e.getState();if(s.phase==='SHOP'){e.clickShopRouteCard?.();e.hitStreets();return 'hitStreets'}if(s.phase==='PLAY'){if(e.scoreFirstPayoutRow?.())return 'scoreFirstPayoutRow';e.recoverLastHand?.();e.dismissOverlays();return 'recoverLastHand'}if(s.roundClearVisible){e.finishRoundClear();return 'finishRoundClear'}e.dismissBossIntro?.();e.dismissOverlays();return 'dismissOverlays'})()")
           issue('api_fallback_needed',f"{ph}: bot could not progress via UI after {stuck} identical actions; used __GB_E2E__.{fb}(). Last buttons={names[:8]}")
           log['fallbacks']=log.get('fallbacks',0)+1
           if log['fallbacks']>6: issue('softlock_no_progress',f"{ph}: >6 fallbacks needed");break
@@ -230,12 +232,13 @@ def choose_inner(btn,ph,strategy,rng,st,log):
   if ph=='SHOP':
     buys=[k for k,n in enumerate(U) if '$' in n and 'HIT' not in n]
     hit=find('HIT THE STREETS',contains=True)
-    routes=[k for k,n in enumerate(U) if 'NEXT QUOTA' in n]
-    if routes and not st.get('selectedShopPathId') and log.get('_shopclicks',0)%8>=3: return rng.choice(routes) if strategy!='greedy' else routes[0]
+    routes=[k for k,b in enumerate(btn) if b.get('lk')=='shop-route-card' or 'NEXT QUOTA' in U[k]]
+    if routes and not st.get('selectedShopPathId'): return routes[0]
     cnt=log.get('_shopclicks',0);log['_shopclicks']=cnt+1
-    if strategy=='greedy' and buys and cnt%8<4: return rng.choice(buys)
-    if strategy!='greedy' and rng.random()<0.45: return rng.randrange(len(btn))
-    if hit is not None and cnt%8>=4: return hit
+    if strategy=='greedy' and buys and not st.get('selectedShopPathId') and cnt%6<2: return rng.choice(buys)
+    if hit is not None and (st.get('selectedShopPathId') or not routes): return hit
+    if routes: return routes[0]
+    if strategy!='greedy' and rng.random()<0.35: return rng.randrange(len(btn))
     if buys and rng.random()<0.4: return rng.choice(buys)
     return hit if hit is not None else rng.randrange(len(btn))
   if ph=='GAMBLE' and strategy=='greedy':
