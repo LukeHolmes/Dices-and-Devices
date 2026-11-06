@@ -86,6 +86,40 @@ for (const [label, width, height] of [
   });
 }
 
+test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke @ 1024×768)", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({
+          pacing: "fast",
+          reducedMotion: true,
+          tutorialCompleted: true,
+          skippedAlleyIntro: true,
+        }),
+      );
+    });
+    await page.evaluate(() => {
+      window.__GB_E2E__.goLineup();
+      window.__GB_E2E__.selectFirstPersona();
+      window.__GB_E2E__.startNewRun();
+      window.__GB_E2E__.skipIntroOverlays?.();
+    });
+    await page.waitForTimeout(500);
+    await page.evaluate(() => window.__GB_E2E__.rollOnce());
+    await page.waitForTimeout(400);
+    const ok = await page.evaluate(() => window.__GB_E2E__.scoreFirstPayoutRow());
+    assert.equal(ok, true);
+  } finally {
+    await browser.close();
+  }
+});
+
 test("r13 — harness seed 546411 greedy desktop_fhd reaches terminal without shop softlock", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();

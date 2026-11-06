@@ -183,6 +183,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       e.rollOnce?.();
       return true;
     }
+    e.focusPlayPayoutsTab?.();
     if (innerWidth < 900) {
       const tabs = document.querySelectorAll("button.gb-tappable-label");
       for (const tab of tabs) {
