@@ -9,6 +9,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
+const { assertViewport } = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
@@ -84,8 +85,11 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["carving-exit"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
-      assert.ok(m.bad.every((b) => b.top >= 0), JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step1", label: "measure" });
+      assertViewport(vp.name, m.bad.every((b) => b.top >= 0), JSON.stringify(m), {
+        suite: "polish-step1",
+        label: "bad top",
+      });
     } finally {
       await browser.close();
     }
@@ -107,7 +111,7 @@ for (const vp of VIEWPORTS) {
           "rap-sheet-history-more",
         ]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step1", label: "rap footer" });
     } finally {
       await browser.close();
     }
@@ -126,11 +130,11 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["loss-explanation-dismiss"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
-      assert.ok(
-        (m.bad[0]?.left ?? 0) >= 0,
-        `loss dismiss left edge: ${JSON.stringify(m)}`,
-      );
+      assertViewport(vp.name, m.ok, JSON.stringify(m), { suite: "polish-step1", label: "loss dismiss" });
+      assertViewport(vp.name, (m.bad[0]?.left ?? 0) >= 0, `loss dismiss left edge: ${JSON.stringify(m)}`, {
+        suite: "polish-step1",
+        label: "loss dismiss left",
+      });
     } finally {
       await browser.close();
     }
