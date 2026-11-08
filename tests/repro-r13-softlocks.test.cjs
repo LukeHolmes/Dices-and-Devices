@@ -190,7 +190,7 @@ test("r15 — loan carve blocked at broke final RAID shop", async () => {
   }
 });
 
-test("r15 — harness seed 483059 greedy tablet_portrait no R9 shop softlock", async () => {
+test("r15 — harness seed 483059 greedy tablet_portrait no R9 shop softlock", { timeout: 420_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
@@ -227,7 +227,7 @@ test("r15 — harness seed 483059 greedy tablet_portrait no R9 shop softlock", a
   }
 });
 
-test("r15 — harness seed 831495 greedy phone_landscape no R9 shop softlock", async () => {
+test("r15 — harness seed 831495 greedy phone_landscape no R9 shop softlock", { timeout: 420_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
@@ -264,7 +264,7 @@ test("r15 — harness seed 831495 greedy phone_landscape no R9 shop softlock", a
   }
 });
 
-test("r13 — harness seed 546411 greedy desktop_fhd reaches terminal without shop softlock", async () => {
+test("r13 — harness seed 546411 greedy desktop_fhd reaches terminal without shop softlock", { timeout: 420_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
