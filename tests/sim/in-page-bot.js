@@ -323,6 +323,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (ph === "PLAY") {
       window.__GB_E2E__?.skipIntroOverlays?.();
       window.__GB_E2E__?.dismissBossIntro?.();
+      window.__GB_E2E__?.dismissOverlays?.();
+      if (
+        (strategy === "edge" || strategy === "random")
+        && window.__GB_E2E__?.getHasRolled?.()
+        && window.__GB_E2E__?.scoreFirstPayoutRow?.()
+      ) {
+        await wait(45);
+        continue;
+      }
       if (st?.roundClearVisible) {
         window.__GB_E2E__?.finishRoundClear?.();
         await wait(80);
