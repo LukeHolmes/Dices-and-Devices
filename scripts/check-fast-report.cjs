@@ -27,10 +27,16 @@ if (code !== 0) process.exit(code);
 code = run("npm", ["run", "test:layout"]);
 if (code !== 0) process.exit(code);
 
-console.log("\n=== check:fast — smoke (all viewports; phone failures are warnings) ===\n");
+console.log("\n=== check:fast — polish step5 layout (blocking + phone warnings) ===\n");
+code = run("node", ["--test", "--test-timeout=900000", "tests/polish-step5-layout.test.cjs"], {
+  CHECK_FAST_PRINT_PHONE_REPORT: "1",
+});
+if (code !== 0) process.exit(code);
+
+console.log("\n=== check:fast — stuck-game smoke (blocking viewports) ===\n");
 const smokeCode = run(
   "node",
-  ["--test", "--test-timeout=720000", "tests/check-fast-smoke.test.cjs"],
+  ["--test", "--test-timeout=720000", "tests/polish-step5-stuck-smoke.test.cjs"],
   { CHECK_FAST_PRINT_PHONE_REPORT: "1" },
 );
 if (smokeCode !== 0) process.exit(smokeCode);
