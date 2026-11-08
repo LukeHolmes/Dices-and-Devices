@@ -49,6 +49,48 @@ test("sim — blocking viewports reach WIN or BUST within generous cap", { timeo
   }
 });
 
+test("sim — seed 118785 rapid @1920x1080 reaches terminal (R2 boss intro regression)", { timeout: 180_000 }, async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  page.__baseUrl = baseUrl;
+  const vp = VIEWPORTS_BLOCKING.find((v) => v.name === "1920x1080");
+  const result = await runOneGame(page, {
+    rid: 15,
+    seed: 118785,
+    strategy: "rapid",
+    viewport: vp,
+    maxSteps: 8000,
+    stuckThreshold: 28,
+    maxFallbacks: 14,
+    booted: { value: false },
+  });
+  await browser.close();
+  assert.notEqual(result.outcome, "INCOMPLETE:PLAY", JSON.stringify(result));
+  assert.equal(result.reason, undefined, JSON.stringify(result));
+  assert.ok(result.outcome === "WIN" || result.outcome === "BUST", JSON.stringify(result));
+  assert.equal(result.stuck, false, JSON.stringify(result));
+});
+
+test("sim — seed 364274 edge @1920x1080 reaches terminal (score overlay regression)", { timeout: 180_000 }, async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  page.__baseUrl = baseUrl;
+  const vp = VIEWPORTS_BLOCKING.find((v) => v.name === "1920x1080");
+  const result = await runOneGame(page, {
+    rid: 46,
+    seed: 364274,
+    strategy: "edge",
+    viewport: vp,
+    maxSteps: 8000,
+    stuckThreshold: 28,
+    maxFallbacks: 14,
+    booted: { value: false },
+  });
+  await browser.close();
+  assert.notEqual(result.outcome, "INCOMPLETE:PLAY", JSON.stringify(result));
+  assert.ok(result.outcome === "WIN" || result.outcome === "BUST", JSON.stringify(result));
+});
+
 test("sim — low max-steps surfaces incomplete failures", { timeout: 120_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
