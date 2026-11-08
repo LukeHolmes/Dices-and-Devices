@@ -353,6 +353,62 @@ const shopLandscape161 = () => {
   });
 };
 
+/** r15 replay rid61 — broke final-job shop: single RAID route, selection cleared after refresh loop. */
+const shopRound9RaidBroke = () => {
+  const shopItems = [
+    {
+      id: "MULT_FACE_r15",
+      value: 0,
+      label: "MULT FACE",
+      type: "modifier",
+      cost: 12,
+      rarity: "common",
+      style: "bg-[#111] text-[#0df] border-[#0df]",
+    },
+    {
+      id: "GOLD_FACE_r15",
+      value: 0,
+      label: "GOLD FACE",
+      type: "modifier",
+      cost: 15,
+      rarity: "common",
+      style: "bg-[#111] text-[#0df] border-[#0df]",
+    },
+  ];
+  return run({
+    phase: "SHOP",
+    round: 9,
+    gold: 0,
+    debt: 106,
+    target: 300,
+    stash: 0,
+    shopRefreshes: 16,
+    selectedShopPathId: null,
+    shopItems,
+    paths: [
+      {
+        id: "RAID",
+        name: "THE RAID",
+        desc: "Final encounter.",
+        mod: 1,
+        color: "border-red-600 text-red-600 animate-pulse",
+        bossId: "THE_RAID",
+      },
+    ],
+  });
+};
+
+const shopRound9RaidRefreshable = () => {
+  const base = shopRound9RaidBroke();
+  return {
+    ...base,
+    gold: 40,
+    debt: 106,
+    shopRefreshes: 0,
+    selectedShopPathId: "RAID",
+  };
+};
+
 const playRaidRound9 = () =>
   run({
     phase: "PLAY",
@@ -414,6 +470,8 @@ module.exports = {
   victoryLastHand,
   bossCases,
   shopLandscape161,
+  shopRound9RaidBroke,
+  shopRound9RaidRefreshable,
   playRaidRound9,
   shopAfterCarve,
   playStashOpen844,

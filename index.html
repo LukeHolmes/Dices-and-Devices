@@ -10181,9 +10181,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, [phase, showIncarceratedStamp]);
 
         useEffect(() => {
-            if (phase !== 'SHOP' || selectedShopPathId || !paths?.length) return;
-            if (paths.length === 1) setSelectedShopPathId(paths[0].id);
-        }, [phase, paths, selectedShopPathId]);
+            if (phase !== 'SHOP' || !paths?.length) return;
+            if (selectedShopPathId && paths.some((p) => p.id === selectedShopPathId)) return;
+            const path = resolveShopAdvancePath();
+            if (path) setSelectedShopPathId(path.id);
+        }, [phase, paths, selectedShopPathId, round]);
 
         useEffect(() => {
             if (phase !== 'SHOP') return;
@@ -11228,11 +11230,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setShowMobileStash(false);
         };
 
+        const syncShopRouteSelectionAfterStockRoll = () => {
+            if (phase !== 'SHOP' || !paths?.length) return;
+            if (selectedShopPathId && paths.some((p) => p.id === selectedShopPathId)) return;
+            const path = resolveShopAdvancePath();
+            if (path) setSelectedShopPathId(path.id);
+        };
+
         const generateShop = ({ preservePaths = false, preserveRefreshes = false } = {}) => {
             shopAdvanceLockRef.current = false;
             shopRewardGrantedRef.current = null;
             setSoldItems([]);
-            setSelectedShopPathId(null);
+            if (!preservePaths) setSelectedShopPathId(null);
             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
             setActiveShopTag(offerTag);
             const rng = dailyRunActive ? runRandomRef.current : Math.random;
@@ -11387,9 +11396,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
             setShopItems(picks.slice(0, 4));
             if (!preserveRefreshes) setShopRefreshes(0);
-            if (preservePaths) return;
+            if (preservePaths) {
+                scheduleTimeout(() => syncShopRouteSelectionAfterStockRoll(), 0);
+                return;
+            }
             if (round === 9) {
-                setPaths([{ id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 }]);
+                const raidPath = { id: 'RAID', name: 'THE RAID', desc: 'Final encounter.', color: 'border-red-600 text-red-600 animate-pulse', boss: BOSSES.THE_RAID, mod: 1 };
+                setPaths([raidPath]);
+                setSelectedShopPathId(raidPath.id);
             } else {
                 const next = GutterbonesReplay
                     ? GutterbonesReplay.filterPathsForMeta([...PATHS], meta)
@@ -11409,6 +11423,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     next[bossIdx] = { ...next[bossIdx], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
                 }
                 setPaths(next);
+                if (next.length === 1) setSelectedShopPathId(next[0].id);
+                else {
+                    const bossPath = next.find((p) => p.boss)
+                        || next.find((p) => /TURF|RAID|BOSS/i.test(String(p.name || '')))
+                        || next.find((p) => p.id === 'BOSS');
+                    if (round >= 8 && bossPath) setSelectedShopPathId(bossPath.id);
+                }
             }
         };
 
@@ -11487,6 +11508,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (soldItems.includes(item.id)) return;
             if (RUN_EXCLUSIVE_SHOP_IDS.has(item.id) && runExclusiveShopIds.includes(item.id)) return;
             const price = shopListPrice(item);
+            const finalRaidShop = phase === 'SHOP' && round >= 9 && paths?.length === 1 && paths[0]?.id === 'RAID';
+            if (finalRaidShop && item.type && gold < price) {
+                setFixerLine('Final job is queued — no more face loans. Hit the streets.');
+                return;
+            }
             setSoldItems(prev => [...prev, item.id]);
             setFixerLine(gold >= price ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
@@ -11602,7 +11628,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         const selectShopPath = (path) => {
-            if (phase !== 'SHOP' || shopAdvanceLockRef.current || !path) return;
+            if (phase !== 'SHOP' || !path) return;
+            if (shopAdvanceLockRef.current) clearShopAdvanceLock();
             setSelectedShopPathId(path.id);
             setFixerLine(`Route locked: ${path.name}. Hit the streets when you're ready.`);
         };
@@ -11616,6 +11643,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             beginShopAdvance(path);
         };
+
+        const shopAdvancePathReady = phase === 'SHOP' ? !!resolveShopAdvancePath() : false;
 
         const handleAdvanceCore = (path) => {
             pendingPhaseTransitionRef.current = null;
@@ -11662,18 +11691,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 shopRefreshDiscount: path.shopRefreshDiscount || 0
             });
             setActiveBoss(path.boss || null);
-            if (path.boss) {
-                setFixerLine(pickLine(FIXER_LINES.boss));
-                setBossIntro(path.boss);
-                if (meta.totalRuns < 3 && !audioSettings.dismissBossHint) {
-                    spawnHitCallout('BOSS RULES — READ BANNER');
-                    patchSettings({ dismissBossHint: true });
-                }
-                if (!reducedMotion) setBossKick(true);
-                triggerCameraKick('hard');
-                AudioSystem.bossSting();
-                if (!reducedMotion) scheduleTimeout(() => setBossKick(false), 280);
-            } else {
+            if (!path.boss) {
                 setFixerLine('Fresh block. Read the room and roll.');
             }
             if (path.reward && shopRewardGrantedRef.current !== rewardKey) {
@@ -11695,9 +11713,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             runPhaseTransition('PLAY', { fast: true, waitHeatMs: 0 });
             playStoryBeat(storyPanel, () => {});
             scheduleTimeout(() => {
+                if (path.boss) {
+                    setFixerLine(pickLine(FIXER_LINES.boss));
+                    setBossIntro(path.boss);
+                    if (meta.totalRuns < 3 && !audioSettings.dismissBossHint) {
+                        spawnHitCallout('BOSS RULES — READ BANNER');
+                        patchSettings({ dismissBossHint: true });
+                    }
+                    if (!reducedMotion) setBossKick(true);
+                    triggerCameraKick('hard');
+                    AudioSystem.bossSting();
+                    if (!reducedMotion) scheduleTimeout(() => setBossKick(false), 280);
+                }
                 shopAdvanceLockRef.current = false;
                 setShopAdvancing(false);
-            }, reducedMotion ? 120 : 160);
+            }, reducedMotion ? 200 : 280);
         };
 
         const grantRandomConsumable = () => {
@@ -13785,7 +13815,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 </div>
                                 <button
                                     type="button"
-                                    disabled={!selectedShopPathId || shopAdvancing}
+                                    data-layout-key="shop-hit-streets"
+                                    disabled={!shopAdvancePathReady || shopAdvancing}
                                     onClick={commitShopAdvance}
                                     className={`w-full py-2.5 min-h-[44px] border-4 border-[#0df] bg-cyan-950/40 text-[#0df] font-marker text-lg italic tracking-wide hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed ${shopAdvancing ? 'scale-[0.98] opacity-70' : ''}`}
                                 >

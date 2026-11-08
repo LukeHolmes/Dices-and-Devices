@@ -107,11 +107,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const routes = btn.map((b, i) =>
         b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1,
       ).filter((x) => x >= 0);
+      if (hit != null && routes.length <= 1) return hit;
       if (routes.length && !st?.selectedShopPathId) {
         return strategy !== "greedy" ? routes[Math.floor(rng() * routes.length)] : routes[0];
       }
       log._shopclicks = (log._shopclicks || 0) + 1;
-      if (strategy === "greedy" && buys.length && !st?.selectedShopPathId && log._shopclicks % 6 < 2) {
+      if (strategy === "greedy" && buys.length && !st?.selectedShopPathId && routes.length > 1 && log._shopclicks % 6 < 2) {
         return buys[0];
       }
       if (hit != null && (st?.selectedShopPathId || !routes.length)) return hit;

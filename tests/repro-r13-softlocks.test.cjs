@@ -120,6 +120,150 @@ test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke 
   }
 });
 
+test("r15 — broke round-9 RAID shop exposes hit streets without route tap @ tablet_portrait", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await resumeFixture(page, fixtures.shopRound9RaidBroke);
+    await page.evaluate(() => window.__GB_E2E__.skipIntroOverlays?.());
+    await page.waitForFunction(
+      () => {
+        const btn = document.querySelector('[data-layout-key="shop-hit-streets"]');
+        return btn && !btn.disabled;
+      },
+      { timeout: 8000 },
+    );
+    const st = await page.evaluate(() => window.__GB_E2E__.getState());
+    assert.equal(st.selectedShopPathId, "RAID");
+    const ok = await page.evaluate(() => window.__GB_E2E__.hitStreets());
+    assert.equal(ok, true);
+    await page.waitForFunction(() => window.__GB_E2E__.getState().phase !== "SHOP", { timeout: 8000 });
+  } finally {
+    await browser.close();
+  }
+});
+
+test("r15 — refresh stock keeps RAID selection on final-job shop", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await resumeFixture(page, fixtures.shopRound9RaidRefreshable);
+    await page.click('[data-layout-key="shop-refresh-stock"]');
+    await page.waitForTimeout(300);
+    const st = await page.evaluate(() => window.__GB_E2E__.getState());
+    assert.equal(st.selectedShopPathId, "RAID");
+    const disabled = await page.evaluate(
+      () => document.querySelector('[data-layout-key="shop-hit-streets"]')?.disabled,
+    );
+    assert.notEqual(disabled, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("r15 — loan carve blocked at broke final RAID shop", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await resumeFixture(page, fixtures.shopRound9RaidBroke);
+    await page.evaluate(() => window.__GB_E2E__.skipIntroOverlays?.());
+    await page.waitForTimeout(400);
+    const carved = await page.evaluate(() => {
+      const hits = [...document.querySelectorAll('[data-layout-key="shop-buy-button"]')];
+      const btn = hits[0];
+      if (!btn || btn.disabled) return false;
+      btn.click();
+      return window.__GB_E2E__.getState().phase === "CARVING";
+    });
+    assert.equal(carved, false, "expected no loan carve at final RAID shop when broke");
+  } finally {
+    await browser.close();
+  }
+});
+
+test("r15 — harness seed 483059 greedy tablet_portrait no R9 shop softlock", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({
+          pacing: "fast",
+          reducedMotion: true,
+          tutorialCompleted: true,
+          skippedAlleyIntro: true,
+        }),
+      );
+    });
+    const { runOneGame } = require("./sim/run.cjs");
+    page.__baseUrl = baseUrl;
+    const result = await runOneGame(page, {
+      rid: 61,
+      seed: 483059,
+      strategy: "greedy",
+      viewport: { name: "768x1024", width: 768, height: 1024 },
+      maxSteps: 12_000,
+      stuckThreshold: 28,
+      maxFallbacks: 20,
+    });
+    assert.notEqual(result.outcome, "INCOMPLETE:SHOP", JSON.stringify(result));
+    assert.equal(result.reason, undefined, JSON.stringify(result));
+    assert.ok(result.outcome === "BUST" || result.outcome === "WIN", JSON.stringify(result));
+  } finally {
+    await browser.close();
+  }
+});
+
+test("r15 — harness seed 831495 greedy phone_landscape no R9 shop softlock", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({
+          pacing: "fast",
+          reducedMotion: true,
+          tutorialCompleted: true,
+          skippedAlleyIntro: true,
+        }),
+      );
+    });
+    const { runOneGame } = require("./sim/run.cjs");
+    page.__baseUrl = baseUrl;
+    const result = await runOneGame(page, {
+      rid: 105,
+      seed: 831495,
+      strategy: "greedy",
+      viewport: { name: "844x390", width: 844, height: 390 },
+      maxSteps: 12_000,
+      stuckThreshold: 28,
+      maxFallbacks: 20,
+    });
+    assert.notEqual(result.outcome, "INCOMPLETE:SHOP", JSON.stringify(result));
+    assert.equal(result.reason, undefined, JSON.stringify(result));
+    assert.ok(result.outcome === "BUST" || result.outcome === "WIN", JSON.stringify(result));
+  } finally {
+    await browser.close();
+  }
+});
+
 test("r13 — harness seed 546411 greedy desktop_fhd reaches terminal without shop softlock", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
