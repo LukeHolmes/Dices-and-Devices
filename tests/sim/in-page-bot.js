@@ -54,6 +54,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   const isCatRow = (b) => /\bLV\d/i.test(b.t) || (b.lk && b.lk.startsWith("payout-row-") && b.pr && b.pr !== "more");
 
+  const bossIntroUp = () =>
+    !!(document.querySelector('[data-layout-key="boss-intro-overlay"]')
+      || window.__GB_E2E__?.isBossIntroVisible?.());
+
   const chooseInner = (btn, ph, st) => {
     const U = btn.map((b) => b.t.toUpperCase());
     const find = (...prefs) => {
@@ -80,12 +84,20 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     let k = find("CONTINUE", "NEXT", "GOT IT", "DISMISS");
     if (k != null && ph !== "SHOP") return k;
     if (ph === "PLAY") {
+      if (bossIntroUp()) {
+        const cont = find("CONTINUE");
+        if (cont != null) return cont;
+        const tap = findContains("TAP TO CONTINUE");
+        if (tap != null) return tap;
+      }
       const cats = btn.map((b, i) => (isCatRow(b) ? i : -1)).filter((x) => x >= 0);
       const roll = find("ROLL");
+      const hasRolled = window.__GB_E2E__?.getHasRolled?.();
       if (cats.length) {
         const vals = cats.map((i) => [(U[i].includes("BUST") ? -1 : num(btn[i].t) || 0), i]);
         vals.sort((a, b) => b[0] - a[0]);
         const need = Math.max(0, (st.target || 0) - (st.score || 0)) / Math.max(1, st.hands || 1);
+        if (!hasRolled && roll != null) return roll;
         if (strategy === "random") {
           if (rng() < 0.25 && roll != null) return roll;
           return cats[Math.floor(rng() * cats.length)];
@@ -306,6 +318,20 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       stuck = 0;
       await wait(80);
       continue;
+    }
+
+    if (ph === "PLAY") {
+      window.__GB_E2E__?.skipIntroOverlays?.();
+      window.__GB_E2E__?.dismissBossIntro?.();
+      if (st?.roundClearVisible) {
+        window.__GB_E2E__?.finishRoundClear?.();
+        await wait(80);
+        continue;
+      }
+      if (bossIntroUp()) {
+        await wait(60);
+        continue;
+      }
     }
 
     let pick = choose(btn, ph, st || {});
