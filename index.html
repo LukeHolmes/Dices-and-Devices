@@ -3324,6 +3324,9 @@ const GutterbonesRules = (() => {
         if (normalized.selectedShopPathId != null && typeof normalized.selectedShopPathId !== 'string') {
             normalized.selectedShopPathId = null;
         }
+        if (normalized.committedPathId != null && typeof normalized.committedPathId !== 'string') {
+            normalized.committedPathId = null;
+        }
         const finiteInt = (n, fallback = 0) => {
             const v = Number(n);
             if (!Number.isFinite(v)) return fallback;
@@ -7664,20 +7667,39 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const NextThreatBadge = ({ phase, activeBoss, paths = [], selectedShopPathId }) => {
+    const NextThreatBadge = ({ phase, activeBoss, paths = [], selectedShopPathId, committedPathId, currentRouteEffect }) => {
         const [tipOpen, setTipOpen] = useState(false);
-        useEffect(() => setTipOpen(false), [phase, activeBoss?.id, selectedShopPathId]);
+        useEffect(() => setTipOpen(false), [phase, activeBoss?.id, selectedShopPathId, committedPathId]);
         const resolveThreatPath = () => {
             if (!paths?.length) return null;
             return paths.find((p) => p.id === selectedShopPathId) || paths[0];
         };
+        const resolvePlayThreatBoss = () => {
+            if (!paths?.length) return null;
+            if (committedPathId) {
+                const committed = paths.find((p) => p.id === committedPathId);
+                if (committed?.boss) return committed.boss;
+            }
+            const routeName = currentRouteEffect?.name;
+            if (routeName) {
+                const byName = paths.find((p) => p.name === routeName);
+                if (byName?.boss) return byName.boss;
+            }
+            const withBoss = paths.find((p) => p.boss);
+            return withBoss?.boss || null;
+        };
         let show = false;
         let headline = 'NEXT THREAT';
         let boss = null;
-        if (phase === 'PLAY' && activeBoss) {
-            show = true;
-            headline = 'BOSS NOW';
-            boss = activeBoss;
+        if (phase === 'PLAY') {
+            if (activeBoss) {
+                show = true;
+                headline = 'BOSS NOW';
+                boss = activeBoss;
+            } else {
+                boss = resolvePlayThreatBoss();
+                if (boss) show = true;
+            }
         } else if (phase === 'SHOP') {
             const path = resolveThreatPath();
             if (path?.boss) {
@@ -7687,7 +7709,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }
         if (!show || !boss) return null;
         const shopInline = phase === 'SHOP';
-        const playAnchor = !shopInline ? { top: 'max(0.35rem, env(safe-area-inset-top, 0px))', right: 'max(0.35rem, env(safe-area-inset-right, 0px))' } : undefined;
+        const playAnchor = !shopInline ? {
+            bottom: 'max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 5.25rem))',
+            right: 'max(0.35rem, env(safe-area-inset-right, 0px))',
+            left: 'auto',
+            top: 'auto'
+        } : undefined;
         return (
             <div
                 data-layout-key="next-threat-badge"
@@ -8214,6 +8241,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [shopRoutesPerPage, setShopRoutesPerPage] = useState(3);
         const [paths, setPaths] = useState([]);
         const [selectedShopPathId, setSelectedShopPathId] = useState(null);
+        const [committedPathId, setCommittedPathId] = useState(null);
         const shopAdvanceLockRef = useRef(false);
         const overlayInputGuardUntilRef = useRef(0);
         const consumeNextClickRef = useRef(false);
@@ -9714,6 +9742,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             runModifierIds,
             runExclusiveShopIds,
             selectedShopPathId,
+            committedPathId,
             dailyRunActive,
             modifierFlags: modifierFlagsRef.current,
             tutorialActive: false
@@ -9785,6 +9814,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setRunStats(saved.runStats || { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
             setRunModifierIds(saved.runModifierIds || []);
             setSelectedShopPathId(typeof saved.selectedShopPathId === 'string' ? saved.selectedShopPathId : null);
+            setCommittedPathId(typeof saved.committedPathId === 'string' ? saved.committedPathId : null);
             setDailyRunActive(!!saved.dailyRunActive);
             modifierFlagsRef.current = saved.modifierFlags || { sacrificeUsed: false, shopInterestRound: null };
             runRandomRef.current = saved.dailyRunActive && GutterbonesReplay
@@ -11784,6 +11814,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
                 }
             }
+            setCommittedPathId(path.id);
             setSelectedShopPathId(null);
             setRunClosed(false);
             dismissScoreOverlays();
@@ -12424,6 +12455,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const btn = document.querySelector('[data-layout-key="next-threat-badge-trigger"]');
                     if (btn) btn.click();
                     return !!document.querySelector('[data-layout-key="next-threat-badge-detail"]');
+                },
+                measureNextThreatOverlap: () => {
+                    const badge = document.querySelector('[data-layout-key="next-threat-badge"]');
+                    if (!badge) return { ok: true, skipped: true };
+                    const br = badge.getBoundingClientRect();
+                    const overlap = (el, key) => {
+                        if (!el) return null;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2 || r.height < 2) return null;
+                        const hit = !(br.bottom <= r.top + 2 || r.bottom <= br.top + 2 || br.right <= r.left + 2 || r.right <= br.left + 2);
+                        return hit ? key : null;
+                    };
+                    const hud = document.querySelector('[data-layout-key="play-hud"]');
+                    const roll = document.querySelector('[data-tutorial="roll-btn"]');
+                    const score = document.querySelector('[data-tutorial="score-btn"]');
+                    const alley = document.querySelector('[data-layout-key="play-alley"]');
+                    const dice = alley?.querySelector('[data-tutorial="dice-lane"]') || alley;
+                    const bad = [overlap(hud, 'play-hud'), overlap(roll, 'roll-btn'), overlap(score, 'score-btn'), overlap(dice, 'dice-lane')].filter(Boolean);
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const inView = br.top >= -1 && br.left >= -1 && br.bottom <= vh + 1 && br.right <= vw + 1;
+                    return { ok: inView && bad.length === 0, inView, overlaps: bad, rect: { top: br.top, bottom: br.bottom, left: br.left, right: br.right } };
                 },
                 selectShopPathById: (pathId) => {
                     const path = paths.find((p) => p.id === pathId);
@@ -13407,7 +13460,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
                 {phase === 'PLAY' && (
                     <>
-                    <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} />
+                    <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
                     <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
@@ -13890,7 +13943,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
                                 <div className="shop-routes-unscaled shrink-0">
                                 <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-70">ROUND {displayJobRound('SHOP', round)}</div></div>
-                                <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} />
+                                <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>

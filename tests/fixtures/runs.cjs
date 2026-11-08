@@ -422,6 +422,37 @@ const playRaidRound9 = () =>
     activeBossId: "THE_RAID",
   });
 
+const playNonBossNextThreat = () =>
+  run({
+    phase: "PLAY",
+    round: 4,
+    gold: 45,
+    target: 120,
+    score: 18,
+    hands: 3,
+    hasRolled: true,
+    dice: dice([3, 3, 4, 5, 2]),
+    paths: [
+      {
+        id: "LOCAL",
+        name: "BACK ALLEY",
+        desc: "Quiet.",
+        mod: 1,
+        color: "border-gray-600 text-gray-400",
+      },
+      {
+        id: "SHARK_TURF",
+        name: "SHARK TURF",
+        desc: "Debt job.",
+        mod: 1.2,
+        color: "border-red-600 text-red-600",
+        bossId: "LOAN_SHARK",
+      },
+    ],
+    committedPathId: "SHARK_TURF",
+    currentRouteEffect: { name: "SHARK TURF", effects: [] },
+  });
+
 const shopAfterCarve = () => {
   const busy = shopBusy();
   return run({
@@ -473,6 +504,7 @@ module.exports = {
   shopRound9RaidBroke,
   shopRound9RaidRefreshable,
   playRaidRound9,
+  playNonBossNextThreat,
   shopAfterCarve,
   playStashOpen844,
 };

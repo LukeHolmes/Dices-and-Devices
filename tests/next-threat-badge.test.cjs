@@ -10,6 +10,7 @@ const { assertViewport, isNonBlockingViewport, phonePortraitBlockingEnabled } = 
 
 const ROOT = path.join(__dirname, "..");
 const ARTIFACT_DIR = "/opt/cursor/artifacts";
+const STORE_DIR = "/cursor/stores/self/next-threat";
 const RUN_KEY = "gutterbones1977:run:v1";
 const BLOCKING = [
   { name: "768x1024", width: 768, height: 1024 },
@@ -24,6 +25,7 @@ let chromium;
 
 before(async () => {
   fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
+  fs.mkdirSync(STORE_DIR, { recursive: true });
   chromium = require("playwright").chromium;
   server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
@@ -121,16 +123,17 @@ test("play — boss round shows BOSS NOW", async () => {
   }
 });
 
-test("play — non-boss round hides badge", async () => {
+test("play — non-boss round shows NEXT THREAT for committed route", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
-    await resume(page, fixtures.run);
+    await resume(page, fixtures.playNonBossNextThreat);
     const badge = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.readNextThreatBadge());
-    assert.equal(badge.visible, false);
-    assert.equal(badge.bossName, "");
+    assert.equal(badge.visible, true);
+    assert.match(badge.headline, /NEXT THREAT/i);
+    assert.match(badge.bossName, /LOAN SHARK/i);
   } finally {
     await browser.close();
   }
@@ -168,6 +171,25 @@ for (const vp of BLOCKING) {
       await browser.close();
     }
   });
+
+  test(`play non-boss — badge visible, no HUD/dice/button overlap @ ${vp.name}`, async () => {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+      await resume(page, fixtures.playNonBossNextThreat);
+      const badge = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.readNextThreatBadge());
+      assertViewport(vp.name, badge.visible, JSON.stringify(badge), { suite: "next-threat-badge", label: "play-non-boss" });
+      if (isNonBlockingViewport(vp.name) && !phonePortraitBlockingEnabled()) return;
+      assert.ok(badge.visible, JSON.stringify(badge));
+      assert.match(badge.headline, /NEXT THREAT/i);
+      const overlap = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureNextThreatOverlap());
+      assert.ok(overlap.ok, JSON.stringify(overlap));
+    } finally {
+      await browser.close();
+    }
+  });
 }
 
 test("detail popover — close stays in viewport @ 1366x768", async () => {
@@ -198,8 +220,8 @@ test("screenshots — PLAY and SHOP badges", async () => {
   const page = await browser.newPage();
   try {
     for (const [label, vp, builder] of [
-      ["play", { width: 1366, height: 768 }, fixtures.playRaidRound9],
-      ["play", { width: 768, height: 1024 }, fixtures.playRaidRound9],
+      ["play", { width: 1366, height: 768 }, fixtures.playNonBossNextThreat],
+      ["play", { width: 768, height: 1024 }, fixtures.playNonBossNextThreat],
       ["shop", { width: 1366, height: 768 }, fixtures.shopRound9RaidRefreshable],
       ["shop", { width: 768, height: 1024 }, fixtures.shopRound9RaidRefreshable],
     ]) {
@@ -208,8 +230,13 @@ test("screenshots — PLAY and SHOP badges", async () => {
       await resume(page, builder);
       await page.waitForTimeout(300);
       const vpName = `${vp.width}x${vp.height}`;
+      const fileName = `next-threat-${label}-${vpName}.png`;
       await page.screenshot({
-        path: path.join(ARTIFACT_DIR, `next-threat-${label}-${vpName}.png`),
+        path: path.join(ARTIFACT_DIR, fileName),
+        fullPage: false,
+      });
+      await page.screenshot({
+        path: path.join(STORE_DIR, fileName),
         fullPage: false,
       });
     }

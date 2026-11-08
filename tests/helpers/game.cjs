@@ -111,6 +111,8 @@ function createGame(snapshot = {}, options = {}) {
     soldItems: [],
     runExclusiveShopIds: [],
     shopItems: [],
+    committedPathId: null,
+    selectedShopPathId: null,
     ...snapshot,
     Math: Object.assign(Object.create(Math), {
       random: options.random || (() => 0.99),
