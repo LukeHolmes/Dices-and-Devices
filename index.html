@@ -12745,6 +12745,94 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                     return { ok: bad.length === 0, bad: bad.slice(0, 12), count: bad.length, minPx, vw };
                 },
+                auditScreenLayout: ({
+                    minBodyPx = 11,
+                    minTapFontPx = 12,
+                    minTapPx = 32,
+                    fullTapAudit = true
+                } = {}) => {
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+                    const docW = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+                    const scrollOk = docH <= vh + 1 && docW <= vw + 1;
+                    const root = document.getElementById('root-gutterbones');
+                    if (!root) return { ok: false, reason: 'no root', scrollOk };
+                    const typoBad = [];
+                    root.querySelectorAll('*').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
+                        const fs = parseFloat(style.fontSize);
+                        if (!Number.isFinite(fs) || fs >= minBodyPx - 0.25) return;
+                        const text = (el.textContent || '').trim();
+                        if (!text || text.length > 120) return;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2 || r.height < 2) return;
+                        if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) return;
+                        typoBad.push({
+                            tag: el.tagName,
+                            key: el.getAttribute('data-layout-key'),
+                            fontSize: fs,
+                            sample: text.slice(0, 40)
+                        });
+                    });
+                    const interBad = [];
+                    const tapSelector = 'button, [role="button"], a[href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])';
+                    root.querySelectorAll(tapSelector).forEach((el) => {
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
+                        if (el.disabled) return;
+                        const r = el.getBoundingClientRect();
+                        if (r.width <= 0 || r.height <= 0) return;
+                        if (r.bottom <= 0 || r.top >= vh || r.right <= 0 || r.left >= vw) return;
+                        const inView = r.top >= -0.5 && r.left >= -0.5 && r.bottom <= vh + 0.5 && r.right <= vw + 0.5;
+                        if (!inView) {
+                            interBad.push({
+                                kind: 'oob',
+                                key: el.getAttribute('data-layout-key'),
+                                tag: el.tagName,
+                                top: r.top,
+                                bottom: r.bottom,
+                                vh,
+                                vw
+                            });
+                            return;
+                        }
+                        const fs = parseFloat(style.fontSize);
+                        const isTappableLabel = el.classList.contains('gb-tappable-label')
+                            || el.hasAttribute('data-layout-key')
+                            || el.tagName === 'BUTTON'
+                            || el.getAttribute('role') === 'button';
+                        if (isTappableLabel && fs > 0 && fs < minTapFontPx - 0.25) {
+                            interBad.push({
+                                kind: 'tapFont',
+                                key: el.getAttribute('data-layout-key'),
+                                fontSize: fs,
+                                label: (el.textContent || '').trim().slice(0, 24)
+                            });
+                        }
+                        if (fullTapAudit && (r.width < minTapPx - 0.5 || r.height < minTapPx - 0.5)) {
+                            interBad.push({
+                                kind: 'tapSize',
+                                key: el.getAttribute('data-layout-key'),
+                                w: r.width,
+                                h: r.height,
+                                label: (el.textContent || '').trim().slice(0, 24)
+                            });
+                        }
+                    });
+                    return {
+                        ok: scrollOk && typoBad.length === 0 && interBad.length === 0,
+                        scrollOk,
+                        docH,
+                        docW,
+                        vh,
+                        vw,
+                        typography: { ok: typoBad.length === 0, bad: typoBad.slice(0, 12), count: typoBad.length },
+                        interactives: { ok: interBad.length === 0, bad: interBad.slice(0, 12), count: interBad.length }
+                    };
+                },
                 stashProgramLayoutKeys: () => ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER']
             };
         }, [phase, round, target, score, gold, hands, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
