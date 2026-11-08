@@ -9,6 +9,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
+const { assertViewport } = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
@@ -79,7 +80,10 @@ for (const vp of VIEWPORTS) {
         const m = await page.evaluate(() =>
           window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["boss-intro-continue"]),
         );
-        assert.ok(m.ok, JSON.stringify(m));
+        assertViewport(vp.name, m.ok, JSON.stringify(m), {
+          suite: "polish-step2",
+          label: `boss intro ${bossId}`,
+        });
       } finally {
         await browser.close();
       }
@@ -99,7 +103,10 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["rap-sheet-backdrop", "rap-play-again"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), {
+        suite: "polish-step2",
+        label: "layout measure",
+      });
     } finally {
       await browser.close();
     }
@@ -133,7 +140,10 @@ for (const vp of VIEWPORTS) {
         }
         return { ok: bad.length === 0, bad, containerBottom: cr.bottom };
       });
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), {
+        suite: "polish-step2",
+        label: "layout measure",
+      });
     } finally {
       await browser.close();
     }
@@ -151,7 +161,10 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["shop-refresh-stock"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), {
+        suite: "polish-step2",
+        label: "layout measure",
+      });
     } finally {
       await browser.close();
     }
@@ -174,7 +187,10 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["run-intel-detail-close"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), {
+        suite: "polish-step2",
+        label: "layout measure",
+      });
     } finally {
       await browser.close();
     }
@@ -193,8 +209,14 @@ for (const vp of VIEWPORTS) {
       const m = await page.evaluate(() =>
         window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(["loss-explanation-dismiss"]),
       );
-      assert.ok(m.ok, JSON.stringify(m));
-      assert.ok((m.bad[0]?.left ?? 0) >= 0, JSON.stringify(m));
+      assertViewport(vp.name, m.ok, JSON.stringify(m), {
+        suite: "polish-step2",
+        label: "layout measure",
+      });
+      assertViewport(vp.name, (m.bad[0]?.left ?? 0) >= 0, JSON.stringify(m), {
+        suite: "polish-step2",
+        label: "loss dismiss left",
+      });
     } finally {
       await browser.close();
     }

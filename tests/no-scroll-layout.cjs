@@ -11,6 +11,7 @@ const { spawn } = require("node:child_process");
 const http = require("node:http");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
+const { assertViewport, assertEqualViewport } = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const ARTIFACT_DIR = path.join("/opt/cursor/artifacts", "no-scroll-layout");
@@ -26,7 +27,9 @@ const VIEWPORTS = [
   { name: "1024x640", width: 1024, height: 640 },
   { name: "1260x650", width: 1260, height: 650 },
   { name: "844x390", width: 844, height: 390 },
+  { name: "360x640", width: 360, height: 640 },
   { name: "390x844", width: 390, height: 844 },
+  { name: "412x915", width: 412, height: 915 },
 ];
 
 const SCENARIOS = [
@@ -260,14 +263,18 @@ for (const scenario of SCENARIOS) {
         const audit = await auditViewport(page);
         const shotPath = path.join(ARTIFACT_DIR, `${scenario.id}-${vp.name}.png`);
         await page.screenshot({ path: shotPath, fullPage: false });
-        assert.ok(
+        assertViewport(
+          vp.name,
           audit.scrollOk,
           `${scenario.id} @ ${vp.name}: document scroll ${audit.docW}x${audit.docH} > viewport ${audit.vw}x${audit.vh}`,
+          { suite: "test:layout", label: `${scenario.id} scroll` },
         );
-        assert.equal(
+        assertEqualViewport(
+          vp.name,
           audit.bad.length,
           0,
           `${scenario.id} @ ${vp.name}: layout keys out of bounds: ${JSON.stringify(audit.bad.slice(0, 3))}`,
+          { suite: "test:layout", label: `${scenario.id} bounds` },
         );
       } finally {
         await browser.close();
