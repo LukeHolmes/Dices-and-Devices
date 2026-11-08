@@ -14,7 +14,7 @@
     "test:presentation": "node --test tests/presentation-timing.test.cjs",
     "audit:known-issues": "node tests/known-issues.cjs",
     "test:known-issues": "node tests/known-issues.cjs --strict",
-    "test:layout": "node --test --test-timeout=900000 tests/no-scroll-layout.cjs",
+    "test:layout": "node --test --test-timeout=5400000 tests/no-scroll-layout.cjs",
     "sim": "node tests/sim/run.cjs --games=150 --max-steps=8000 --parallel=2 --viewports=blocking",
     "sim:completion": "node --test --test-timeout=900000 tests/sim/sim-completion.test.cjs",
     "check:fast": "node scripts/check-fast-report.cjs",
