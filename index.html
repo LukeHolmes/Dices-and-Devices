@@ -1198,11 +1198,32 @@
     #root-gutterbones .next-threat-badge--play {
         pointer-events: auto;
         contain: layout;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    #root-gutterbones [data-layout-key="play-next-threat-slot"] {
+        position: relative;
+        z-index: 4;
     }
     #root-gutterbones .next-threat-badge--shop {
         pointer-events: auto;
         max-width: 100%;
         box-sizing: border-box;
+        position: relative;
+        z-index: 12;
+    }
+    #root-gutterbones [data-layout-key="shop-next-threat-slot"] {
+        position: relative;
+        z-index: 12;
+        flex-shrink: 0;
+    }
+    #root-gutterbones[data-phase="SHOP"] .toast-stack-root {
+        top: max(4.25rem, env(safe-area-inset-top, 0px));
+        left: max(0.35rem, env(safe-area-inset-left, 0px));
+        right: auto;
+        transform: none;
+        width: min(46vw, 22rem);
     }
     #root-gutterbones [data-layout-key="next-threat-badge-detail"] {
         max-height: min(40vh, 8.5rem);
@@ -6786,7 +6807,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const ToastStack = ({ items = [] }) => (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[550] pointer-events-none w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
+        <div className="toast-stack-root absolute top-14 left-1/2 -translate-x-1/2 z-[550] pointer-events-none w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
             {items.map((item, idx) => (
                 <div
                     key={item.id}
@@ -7709,17 +7730,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }
         if (!show || !boss) return null;
         const shopInline = phase === 'SHOP';
-        const playAnchor = !shopInline ? {
-            bottom: 'max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 5.25rem))',
-            right: 'max(0.35rem, env(safe-area-inset-right, 0px))',
-            left: 'auto',
-            top: 'auto'
-        } : undefined;
         return (
             <div
                 data-layout-key="next-threat-badge"
-                className={`next-threat-badge font-mono ${shopInline ? 'next-threat-badge--shop' : 'next-threat-badge--play fixed z-[76] w-[min(11.5rem,calc(100vw - 0.75rem))]'}`}
-                style={playAnchor}
+                className={`next-threat-badge font-mono ${shopInline ? 'next-threat-badge--shop' : 'next-threat-badge--play'}`}
             >
                 <button
                     type="button"
@@ -12461,22 +12475,59 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (!badge) return { ok: true, skipped: true };
                     const br = badge.getBoundingClientRect();
                     const overlap = (el, key) => {
-                        if (!el) return null;
+                        if (!el || badge.contains(el) || el.contains(badge)) return null;
                         const r = el.getBoundingClientRect();
                         if (r.width < 2 || r.height < 2) return null;
                         const hit = !(br.bottom <= r.top + 2 || r.bottom <= br.top + 2 || br.right <= r.left + 2 || r.right <= br.left + 2);
                         return hit ? key : null;
                     };
-                    const hud = document.querySelector('[data-layout-key="play-hud"]');
                     const roll = document.querySelector('[data-tutorial="roll-btn"]');
                     const score = document.querySelector('[data-tutorial="score-btn"]');
                     const alley = document.querySelector('[data-layout-key="play-alley"]');
-                    const dice = alley?.querySelector('[data-tutorial="dice-lane"]') || alley;
-                    const bad = [overlap(hud, 'play-hud'), overlap(roll, 'roll-btn'), overlap(score, 'score-btn'), overlap(dice, 'dice-lane')].filter(Boolean);
+                    const diceLane = alley;
+                    const stash = document.querySelector('[data-layout-key="play-stash"]');
+                    const stashPanels = stash
+                        ? Array.from(stash.querySelectorAll('[data-layout-key="run-intel-summary"], .stash-hardware-panel, .stash-programs-pinned, .build-indicator-root, [data-layout-key="play-stash"] > button'))
+                        : [];
+                    const payoutDock = document.querySelector('[data-tutorial="payout-sheet"]');
+                    const bad = [
+                        overlap(roll, 'roll-btn'),
+                        overlap(score, 'score-btn'),
+                        overlap(diceLane, 'dice-lane'),
+                        overlap(payoutDock, 'payout-sheet'),
+                        ...stashPanels.map((el, idx) => overlap(el, `play-stash-panel-${idx}`)),
+                    ].filter(Boolean);
                     const vh = window.innerHeight;
                     const vw = window.innerWidth;
                     const inView = br.top >= -1 && br.left >= -1 && br.bottom <= vh + 1 && br.right <= vw + 1;
                     return { ok: inView && bad.length === 0, inView, overlaps: bad, rect: { top: br.top, bottom: br.bottom, left: br.left, right: br.right } };
+                },
+                measureNextThreatBadgeHitTest: () => {
+                    const badge = document.querySelector('[data-layout-key="next-threat-badge"]');
+                    if (!badge) return { ok: false, reason: 'missing' };
+                    const r = badge.getBoundingClientRect();
+                    if (r.width < 2 || r.height < 2) return { ok: false, reason: 'zero-size' };
+                    const x = r.left + r.width / 2;
+                    const y = r.top + r.height / 2;
+                    const prev = badge.style.pointerEvents;
+                    badge.style.pointerEvents = 'auto';
+                    const topEl = document.elementFromPoint(x, y);
+                    badge.style.pointerEvents = prev || '';
+                    const ok = !!(topEl && (badge === topEl || badge.contains(topEl)));
+                    return { ok, topTag: topEl?.tagName, topKey: topEl?.closest('[data-layout-key]')?.getAttribute('data-layout-key') || null };
+                },
+                dismissToastStack: () => setToastStack([]),
+                measurePlayAlleyDiceClip: () => {
+                    const alley = document.querySelector('[data-layout-key="play-alley"]');
+                    if (!alley) return { ok: true, skipped: true };
+                    const ar = alley.getBoundingClientRect();
+                    const wraps = alley.querySelectorAll('.bone-slot-wrap');
+                    const clips = [];
+                    wraps.forEach((el, idx) => {
+                        const r = el.getBoundingClientRect();
+                        if (r.right > ar.right - 1 || r.left < ar.left + 1) clips.push(idx);
+                    });
+                    return { ok: clips.length === 0, clips, alley: { left: ar.left, right: ar.right } };
                 },
                 selectShopPathById: (pathId) => {
                     const path = paths.find((p) => p.id === pathId);
@@ -13460,7 +13511,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
                 {phase === 'PLAY' && (
                     <>
-                    <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
                     <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
@@ -13509,6 +13559,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </div>
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
                                 </div>
+                            </div>
+                            <div data-layout-key="play-next-threat-slot" className="px-2 md:px-3 pt-1.5 pb-0 border-t border-gray-800/80 shrink-0">
+                                <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
                             </div>
                             <div data-layout-key="side-wager-row" className="px-3 md:px-4 pb-2 border-t border-gray-800 pt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                                 <div className="font-mono text-[9px] text-gray-400 min-w-0 truncate">
@@ -13942,8 +13995,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
                                 <div className="shop-routes-unscaled shrink-0">
-                                <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-70">ROUND {displayJobRound('SHOP', round)}</div></div>
-                                <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
+                                <div className="mb-3 border-b border-red-900 pb-2">
+                                    <div className="flex justify-between items-center gap-2 mb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl shrink-0">NEXT JOB</h3><div className="font-mono text-sm opacity-70 shrink-0">ROUND {displayJobRound('SHOP', round)}</div></div>
+                                    <div data-layout-key="shop-next-threat-slot">
+                                        <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
+                                    </div>
+                                </div>
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>

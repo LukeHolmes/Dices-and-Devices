@@ -68,10 +68,13 @@ test("shop — RAID route shows THE RAID as next threat", async () => {
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
     await resume(page, fixtures.shopRound9RaidRefreshable);
+    await page.waitForTimeout(400);
     const badge = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.readNextThreatBadge());
     assert.equal(badge.visible, true);
     assert.match(badge.headline, /NEXT THREAT/i);
     assert.match(badge.bossName, /THE RAID/i);
+    const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureNextThreatBadgeHitTest());
+    assert.ok(hit.ok, JSON.stringify(hit));
   } finally {
     await browser.close();
   }
@@ -147,10 +150,13 @@ for (const vp of BLOCKING) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
       await resume(page, fixtures.shopRound9RaidRefreshable);
+      await page.waitForTimeout(400);
       const badge = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.readNextThreatBadge());
       assertViewport(vp.name, badge.visible, JSON.stringify(badge), { suite: "next-threat-badge", label: "shop" });
       if (isNonBlockingViewport(vp.name) && !phonePortraitBlockingEnabled()) return;
       assert.ok(badge.visible, JSON.stringify(badge));
+      const hit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureNextThreatBadgeHitTest());
+      assert.ok(hit.ok, JSON.stringify(hit));
     } finally {
       await browser.close();
     }
@@ -230,7 +236,7 @@ test("screenshots — PLAY and SHOP badges", async () => {
       await resume(page, builder);
       await page.waitForTimeout(300);
       const vpName = `${vp.width}x${vp.height}`;
-      const fileName = `next-threat-${label}-${vpName}.png`;
+      const fileName = `next-threat-${label}-${vpName}-v2.png`;
       await page.screenshot({
         path: path.join(ARTIFACT_DIR, fileName),
         fullPage: false,
