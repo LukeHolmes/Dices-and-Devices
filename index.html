@@ -1961,6 +1961,25 @@
         z-index: 25;
         pointer-events: auto !important;
     }
+    @media (min-width: 768px) {
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            position: relative;
+            z-index: 12;
+            pointer-events: auto;
+        }
+        #root-gutterbones .play-stash-column .stash-programs-pinned {
+            position: relative;
+            z-index: 2;
+        }
+    }
+    @media (min-width: 768px) and (min-height: 821px) {
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            flex: 0 0 auto;
+            min-height: 6.5rem;
+            max-height: none;
+            overflow: visible;
+        }
+    }
     #root-gutterbones [data-layout-key="play-stash"] {
         pointer-events: none;
     }
