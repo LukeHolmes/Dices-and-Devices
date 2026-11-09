@@ -2973,9 +2973,9 @@ const GutterbonesRules = (() => {
                 state.gDelta += 2;
                 pushSynergyEvent(state, { chainId: 'wire_feed', kind: 'cash', label: 'Wire feed (extra gold)', impact: '+$2' });
                 applied.add('wire_feed');
+                if (chainLinkingOn(tuning)) state.chainWireFeedDirty = true;
             }
         }
-        void tuning;
     };
 
     const resolveSynergyHardwareChains = (resolved, destroyed, state, hwMeta) => {
@@ -3026,10 +3026,16 @@ const GutterbonesRules = (() => {
                 if (isBloodOrDestructive(resolved[i])) cascadeChips += 5;
             });
             cascadeChips = Math.min(25, cascadeChips);
-            if (cascadeChips > 0) {
+            let dirtyBonus = 0;
+            if (chainLinkingOn(tuning) && state.chainWireFeedDirty) dirtyBonus = 5;
+            if (cascadeChips > 0 || dirtyBonus > 0) {
+                cascadeChips += dirtyBonus;
                 state.chips += cascadeChips;
                 pushSynergyEvent(state, { chainId: 'crowbar_cascade', kind: 'chips', label: 'Crowbar cascade', impact: `+${cascadeChips}` });
                 applied.add('crowbar_cascade');
+                if (dirtyBonus > 0 && state.synergyApplied.has('wire_feed')) {
+                    noteChainLink(state, 'wire_feed', 'crowbar_cascade');
+                }
             }
         }
     };

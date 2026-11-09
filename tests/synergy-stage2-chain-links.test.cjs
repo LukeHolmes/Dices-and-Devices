@@ -85,3 +85,35 @@ test("link: ghost echo enables bookends value-only match", () => {
   assert.ok(on.synergyEvents.some((e) => e.id === "bookends_retrigger"));
   assert.ok(on.chainLinks.some((l) => l.from === "ghost_echo" && l.to === "bookends_retrigger"));
 });
+
+test("link: wire feed dirty hand → crowbar cascade +5 chips", () => {
+  const g = createGame(snapshot());
+  const d = dice([6, 0, 0, 0, 6]);
+  d[0] = bone(6, 0, { faceId: "BLOOD_6", type: "blood" });
+  d[1] = bone(0, 1, { faceId: "GOLD_FACE", type: "modifier" });
+  d[2] = bone(0, 2, { faceId: "WIREBAG_FACE", type: "parasite" });
+  d[3] = bone(0, 3, { faceId: "SHIV_FACE", type: "destructive" });
+  d[4] = bone(6, 4, { faceId: "BLOOD_6", type: "blood" });
+  const rOff = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, {
+      synergyTuning: { enabled: true, chainLinkingEnabled: false, maxChainPasses: 8 },
+      inventory: [{ id: "CROWBAR" }],
+    }),
+  );
+  const rOn = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "CROWBAR" }] }),
+  );
+  const offCascade = rOff.synergyEvents.find((e) => e.id === "crowbar_cascade");
+  const onCascade = rOn.synergyEvents.find((e) => e.id === "crowbar_cascade");
+  assert.ok(rOn.synergyEvents.some((e) => e.id === "wire_feed"));
+  assert.ok(onCascade);
+  assert.ok(offCascade);
+  const offChips = parseInt(String(offCascade.impact).replace(/[^\d]/g, ""), 10);
+  const onChips = parseInt(String(onCascade.impact).replace(/[^\d]/g, ""), 10);
+  assert.equal(onChips, offChips + 5);
+  assert.ok(rOn.chainLinks.some((l) => l.from === "wire_feed" && l.to === "crowbar_cascade"));
+});
