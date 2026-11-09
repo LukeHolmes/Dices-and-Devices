@@ -117,3 +117,35 @@ test("link: wire feed dirty hand → crowbar cascade +5 chips", () => {
   assert.equal(onChips, offChips + 5);
   assert.ok(rOn.chainLinks.some((l) => l.from === "wire_feed" && l.to === "crowbar_cascade"));
 });
+
+test("chain linking ON reaches depth 2–4 and terminates", () => {
+  const g = createGame(snapshot());
+  const d = dice([1, 0, 0, 4, 5]);
+  d[1] = bone(2, 1, { faceId: "MULT_FACE", type: "modifier" });
+  d[2] = bone(0, 2, { faceId: "FUSE_FACE", type: "modifier" });
+  d[3] = bone(6, 3, { faceId: "BLOOD_6", type: "blood" });
+  d[4] = bone(0, 4, { faceId: "SHIV_FACE", type: "destructive" });
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "ENGINE" }] }),
+  );
+  assert.ok(r.chainDepth >= 2 && r.chainDepth <= 4, `chainDepth=${r.chainDepth}`);
+  assert.ok(r.synergyEvents.length >= 2);
+  const uniqueChains = new Set(r.synergyEvents.map((e) => e.id));
+  assert.ok(uniqueChains.size >= 2);
+});
+
+test("chain linking OFF preserves synergy-chains blood ripple total", () => {
+  const g = createGame(snapshot());
+  const d = dice([6, 0, 2, 3, 4]);
+  d[0] = bone(6, 0, { faceId: "BLOOD_6", type: "blood" });
+  d[1] = bone(0, 1, { faceId: "SHIV_FACE", type: "destructive" });
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { synergyTuning: { enabled: true, chainLinkingEnabled: false, maxChainPasses: 8 } }),
+  );
+  assert.equal(r.total, 173);
+  assert.equal(r.chainLinks.length, 0);
+});
