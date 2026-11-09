@@ -2762,6 +2762,8 @@ const GutterbonesRules = (() => {
         chainLinkMarkers: []
     });
 
+    const chainLinkingOn = (tuning) => Boolean(tuning?.chainLinkingEnabled);
+
     const recordChainLinkMarker = (state, tuning, { chainId, chainIndex, kind }) => {
         if (!tuning?.chainLinkingEnabled) return;
         if (!Array.isArray(state.chainLinkMarkers)) state.chainLinkMarkers = [];
@@ -2772,6 +2774,18 @@ const GutterbonesRules = (() => {
             linkedFrom: null,
             linkedTo: null
         });
+    };
+
+    const noteChainLink = (state, fromChainId, toChainId) => {
+        const tuning = state.synergyTuningRef || {};
+        if (!chainLinkingOn(tuning)) return;
+        if (!Array.isArray(state.chainLinks)) state.chainLinks = [];
+        state.chainLinks.push({ from: fromChainId, to: toChainId });
+        if (!Array.isArray(state.chainLinkMarkers)) return;
+        const fromMarker = [...state.chainLinkMarkers].reverse().find((m) => m.chainId === fromChainId);
+        const toMarker = [...state.chainLinkMarkers].reverse().find((m) => m.chainId === toChainId);
+        if (fromMarker) fromMarker.linkedTo = toChainId;
+        if (toMarker) toMarker.linkedFrom = fromChainId;
     };
 
     const BLUEPRINT_IDS = Object.freeze(['MULT_ENGINE_START', 'BLOOD_DEBT_START', 'FLOW_SAVE_ONCE']);
@@ -2880,6 +2894,13 @@ const GutterbonesRules = (() => {
                 state.mult += rippleMult;
                 pushSynergyEvent(state, { chainId: 'blood_ripple', kind: 'mult', label: 'Blood ripple', impact: `+${rippleMult}x` });
                 applied.add('blood_ripple');
+                if (chainLinkingOn(tuning)) {
+                    if (!state.chainChargedSlots) state.chainChargedSlots = new Set();
+                    resolved.forEach((d, i) => {
+                        if (destroyed.has(i) || d.faceId !== 'BLOOD_6') return;
+                        state.chainChargedSlots.add(i);
+                    });
+                }
             }
         }
         if (!applied.has('ghost_echo')) {
@@ -2895,23 +2916,48 @@ const GutterbonesRules = (() => {
                 state.mult += 1;
                 pushSynergyEvent(state, { chainId: 'ghost_echo', kind: 'mult', label: 'Ghost echo', impact: '+1x' });
                 applied.add('ghost_echo');
+                if (chainLinkingOn(tuning)) state.chainGhostEchoFired = true;
             }
         }
         if (!applied.has('fuse_spark')) {
             let fuseChips = 0;
+            let fuseUsedChargeLink = false;
             for (let i = 0; i < 5; i++) {
                 if (destroyed.has(i) || resolved[i].faceId !== 'FUSE_FACE') continue;
+                let sparkedThisFuse = false;
+                let chargeNeighbor = false;
                 const neighborMult = neighborIndices(i).some((j) => {
                     if (destroyed.has(j)) return false;
+                    if (chainLinkingOn(tuning) && state.chainChargedSlots?.has(j)) {
+                        chargeNeighbor = true;
+                        sparkedThisFuse = true;
+                        return true;
+                    }
                     const n = resolved[j];
-                    return n.faceId === 'MULT_FACE' || n.type === 'modifier';
+                    const qualifies = n.faceId === 'MULT_FACE' || n.type === 'modifier';
+                    if (qualifies) sparkedThisFuse = true;
+                    return qualifies;
                 });
-                if (neighborMult) fuseChips += 10;
+                if (neighborMult) {
+                    fuseChips += 10;
+                    if (chainLinkingOn(tuning) && sparkedThisFuse) {
+                        if (!state.chainSparkedSlots) state.chainSparkedSlots = new Set();
+                        state.chainSparkedSlots.add(i);
+                        neighborIndices(i).forEach((j) => {
+                            if (destroyed.has(j)) return;
+                            if (state.chainChargedSlots?.has(j) || resolved[j].faceId === 'MULT_FACE' || resolved[j].type === 'modifier') {
+                                state.chainSparkedSlots.add(j);
+                            }
+                        });
+                    }
+                    if (chargeNeighbor && applied.has('blood_ripple')) fuseUsedChargeLink = true;
+                }
             }
             if (fuseChips > 0) {
                 state.chips += fuseChips;
                 pushSynergyEvent(state, { chainId: 'fuse_spark', kind: 'chips', label: 'Fuse spark', impact: `+${fuseChips}` });
                 applied.add('fuse_spark');
+                if (fuseUsedChargeLink) noteChainLink(state, 'blood_ripple', 'fuse_spark');
             }
         }
         if (!applied.has('wire_feed')) {
@@ -2927,12 +2973,13 @@ const GutterbonesRules = (() => {
                 state.gDelta += 2;
                 pushSynergyEvent(state, { chainId: 'wire_feed', kind: 'cash', label: 'Wire feed (extra gold)', impact: '+$2' });
                 applied.add('wire_feed');
+                if (chainLinkingOn(tuning)) state.chainWireFeedDirty = true;
             }
         }
-        void tuning;
     };
 
     const resolveSynergyHardwareChains = (resolved, destroyed, state, hwMeta) => {
+        const tuning = state.synergyTuningRef || {};
         const applied = state.synergyApplied;
         if (!applied.has('build_tag_link') && (hwMeta.multEngineTagCount || 0) >= 2) {
             state.mult += 1;
@@ -2942,12 +2989,24 @@ const GutterbonesRules = (() => {
         const engineLinkReady = hwMeta.engineBonus >= 2
             || (hwMeta.engineBonus >= 1 && (hwMeta.multEngineTagCount || 0) >= 2);
         if (!applied.has('engine_link') && engineLinkReady) {
-            const modCount = resolved.filter((d, i) => !destroyed.has(i) && d.type === 'modifier').length;
-            const linkMult = Math.min(4, modCount);
+            const modSlots = new Set();
+            resolved.forEach((d, i) => {
+                if (!destroyed.has(i) && d.type === 'modifier') modSlots.add(i);
+            });
+            if (chainLinkingOn(tuning) && state.chainSparkedSlots?.size) {
+                state.chainSparkedSlots.forEach((i) => {
+                    if (destroyed.has(i)) return;
+                    modSlots.add(i);
+                });
+            }
+            const linkMult = Math.min(4, modSlots.size);
             if (linkMult > 0) {
                 state.mult += linkMult;
                 pushSynergyEvent(state, { chainId: 'engine_link', kind: 'mult', label: 'Engine link', impact: `+${linkMult}x` });
                 applied.add('engine_link');
+                if (chainLinkingOn(tuning) && state.chainSparkedSlots?.size && state.synergyApplied.has('fuse_spark')) {
+                    noteChainLink(state, 'fuse_spark', 'engine_link');
+                }
             }
         }
         if (!applied.has('bookends_retrigger') && hwMeta.bookendsMatched) {
@@ -2957,6 +3016,9 @@ const GutterbonesRules = (() => {
             });
             pushSynergyEvent(state, { chainId: 'bookends_retrigger', kind: 'retrigger', label: 'Bookends retrigger', impact: 'faces 1 & 5' });
             applied.add('bookends_retrigger');
+            if (chainLinkingOn(tuning) && hwMeta.bookendsGhostValueLink && state.chainGhostEchoFired) {
+                noteChainLink(state, 'ghost_echo', 'bookends_retrigger');
+            }
         }
         if (!applied.has('crowbar_cascade') && hwMeta.crowbarMultAdded > 0) {
             let cascadeChips = 0;
@@ -2964,10 +3026,16 @@ const GutterbonesRules = (() => {
                 if (isBloodOrDestructive(resolved[i])) cascadeChips += 5;
             });
             cascadeChips = Math.min(25, cascadeChips);
-            if (cascadeChips > 0) {
+            let dirtyBonus = 0;
+            if (chainLinkingOn(tuning) && state.chainWireFeedDirty) dirtyBonus = 5;
+            if (cascadeChips > 0 || dirtyBonus > 0) {
+                cascadeChips += dirtyBonus;
                 state.chips += cascadeChips;
                 pushSynergyEvent(state, { chainId: 'crowbar_cascade', kind: 'chips', label: 'Crowbar cascade', impact: `+${cascadeChips}` });
                 applied.add('crowbar_cascade');
+                if (dirtyBonus > 0 && state.synergyApplied.has('wire_feed')) {
+                    noteChainLink(state, 'wire_feed', 'crowbar_cascade');
+                }
             }
         }
     };
@@ -3008,7 +3076,14 @@ const GutterbonesRules = (() => {
         const MULT_ENGINE_HARDWARE = new Set([
             'ENGINE', 'CROWBAR', 'FUSE_BOX', 'HOT_STREAK_COIL', 'CENTERPIECE', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'COPY_LAST'
         ]);
-        const meta = { engineBonus: 0, crowbarMultAdded: 0, bookendsMatched: false, multEngineTagCount: 0 };
+        const meta = {
+            engineBonus: 0,
+            crowbarMultAdded: 0,
+            bookendsMatched: false,
+            bookendsGhostValueLink: false,
+            multEngineTagCount: 0
+        };
+        const hwTuning = state.synergyTuningRef || {};
         meta.multEngineTagCount = inventory.filter((item) => MULT_ENGINE_HARDWARE.has(item.id)).length;
         if (hardwareDisabled) {
             if (inventory.length > 0) {
@@ -3035,12 +3110,19 @@ const GutterbonesRules = (() => {
                     pushStep('modifier', 'HARDWARE: CENTERPIECE', `Slot 3 copy${centerChips ? ` +${centerChips} chips` : ''}${centerMult ? ` +${centerMult}x` : ''}`, `${centerChips ? `+${centerChips}` : ''}${centerMult ? `${centerChips ? ' / ' : ''}+${centerMult}x` : ''}` || 'TRIGGERED');
                 }
             }
-            if (item.id === 'BOOKENDS' && resolved[0].value === resolved[4].value && resolved[0].faceId === resolved[4].faceId && !destroyed.has(0) && !destroyed.has(4)) {
-                state.chips += 30;
-                triggers.push({ name: 'BOOKENDS', value: '+30' });
-                state.hardwareTriggerCount += 1;
-                meta.bookendsMatched = true;
-                pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
+            if (item.id === 'BOOKENDS' && !destroyed.has(0) && !destroyed.has(4)) {
+                const valueMatch = resolved[0].value === resolved[4].value;
+                const faceMatch = valueMatch && resolved[0].faceId === resolved[4].faceId;
+                const ghostValueLink = chainLinkingOn(hwTuning) && state.chainGhostEchoFired;
+                const matched = valueMatch && (faceMatch || ghostValueLink);
+                if (matched) {
+                    state.chips += 30;
+                    triggers.push({ name: 'BOOKENDS', value: '+30' });
+                    state.hardwareTriggerCount += 1;
+                    meta.bookendsMatched = true;
+                    meta.bookendsGhostValueLink = valueMatch && !faceMatch && ghostValueLink;
+                    pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
+                }
             }
             if (item.id === 'ENGINE') {
                 const anchor = resolved[0].value;
@@ -3238,7 +3320,9 @@ const GutterbonesRules = (() => {
         const scoreState = {
             chips, mult, gDelta, triggers, pushStep, hardwareTriggerCount,
             synergyEvents: [], synergyApplied: new Set(), retriggerCount: 0, synergyPass: 0,
-            chainLinks: [], chainLinkMarkers: [], synergyTuningRef: synergyTuningHand
+            chainLinks: [], chainLinkMarkers: [], synergyTuningRef: synergyTuningHand,
+            chainChargedSlots: new Set(), chainSparkedSlots: new Set(),
+            chainGhostEchoFired: false, chainWireFeedDirty: false
         };
         const faceApi = { pushStep, triggers };
         applyAllFaceModifiers(resolved, destroyed, scoreState, faceApi);
