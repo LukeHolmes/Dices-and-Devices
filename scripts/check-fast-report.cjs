@@ -21,8 +21,12 @@ function run(cmd, args, envExtra = {}) {
 
 clearPhoneWarnings();
 
-console.log("=== check:fast — npm test ===\n");
-let code = run("npm", ["test"]);
+console.log("=== check:fast — test:fast (Node rules/unit, no Playwright playtest suite) ===\n");
+let code = run("npm", ["run", "test:fast"]);
+if (code !== 0) process.exit(code);
+
+console.log("\n=== check:fast — repro-r13 softlocks ===\n");
+code = run("node", ["--test", "--test-timeout=420000", "tests/repro-r13-softlocks.test.cjs"]);
 if (code !== 0) process.exit(code);
 
 const fullLayout = process.env.FULL_LAYOUT_REPLAY === "1";

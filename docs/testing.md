@@ -73,11 +73,12 @@ Before publishing, check:
 
 **Every push and PR — `Baseline checks` / job `baseline` (required):**
 
-- `npm run check:fast` — Node unit/regression/e2e tests plus polish step5 smoke and stuck-game smoke on **blocking** tablet/desktop viewports. Does **not** run the full browser layout replay (`test:layout`).
+- `npm run check:fast` — `test:fast` (Node rules/regression, no Playwright playtest bundle), `repro-r13`, polish step5 smoke and stuck-game smoke on **blocking** viewports. Does **not** run `test:playwright`, `test:layout`, or the old monolithic `npm test` browser marathon.
+- **Local full unit + browser regression:** `npm test` (= `test:fast` + `test:playwright` + `repro-r13`).
 - `npm run sim:50` — headless seeded bot sim, 50 games, blocking viewports only.
 - `npm run audit:known-issues` — defect audit alias.
 
-**Full browser layout replay (sharded):** job `full-replay` in the same workflow, only when the PR is **ready for review** (not draft) or carries the **`full-replay`** label. Four parallel shards, one blocking viewport each: `768x1024`, `1024x768`, `1366x768`, `1920x1080`. Phone portrait/landscape sizes stay **warning-only** unless `PHONE_PORTRAIT_BLOCKING=1`.
+**Full browser layout replay (sharded):** job `full-replay` in the same workflow, only when the PR is **ready for review** (not draft) or carries the **`full-replay`** label. Four parallel shards, one blocking viewport each: `768x1024`, `1024x768`, `1366x768`, `1920x1080`. Phone portrait/landscape sizes stay **warning-only** unless `PHONE_PORTRAIT_BLOCKING=1`. **`npm run test:playwright`** (Playwright playtests and polish steps 1–4) is not in baseline; run locally via `npm test` or add to release gating as needed.
 
 **Nightly on `main`:** `Nightly full replay` — same four layout shards plus `npm run sim:nightly` (500 games). A summary job fails only when a shard fails (no notifications).
 
