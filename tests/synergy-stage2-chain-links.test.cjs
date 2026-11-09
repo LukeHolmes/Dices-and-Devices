@@ -37,3 +37,28 @@ test("link: blood ripple charges slots → fuse spark via charged neighbor", () 
   assert.ok(on.synergyEvents.some((e) => e.id === "fuse_spark"));
   assert.ok(on.chainLinks.some((l) => l.from === "blood_ripple" && l.to === "fuse_spark"));
 });
+
+test("link: sparked slots count toward engine link (fuse_spark → engine_link)", () => {
+  const g = createGame(snapshot());
+  const d = dice([1, 4, 0, 6, 6]);
+  d[2] = bone(0, 2, { faceId: "FUSE_FACE", type: "modifier" });
+  d[3] = bone(6, 3, { faceId: "BLOOD_6", type: "blood" });
+  d[4] = bone(6, 4, { faceId: "BLOOD_6", type: "blood" });
+  const rOff = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, {
+      synergyTuning: { enabled: true, chainLinkingEnabled: false, maxChainPasses: 8 },
+      inventory: [{ id: "ENGINE" }],
+    }),
+  );
+  const rOn = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "ENGINE" }] }),
+  );
+  assert.ok(rOn.synergyEvents.some((e) => e.id === "fuse_spark"));
+  assert.ok(rOn.synergyEvents.some((e) => e.id === "engine_link"));
+  assert.ok(rOn.chainLinks.some((l) => l.from === "fuse_spark" && l.to === "engine_link"));
+  assert.ok(rOn.total >= rOff.total);
+});

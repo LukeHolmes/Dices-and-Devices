@@ -2978,6 +2978,7 @@ const GutterbonesRules = (() => {
     };
 
     const resolveSynergyHardwareChains = (resolved, destroyed, state, hwMeta) => {
+        const tuning = state.synergyTuningRef || {};
         const applied = state.synergyApplied;
         if (!applied.has('build_tag_link') && (hwMeta.multEngineTagCount || 0) >= 2) {
             state.mult += 1;
@@ -2987,12 +2988,24 @@ const GutterbonesRules = (() => {
         const engineLinkReady = hwMeta.engineBonus >= 2
             || (hwMeta.engineBonus >= 1 && (hwMeta.multEngineTagCount || 0) >= 2);
         if (!applied.has('engine_link') && engineLinkReady) {
-            const modCount = resolved.filter((d, i) => !destroyed.has(i) && d.type === 'modifier').length;
-            const linkMult = Math.min(4, modCount);
+            const modSlots = new Set();
+            resolved.forEach((d, i) => {
+                if (!destroyed.has(i) && d.type === 'modifier') modSlots.add(i);
+            });
+            if (chainLinkingOn(tuning) && state.chainSparkedSlots?.size) {
+                state.chainSparkedSlots.forEach((i) => {
+                    if (destroyed.has(i)) return;
+                    modSlots.add(i);
+                });
+            }
+            const linkMult = Math.min(4, modSlots.size);
             if (linkMult > 0) {
                 state.mult += linkMult;
                 pushSynergyEvent(state, { chainId: 'engine_link', kind: 'mult', label: 'Engine link', impact: `+${linkMult}x` });
                 applied.add('engine_link');
+                if (chainLinkingOn(tuning) && state.chainSparkedSlots?.size && state.synergyApplied.has('fuse_spark')) {
+                    noteChainLink(state, 'fuse_spark', 'engine_link');
+                }
             }
         }
         if (!applied.has('bookends_retrigger') && hwMeta.bookendsMatched) {
