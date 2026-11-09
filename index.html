@@ -1195,6 +1195,45 @@
         max-width: 100%;
         box-sizing: border-box;
     }
+    #root-gutterbones .next-threat-badge--play {
+        pointer-events: auto;
+        contain: layout;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    #root-gutterbones [data-layout-key="play-next-threat-slot"],
+    #root-gutterbones [data-layout-key="play-next-threat-slot-md"] {
+        position: relative;
+        z-index: 4;
+    }
+    #root-gutterbones .play-stash-column .next-threat-badge--play button {
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+    }
+    #root-gutterbones .next-threat-badge--shop {
+        pointer-events: auto;
+        max-width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 12;
+    }
+    #root-gutterbones [data-layout-key="shop-next-threat-slot"] {
+        position: relative;
+        z-index: 12;
+        flex-shrink: 0;
+    }
+    #root-gutterbones[data-phase="SHOP"] .toast-stack-root {
+        top: max(4.25rem, env(safe-area-inset-top, 0px));
+        left: max(0.35rem, env(safe-area-inset-left, 0px));
+        right: auto;
+        transform: none;
+        width: min(46vw, 22rem);
+    }
+    #root-gutterbones [data-layout-key="next-threat-badge-detail"] {
+        max-height: min(40vh, 8.5rem);
+        overflow: hidden;
+    }
     #root-gutterbones .run-intel-summary--inline,
     #root-gutterbones [data-layout-key="run-intel-summary"] {
         width: 100%;
@@ -1921,6 +1960,25 @@
         position: relative;
         z-index: 25;
         pointer-events: auto !important;
+    }
+    @media (min-width: 768px) {
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            position: relative;
+            z-index: 12;
+            pointer-events: auto;
+        }
+        #root-gutterbones .play-stash-column .stash-programs-pinned {
+            position: relative;
+            z-index: 2;
+        }
+    }
+    @media (min-width: 768px) and (min-height: 821px) {
+        #root-gutterbones .play-stash-column .stash-intel-scroll {
+            flex: 0 0 auto;
+            min-height: 6.5rem;
+            max-height: none;
+            overflow: visible;
+        }
     }
     #root-gutterbones [data-layout-key="play-stash"] {
         pointer-events: none;
@@ -3310,6 +3368,9 @@ const GutterbonesRules = (() => {
         }
         if (normalized.selectedShopPathId != null && typeof normalized.selectedShopPathId !== 'string') {
             normalized.selectedShopPathId = null;
+        }
+        if (normalized.committedPathId != null && typeof normalized.committedPathId !== 'string') {
+            normalized.committedPathId = null;
         }
         const finiteInt = (n, fallback = 0) => {
             const v = Number(n);
@@ -6770,7 +6831,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const ToastStack = ({ items = [] }) => (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[550] pointer-events-none w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
+        <div className="toast-stack-root absolute top-14 left-1/2 -translate-x-1/2 z-[550] pointer-events-none w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
             {items.map((item, idx) => (
                 <div
                     key={item.id}
@@ -7651,6 +7712,87 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
+    const NextThreatBadge = ({ phase, activeBoss, paths = [], selectedShopPathId, committedPathId, currentRouteEffect }) => {
+        const [tipOpen, setTipOpen] = useState(false);
+        useEffect(() => setTipOpen(false), [phase, activeBoss?.id, selectedShopPathId, committedPathId]);
+        const resolveThreatPath = () => {
+            if (!paths?.length) return null;
+            return paths.find((p) => p.id === selectedShopPathId) || paths[0];
+        };
+        const resolvePlayThreatBoss = () => {
+            if (!paths?.length) return null;
+            if (committedPathId) {
+                const committed = paths.find((p) => p.id === committedPathId);
+                if (committed?.boss) return committed.boss;
+            }
+            const routeName = currentRouteEffect?.name;
+            if (routeName) {
+                const byName = paths.find((p) => p.name === routeName);
+                if (byName?.boss) return byName.boss;
+            }
+            const withBoss = paths.find((p) => p.boss);
+            return withBoss?.boss || null;
+        };
+        let show = false;
+        let headline = 'NEXT THREAT';
+        let boss = null;
+        if (phase === 'PLAY') {
+            if (activeBoss) {
+                show = true;
+                headline = 'BOSS NOW';
+                boss = activeBoss;
+            } else {
+                boss = resolvePlayThreatBoss();
+                if (boss) show = true;
+            }
+        } else if (phase === 'SHOP') {
+            const path = resolveThreatPath();
+            if (path?.boss) {
+                show = true;
+                boss = path.boss;
+            }
+        }
+        if (!show || !boss) return null;
+        const shopInline = phase === 'SHOP';
+        return (
+            <div
+                data-layout-key="next-threat-badge"
+                className={`next-threat-badge font-mono ${shopInline ? 'next-threat-badge--shop' : 'next-threat-badge--play'}`}
+            >
+                <button
+                    type="button"
+                    data-layout-key="next-threat-badge-trigger"
+                    className="gb-tappable-label w-full text-left border border-red-800/90 bg-red-950/90 rounded-lg px-2 py-1.5 min-h-[32px] shadow-md"
+                    onClick={() => setTipOpen((open) => !open)}
+                    aria-expanded={tipOpen}
+                    aria-label={`${headline}: ${boss.name}. Tap for details.`}
+                >
+                    <div className="text-[length:max(11px,var(--gb-min-font))] tracking-[.14em] text-red-300/95 font-bold">{headline}</div>
+                    <div className={`text-[length:max(12px,var(--gb-min-font))] font-bold truncate ${boss.color || 'text-red-200'}`}>{boss.name}</div>
+                </button>
+                {tipOpen && (
+                    <div
+                        data-layout-key="next-threat-badge-detail"
+                        className="mt-1 border border-gray-700 rounded-lg bg-black/95 p-2 shadow-xl w-full box-border"
+                        role="dialog"
+                        aria-label="Threat briefing"
+                    >
+                        <div className={`text-[length:max(12px,var(--gb-min-font))] font-bold leading-snug ${boss.color || 'text-white'}`}>{boss.name}</div>
+                        <p className="text-[length:max(11px,var(--gb-min-font))] text-gray-200 mt-1 leading-snug line-clamp-3">{boss.desc}</p>
+                        <button
+                            type="button"
+                            data-layout-key="next-threat-badge-close"
+                            className="gb-tappable-label mt-2 w-full min-h-[32px] border border-gray-600 text-gray-200 text-[length:max(12px,var(--gb-min-font))] rounded hover:bg-gray-900"
+                            onClick={() => setTipOpen(false)}
+                        >
+                            CLOSE
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const BuildIndicator = ({ analysis, inline = false }) => {
         const ui = BUILD_UI[analysis.primaryBuild] || BUILD_UI[BUILD_IDS.UNKNOWN];
         const tier = analysis.confidence >= 0.72 ? 'HIGH' : analysis.confidence >= 0.42 ? 'MED' : 'LOW';
@@ -8137,6 +8279,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [shopRoutesPerPage, setShopRoutesPerPage] = useState(3);
         const [paths, setPaths] = useState([]);
         const [selectedShopPathId, setSelectedShopPathId] = useState(null);
+        const [committedPathId, setCommittedPathId] = useState(null);
         const shopAdvanceLockRef = useRef(false);
         const overlayInputGuardUntilRef = useRef(0);
         const consumeNextClickRef = useRef(false);
@@ -9637,6 +9780,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             runModifierIds,
             runExclusiveShopIds,
             selectedShopPathId,
+            committedPathId,
             dailyRunActive,
             modifierFlags: modifierFlagsRef.current,
             tutorialActive: false
@@ -9708,6 +9852,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setRunStats(saved.runStats || { totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
             setRunModifierIds(saved.runModifierIds || []);
             setSelectedShopPathId(typeof saved.selectedShopPathId === 'string' ? saved.selectedShopPathId : null);
+            setCommittedPathId(typeof saved.committedPathId === 'string' ? saved.committedPathId : null);
             setDailyRunActive(!!saved.dailyRunActive);
             modifierFlagsRef.current = saved.modifierFlags || { sacrificeUsed: false, shopInterestRound: null };
             runRandomRef.current = saved.dailyRunActive && GutterbonesReplay
@@ -11707,6 +11852,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
                 }
             }
+            setCommittedPathId(path.id);
             setSelectedShopPathId(null);
             setRunClosed(false);
             dismissScoreOverlays();
@@ -12329,6 +12475,104 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         scrollH: row.scrollHeight,
                         clientH: row.clientHeight
                     };
+                },
+                readNextThreatBadge: () => {
+                    const badges = Array.from(document.querySelectorAll('[data-layout-key="next-threat-badge"]'));
+                    const badge = badges.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        return st.display !== 'none' && st.visibility !== 'hidden' && el.getBoundingClientRect().width > 2;
+                    });
+                    if (!badge) return { visible: false, headline: '', bossName: '' };
+                    const trigger = badge.querySelector('[data-layout-key="next-threat-badge-trigger"]');
+                    const headline = trigger?.querySelector('div')?.textContent?.trim() || '';
+                    const nameEl = trigger?.querySelectorAll('div')[1];
+                    const bossName = nameEl?.textContent?.trim() || '';
+                    const r = badge.getBoundingClientRect();
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const inView = r.width > 0 && r.height > 0 && r.top >= -1 && r.left >= -1 && r.bottom <= vh + 1 && r.right <= vw + 1;
+                    return { visible: inView, headline, bossName, rect: { top: r.top, bottom: r.bottom, left: r.left, right: r.right }, vh, vw };
+                },
+                openNextThreatBadgeDetail: () => {
+                    const btn = document.querySelector('[data-layout-key="next-threat-badge-trigger"]');
+                    if (btn) btn.click();
+                    return !!document.querySelector('[data-layout-key="next-threat-badge-detail"]');
+                },
+                measurePlayStashProgramsInViewport: () => {
+                    const keys = ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER'];
+                    return window.__GB_LAYOUT_AUDIT__.measureLayoutKeysInViewport(keys);
+                },
+                measureNextThreatOverlap: () => {
+                    const badges = Array.from(document.querySelectorAll('[data-layout-key="next-threat-badge"]'));
+                    const badge = badges.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        return st.display !== 'none' && st.visibility !== 'hidden' && el.getBoundingClientRect().width > 2;
+                    }) || badges[0];
+                    if (!badge) return { ok: true, skipped: true };
+                    const br = badge.getBoundingClientRect();
+                    const overlap = (el, key) => {
+                        if (!el || badge.contains(el) || el.contains(badge)) return null;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2 || r.height < 2) return null;
+                        const hit = !(br.bottom <= r.top + 2 || r.bottom <= br.top + 2 || br.right <= r.left + 2 || r.right <= br.left + 2);
+                        return hit ? key : null;
+                    };
+                    const roll = document.querySelector('[data-tutorial="roll-btn"]');
+                    const score = document.querySelector('[data-tutorial="score-btn"]');
+                    const alley = document.querySelector('[data-layout-key="play-alley"]');
+                    const diceLane = alley;
+                    const stash = document.querySelector('[data-layout-key="play-stash"]');
+                    const stashPanels = stash
+                        ? Array.from(stash.querySelectorAll('[data-layout-key="run-intel-summary"], .stash-hardware-panel, .stash-programs-pinned, .build-indicator-root, [data-layout-key="play-stash"] > button'))
+                        : [];
+                    const payoutDock = document.querySelector('[data-tutorial="payout-sheet"]');
+                    const bad = [
+                        overlap(roll, 'roll-btn'),
+                        overlap(score, 'score-btn'),
+                        overlap(diceLane, 'dice-lane'),
+                        overlap(payoutDock, 'payout-sheet'),
+                        ...stashPanels.map((el, idx) => overlap(el, `play-stash-panel-${idx}`)),
+                    ].filter(Boolean);
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const inView = br.top >= -1 && br.left >= -1 && br.bottom <= vh + 1 && br.right <= vw + 1;
+                    return { ok: inView && bad.length === 0, inView, overlaps: bad, rect: { top: br.top, bottom: br.bottom, left: br.left, right: br.right } };
+                },
+                measureNextThreatBadgeHitTest: () => {
+                    const badges = Array.from(document.querySelectorAll('[data-layout-key="next-threat-badge"]'));
+                    const badge = badges.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        return st.display !== 'none' && st.visibility !== 'hidden' && el.getBoundingClientRect().width > 2;
+                    });
+                    if (!badge) return { ok: false, reason: 'missing' };
+                    const r = badge.getBoundingClientRect();
+                    if (r.width < 2 || r.height < 2) return { ok: false, reason: 'zero-size' };
+                    const x = r.left + r.width / 2;
+                    const y = r.top + r.height / 2;
+                    const prev = badge.style.pointerEvents;
+                    badge.style.pointerEvents = 'auto';
+                    const topEl = document.elementFromPoint(x, y);
+                    badge.style.pointerEvents = prev || '';
+                    const ok = !!(topEl && (badge === topEl || badge.contains(topEl)));
+                    return { ok, topTag: topEl?.tagName, topKey: topEl?.closest('[data-layout-key]')?.getAttribute('data-layout-key') || null };
+                },
+                dismissToastStack: () => setToastStack([]),
+                measurePlayAlleyDiceClip: () => {
+                    const alley = document.querySelector('[data-layout-key="play-alley"]');
+                    if (!alley) return { ok: true, skipped: true };
+                    const ar = alley.getBoundingClientRect();
+                    const wraps = alley.querySelectorAll('.bone-slot-wrap');
+                    const clips = [];
+                    wraps.forEach((el, idx) => {
+                        const r = el.getBoundingClientRect();
+                        if (r.right > ar.right - 1 || r.left < ar.left + 1) clips.push(idx);
+                    });
+                    return { ok: clips.length === 0, clips, alley: { left: ar.left, right: ar.right } };
+                },
+                selectShopPathById: (pathId) => {
+                    const path = paths.find((p) => p.id === pathId);
+                    if (path && phase === 'SHOP') selectShopPath(path);
+                    return selectedShopPathId;
                 },
                 dismissScoreOverlays: () => dismissScoreOverlays(true),
                 armPendingRoundFinalizeDemo: () => {
@@ -13306,6 +13550,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 )}
 
                 {phase === 'PLAY' && (
+                    <>
                     <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
@@ -13354,6 +13599,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </div>
                                     <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
                                 </div>
+                            </div>
+                            <div data-layout-key="play-next-threat-slot" className="md:hidden px-2 pt-1 pb-0 border-t border-gray-800/80 shrink-0">
+                                <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
                             </div>
                             <div data-layout-key="side-wager-row" className="px-3 md:px-4 pb-2 border-t border-gray-800 pt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                                 <div className="font-mono text-[9px] text-gray-400 min-w-0 truncate">
@@ -13570,6 +13818,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                             <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-2 min-h-0 min-w-0 overflow-hidden pr-1 md:!flex play-stash-column`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
+                                <div data-layout-key="play-next-threat-slot-md" className="hidden md:block shrink-0 mb-1 w-full max-w-full">
+                                    <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
+                                </div>
                                 <div className="hidden md:flex flex-col gap-2 stash-intel-scroll min-h-0">
                                     <BuildIndicator analysis={buildAnalysis} inline />
                                     <RunIntelSummary
@@ -13661,6 +13912,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         </div>
                     </div>
+                    </>
                 )}
 
                 {phase === 'GAMBLE' && (
@@ -13786,7 +14038,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
                                 <div className="shop-routes-unscaled shrink-0">
-                                <div className="flex justify-between items-center mb-4 border-b border-red-900 pb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl">NEXT JOB</h3><div className="font-mono text-sm opacity-70">ROUND {displayJobRound('SHOP', round)}</div></div>
+                                <div className="mb-3 border-b border-red-900 pb-2">
+                                    <div className="flex justify-between items-center gap-2 mb-2"><h3 data-layout-key="shop-next-job-header" className="shop-next-job-header text-red-400 font-mono text-xl shrink-0">NEXT JOB</h3><div className="font-mono text-sm opacity-70 shrink-0">ROUND {displayJobRound('SHOP', round)}</div></div>
+                                    <div data-layout-key="shop-next-threat-slot">
+                                        <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
+                                    </div>
+                                </div>
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>

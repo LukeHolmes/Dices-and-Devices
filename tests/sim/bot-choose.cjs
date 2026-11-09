@@ -8,9 +8,13 @@ function num(t) {
 function chooseInner(btn, ph, strategy, rng, st, log) {
   const names = btn.map((b) => b.t);
   const U = names.map((n) => n.toUpperCase());
+  const isThreatBadge = (idx) =>
+    btn[idx].lk === "next-threat-badge-trigger" || btn[idx].lk === "next-threat-badge-close";
   const find = (...prefs) => {
     for (const p of prefs) {
       for (let k = 0; k < U.length; k++) {
+        if (isThreatBadge(k)) continue;
+        if (p === "NEXT" && (U[k].includes("THREAT") || U[k].includes("BOSS NOW"))) continue;
         if (U[k].startsWith(p)) return k;
       }
     }
