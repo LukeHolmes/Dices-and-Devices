@@ -69,4 +69,21 @@ Before publishing, check:
 - **Phase 7 build intel:** after several scoring hands with chain depth ≥1, **BUILD INTEL** shows CHAIN AVG / PEAK; shop still biases one slot toward `analyzeBuild().primaryBuild`; rap sheet **RUN ARCHETYPE** tips mention chains when relevant; `tests/synergy-phase7-build.test.cjs`.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 
-CI runs `npm run check` with read-only repository permissions. It neither deploys nor modifies saves. A successful local check is not evidence that remote CI has run.
+## CI tiers (GitHub Actions)
+
+**Every push and PR — `Baseline checks` / job `baseline` (required):**
+
+- `npm run check:fast` — `test:fast` (Node rules/regression, no Playwright playtest bundle), `repro-r13`, polish step5 smoke and stuck-game smoke on **blocking** viewports. Does **not** run `test:playwright`, `test:layout`, or the old monolithic `npm test` browser marathon.
+- **Local full unit + browser regression:** `npm test` (= `test:fast` + `test:playwright` + `repro-r13`).
+- `npm run sim:50` — headless seeded bot sim, 50 games, blocking viewports only.
+- `npm run audit:known-issues` — defect audit alias.
+
+**Full browser layout replay (sharded):** job `full-replay` in the same workflow, only when the PR is **ready for review** (not draft) or carries the **`full-replay`** label. Four parallel shards, one blocking viewport each: `768x1024`, `1024x768`, `1366x768`, `1920x1080`. Phone portrait/landscape sizes stay **warning-only** unless `PHONE_PORTRAIT_BLOCKING=1`. **`npm run test:playwright`** (Playwright playtests and polish steps 1–4) is not in baseline; run locally via `npm test` or add to release gating as needed.
+
+**Nightly on `main`:** `Nightly full replay` — same four layout shards plus `npm run sim:nightly` (500 games). A summary job fails only when a shard fails (no notifications).
+
+**Local full layout:** `npm run test:layout` (all viewports) or `LAYOUT_VIEWPORT=1366x768 npm run test:layout:shard` for one shard.
+
+---
+
+CI runs with read-only repository permissions. It neither deploys nor modifies saves. A successful local check is not evidence that remote CI has run.

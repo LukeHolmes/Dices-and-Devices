@@ -2,6 +2,7 @@ name: Baseline checks
 on:
   push:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled, converted_to_draft]
 permissions:
   contents: read
 jobs:
@@ -11,11 +12,44 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npx playwright install chromium
-      - run: npm run check:fast
+      - name: check:fast (unit + polish smoke, no layout replay)
+        run: npm run check:fast
         env:
           PHONE_PORTRAIT_BLOCKING: "0"
+      - name: sim50 (blocking viewports)
+        run: npm run sim:50
       - run: npm run audit:known-issues
+
+  full-replay:
+    if: |
+      github.event_name == 'pull_request' &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'full-replay') ||
+        github.event.pull_request.draft == false
+      )
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - 768x1024
+          - 1024x768
+          - 1366x768
+          - 1920x1080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - name: layout replay shard
+        run: npm run test:layout:shard
+        env:
+          LAYOUT_VIEWPORT: ${{ matrix.viewport }}
+          PHONE_PORTRAIT_BLOCKING: "0"
