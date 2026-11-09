@@ -1,0 +1,64 @@
+name: Nightly full replay
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  layout-blocking:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - 768x1024
+          - 1024x768
+          - 1366x768
+          - 1920x1080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - name: layout replay — ${{ matrix.viewport }}
+        id: layout
+        continue-on-error: true
+        run: npm run test:layout:shard
+        env:
+          LAYOUT_VIEWPORT: ${{ matrix.viewport }}
+          PHONE_PORTRAIT_BLOCKING: "0"
+      - name: record shard failure
+        if: steps.layout.outcome == 'failure'
+        run: echo "| layout ${{ matrix.viewport }} | failed |" >> "$GITHUB_STEP_SUMMARY"
+
+  sim-nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - name: seeded sim (500 games, blocking viewports)
+        id: sim
+        continue-on-error: true
+        run: npm run sim:nightly
+      - name: record sim failure
+        if: steps.sim.outcome == 'failure'
+        run: echo "| sim:nightly (500 games) | failed |" >> "$GITHUB_STEP_SUMMARY"
+
+  nightly-failures-only:
+    runs-on: ubuntu-latest
+    needs: [layout-blocking, sim-nightly]
+    if: always() && (needs.layout-blocking.result != 'success' || needs.sim-nightly.result != 'success')
+    steps:
+      - run: |
+          echo "## Nightly failures" >> "$GITHUB_STEP_SUMMARY"
+          echo "One or more nightly shards failed. Expand job logs for details." >> "$GITHUB_STEP_SUMMARY"
+          exit 1

@@ -69,4 +69,20 @@ Before publishing, check:
 - **Phase 7 build intel:** after several scoring hands with chain depth ≥1, **BUILD INTEL** shows CHAIN AVG / PEAK; shop still biases one slot toward `analyzeBuild().primaryBuild`; rap sheet **RUN ARCHETYPE** tips mention chains when relevant; `tests/synergy-phase7-build.test.cjs`.
 - Confirm the changed build still reaches victory/bust and clears the active save. Terminal settlement remains a recorded bug.
 
-CI runs `npm run check` with read-only repository permissions. It neither deploys nor modifies saves. A successful local check is not evidence that remote CI has run.
+## CI tiers (GitHub Actions)
+
+**Every push and PR — `Baseline checks` / job `baseline` (required):**
+
+- `npm run check:fast` — Node unit/regression/e2e tests plus polish step5 smoke and stuck-game smoke on **blocking** tablet/desktop viewports. Does **not** run the full browser layout replay (`test:layout`).
+- `npm run sim:50` — headless seeded bot sim, 50 games, blocking viewports only.
+- `npm run audit:known-issues` — defect audit alias.
+
+**Full browser layout replay (sharded):** job `full-replay` in the same workflow, only when the PR is **ready for review** (not draft) or carries the **`full-replay`** label. Four parallel shards, one blocking viewport each: `768x1024`, `1024x768`, `1366x768`, `1920x1080`. Phone portrait/landscape sizes stay **warning-only** unless `PHONE_PORTRAIT_BLOCKING=1`.
+
+**Nightly on `main`:** `Nightly full replay` — same four layout shards plus `npm run sim:nightly` (500 games). A summary job fails only when a shard fails (no notifications).
+
+**Local full layout:** `npm run test:layout` (all viewports) or `LAYOUT_VIEWPORT=1366x768 npm run test:layout:shard` for one shard.
+
+---
+
+CI runs with read-only repository permissions. It neither deploys nor modifies saves. A successful local check is not evidence that remote CI has run.

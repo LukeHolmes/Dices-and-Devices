@@ -11,7 +11,11 @@ const { spawn } = require("node:child_process");
 const http = require("node:http");
 const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
-const { assertViewport, assertEqualViewport } = require("./helpers/phone-portrait.cjs");
+const {
+  assertViewport,
+  assertEqualViewport,
+  BLOCKING_CHECK_FAST_NAMES,
+} = require("./helpers/phone-portrait.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const ARTIFACT_DIR = path.join("/opt/cursor/artifacts", "no-scroll-layout");
@@ -20,6 +24,7 @@ const RUN_KEY = "gutterbones1977:run:v1";
 const VIEWPORTS = [
   { name: "1280x800", width: 1280, height: 800 },
   { name: "1280x690", width: 1280, height: 690 },
+  { name: "768x1024", width: 768, height: 1024 },
   { name: "1366x768", width: 1366, height: 768 },
   { name: "1440x900", width: 1440, height: 900 },
   { name: "1920x1080", width: 1920, height: 1080 },
@@ -31,6 +36,21 @@ const VIEWPORTS = [
   { name: "390x844", width: 390, height: 844 },
   { name: "412x915", width: 412, height: 915 },
 ];
+
+function activeLayoutViewports() {
+  const only = process.env.LAYOUT_VIEWPORT;
+  if (only) {
+    const picked = VIEWPORTS.filter((vp) => vp.name === only);
+    if (!picked.length) {
+      throw new Error(`LAYOUT_VIEWPORT unknown: ${only}`);
+    }
+    return picked;
+  }
+  if (process.env.LAYOUT_BLOCKING_ONLY === "1") {
+    return VIEWPORTS.filter((vp) => BLOCKING_CHECK_FAST_NAMES.includes(vp.name));
+  }
+  return VIEWPORTS;
+}
 
 const SCENARIOS = [
   { id: "title_screen", label: "Title screen", resume: null, action: null },
@@ -206,8 +226,10 @@ async function auditViewport(page) {
   });
 }
 
+const layoutViewports = activeLayoutViewports();
+
 for (const scenario of SCENARIOS) {
-  for (const vp of VIEWPORTS) {
+  for (const vp of layoutViewports) {
     if (scenario.id === "play_score_overlay" && vp.height < 500) continue;
     test(`no scroll — ${scenario.id} @ ${vp.name}`, async () => {
       const browser = await chromium.launch({ headless: true });
@@ -283,7 +305,7 @@ for (const scenario of SCENARIOS) {
   }
 }
 
-test("rap sheet — label and value share row baseline", async () => {
+if (!process.env.LAYOUT_VIEWPORT) test("rap sheet — label and value share row baseline", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {

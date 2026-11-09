@@ -21,11 +21,18 @@ function run(cmd, args, envExtra = {}) {
 
 clearPhoneWarnings();
 
-console.log("=== check:fast (blocking) — npm test + test:layout ===\n");
+console.log("=== check:fast — npm test ===\n");
 let code = run("npm", ["test"]);
 if (code !== 0) process.exit(code);
-code = run("npm", ["run", "test:layout"]);
-if (code !== 0) process.exit(code);
+
+const fullLayout = process.env.FULL_LAYOUT_REPLAY === "1";
+if (fullLayout) {
+  console.log("\n=== check:fast (blocking) — test:layout (FULL_LAYOUT_REPLAY=1) ===\n");
+  code = run("npm", ["run", "test:layout"]);
+  if (code !== 0) process.exit(code);
+} else {
+  console.log("\n=== check:fast — skipping browser layout replay (use FULL_LAYOUT_REPLAY=1 or CI full-replay job) ===\n");
+}
 
 console.log("\n=== check:fast — polish step5 layout (blocking + phone warnings) ===\n");
 code = run("node", ["--test", "--test-timeout=900000", "tests/polish-step5-layout.test.cjs"], {
