@@ -2754,7 +2754,25 @@ const GutterbonesRules = (() => {
         return { resolved, destroyed };
     };
 
-    const emptySynergyResult = () => ({ synergyEvents: [], chainDepth: 0, retriggerCount: 0 });
+    const emptySynergyResult = () => ({
+        synergyEvents: [],
+        chainDepth: 0,
+        retriggerCount: 0,
+        chainLinks: [],
+        chainLinkMarkers: []
+    });
+
+    const recordChainLinkMarker = (state, tuning, { chainId, chainIndex, kind }) => {
+        if (!tuning?.chainLinkingEnabled) return;
+        if (!Array.isArray(state.chainLinkMarkers)) state.chainLinkMarkers = [];
+        state.chainLinkMarkers.push({
+            chainId,
+            chainIndex,
+            kind,
+            linkedFrom: null,
+            linkedTo: null
+        });
+    };
 
     const BLUEPRINT_IDS = Object.freeze(['MULT_ENGINE_START', 'BLOOD_DEBT_START', 'FLOW_SAVE_ONCE']);
 
@@ -2829,7 +2847,18 @@ const GutterbonesRules = (() => {
 
     const pushSynergyEvent = (state, { chainId, kind, label, impact }) => {
         const chainIndex = state.synergyPass;
-        state.synergyEvents.push({ id: chainId, kind, source: { chainId }, label, impact, chainIndex });
+        const chainPass = chainIndex + 1;
+        const tuning = state.synergyTuningRef || {};
+        state.synergyEvents.push({
+            id: chainId,
+            kind,
+            source: { chainId },
+            label,
+            impact,
+            chainIndex,
+            chainPass
+        });
+        recordChainLinkMarker(state, tuning, { chainId, chainIndex, kind });
         state.triggers.push({ name: chainId.replace(/_/g, ' '), value: String(impact) });
         state.pushStep('modifier', `CHAIN: ${label}`, impact, impact);
         if (kind === 'retrigger') state.retriggerCount += 1;
@@ -2945,16 +2974,28 @@ const GutterbonesRules = (() => {
 
     const runSynergyPasses = (resolved, destroyed, state, tuning, hwMeta, blueprintIds = []) => {
         const maxPasses = Math.max(1, tuning.maxChainPasses || 8);
-        for (state.synergyPass = 0; state.synergyPass < maxPasses; state.synergyPass += 1) {
+        state.synergyTuningRef = tuning;
+        if (typeof state.synergyPass !== 'number' || state.synergyPass < 0) state.synergyPass = 0;
+        if (!Array.isArray(state.chainLinks)) state.chainLinks = [];
+        let passesRun = 0;
+        while (passesRun < maxPasses) {
             const before = state.synergyEvents.length;
             resolveSynergyFaceChains(resolved, destroyed, state, tuning, blueprintIds);
             if (hwMeta) resolveSynergyHardwareChains(resolved, destroyed, state, hwMeta);
             if (state.synergyEvents.length === before) break;
+            passesRun += 1;
+            state.synergyPass += 1;
         }
         const chainDepth = state.synergyEvents.length
             ? Math.max(...state.synergyEvents.map(e => e.chainIndex)) + 1
             : 0;
-        return { chainDepth, retriggerCount: state.retriggerCount, synergyEvents: state.synergyEvents };
+        return {
+            chainDepth,
+            retriggerCount: state.retriggerCount,
+            synergyEvents: state.synergyEvents,
+            chainLinks: state.chainLinks || [],
+            chainLinkMarkers: state.chainLinkMarkers || []
+        };
     };
 
     const applyHardware = (resolved, destroyed, catId, standardVals, inventory, hardwareDisabled, activeBoss, state, handContext = {}) => {
@@ -3196,7 +3237,8 @@ const GutterbonesRules = (() => {
         }
         const scoreState = {
             chips, mult, gDelta, triggers, pushStep, hardwareTriggerCount,
-            synergyEvents: [], synergyApplied: new Set(), retriggerCount: 0, synergyPass: 0
+            synergyEvents: [], synergyApplied: new Set(), retriggerCount: 0, synergyPass: 0,
+            chainLinks: [], chainLinkMarkers: [], synergyTuningRef: synergyTuningHand
         };
         const faceApi = { pushStep, triggers };
         applyAllFaceModifiers(resolved, destroyed, scoreState, faceApi);
@@ -3269,6 +3311,8 @@ const GutterbonesRules = (() => {
             synergyEvents: synergyResult.synergyEvents,
             chainDepth: synergyResult.chainDepth,
             retriggerCount: synergyResult.retriggerCount,
+            chainLinks: synergyResult.chainLinks || [],
+            chainLinkMarkers: synergyResult.chainLinkMarkers || [],
             categoryMarkEarned,
             heatSpikeApplied,
             blueprintMultEngineTriggered
@@ -5249,6 +5293,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     /** Compounding synergy chains (Balatro-style). See docs/plans/compounding-synergies-phased-implementation.md */
     const SYNERGY_TUNING = {
         enabled: true,
+        chainLinkingEnabled: false,
         maxChainPasses: 8,
         juiceStepMs: 150,
         overlayBaseMs: 2600,
