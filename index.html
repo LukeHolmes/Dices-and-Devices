@@ -2764,6 +2764,28 @@ const GutterbonesRules = (() => {
 
     const chainLinkingOn = (tuning) => Boolean(tuning?.chainLinkingEnabled);
 
+    const synergyChainMultCap = (tuning) => {
+        if (tuning?.maxChainBonusMultPerHand == null || Number.isNaN(Number(tuning.maxChainBonusMultPerHand))) {
+            return null;
+        }
+        return Math.max(0, Number(tuning.maxChainBonusMultPerHand));
+    };
+
+    const applySynergyChainMultBonus = (state, tuning, delta) => {
+        const add = Math.max(0, Number(delta) || 0);
+        if (add <= 0) return 0;
+        const cap = synergyChainMultCap(tuning);
+        if (cap == null) {
+            state.mult += add;
+            return add;
+        }
+        const used = Math.max(0, Number(state.chainMultBonusUsed) || 0);
+        const allowed = Math.min(add, Math.max(0, cap - used));
+        state.chainMultBonusUsed = used + allowed;
+        state.mult += allowed;
+        return allowed;
+    };
+
     const recordChainLinkMarker = (state, tuning, { chainId, chainIndex, kind }) => {
         if (!tuning?.chainLinkingEnabled) return;
         if (!Array.isArray(state.chainLinkMarkers)) state.chainLinkMarkers = [];
@@ -2891,8 +2913,9 @@ const GutterbonesRules = (() => {
             });
             rippleMult = Math.min(bloodRippleCap(blueprintIds), rippleMult);
             if (rippleMult > 0) {
-                state.mult += rippleMult;
-                pushSynergyEvent(state, { chainId: 'blood_ripple', kind: 'mult', label: 'Blood ripple', impact: `+${rippleMult}x` });
+                const appliedMult = applySynergyChainMultBonus(state, tuning, rippleMult);
+                if (appliedMult > 0) {
+                pushSynergyEvent(state, { chainId: 'blood_ripple', kind: 'mult', label: 'Blood ripple', impact: `+${appliedMult}x` });
                 applied.add('blood_ripple');
                 if (chainLinkingOn(tuning)) {
                     if (!state.chainChargedSlots) state.chainChargedSlots = new Set();
@@ -2900,6 +2923,7 @@ const GutterbonesRules = (() => {
                         if (destroyed.has(i) || d.faceId !== 'BLOOD_6') return;
                         state.chainChargedSlots.add(i);
                     });
+                }
                 }
             }
         }
@@ -2913,10 +2937,12 @@ const GutterbonesRules = (() => {
                 if (hasEchoNeighbor) { ghostEcho = true; break; }
             }
             if (ghostEcho) {
-                state.mult += 1;
-                pushSynergyEvent(state, { chainId: 'ghost_echo', kind: 'mult', label: 'Ghost echo', impact: '+1x' });
+                const appliedMult = applySynergyChainMultBonus(state, tuning, 1);
+                if (appliedMult > 0) {
+                pushSynergyEvent(state, { chainId: 'ghost_echo', kind: 'mult', label: 'Ghost echo', impact: `+${appliedMult}x` });
                 applied.add('ghost_echo');
                 if (chainLinkingOn(tuning)) state.chainGhostEchoFired = true;
+                }
             }
         }
         if (!applied.has('fuse_spark')) {
@@ -2982,9 +3008,11 @@ const GutterbonesRules = (() => {
         const tuning = state.synergyTuningRef || {};
         const applied = state.synergyApplied;
         if (!applied.has('build_tag_link') && (hwMeta.multEngineTagCount || 0) >= 2) {
-            state.mult += 1;
-            pushSynergyEvent(state, { chainId: 'build_tag_link', kind: 'mult', label: 'Build link (matched hardware)', impact: '+1x' });
+            const appliedMult = applySynergyChainMultBonus(state, tuning, 1);
+            if (appliedMult > 0) {
+            pushSynergyEvent(state, { chainId: 'build_tag_link', kind: 'mult', label: 'Build link (matched hardware)', impact: `+${appliedMult}x` });
             applied.add('build_tag_link');
+            }
         }
         const engineLinkReady = hwMeta.engineBonus >= 2
             || (hwMeta.engineBonus >= 1 && (hwMeta.multEngineTagCount || 0) >= 2);
@@ -3001,11 +3029,13 @@ const GutterbonesRules = (() => {
             }
             const linkMult = Math.min(4, modSlots.size);
             if (linkMult > 0) {
-                state.mult += linkMult;
-                pushSynergyEvent(state, { chainId: 'engine_link', kind: 'mult', label: 'Engine link', impact: `+${linkMult}x` });
+                const appliedMult = applySynergyChainMultBonus(state, tuning, linkMult);
+                if (appliedMult > 0) {
+                pushSynergyEvent(state, { chainId: 'engine_link', kind: 'mult', label: 'Engine link', impact: `+${appliedMult}x` });
                 applied.add('engine_link');
                 if (chainLinkingOn(tuning) && state.chainSparkedSlots?.size && state.synergyApplied.has('fuse_spark')) {
                     noteChainLink(state, 'fuse_spark', 'engine_link');
+                }
                 }
             }
         }
@@ -3156,7 +3186,12 @@ const GutterbonesRules = (() => {
                 pushStep('multiplier', 'HARDWARE: MIRROR RIG', 'Slots 2 & 4 matched after swap — +1x', '+1x');
             }
             if (item.id === 'DEBT_COLLECTOR') {
-                const debtMult = Math.max(0, Math.floor(Number(debt) || 0)) * 0.5;
+                const debtTuning = state.synergyTuningRef || {};
+                const rawDebtMult = Math.max(0, Math.floor(Number(debt) || 0)) * 0.5;
+                const debtCap = debtTuning.debtCollectorMaxMult;
+                const debtMult = debtCap != null && !Number.isNaN(Number(debtCap))
+                    ? Math.min(rawDebtMult, Math.max(0, Number(debtCap)))
+                    : rawDebtMult;
                 if (debtMult > 0) {
                     state.mult += debtMult;
                     triggers.push({ name: 'DEBT COIL', value: `+${debtMult}x` });
@@ -3322,7 +3357,8 @@ const GutterbonesRules = (() => {
             synergyEvents: [], synergyApplied: new Set(), retriggerCount: 0, synergyPass: 0,
             chainLinks: [], chainLinkMarkers: [], synergyTuningRef: synergyTuningHand,
             chainChargedSlots: new Set(), chainSparkedSlots: new Set(),
-            chainGhostEchoFired: false, chainWireFeedDirty: false
+            chainGhostEchoFired: false, chainWireFeedDirty: false,
+            chainMultBonusUsed: 0
         };
         const faceApi = { pushStep, triggers };
         applyAllFaceModifiers(resolved, destroyed, scoreState, faceApi);
@@ -5377,8 +5413,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     /** Compounding synergy chains (Balatro-style). See docs/plans/compounding-synergies-phased-implementation.md */
     const SYNERGY_TUNING = {
         enabled: true,
-        chainLinkingEnabled: false,
+        chainLinkingEnabled: true,
         maxChainPasses: 8,
+        maxChainBonusMultPerHand: 6,
+        debtCollectorMaxMult: 4,
         juiceStepMs: 150,
         overlayBaseMs: 2600,
         overlayTailMs: 1200,
