@@ -18,6 +18,12 @@ const BLOCKING = [
   { name: "1366x768", width: 1366, height: 768 },
   { name: "1920x1080", width: 1920, height: 1080 },
 ];
+const STASH_PROGRAM_KEYS = [
+  "stash-program-SNIFF",
+  "stash-program-BRIBE",
+  "stash-program-FIX",
+  "stash-program-LAUNDER",
+];
 
 let server;
 let baseUrl;
@@ -178,6 +184,26 @@ for (const vp of BLOCKING) {
     }
   });
 
+  test(`play threat stress — stash programs in viewport @ ${vp.name}`, async () => {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+      await resume(page, fixtures.playStashThreatStress);
+      const badge = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.readNextThreatBadge());
+      assertViewport(vp.name, badge.visible, JSON.stringify(badge), { suite: "next-threat-badge", label: "stash-stress-badge" });
+      if (isNonBlockingViewport(vp.name) && !phonePortraitBlockingEnabled()) return;
+      assert.ok(badge.visible, JSON.stringify(badge));
+      const stash = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measurePlayStashProgramsInViewport());
+      assert.ok(stash.ok, JSON.stringify(stash));
+      const overlap = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureNextThreatOverlap());
+      assert.ok(overlap.ok, JSON.stringify(overlap));
+    } finally {
+      await browser.close();
+    }
+  });
+
   test(`play non-boss — badge visible, no HUD/dice/button overlap @ ${vp.name}`, async () => {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
@@ -236,7 +262,7 @@ test("screenshots — PLAY and SHOP badges", async () => {
       await resume(page, builder);
       await page.waitForTimeout(300);
       const vpName = `${vp.width}x${vp.height}`;
-      const fileName = `next-threat-${label}-${vpName}-v2.png`;
+      const fileName = `next-threat-${label}-${vpName}-v3.png`;
       await page.screenshot({
         path: path.join(ARTIFACT_DIR, fileName),
         fullPage: false,
@@ -246,6 +272,24 @@ test("screenshots — PLAY and SHOP badges", async () => {
         fullPage: false,
       });
     }
+  } finally {
+    await browser.close();
+  }
+});
+
+test("screenshot — stash stress reproduction @ 768x1024", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resume(page, fixtures.playStashThreatStress);
+    await page.waitForTimeout(400);
+    const stash = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measurePlayStashProgramsInViewport());
+    assert.ok(stash.ok, JSON.stringify(stash));
+    const shot = "next-threat-stash-stress-768x1024-v3.png";
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, shot), fullPage: false });
+    await page.screenshot({ path: path.join(STORE_DIR, shot), fullPage: false });
   } finally {
     await browser.close();
   }

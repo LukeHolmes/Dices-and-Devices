@@ -453,6 +453,24 @@ const playNonBossNextThreat = () =>
     currentRouteEffect: { name: "SHARK TURF", effects: [] },
   });
 
+const playStashThreatStress = () => {
+  const heavy = playHeavyHardware();
+  const threat = playNonBossNextThreat();
+  return {
+    ...threat,
+    round: heavy.round,
+    score: heavy.score,
+    target: heavy.target,
+    hands: heavy.hands,
+    stash: 55,
+    inventory: heavy.inventory,
+    insaneContract: true,
+    activeWager: { stake: 10, threshold: 140 },
+    debt: 24,
+    gold: 38,
+  };
+};
+
 const shopAfterCarve = () => {
   const busy = shopBusy();
   return run({
@@ -505,6 +523,7 @@ module.exports = {
   shopRound9RaidRefreshable,
   playRaidRound9,
   playNonBossNextThreat,
+  playStashThreatStress,
   shopAfterCarve,
   playStashOpen844,
 };

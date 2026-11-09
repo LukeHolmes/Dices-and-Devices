@@ -60,9 +60,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   const chooseInner = (btn, ph, st) => {
     const U = btn.map((b) => b.t.toUpperCase());
+    const isThreatBadge = (idx) =>
+      btn[idx].lk === "next-threat-badge-trigger" || btn[idx].lk === "next-threat-badge-close";
     const find = (...prefs) => {
       for (const p of prefs) {
-        for (let k = 0; k < U.length; k++) if (U[k].startsWith(p)) return k;
+        for (let k = 0; k < U.length; k++) {
+          if (isThreatBadge(k)) continue;
+          if (p === "NEXT" && (U[k].includes("THREAT") || U[k].includes("BOSS NOW"))) continue;
+          if (U[k].startsWith(p)) return k;
+        }
       }
       return null;
     };
