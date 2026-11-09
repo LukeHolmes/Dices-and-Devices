@@ -2,6 +2,7 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("node:path");
+const os = require("node:os");
 const http = require("node:http");
 const fs = require("node:fs");
 const { createGame, plain } = require("./helpers/game.cjs");
@@ -10,7 +11,28 @@ const { assertViewport, isNonBlockingViewport, phonePortraitBlockingEnabled } = 
 
 const ROOT = path.join(__dirname, "..");
 const ARTIFACT_DIR = "/opt/cursor/artifacts";
-const STORE_DIR = "/cursor/stores/self/next-threat";
+
+function resolveNextThreatStoreDir() {
+  const candidates = [
+    process.env.GB_NEXT_THREAT_SHOT_DIR,
+    "/cursor/stores/self/next-threat",
+    path.join(ARTIFACT_DIR, "next-threat"),
+    path.join(ROOT, "shots", "next-threat"),
+    path.join(os.tmpdir(), "gb-next-threat"),
+  ].filter(Boolean);
+  for (const dir of candidates) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.accessSync(dir, fs.constants.W_OK);
+      return dir;
+    } catch {
+      /* try next candidate */
+    }
+  }
+  throw new Error(`no writable next-threat screenshot dir (tried: ${candidates.join(", ")})`);
+}
+
+let STORE_DIR;
 const RUN_KEY = "gutterbones1977:run:v1";
 const BLOCKING = [
   { name: "768x1024", width: 768, height: 1024 },
@@ -30,8 +52,12 @@ let baseUrl;
 let chromium;
 
 before(async () => {
-  fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
-  fs.mkdirSync(STORE_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
+  } catch {
+    /* optional artifact root */
+  }
+  STORE_DIR = resolveNextThreatStoreDir();
   chromium = require("playwright").chromium;
   server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
