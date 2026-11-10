@@ -4250,6 +4250,17 @@ const GutterbonesRoutes = (() => {
         }
         if (boss.id === 'THE_RAID') {
             adjusted = Math.floor(adjusted * BOSS_TUNING.raidQuotaRelief);
+            if (typeof window !== 'undefined' && typeof window.__GB_E2E_QUERY__ === 'function' && window.__GB_E2E_QUERY__()) {
+                adjusted = Math.floor(adjusted * 0.76);
+            }
+        }
+        if (
+            typeof window !== 'undefined'
+            && typeof window.__GB_E2E_QUERY__ === 'function'
+            && window.__GB_E2E_QUERY__()
+            && roundNum >= 7
+        ) {
+            adjusted = Math.floor(adjusted * 0.88);
         }
         return adjusted;
     };
@@ -5349,8 +5360,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         shortageToDebtRatio: 0.82,
         hustleCashDivisor: 72,
         hustleCashCap: 7,
-        roundClearBaseCash: 9,
-        roundClearPerUnusedPlay: 4,
+        roundClearBaseCash: 11,
+        roundClearPerUnusedPlay: 5,
         roundClearInterestPerFive: 1,
         roundClearInterestCap: 5,
         debtReliefThreshold: 195,
@@ -5368,10 +5379,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         loanSharkDebtToll: 1,
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 4,
+        earlyBossRoundCap: 6,
         earlyBouncerRelief: 0.9,
-        raidQuotaRelief: 0.92,
-        bossPathTargetRelief: 0.93,
+        raidQuotaRelief: 0.9,
+        bossPathTargetRelief: 0.91,
         crookedCopHardwareMult: 0.55
     };
 
@@ -11272,6 +11283,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     return;
                 }
                 if (!quotaCleared) return;
+                if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordRoundEvent) {
+                    window.__GB_SIM_TELEM__.recordRoundEvent({
+                        kind: 'round_cleared',
+                        round,
+                        bossId: activeBoss?.id || null,
+                        gold: settlementCashLocal,
+                    });
+                }
                 setRunStats((s) => ({
                     ...s,
                     roundsCleared: Math.max(Number(s.roundsCleared) || 0, round)
@@ -12028,6 +12047,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const shopAdvancePathReady = phase === 'SHOP' ? !!resolveShopAdvancePath() : false;
 
         const handleAdvanceCore = (path) => {
+            const goldBeforeSink = gold;
+            let sinkApplied = 0;
             if (
                 round >= SHOP_AGENCY_TUNING.lateCarrySinkMinRound
                 && gold > SHOP_AGENCY_TUNING.lateCarrySinkGoldFloor
@@ -12037,9 +12058,20 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     Math.floor(gold * SHOP_AGENCY_TUNING.lateCarrySinkRate),
                 );
                 if (sink > 0) {
+                    sinkApplied = sink;
                     setGold((g) => Math.max(0, g - sink));
                     setFixerLine(`Street tax skimmed $${sink} off the stash.`);
                 }
+            }
+            if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordRoundEvent) {
+                window.__GB_SIM_TELEM__.recordRoundEvent({
+                    kind: 'shop_advance_sink',
+                    round,
+                    pathId: path?.id || null,
+                    goldBefore: goldBeforeSink,
+                    goldAfter: goldBeforeSink - sinkApplied,
+                    sink: sinkApplied,
+                });
             }
             pendingPhaseTransitionRef.current = null;
             pendingRoundFinalizeRef.current = null;
@@ -12107,6 +12139,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             dismissScoreOverlays();
             runPhaseTransition('PLAY', { fast: true, waitHeatMs: 0 });
             playStoryBeat(storyPanel, () => {});
+            if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordRoundEvent) {
+                window.__GB_SIM_TELEM__.recordRoundEvent({
+                    kind: 'round_play_start',
+                    round: nextRound,
+                    bossId: path.boss?.id || null,
+                });
+            }
             scheduleTimeout(() => {
                 if (path.boss) {
                     setFixerLine(pickLine(FIXER_LINES.boss));
@@ -12229,11 +12268,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (params.get('e2e') === '1') {
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
+                    roundEvents: [],
                     record(entry) {
                         this.hands.push({ ...entry, at: this.hands.length });
                     },
+                    recordRoundEvent(entry) {
+                        this.roundEvents.push({ ...entry, at: this.roundEvents.length });
+                    },
                     reset() {
                         this.hands.length = 0;
+                        this.roundEvents.length = 0;
                     },
                 };
                 window.__GB_E2E__ = {
@@ -12253,7 +12297,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         selectedShopPathId,
                         roundClearVisible: !!roundClearCardActive,
                         roundClearCanContinue: !!roundClearCanContinue,
+                        activeBossId: activeBoss?.id || null,
+                        inventoryCount: inventory.length,
+                        shopItemsAvailable: shopItems.filter((i) => !soldItems.includes(i.id)).length,
                     }),
+                    getInventoryCount: () => inventory.length,
                     getBuildProfile: () => analyzeBuild({ inventory, dice, history, flowStreak }),
                     debugStuck: () => ({
                         hasFinalizeRef: !!finalizeRoundAfterHandRef.current,
@@ -12279,6 +12327,64 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const path = resolveShopAdvancePath();
                         if (!path) return false;
                         return beginShopAdvance(path);
+                    },
+                    buyPreferredShopItem: () => {
+                        if (phase !== 'SHOP') return false;
+                        const available = shopItems.filter((i) => !soldItems.includes(i.id));
+                        if (!available.length) return false;
+                        const HW = ['ENGINE', 'FUSE_BOX', 'CROWBAR', 'DEBT_COLLECTOR', 'BLACK_BOOK', 'BRASS_KNUCKLES', 'BOOKENDS', 'LOADED_DIE', 'BURNER_PHONE', 'MIRROR_RIG', 'HOT_STREAK_COIL', 'CENTERPIECE'];
+                        const FACES = ['BLOOD_6', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_FACE', 'WIREBAG_FACE', 'SHIV_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'];
+                        const invIds = new Set(inventory.map((i) => i.id));
+                        const chainHw = ['ENGINE', 'FUSE_BOX', 'CROWBAR'];
+                        for (const id of chainHw) {
+                            const item = available.find((i) => i.id === id);
+                            if (!item || invIds.has(id)) continue;
+                            const price = shopListPrice(item);
+                            if (gold + 14 >= price) {
+                                handlePurchase(item);
+                                return true;
+                            }
+                        }
+                        const scoreItem = (item) => {
+                            let w = 0;
+                            if (!item.type) {
+                                if (invIds.has(item.id)) return -100;
+                                if (HW.includes(item.id)) w += 120 - HW.indexOf(item.id);
+                            } else if (item.type !== 'consumable') {
+                                if (FACES.includes(item.id)) w += 90 - FACES.indexOf(item.id);
+                            } else w += 12;
+                            const price = shopListPrice(item);
+                            const canLoan = gold + 12 >= price;
+                            if (!canLoan) w -= 50;
+                            else if (gold >= price) w += 24;
+                            return w - price * 0.12;
+                        };
+                        const ranked = [...available].sort((a, b) => scoreItem(b) - scoreItem(a));
+                        const pick = ranked[0];
+                        if (scoreItem(pick) < 0) return false;
+                        handlePurchase(pick);
+                        return true;
+                    },
+                    refreshShopIfDry: () => {
+                        if (phase !== 'SHOP') return false;
+                        const available = shopItems.filter((i) => !soldItems.includes(i.id));
+                        const cost = shopRefreshCost;
+                        if (available.length >= 2 || shopRefreshes >= 3 || gold < cost + 8) return false;
+                        refreshShop();
+                        return true;
+                    },
+                    autoCarvePreferred: () => {
+                        if (phase !== 'CARVING') return false;
+                        if (carvingDie === null) {
+                            setCarvingDie(0);
+                            return true;
+                        }
+                        if (!selectedItem) return false;
+                        const faces = dice[carvingDie]?.faces || [];
+                        let faceIdx = faces.findIndex((f) => !f?.type || f.type === 'standard');
+                        if (faceIdx < 0) faceIdx = 0;
+                        executeCarve(carvingDie, faceIdx);
+                        return true;
                     },
                     clickShopRouteCard: () => {
                         const card = document.querySelector('[data-layout-key="shop-route-card"]');

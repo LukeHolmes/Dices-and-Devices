@@ -122,7 +122,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const buys = btn.map((_, i) => (btn[i].t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
       if (buys.length) {
         buys.sort((a, b) => scoreBuy(b) - scoreBuy(a));
-        if (scoreBuy(buys[0]) > 20) return buys[0];
+        if (scoreBuy(buys[0]) > 8) return buys[0];
       }
       const routes = btn.map((b, i) =>
         (b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1),
@@ -131,8 +131,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         const hw = routes.find((i) => U[i].includes("HARDWARE") || U[i].includes("MOD") || U[i].includes("PAWN"));
         return hw != null ? hw : routes[0];
       }
+      const inv = Number(st?.inventoryCount) || 0;
       const hit = findContains("HIT THE STREETS");
-      if (hit != null) return hit;
+      if (hit != null && st?.selectedShopPathId && (inv >= 1 || (st.round || 1) >= 4 || buys.length === 0)) return hit;
       return buys[0] != null ? buys[0] : null;
     }
     if (ph === "PLAY") {
@@ -280,7 +281,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   try {
     window.__GB_E2E__.goLineup();
     if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
-      window.__GB_E2E__.selectPersonaByIndex(1);
+      if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
+        window.__GB_E2E__.selectPersonaByIndex(1);
+      }
     } else {
       window.__GB_E2E__.selectFirstPersona();
     }
@@ -344,6 +347,40 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       window.__GB_E2E__?.finishRoundClear?.();
       await wait(120);
       continue;
+    }
+
+    const shopBot = strategy === "builder" || strategy === "greedy";
+    if (shopBot && ph === "SHOP") {
+      log._shopPasses = (log._shopPasses || 0) + 1;
+      const invNow = Number(st?.inventoryCount) || 0;
+      if (
+        st?.selectedShopPathId
+        && (invNow >= 1 || log._shopPasses > 10 || (st.round || 1) >= 4)
+      ) {
+        if (window.__GB_E2E__?.hitStreets?.()) {
+          log._shopPasses = 0;
+          await wait(120);
+          continue;
+        }
+      }
+      if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
+        await wait(90);
+        continue;
+      }
+      if (log._shopPasses <= 12 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+        await wait(90);
+        continue;
+      }
+      if (!st?.selectedShopPathId && window.__GB_E2E__?.clickShopRouteCard?.()) {
+        await wait(80);
+        continue;
+      }
+    }
+    if (shopBot && ph === "CARVING") {
+      if (window.__GB_E2E__?.autoCarvePreferred?.()) {
+        await wait(90);
+        continue;
+      }
     }
 
     const names = btn.map((b) => b.t);

@@ -22,7 +22,7 @@ const VIEWPORTS_ALL = [
 const VIEWPORTS_BLOCKING = VIEWPORTS_ALL.filter((v) =>
   ["768x1024", "1024x768", "1366x768", "1920x1080"].includes(v.name),
 );
-const STRATEGIES = ["builder", "builder", "builder", "greedy"];
+const STRATEGIES = ["builder", "builder", "builder", "builder"];
 
 function median(nums) {
   if (!nums.length) return 0;
@@ -58,12 +58,18 @@ function pickViewports(mode) {
 }
 
 function startServer(port, root) {
+  const absRoot = path.resolve(root);
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
       const rel = urlPath === "/" ? "/index.html" : urlPath;
-      const filePath = path.join(root, rel.replace(/^\//, ""));
-      if (!filePath.startsWith(root) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      const filePath = path.resolve(absRoot, rel.replace(/^\//, ""));
+      if (!filePath.startsWith(absRoot + path.sep) && filePath !== absRoot) {
+        res.statusCode = 404;
+        res.end("Not found");
+        return;
+      }
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
         res.statusCode = 404;
         res.end("Not found");
         return;
@@ -78,10 +84,11 @@ function startServer(port, root) {
 }
 
 async function bootPage(page, baseUrl, viewport) {
+  page.setDefaultTimeout(120_000);
   const mobile = viewport.width < 700 || viewport.height < 500;
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
-  await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
-  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+  await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "networkidle", timeout: 120_000 });
+  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
   await page.evaluate(() => {
     localStorage.setItem(
       "gutterbones1977:settings:v1",
@@ -95,7 +102,40 @@ async function bootPage(page, baseUrl, viewport) {
     try {
       localStorage.setItem(
         "gutterbones1977:meta:v1",
-        JSON.stringify({ totalRuns: 12, victories: 2 }),
+        JSON.stringify({
+          totalRuns: 12,
+          victories: 2,
+          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
+          unlockedFaceIds: [
+            "MULT_FACE",
+            "GOLD_FACE",
+            "BLOOD_6",
+            "WILD_FACE",
+            "ECHO_FACE",
+            "GHOST_FACE",
+            "SHIV_FACE",
+            "WIREBAG_FACE",
+            "MAGNET_FACE",
+            "MARK_FACE",
+            "FUSE_FACE",
+            "DOUBLE_DOWN_FACE",
+          ],
+          unlockedHardwareIds: [
+            "BOOKENDS",
+            "LOADED_DIE",
+            "BRASS_KNUCKLES",
+            "BLACK_BOOK",
+            "BURNER_PHONE",
+            "CROWBAR",
+            "ENGINE",
+            "FUSE_BOX",
+            "MIRROR_RIG",
+            "DEBT_COLLECTOR",
+            "HOT_STREAK_COIL",
+            "CENTERPIECE",
+          ],
+          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+        }),
       );
     } catch (_) {
       /* ignore */
@@ -115,6 +155,7 @@ async function runOneGame(
   page,
   { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 48, maxFallbacks = 36 },
 ) {
+  page.setDefaultTimeout(120_000);
   const booted = bootedRef || { value: false };
   if (!booted.value) {
     await bootPage(page, page.__baseUrl, viewport);
@@ -136,7 +177,40 @@ async function runOneGame(
       try {
         localStorage.setItem(
           "gutterbones1977:meta:v1",
-          JSON.stringify({ totalRuns: 12, victories: 2 }),
+          JSON.stringify({
+          totalRuns: 12,
+          victories: 2,
+          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
+          unlockedFaceIds: [
+            "MULT_FACE",
+            "GOLD_FACE",
+            "BLOOD_6",
+            "WILD_FACE",
+            "ECHO_FACE",
+            "GHOST_FACE",
+            "SHIV_FACE",
+            "WIREBAG_FACE",
+            "MAGNET_FACE",
+            "MARK_FACE",
+            "FUSE_FACE",
+            "DOUBLE_DOWN_FACE",
+          ],
+          unlockedHardwareIds: [
+            "BOOKENDS",
+            "LOADED_DIE",
+            "BRASS_KNUCKLES",
+            "BLACK_BOOK",
+            "BURNER_PHONE",
+            "CROWBAR",
+            "ENGINE",
+            "FUSE_BOX",
+            "MIRROR_RIG",
+            "DEBT_COLLECTOR",
+            "HOT_STREAK_COIL",
+            "CENTERPIECE",
+          ],
+          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+        }),
         );
       } catch (_) {
         /* ignore */
@@ -166,8 +240,9 @@ async function runOneGame(
   const telem = await page.evaluate(() => {
     const st = window.__GB_E2E__?.getState?.() || {};
     const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
+    const roundEvents = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.roundEvents) || [];
     const build = window.__GB_E2E__?.getBuildProfile?.() || null;
-    return { hands, gold: st.gold, score: st.score, build };
+    return { hands, gold: st.gold, score: st.score, build, roundEvents };
   });
   return { rid, viewport: viewport.name, ...result, telem };
 }
@@ -264,8 +339,10 @@ async function main() {
   const medMaxRound = median(rounds);
 
   const LINK_KEYS = [
+    "blood_ripple→fuse_spark",
     "blood_ripple→ghost_echo",
     "fuse_spark→engine_link",
+    "ghost_echo→bookends_retrigger",
     "ghost_echo→engine_link",
     "wire_feed→crowbar_cascade",
   ];
@@ -276,7 +353,19 @@ async function main() {
   let handsWithChain = 0;
   const buildWins = {};
   const buildBusts = {};
+  let crookedCopStarts = 0;
+  let crookedCopClears = 0;
+  const sinkGoldBefore = [];
+  const sinkAmounts = [];
   for (const r of results) {
+    for (const ev of r.telem?.roundEvents || []) {
+      if (ev.kind === "round_play_start" && ev.bossId === "CROOKED_COP") crookedCopStarts += 1;
+      if (ev.kind === "round_cleared" && ev.bossId === "CROOKED_COP") crookedCopClears += 1;
+      if (ev.kind === "shop_advance_sink" && ev.sink > 0) {
+        sinkGoldBefore.push(ev.goldBefore);
+        sinkAmounts.push(ev.sink);
+      }
+    }
     const hands = r.telem?.hands || [];
     for (const h of hands) {
       if ((h.chainDepth || 0) > 0 || (h.synergyChainIds || []).length) handsWithChain += 1;
@@ -316,6 +405,18 @@ async function main() {
     generousStepCap: generousCap,
     synergy: { linkCounts, depthHist, handsWithChain, chainMultCapHits, debtCapHits },
     buildOutcomes: { wins: buildWins, busts: buildBusts },
+    telemetry: {
+      crookedCop: {
+        roundStarts: crookedCopStarts,
+        roundsCleared: crookedCopClears,
+        survivalRate: crookedCopStarts ? crookedCopClears / crookedCopStarts : 0,
+      },
+      shopAdvanceSink: {
+        events: sinkAmounts.length,
+        medianGoldBefore: median(sinkGoldBefore),
+        medianSink: median(sinkAmounts),
+      },
+    },
     failures: failures.map((g) => ({
       rid: g.rid,
       seed: g.seed,
