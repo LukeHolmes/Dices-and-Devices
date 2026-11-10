@@ -4217,8 +4217,8 @@ const GutterbonesRoutes = (() => {
     const PROGRESSION_GUARDRAILS = Object.freeze({
         minGrowthRate: 1.16,
         earlyMaxGrowthRate: 1.32,
-        midMaxGrowthRate: 1.52,
-        lateMaxGrowthRate: 1.52,
+        midMaxGrowthRate: 1.48,
+        lateMaxGrowthRate: 1.46,
         extremeMaxGrowthRate: 1.24
     });
 
@@ -4834,7 +4834,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const PERSONAS = [
-        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 20, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
+        { id: 'STREET_RAT', name: 'The Street Rat', alias: 'DEFAULT', cash: 22, plays: 4, pills: 3, quirk: 'No gimmick. Just a kid with a pocket full of raw bones.', loadout: '5x Standard Bones', color: 'bg-gray-600', portraitSrc: 'assets/personas/street-rat.png', portraitAlt: 'The Street Rat' },
         { id: 'HUSTLER', name: 'The Hustler', alias: 'DEEP POCKETS', cash: 50, plays: 4, pills: 2, quirk: 'Starts flush with cash, but the Stash fills 50% slower.', loadout: '5x Standard Bones', color: 'bg-yellow-700', portraitSrc: 'assets/personas/hustler.png', portraitAlt: 'The Hustler' },
         { id: 'ENFORCER', name: 'The Enforcer', alias: 'BRUISER', cash: 10, plays: 4, pills: 0, quirk: 'Zero pills. No second chances. Starts with a Blood 6.', loadout: '1x Blood 6, 4x Standard', color: 'bg-red-900', portraitSrc: 'assets/personas/enforcer.png', portraitAlt: 'The Enforcer' },
         { id: 'CARD_COUNTER', name: 'The Counter', alias: 'BRAINIAC', cash: 15, plays: 4, pills: 3, quirk: 'Starts with The Black Book. Quota starts 15% higher.', loadout: 'The Black Book, 5x Standard', color: 'bg-blue-900', portraitSrc: 'assets/personas/card-counter.png', portraitAlt: 'The Counter' },
@@ -5348,9 +5348,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const ECONOMY_TUNING = {
         shortageToDebtRatio: 0.82,
         hustleCashDivisor: 72,
-        hustleCashCap: 5,
-        roundClearBaseCash: 8,
-        roundClearPerUnusedPlay: 3,
+        hustleCashCap: 7,
+        roundClearBaseCash: 9,
+        roundClearPerUnusedPlay: 4,
         roundClearInterestPerFive: 1,
         roundClearInterestCap: 5,
         debtReliefThreshold: 195,
@@ -5383,12 +5383,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const FIRST_RUN_TUNING = {
         enabled: true,
-        openingTarget: 75,
+        openingTarget: 72,
         enforcerRound1Pills: 1
     };
 
     const EARLY_GAME_TUNING = {
-        openingTarget: 75,
+        openingTarget: 72,
         counterOpeningMultiplier: 1.15,
         /** Stash % shown at run start after the free opening reroll (one SNIFF worth). */
         openingStashGrant: 25,
@@ -5410,10 +5410,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         refreshRoundTax: 2,
         refreshEscalation: 4,
         sellRate: 0.6,
-        lateCarrySinkMinRound: 6,
-        lateCarrySinkGoldFloor: 48,
-        lateCarrySinkRate: 0.07,
-        lateCarrySinkCap: 22
+        lateCarrySinkMinRound: 8,
+        lateCarrySinkGoldFloor: 56,
+        lateCarrySinkRate: 0.05,
+        lateCarrySinkCap: 18
     };
 
     const getShopRefreshCost = (roundNum, refreshCount) => Math.max(
@@ -12301,6 +12301,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     goLineup: () => setPhase("LINEUP"),
                     selectFirstPersona: () => setPersonaIdx(0),
+                    selectPersonaByIndex: (idx) => {
+                        const i = Math.max(0, Math.min(PERSONAS.length - 1, Math.floor(Number(idx) || 0)));
+                        if (!meta.unlockedPersonaIds?.includes(PERSONAS[i]?.id)) return false;
+                        setPersonaIdx(i);
+                        return true;
+                    },
                     startNewRun: () => beginContract({ tutorial: false }),
                     setPlaysRemaining: (n) => setHands(Math.max(0, Math.floor(Number(n) || 0))),
                     setScore: (n) => setScore(Math.max(0, Math.floor(Number(n) || 0))),

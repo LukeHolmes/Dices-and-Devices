@@ -279,7 +279,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   try {
     window.__GB_E2E__.goLineup();
-    window.__GB_E2E__.selectFirstPersona();
+    if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
+      window.__GB_E2E__.selectPersonaByIndex(1);
+    } else {
+      window.__GB_E2E__.selectFirstPersona();
+    }
     window.__GB_E2E__.startNewRun();
     window.__GB_E2E__.skipIntroOverlays?.();
     await wait(120);

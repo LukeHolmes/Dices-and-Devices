@@ -7,7 +7,11 @@ const r = spawnSync(
   { cwd: require("node:path").join(__dirname, ".."), encoding: "utf8", maxBuffer: 8 * 1024 * 1024 },
 );
 
-const jsonLine = (r.stdout || "").trim().split("\n").find((l) => l.startsWith("{"));
+const jsonLine = (r.stdout || "")
+  .trim()
+  .split("\n")
+  .filter((l) => l.startsWith("{"))
+  .pop();
 if (!jsonLine) {
   console.error(r.stdout, r.stderr);
   process.exit(1);
