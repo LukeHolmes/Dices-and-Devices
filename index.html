@@ -12347,53 +12347,38 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (phase !== 'SHOP') return false;
                         const bossPath = paths?.find((p) => p.boss);
                         const hasEngine = inventory.some((i) => i.id === 'ENGINE');
-                        const hasFuse = inventory.some((i) => i.id === 'FUSE_BOX')
-                            || window.__GB_E2E__.countCarvedFace('FUSE_FACE') >= 1;
+                        const hasFuseBox = inventory.some((i) => i.id === 'FUSE_BOX');
                         const bloodOnBoard = window.__GB_E2E__.countCarvedFace('BLOOD_6');
                         const fuseOnBoard = window.__GB_E2E__.countCarvedFace('FUSE_FACE');
-                        const bloodReady = bloodOnBoard >= 1;
-                        const kitBuilding = !hasEngine || !hasFuse || bloodOnBoard < 2 || fuseOnBoard < 1;
+                        const organicReady = window.__GB_E2E__.isOrganicChainReady();
                         if (
-                            bossPath && hasEngine && hasFuse && bloodReady
-                            && inventory.length >= 3 && round >= 3 && !selectedShopPathId
+                            bossPath && organicReady && inventory.length >= 3 && round >= 3 && !selectedShopPathId
                         ) {
                             selectShopPath(bossPath);
                             return true;
                         }
-                        if (bossPath && hasEngine && inventory.length >= 2 && round >= 5 && !selectedShopPathId) {
-                            selectShopPath(bossPath);
-                            return true;
-                        }
-                        const organicReady = window.__GB_E2E__.isOrganicChainReady();
-                        if (!organicReady && kitBuilding) {
-                            if (!selectedShopPathId && round < 8) {
-                                const needFaces = bloodOnBoard < 2 || fuseOnBoard < 1;
-                                const routePick = needFaces && hasEngine && hasFuse
-                                    ? (paths?.find((p) => p.id === 'SMUGGLE')
-                                        || paths?.find((p) => p.id === 'VIP')
-                                        || paths?.find((p) => p.id === 'PAWN'))
-                                    : paths?.find((p) => p.id === 'PAWN');
+                        if (!organicReady) {
+                            if (!selectedShopPathId) {
+                                const dangerGate = SHOP_TUNING.earlyDangerRoundGate;
+                                const needSkew = round >= dangerGate && (bloodOnBoard < 2 || fuseOnBoard < 1);
+                                const routePick = round < dangerGate
+                                    ? (paths?.find((p) => p.id === 'LOCAL') || paths?.[0])
+                                    : (needSkew && hasEngine
+                                        ? (paths?.find((p) => p.id === 'VIP')
+                                            || paths?.find((p) => p.id === 'SMUGGLE')
+                                            || paths?.find((p) => p.id === 'LOCAL'))
+                                        : (paths?.find((p) => p.id === 'PAWN') || paths?.[0]));
                                 if (routePick) {
                                     selectShopPath(routePick);
                                     return true;
                                 }
                             }
-                            const offers = window.__GB_E2E__.getShopOffers();
-                            const hasBloodOffer = offers.some((o) => o.id === 'BLOOD_6');
-                            const hasFuseOffer = offers.some((o) => o.id === 'FUSE_FACE');
-                            const canRefresh = shopRefreshes < 10 && gold >= shopRefreshCost;
-                            const needBlood = bloodOnBoard < 2;
-                            const needFuse = fuseOnBoard < 1;
-                            const bloodGate = round < SHOP_TUNING.earlyDangerRoundGate;
-                            const shopDry = (needBlood && !hasBloodOffer && (!canRefresh || bloodGate))
-                                || (needFuse && bloodOnBoard >= 2 && !hasFuseOffer && !canRefresh);
-                            if (shopDry && hasEngine && hasFuse && selectedShopPathId) {
+                            if (selectedShopPathId && window.__GB_E2E__.shouldLeaveShopForPacing?.()) {
                                 const path = resolveShopAdvancePath();
                                 if (path) return beginShopAdvance(path);
                             }
                             return false;
                         }
-                        if (!organicReady) return false;
                         const path = resolveShopAdvancePath();
                         if (!path) return false;
                         return beginShopAdvance(path);
@@ -12417,7 +12402,35 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (phase !== 'SHOP') return [];
                         return shopItems
                             .filter((i) => !soldItems.includes(i.id))
-                            .map((i) => ({ id: i.id, type: i.type || 'hardware', price: shopListPrice(i) }));
+                            .map((i) => ({ id: i.id, type: i.type || 'hardware', price: shopListPrice(i), rarity: i.rarity || null }));
+                    },
+                    shouldLeaveShopForPacing: () => {
+                        if (phase !== 'SHOP') return false;
+                        if (window.__GB_E2E__.isOrganicChainReady()) return true;
+                        const bloodOnBoard = window.__GB_E2E__.countCarvedFace('BLOOD_6');
+                        const fuseOnBoard = window.__GB_E2E__.countCarvedFace('FUSE_FACE');
+                        const invIds = new Set(inventory.map((i) => i.id));
+                        const offers = window.__GB_E2E__.getShopOffers();
+                        const hasBloodOffer = offers.some((o) => o.id === 'BLOOD_6');
+                        const hasFuseOffer = offers.some((o) => o.id === 'FUSE_FACE');
+                        const reserve = shopRefreshCost + 12;
+                        const dangerGate = SHOP_TUNING.earlyDangerRoundGate;
+                        if (round < dangerGate) {
+                            if (shopRefreshes >= 1 && gold < reserve + 18) return true;
+                            if (invIds.has('ENGINE') && gold < reserve) return true;
+                            if (!invIds.has('ENGINE') && shopRefreshes >= 1) return true;
+                            return false;
+                        }
+                        if (bloodOnBoard < 2 && !hasBloodOffer) {
+                            if (shopRefreshes >= 2 || gold < reserve) return true;
+                        }
+                        if (bloodOnBoard >= 2 && fuseOnBoard < 1 && !hasFuseOffer) {
+                            if (shopRefreshes >= 2 || gold < reserve) return true;
+                        }
+                        if (!invIds.has('FUSE_BOX') && round >= 4 && !offers.some((o) => o.id === 'FUSE_BOX') && gold < reserve) {
+                            return true;
+                        }
+                        return false;
                     },
                     getOrganicChainSnapshot: () => {
                         const invIds = inventory.map((i) => i.id);
@@ -12480,32 +12493,34 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             handlePurchase(item);
                             return true;
                         };
+                        const canRefreshOnce = (minReserve = 28) => (
+                            shopRefreshes < 1 && gold >= shopRefreshCost + minReserve
+                        );
                         if (!invIds.has('ENGINE')) {
                             if (tryBuy('ENGINE')) return true;
-                            if (shopRefreshes < 10 && gold >= shopRefreshCost) {
+                            if (canRefreshOnce(32)) {
                                 refreshShop();
                                 return true;
                             }
                             return false;
                         }
-                        if (!invIds.has('FUSE_BOX')) {
+                        if (!invIds.has('FUSE_BOX') && round >= 3) {
                             if (tryBuy('FUSE_BOX')) return true;
-                            if (shopRefreshes < 10 && gold >= shopRefreshCost) {
+                            if (round >= SHOP_TUNING.earlyDangerRoundGate && canRefreshOnce(36)) {
                                 refreshShop();
                                 return true;
                             }
                             return false;
                         }
+                        if (!invIds.has('FUSE_BOX')) return false;
                         if (bloodOnBoard < 2) {
+                            if (round < SHOP_TUNING.earlyDangerRoundGate) return false;
                             if (tryBuy('BLOOD_6')) return true;
-                            const needsBloodRefresh = invIds.has('ENGINE') && invIds.has('FUSE_BOX');
-                            if (needsBloodRefresh && round >= SHOP_TUNING.earlyDangerRoundGate) {
-                                const availableBlood = shopItems.filter((i) => !soldItems.includes(i.id));
-                                const hasBlood = availableBlood.some((i) => i.id === 'BLOOD_6');
-                                if (!hasBlood && shopRefreshes < 10 && gold >= shopRefreshCost) {
-                                    refreshShop();
-                                    return true;
-                                }
+                            const availableBlood = shopItems.filter((i) => !soldItems.includes(i.id));
+                            const hasBlood = availableBlood.some((i) => i.id === 'BLOOD_6');
+                            if (!hasBlood && shopRefreshes < 2 && gold >= shopRefreshCost + 20) {
+                                refreshShop();
+                                return true;
                             }
                             return false;
                         }
@@ -12516,7 +12531,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (needsChainFaces) {
                             const hasFuse = available.some((i) => i.id === 'FUSE_FACE');
                             if (fuseOnBoard < 1 && !hasFuse) {
-                                if (shopRefreshes < 10 && gold >= shopRefreshCost) {
+                                if (shopRefreshes < 2 && gold >= shopRefreshCost + 18) {
                                     refreshShop();
                                     return true;
                                 }
@@ -12574,7 +12589,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const hasFuse = available.some((i) => i.id === 'FUSE_FACE');
                         if ((bloodOnBoard < 2 && hasBlood) || (fuseOnBoard < 1 && hasFuse)) return false;
                         if (bloodOnBoard < 2 && round < SHOP_TUNING.earlyDangerRoundGate) return false;
-                        if (shopRefreshes >= 10 || gold < shopRefreshCost) return false;
+                        if (round < SHOP_TUNING.earlyDangerRoundGate) return false;
+                        if (shopRefreshes >= 2 || gold < shopRefreshCost + 16) return false;
                         refreshShop();
                         return true;
                     },

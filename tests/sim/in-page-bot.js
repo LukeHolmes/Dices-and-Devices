@@ -295,8 +295,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   try {
     window.__GB_E2E__.goLineup();
     if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
-      if (!window.__GB_E2E__.selectPersonaByIndex(1)) {
-        if (!window.__GB_E2E__.selectPersonaByIndex(2)) {
+      if (!window.__GB_E2E__.selectPersonaByIndex(2)) {
+        if (!window.__GB_E2E__.selectPersonaByIndex(1)) {
           window.__GB_E2E__.selectPersonaByIndex(4);
         }
       }
@@ -376,16 +376,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const invNow = Number(st?.inventoryCount) || 0;
       const organicReady = strategy === "builder" && window.__GB_E2E__?.isOrganicChainReady?.();
       const minInv = strategy === "builder" ? 2 : 1;
-      const kitSnap = strategy === "builder" ? window.__GB_E2E__?.getOrganicChainSnapshot?.() : null;
-      const kitHasHw =
-        kitSnap?.invIds?.includes("ENGINE") && kitSnap?.invIds?.includes("FUSE_BOX");
-      const noBloodOffer = !(kitSnap?.shopOffers || []).some((o) => o.id === "BLOOD_6");
-      const brokeKitShop =
-        kitHasHw
-        && (kitSnap?.bloodOnBoard || 0) < 2
-        && noBloodOffer
-        && ((kitSnap?.shopRefreshes || 0) >= 10 || (Number(st?.gold) || 0) < (kitSnap?.shopRefreshCost || 99));
-      const builderStreets = organicReady || log._shopPasses > 24 || (kitHasHw && brokeKitShop);
+      const shopRound = Number(st?.round) || 1;
+      const builderStreets =
+        organicReady
+        || log._shopPasses > 18
+        || (strategy === "builder" && window.__GB_E2E__?.shouldLeaveShopForPacing?.());
       if (
         st?.selectedShopPathId
         && (builderStreets || (strategy !== "builder" && (invNow >= minInv || log._shopPasses > 14 || (st.round || 1) >= 4)))
@@ -396,11 +391,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
           continue;
         }
       }
-      if (log._shopPasses <= 12 && window.__GB_E2E__?.refreshShopForChainKit?.()) {
+      if (
+        shopRound >= 6
+        && log._shopPasses <= 10
+        && window.__GB_E2E__?.refreshShopForChainKit?.()
+      ) {
         await wait(90);
         continue;
       }
-      if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
+      if (
+        shopRound < 3
+        && log._shopPasses <= 2
+        && window.__GB_E2E__?.refreshShopIfDry?.()
+      ) {
         await wait(90);
         continue;
       }
