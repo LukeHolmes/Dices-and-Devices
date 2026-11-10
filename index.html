@@ -3109,6 +3109,74 @@
         margin-top: 0.35rem;
         padding-top: 0.15rem;
     }
+    @keyframes handThrowSweep {
+        0% { transform: translate(-110%, 80%) rotate(-22deg) scale(0.95); opacity: 0; }
+        18% { transform: translate(-25%, 22%) rotate(-12deg) translateY(-6px); opacity: 1; }
+        26% { transform: translate(-20%, 18%) rotate(-8deg) translateY(6px); opacity: 1; }
+        35% { transform: translate(-5%, 5%) rotate(6deg) scale(1.02); opacity: 1; }
+        55% { transform: translate(-8%, 8%) rotate(4deg) scale(1); opacity: 1; }
+        100% { transform: translate(-120%, 95%) rotate(-15deg) scale(0.95); opacity: 0; }
+    }
+    @keyframes handGripClosedVisible {
+        0%, 34.9% { opacity: 1; }
+        35%, 100% { opacity: 0; }
+    }
+    @keyframes handGripOpenVisible {
+        0%, 34.9% { opacity: 0; }
+        35%, 100% { opacity: 1; }
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 22;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+        position: absolute;
+        left: 34%;
+        bottom: 22%;
+        width: clamp(5.5rem, 32vw, 11rem);
+        aspect-ratio: 4 / 5;
+        transform-origin: 18% 82%;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .animate-gutter-hand {
+        animation: handThrowSweep 460ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-closed,
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-open {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: left bottom;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-closed {
+        animation: handGripClosedVisible 460ms linear forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-open {
+        animation: handGripOpenVisible 460ms linear forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .gutter-roll-hand-overlay {
+        display: none !important;
+    }
+    @media (max-width: 1024px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            left: 28%;
+            bottom: 26%;
+            width: clamp(4.75rem, 36vw, 9rem);
+        }
+    }
+    @media (max-height: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            bottom: 30%;
+            width: clamp(4.25rem, 30vw, 8rem);
+            opacity: 0.92;
+        }
+    }
     #root-gutterbones[data-ui-redesign="1"] .score-row-name {
         white-space: normal;
         line-height: 1.15;
@@ -6890,6 +6958,51 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
+    const ROLL_HAND_SPRITE_CLOSED = ['assets', 'scenes', 'hand-closed.png'].join('/');
+    const ROLL_HAND_SPRITE_OPEN = ['assets', 'scenes', 'hand-open.png'].join('/');
+    const ROLL_HAND_FX_MS = 460;
+
+    const probeRollHandSprites = (() => {
+        let cached = null;
+        return () => {
+            if (cached) return cached;
+            cached = new Promise((resolve) => {
+                if (typeof Image === 'undefined') {
+                    resolve(false);
+                    return;
+                }
+                let closedDone = false;
+                let openDone = false;
+                let closedOk = false;
+                let openOk = false;
+                const finish = () => {
+                    if (closedDone && openDone) resolve(closedOk && openOk);
+                };
+                const closed = new Image();
+                const open = new Image();
+                closed.onload = () => { closedOk = true; closedDone = true; finish(); };
+                closed.onerror = () => { closedDone = true; finish(); };
+                open.onload = () => { openOk = true; openDone = true; finish(); };
+                open.onerror = () => { openDone = true; finish(); };
+                closed.src = ROLL_HAND_SPRITE_CLOSED;
+                open.src = ROLL_HAND_SPRITE_OPEN;
+            });
+            return cached;
+        };
+    })();
+
+    const RollHandThrowOverlay = ({ generation, spritesReady }) => {
+        if (!generation || !spritesReady) return null;
+        return (
+            <div data-layout-key="roll-hand-throw-overlay" className="gutter-roll-hand-overlay" aria-hidden="true">
+                <div key={generation} className="gutter-roll-hand-sprite animate-gutter-hand">
+                    <img src={ROLL_HAND_SPRITE_CLOSED} alt="" className="gutter-roll-hand-closed" draggable={false} decoding="async" />
+                    <img src={ROLL_HAND_SPRITE_OPEN} alt="" className="gutter-roll-hand-open" draggable={false} decoding="async" />
+                </div>
+            </div>
+        );
+    };
+
     const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem }) => {
         if (!previewItem) return null;
         return (
@@ -9475,6 +9588,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [payoutKeyboardIndex, setPayoutKeyboardIndex] = useState(0);
         const [payoutPostRollGen, setPayoutPostRollGen] = useState(0);
         const [rollBtnSquash, setRollBtnSquash] = useState(false);
+        const [rollHandFxGen, setRollHandFxGen] = useState(0);
+        const [rollHandSpritesReady, setRollHandSpritesReady] = useState(false);
+        const rollHandSpritesReadyRef = useRef(false);
+        const rollHandFxTimerRef = useRef(null);
         const [screenTransition, setScreenTransition] = useState(null);
         const [lossExplanation, setLossExplanation] = useState(null);
         const [showSystemMenu, setShowSystemMenu] = useState(false);
@@ -10286,6 +10403,34 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!rootEl) return;
             rootEl.dataset.uiRedesign = '1';
         }, []);
+
+        useEffect(() => {
+            let alive = true;
+            probeRollHandSprites().then((ok) => {
+                if (!alive) return;
+                rollHandSpritesReadyRef.current = ok;
+                setRollHandSpritesReady(ok);
+                if (typeof window !== 'undefined') window.__GB_ROLL_HAND_SPRITES_READY = !!ok;
+            });
+            return () => {
+                alive = false;
+                if (rollHandFxTimerRef.current) {
+                    clearTimeout(rollHandFxTimerRef.current);
+                    rollHandFxTimerRef.current = null;
+                }
+                setRollHandFxGen(0);
+            };
+        }, []);
+
+        const pulseRollHandFx = () => {
+            if (reducedMotion || !rollHandSpritesReadyRef.current) return;
+            if (rollHandFxTimerRef.current) clearTimeout(rollHandFxTimerRef.current);
+            setRollHandFxGen((g) => g + 1);
+            rollHandFxTimerRef.current = scheduleTimeout(() => {
+                setRollHandFxGen(0);
+                rollHandFxTimerRef.current = null;
+            }, ROLL_HAND_FX_MS + 48);
+        };
 
         const scoringDiceResolved = useMemo(() => {
             if (!dice.length || typeof GutterbonesRules?.resolveDice !== 'function') return dice;
@@ -11738,6 +11883,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 });
             }
             setRollingSlots(activeMask);
+            if (activeIndices.length && typeof pulseRollHandFx === 'function') pulseRollHandFx();
             setFeltPulse(true);
             triggerCameraKick('soft');
             scheduleTimeout(() => setFeltPulse(false), 650);
@@ -15113,6 +15259,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <div className="felt-smoke-wisp left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
                                 </div>
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
+                                <RollHandThrowOverlay generation={rollHandFxGen} spritesReady={rollHandSpritesReady} />
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 {swapMode && (
                                     <div className="absolute top-14 left-2 right-2 z-40 px-3 py-2 bg-black/80 border border-[#0df]/50 font-mono text-[10px] md:text-xs text-cyan-100 text-center">

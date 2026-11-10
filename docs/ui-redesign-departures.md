@@ -13,6 +13,11 @@ Presentation-only scope on `data-ui-redesign="1"`. No scoring, quota, economy, o
 | Carving workbench | Shelf-over-strip column under redesign CSS; carve actions unchanged. |
 | Stash program contrast | Ledger stash dock uses higher-contrast paper tokens under redesign scoped CSS (buttons keep existing `handleProgram` wiring). |
 
+## Hand roll overlay (Luke add-on)
+
+- Sprites `assets/scenes/hand-closed.png` / `hand-open.png` are **not committed**; runtime probes both and skips overlay until parent art lands (see `assets/scenes/HAND-ROLL-SPRITES.md`).
+- Animation is cosmetic only: `pointer-events: none`, `aria-hidden`, gated on successful roll in `rollBones` (not pill rerolls / disabled button), cleared on timer + unmount; hidden under `gb-motion-reduce`.
+
 ## Still partial vs. aspirational brief
 
 - **Phase 7 Vite module split** remains deferred per `AGENTS.md` (monolith `index.html`).
