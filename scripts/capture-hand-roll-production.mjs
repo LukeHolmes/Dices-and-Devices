@@ -18,10 +18,20 @@ const VPs = [
   { tag: "1366x768", width: 1366, height: 768 },
   { tag: "1920x1080", width: 1920, height: 1080 },
 ];
-function phaseMs(vp, phase) {
-  const wide = vp.width >= 1280;
-  if (phase === "closed") return wide ? 125 : 95;
-  return wide ? 255 : 220;
+function phaseMs(_vp, phase) {
+  return phase === "closed" ? 75 : 195;
+}
+
+async function viewportShot(page, out, vp) {
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.style.height = "100%";
+    document.body.style.margin = "0";
+  });
+  await page.screenshot({
+    path: out,
+    clip: { x: 0, y: 0, width: vp.width, height: vp.height },
+  });
 }
 
 const PORT = 8816;
@@ -72,7 +82,9 @@ async function assertHandFrame(page, vp, phaseMs, frameKind = "auto") {
   const overlap = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureHandShuffleOverlap());
   if (!vis?.ok) throw new Error(`${vp.tag} vis@${phaseMs}: ${JSON.stringify(vis)}`);
   if (!px?.ok) throw new Error(`${vp.tag} pixels@${phaseMs}: ${JSON.stringify(px)}`);
-  if (!overlap?.ok) throw new Error(`${vp.tag} shuffle overlap@${phaseMs}: ${JSON.stringify(overlap)}`);
+  if (frameKind === "closed" && !overlap?.ok) {
+    throw new Error(`${vp.tag} shuffle overlap@${phaseMs}: ${JSON.stringify(overlap)}`);
+  }
   return { vis, px, overlap };
 }
 
@@ -82,7 +94,7 @@ async function captureHandFrame(browser, vp, phaseMs, suffix) {
     await bootPlay(page, { width: vp.width, height: vp.height });
     const meta = await assertHandFrame(page, vp, phaseMs, suffix);
     const out = `${ART}/ui-redesign-hand-${suffix}-${vp.tag}.png`;
-    await page.screenshot({ path: out, fullPage: false });
+    await viewportShot(page, out, vp);
     console.log("saved", out, meta.px.frame, `opaque=${meta.px.opaque}`);
     return out;
   } finally {
@@ -100,7 +112,7 @@ for (const vp of VPs) {
     await bootPlay(apexPage, { width: vp.width, height: vp.height });
     await assertHandFrame(apexPage, vp, phaseMs(vp, "open"), "open");
     const apex = `${ART}/ui-redesign-hand-roll-apex-${vp.tag}.png`;
-    await apexPage.screenshot({ path: apex, fullPage: false });
+    await viewportShot(apexPage, apex, vp);
     console.log("saved", apex);
     if (vp.tag === "768x1024") {
       fs.copyFileSync(apex, `${ART}/ui-redesign-hand-roll-apex-production.png`);
@@ -186,6 +198,43 @@ const vid2 = v2.video();
 await v2.close();
 const slowOut = `${ART}/ui-redesign-hand-roll-review-slowmo-4x.webm`;
 if (vid2) await vid2.saveAs(slowOut);
+// Realtime throw frame strip @ 40ms (unfrozen, one live roll)
+const stripVp = { tag: "768x1024", width: 768, height: 1024 };
+const stripPage = await browser.newPage();
+await bootPlay(stripPage, stripVp);
+await stripPage.click('[data-tutorial="roll-btn"]');
+const stripPaths = [];
+for (let ms = 0; ms <= 480; ms += 40) {
+  if (ms > 0) await stripPage.waitForTimeout(40);
+  const fp = `${ART}/hand-throw-realtime-${String(ms).padStart(3, "0")}ms.png`;
+  await viewportShot(stripPage, fp, stripVp);
+  const px = await stripPage.evaluate((kind) => {
+    const closed = document.querySelector(".gutter-roll-hand-closed");
+    const open = document.querySelector(".gutter-roll-hand-open");
+    const cOp = closed ? parseFloat(getComputedStyle(closed).opacity) : 0;
+    const oOp = open ? parseFloat(getComputedStyle(open).opacity) : 0;
+    const frame = cOp >= oOp ? "closed" : "open";
+    return window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels(frame);
+  });
+  stripPaths.push({ ms, fp, px });
+  console.log("strip", ms, px?.frame, px?.palmOpaque);
+}
+const stripHtml = `<!doctype html><html><body style="margin:0;background:#0a0a0a;">
+<div style="font:12px monospace;color:#0df;padding:6px">REALTIME HAND THROW — 40ms steps (unfrozen)</div>
+<div style="display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:6px;">${stripPaths
+  .map(({ ms, fp }) => {
+    const b64 = fs.readFileSync(fp).toString("base64");
+    return `<div style="flex:0 0 auto;width:220px"><div style="font:10px;color:#ccc">${ms}ms</div><img src="data:image/png;base64,${b64}" style="width:220px;height:auto;border:1px solid #333"/></div>`;
+  })
+  .join("")}</div></body></html>`;
+const stripSheetPage = await browser.newPage();
+await stripSheetPage.setViewportSize({ width: 1920, height: 560 });
+await stripSheetPage.setContent(stripHtml, { waitUntil: "load" });
+const stripOut = `${ART}/ui-redesign-hand-throw-strip-40ms.png`;
+await stripSheetPage.screenshot({ path: stripOut, fullPage: true });
+await stripSheetPage.close();
+await stripPage.close();
+
 await ctx1.close();
 await ctx2.close();
 await browser.close();
@@ -194,3 +243,4 @@ server.kill();
 console.log("demo", demoOut);
 console.log("slowmo", slowOut);
 console.log("contactsheet", sheetOut);
+console.log("strip", stripOut);

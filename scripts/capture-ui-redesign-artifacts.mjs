@@ -142,9 +142,16 @@ async function captureSuite(serveRoot, outDir, label) {
         await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
         await page.waitForTimeout(900);
         if (await page.$('[data-layout-key="carving-layout"]')) {
+          await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.showCarvingHelpToast());
+          await page.waitForSelector('[data-layout-key="mechanic-toast"]', { timeout: 5000 });
+          await page.waitForTimeout(350);
           await page.screenshot({
             path: path.join(outDir, "carving-mod-bench-tablet-after.png"),
-            fullPage: false,
+            clip: { x: 0, y: 0, width: 768, height: 1024 },
+          });
+          await page.screenshot({
+            path: path.join(outDir, "carving-mod-help-tablet-after.png"),
+            clip: { x: 0, y: 0, width: 768, height: 1024 },
           });
         }
       }
@@ -167,6 +174,7 @@ const flat = [
   ["after-redesign/play-tablet-768x1024-after.png", "ui-redesign-after-play-tablet-768x1024.png"],
   ["before-main/play-tablet-after-roll-before.png", "ui-redesign-before-play-tablet-after-roll.png"],
   ["after-redesign/play-tablet-after-roll-after.png", "ui-redesign-after-play-tablet-after-roll.png"],
+  ["after-redesign/play-tablet-after-roll-after.png", "ui-redesign-pill-settled-tablet-verify.png"],
   ["after-redesign/play-payout-unlock-inspector.png", "ui-redesign-after-payout-unlock-inspector-768x1024.png"],
   ["after-redesign/play-payout-receipt-hover-after.png", "ui-redesign-after-payout-receipt-hover-768x1024.png"],
   ["after-redesign/play-history-drawer-after.png", "ui-redesign-after-play-history-drawer-768x1024.png"],
@@ -175,6 +183,7 @@ const flat = [
   ["after-redesign/shop-tablet-768x1024-after.png", "ui-redesign-after-shop-tablet-768x1024.png"],
   ["after-redesign/carving-mod-bench-after.png", "ui-redesign-after-carving-1920x1080.png"],
   ["after-redesign/carving-mod-bench-tablet-after.png", "ui-redesign-after-carving-tablet-768x1024.png"],
+  ["after-redesign/carving-mod-help-tablet-after.png", "ui-redesign-after-carving-help-tablet-768x1024.png"],
 ];
 for (const [rel, name] of flat) {
   const src = path.join(outRoot, rel);

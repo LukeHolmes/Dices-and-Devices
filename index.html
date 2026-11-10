@@ -3110,11 +3110,11 @@
         padding-top: 0.15rem;
     }
     @keyframes handThrowSweep {
-        0% { transform: translate(-74%, -14%) rotate(-16deg) scale(0.97); opacity: 1; }
-        20% { transform: translate(-32%, -18%) rotate(-10deg); opacity: 1; }
-        35% { transform: translate(-10%, -22%) rotate(4deg) scale(1.02); opacity: 1; }
-        58% { transform: translate(-14%, -16%) rotate(2deg) scale(1); opacity: 1; }
-        100% { transform: translate(-80%, -10%) rotate(-12deg) scale(0.96); opacity: 0; }
+        0% { transform: translate(-28%, -12%) rotate(-15deg) scale(0.98); opacity: 1; }
+        18% { transform: translate(-6%, -16%) rotate(-9deg); opacity: 1; }
+        35% { transform: translate(14%, -18%) rotate(5deg) scale(1.03); opacity: 1; }
+        58% { transform: translate(8%, -14%) rotate(2deg) scale(1); opacity: 1; }
+        100% { transform: translate(-32%, -10%) rotate(-11deg) scale(0.97); opacity: 0; }
     }
     @keyframes handGripClosedVisible {
         0%, 34.9% { opacity: 1; }
@@ -3134,11 +3134,13 @@
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
         --hand-anchor-x: 29.427%;
         --hand-anchor-y: 56.25%;
+        --hand-wrist-inset-x: 2.5%;
+        --hand-wrist-lift-y: 46%;
         position: absolute;
-        left: -10%;
-        bottom: 38%;
-        width: clamp(6.25rem, min(36vw, 28vh), 13.5rem);
-        height: clamp(6.25rem, min(36vw, 28vh), 13.5rem);
+        left: var(--hand-wrist-inset-x);
+        bottom: var(--hand-wrist-lift-y);
+        width: var(--hand-sprite-size, clamp(7.5rem, min(42vw, 34vh), 15.5rem));
+        height: var(--hand-sprite-size, clamp(7.5rem, min(42vw, 34vh), 15.5rem));
         transform-origin: var(--hand-anchor-x) var(--hand-anchor-y);
         will-change: transform, opacity;
     }
@@ -3165,29 +3167,45 @@
     #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .gutter-roll-hand-overlay {
         display: none !important;
     }
-    @media (max-width: 1024px) {
+    @media (max-width: 1024px) and (min-height: 900px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            left: -12%;
-            bottom: 36%;
-            width: clamp(6rem, min(42vw, 28vh), 12rem);
-            height: clamp(6rem, min(42vw, 28vh), 12rem);
+            --hand-wrist-inset-x: 1.5%;
+            --hand-wrist-lift-y: 48%;
+            --hand-sprite-size: clamp(8rem, min(52vw, 36vh), 16rem);
         }
     }
-    @media (max-height: 768px) {
+    @media (max-height: 820px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            left: -14%;
-            bottom: 34%;
-            width: clamp(5.5rem, min(32vw, 38vh), 11.5rem);
-            height: clamp(5.5rem, min(32vw, 38vh), 11.5rem);
+            --hand-wrist-inset-x: 2%;
+            --hand-wrist-lift-y: 44%;
+            --hand-sprite-size: clamp(7rem, min(36vw, 42vh), 14rem);
         }
     }
     @media (min-width: 1280px) and (max-height: 900px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            left: -4%;
-            bottom: 36%;
-            width: clamp(6rem, min(22vw, 46vh), 12.5rem);
-            height: clamp(6rem, min(22vw, 46vh), 12.5rem);
+            --hand-wrist-inset-x: 3%;
+            --hand-wrist-lift-y: 45%;
+            --hand-sprite-size: clamp(7.25rem, min(24vw, 48vh), 14.5rem);
         }
+    }
+    @media (min-width: 1800px) and (min-height: 900px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-wrist-inset-x: 4%;
+            --hand-wrist-lift-y: 46%;
+            --hand-sprite-size: clamp(8rem, min(18vw, 38vh), 15rem);
+        }
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-inner > .bone-pill-control {
+        top: auto;
+        bottom: -0.5rem;
+        right: -0.35rem;
+        left: auto;
+        min-height: 2rem;
+        min-width: 2rem;
+        padding: 0.15rem 0.35rem;
+        font-size: max(9px, 0.62rem);
+        z-index: 45;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
     }
     #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .animate-gutter-hand,
     #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .gutter-roll-hand-closed,
@@ -6865,7 +6883,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         onBlur={onDismissPillHint}
                         title={canPill ? 'Pill reroll this bone' : 'No pills left'}
                         aria-label={canPill ? 'Reroll this bone (spend 1 pill)' : 'No pills remaining'}
-                        className={`gb-tappable-label absolute -top-3 -right-3 z-50 flex min-h-11 min-w-11 md:min-h-8 md:min-w-9 items-center justify-center rounded-full border border-[#0df]/70 bg-black px-1.5 font-mono font-bold text-[#0df] shadow-[0_0_10px_rgba(0,221,255,.25)] transition-opacity ${canPill ? 'opacity-100 hover:bg-[#0a1520]' : 'cursor-not-allowed opacity-35'} ${pillPulse && canPill ? 'animate-pulse ring-2 ring-[#ff007f]/80' : ''}`}
+                        className={`bone-pill-control gb-tappable-label absolute -top-3 -right-3 z-50 flex min-h-11 min-w-11 md:min-h-8 md:min-w-9 items-center justify-center rounded-full border border-[#0df]/70 bg-black px-1.5 font-mono font-bold text-[#0df] shadow-[0_0_10px_rgba(0,221,255,.25)] transition-opacity ${canPill ? 'opacity-100 hover:bg-[#0a1520]' : 'cursor-not-allowed opacity-35'} ${pillPulse && canPill ? 'animate-pulse ring-2 ring-[#ff007f]/80' : ''}`}
                     >
                         PILL
                         {raidPill && canPill && <span className="absolute -bottom-4 text-[8px] font-bold font-mono text-red-500">-$2</span>}
@@ -13892,7 +13910,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     for (let i = 3; i < data.length; i += 4) {
                         if (data[i] > 28) opaque += 1;
                     }
-                    return { ok: opaque >= 180, opaque, samples: w * h, frame: pick.classList.contains('gutter-roll-hand-open') ? 'open' : 'closed' };
+                    let palmOpaque = 0;
+                    const palmX0 = Math.floor(w * 0.32);
+                    for (let y = 0; y < h; y += 1) {
+                        for (let x = palmX0; x < w; x += 1) {
+                            const i = (y * w + x) * 4 + 3;
+                            if (data[i] > 28) palmOpaque += 1;
+                        }
+                    }
+                    const palmMin = preferFrame === 'closed' ? 95 : 70;
+                    return {
+                        ok: opaque >= 180 && palmOpaque >= palmMin,
+                        opaque,
+                        palmOpaque,
+                        samples: w * h,
+                        frame: pick.classList.contains('gutter-roll-hand-open') ? 'open' : 'closed',
+                    };
                 },
                 measureHandShuffleOverlap: () => {
                     const hand = document.querySelector('.gutter-roll-hand-closed, .gutter-roll-hand-open');
@@ -13906,6 +13939,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const shuffleArea = Math.max(1, sr.width * sr.height);
                     const ratio = overlapArea / shuffleArea;
                     return { ok: ratio < 0.22, ratio, overlapArea, shuffleArea };
+                },
+                showCarvingHelpToast: () => {
+                    const hint = MECHANIC_HINTS.TIP_FIRST_CARVE;
+                    if (!hint) return false;
+                    pushToast({
+                        kind: 'mechanic',
+                        title: hint.title,
+                        body: hint.body,
+                        layoutKey: 'mechanic-toast',
+                    });
+                    return true;
                 },
                 setHandReviewSlowMo: (on) => {
                     const root = document.getElementById('root-gutterbones');
