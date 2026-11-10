@@ -29,6 +29,10 @@ console.log("\n=== check:fast — repro-r13 softlocks ===\n");
 code = run("node", ["--test", "--test-timeout=420000", "tests/repro-r13-softlocks.test.cjs"]);
 if (code !== 0) process.exit(code);
 
+console.log("\n=== check:fast — hand-roll overlay (fixture sprites only) ===\n");
+code = run("node", ["--test", "--test-timeout=180000", "tests/hand-roll-overlay.test.cjs"]);
+if (code !== 0) process.exit(code);
+
 const fullLayout = process.env.FULL_LAYOUT_REPLAY === "1";
 if (fullLayout) {
   console.log("\n=== check:fast (blocking) — test:layout (FULL_LAYOUT_REPLAY=1) ===\n");

@@ -103,6 +103,12 @@ async function captureSuite(serveRoot, outDir, label) {
   await loadPlay(page, fixtures.shopBusy, vpDesk, base);
   await page.waitForSelector('[data-layout-key="shop-layout"]', { timeout: 12_000 });
   await page.screenshot({ path: path.join(outDir, `shop-counting-cash-1920-${label}.png`), fullPage: false });
+  if (label === "after") {
+    await page.setViewportSize(vpTablet);
+    await loadPlay(page, fixtures.shopBusy, vpTablet, base);
+    await page.waitForSelector('[data-layout-key="shop-layout"]', { timeout: 12_000 });
+    await page.screenshot({ path: path.join(outDir, "shop-tablet-768x1024-after.png"), fullPage: false });
+  }
 
   if (label === "after") {
     const inspectBtn = await page.$('[data-layout-key="shop-inspect-offer"]');
@@ -141,4 +147,25 @@ async function captureSuite(serveRoot, outDir, label) {
 
 await captureSuite(worktreePath, beforeDir, "before");
 await captureSuite(ROOT, afterDir, "after");
+
+const flat = [
+  ["before-main/play-tablet-768x1024-before.png", "ui-redesign-before-play-tablet-768x1024.png"],
+  ["after-redesign/play-tablet-768x1024-after.png", "ui-redesign-after-play-tablet-768x1024.png"],
+  ["before-main/play-tablet-after-roll-before.png", "ui-redesign-before-play-tablet-after-roll.png"],
+  ["after-redesign/play-tablet-after-roll-after.png", "ui-redesign-after-play-tablet-after-roll.png"],
+  ["after-redesign/play-payout-unlock-inspector.png", "ui-redesign-after-payout-unlock-inspector-768x1024.png"],
+  ["after-redesign/play-payout-receipt-hover-after.png", "ui-redesign-after-payout-receipt-hover-768x1024.png"],
+  ["after-redesign/play-history-drawer-after.png", "ui-redesign-after-play-history-drawer-768x1024.png"],
+  ["after-redesign/shop-counting-cash-1920-after.png", "ui-redesign-after-shop-1920x1080.png"],
+  ["after-redesign/shop-workbench-inspect-bones.png", "ui-redesign-after-shop-inspect-bones-1920x1080.png"],
+  ["after-redesign/shop-tablet-768x1024-after.png", "ui-redesign-after-shop-tablet-768x1024.png"],
+  ["after-redesign/carving-mod-bench-after.png", "ui-redesign-after-carving-1920x1080.png"],
+];
+for (const [rel, name] of flat) {
+  const src = path.join(outRoot, rel);
+  const dest = path.join("/opt/cursor/artifacts", name);
+  if (fs.existsSync(src)) fs.copyFileSync(src, dest);
+}
+
 console.log("UI redesign before/after capture complete:", outRoot);
+console.log("Flat artifact copies under /opt/cursor/artifacts/ui-redesign-*.png");

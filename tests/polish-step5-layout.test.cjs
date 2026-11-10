@@ -54,6 +54,7 @@ const SCREENS = [
 let server;
 let baseUrl;
 let chromium;
+let sharedBrowser;
 
 before(async () => {
   chromium = require("playwright").chromium;
@@ -73,9 +74,11 @@ before(async () => {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}`;
+  sharedBrowser = await chromium.launch({ headless: true });
 });
 
 after(async () => {
+  if (sharedBrowser) await sharedBrowser.close();
   if (server) await new Promise((resolve) => server.close(resolve));
   if (process.env.CHECK_FAST_PRINT_PHONE_REPORT === "1") {
     printPhonePortraitReport();
@@ -90,8 +93,8 @@ async function resumeFixture(page, fixtureName) {
     ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
     { key: RUN_KEY, data: payload },
   );
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
   await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
   await page.waitForTimeout(500);
 }
@@ -132,11 +135,16 @@ for (const screen of SCREENS) {
   for (const vp of VIEWPORTS) {
     if (screen.id === "score_overlay" && vp.height < 500) continue;
     test(`polish step5 layout — ${screen.id} @ ${vp.name}`, async () => {
-      const browser = await chromium.launch({ headless: true });
-      const page = await browser.newPage();
+      const context = await sharedBrowser.newContext();
+      const page = await context.newPage();
+      page.setDefaultNavigationTimeout(90_000);
+      page.setDefaultTimeout(90_000);
       try {
         await page.setViewportSize({ width: vp.width, height: vp.height });
-        await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+        await page.goto(`${baseUrl}/index.html?layoutAudit=1`, {
+          waitUntil: "domcontentloaded",
+          timeout: 90_000,
+        });
         await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
         await resumeFixture(page, screen.fixture);
         if (screen.id === "shop") {
@@ -166,7 +174,8 @@ for (const screen of SCREENS) {
         }
         assert.ok(audit.ok, msg);
       } finally {
-        await browser.close();
+        await page.close();
+        await context.close();
       }
     });
   }

@@ -16,3 +16,14 @@ This branch (`cursor/gutterbones-ui-ux-redesign-dab9`) is **presentation-only**.
 **Do not** merge stash-tax or balance deltas from the brief — none were implemented here.
 
 When integrating with #78, prefer #78 for scoring/economy logic and this branch for JSX/CSS in the table above.
+
+## Test harness reuse from #78 (test-only on #79)
+
+Without touching branch `cursor/sim-win-rate-f4c3`:
+
+| Change | Why |
+|--------|-----|
+| `polish-step5-layout.test.cjs` shared Chromium browser + 90s navigation timeouts | Prior failures: `toast @ 844×390` hit **reload timeout** after ~80 sequential browser launches (resource churn), not a toast layout assertion failure. |
+| `repro-r13` r14 waits + `focusPlayPayoutsTab` retry | Prior failures: `scoreFirstPayoutRow()` returned false at 1024×768 because roll wasn’t settled and payouts dock wasn’t focused for redesign play chrome (functional E2E gap, not gameplay). |
+
+**Hand overlay:** `tests/hand-roll-overlay.test.cjs` serves `tests/fixtures/hand-roll/*.png` — positive animation coverage only in tests; production sprites still absent.
