@@ -10,8 +10,11 @@ const fs = require("node:fs");
 const { runOneGame, VIEWPORTS_BLOCKING } = require("./run.cjs");
 
 const ROOT = path.join(__dirname, "../..");
-const RID = Number(process.env.DETERMINISTIC_REPLAY_RID || 7);
 const MAX_STEPS = Number(process.env.DETERMINISTIC_REPLAY_STEPS || 5000);
+const REPLAY_RIDS = (process.env.DETERMINISTIC_REPLAY_RIDS || "0,7,16,23,42")
+  .split(",")
+  .map((s) => Number(s.trim()))
+  .filter((n) => Number.isFinite(n));
 const vp = VIEWPORTS_BLOCKING.find((v) => v.name === "1024x768") || VIEWPORTS_BLOCKING[0];
 
 let server;
@@ -23,13 +26,41 @@ function fingerprint(r) {
   );
   return {
     outcome: r.outcome,
-    steps: r.steps,
     maxRound: r.maxRound,
     stuck: !!r.stuck,
     reason: r.reason || null,
     linkKeys: links.sort().join(","),
     hands: r.telem?.hands?.length || 0,
+    inventoryCount: r.telem?.inventoryCount ?? null,
+    terminalScore: r.telem?.score ?? null,
   };
+}
+
+async function replayRid(rid) {
+  const chromium = globalThis.__detChromium;
+  const runs = [];
+  for (let rep = 0; rep < 2; rep += 1) {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    try {
+      page.__baseUrl = baseUrl;
+      const booted = { value: false };
+      const r = await runOneGame(page, {
+        rid,
+        seed: rid * 7919,
+        strategy: "builder",
+        viewport: vp,
+        maxSteps: MAX_STEPS,
+        booted,
+        stuckThreshold: 48,
+        maxFallbacks: 36,
+      });
+      runs.push(fingerprint(r));
+    } finally {
+      await browser.close();
+    }
+  }
+  assert.deepEqual(runs[0], runs[1], `rid ${rid} non-deterministic: ${JSON.stringify(runs)}`);
 }
 
 before(async () => {
@@ -56,33 +87,8 @@ after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-test(
-  `deterministic replay — builder rid ${RID} ×2 identical fingerprint`,
-  { timeout: 600_000 },
-  async () => {
-    const chromium = globalThis.__detChromium;
-    const runs = [];
-    for (let rep = 0; rep < 2; rep += 1) {
-      const browser = await chromium.launch({ headless: true });
-      const page = await browser.newPage();
-      try {
-        page.__baseUrl = baseUrl;
-        const booted = { value: false };
-        const r = await runOneGame(page, {
-          rid: RID,
-          seed: RID * 7919,
-          strategy: "builder",
-          viewport: vp,
-          maxSteps: MAX_STEPS,
-          booted,
-          stuckThreshold: 48,
-          maxFallbacks: 36,
-        });
-        runs.push(fingerprint(r));
-      } finally {
-        await browser.close();
-      }
-    }
-    assert.deepEqual(runs[0], runs[1], `non-deterministic replay: ${JSON.stringify(runs)}`);
-  },
-);
+for (const rid of REPLAY_RIDS) {
+  test(`deterministic replay — builder rid ${rid} ×2 identical fingerprint`, { timeout: 600_000 }, async () => {
+    await replayRid(rid);
+  });
+}

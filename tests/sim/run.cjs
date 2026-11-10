@@ -242,7 +242,15 @@ async function runOneGame(
     const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
     const roundEvents = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.roundEvents) || [];
     const build = window.__GB_E2E__?.getBuildProfile?.() || null;
-    return { hands, gold: st.gold, score: st.score, build, roundEvents };
+    return {
+      hands,
+      gold: st.gold,
+      score: st.score,
+      target: st.target,
+      inventoryCount: st.inventoryCount,
+      build,
+      roundEvents,
+    };
   });
   return { rid, viewport: viewport.name, ...result, telem };
 }

@@ -387,11 +387,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         && shopRound >= 2;
       const builderStreets =
         strategy === "builder"
-          ? organicReady || kitStalled || log._shopPasses > 28
+          ? (organicReady && invNow >= 2) || kitStalled || log._shopPasses > 22
           : organicReady
             || log._shopPasses > 18
             || window.__GB_E2E__?.shouldLeaveShopForPacing?.();
-      if (log._shopPasses <= 20 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+      if (log._shopPasses <= 14 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
         await wait(90);
         continue;
       }

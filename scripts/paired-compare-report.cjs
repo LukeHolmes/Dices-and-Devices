@@ -68,6 +68,14 @@ function countPair(links, from, to) {
   return (links || []).some((l) => l.from === from && l.to === to);
 }
 
+/** Production v1 Bookends hardware: end pip match AND (face match OR ghost_echo already fired). No haunted-only bracket. */
+function v1BookendsWouldFire(resolved, destroyed, ghostEchoFired) {
+  if (destroyed.has(0) || destroyed.has(4)) return false;
+  const valueMatch = resolved[0].value === resolved[4].value;
+  const faceMatch = valueMatch && resolved[0].faceId === resolved[4].faceId;
+  return valueMatch && (faceMatch || ghostEchoFired);
+}
+
 function makeCarvedKitLane(n, layout = "echo1_ghost2") {
   const values = Array.from({ length: 5 }, (_, i) => 1 + ((n * 13 + i * 5) % 6));
   const d = dice(values);
@@ -169,9 +177,12 @@ function conditionalPreparedLane(samples = 8000) {
   const ctx = linkCtx(g, [{ id: "BOOKENDS" }]);
   let pairV2 = 0;
   let pairV1 = 0;
-  let ge = 0;
+  let geV2 = 0;
+  let geV1 = 0;
   let bookendsV2 = 0;
   let bookendsV1 = 0;
+  let bothFireV2 = 0;
+  let bothFireV1 = 0;
   let endsValueMatch = 0;
   let hauntedOnly = 0;
   for (let n = 0; n < samples; n++) {
@@ -187,25 +198,37 @@ function conditionalPreparedLane(samples = 8000) {
     if (!vm && bracket) hauntedOnly += 1;
     const cur = g.api.GutterbonesRules.calculateScore("C", d, ctx);
     const { resolved, destroyed } = g.api.GutterbonesRules.resolveDice(d);
-    const v1 = patchV1(cur, resolved, destroyed);
-    if (cur.synergyEvents.some((e) => e.id === "ghost_echo")) ge += 1;
-    if (cur.synergyEvents.some((e) => e.id === "bookends_retrigger")) bookendsV2 += 1;
-    if (v1.synergyEvents.some((e) => e.id === "bookends_retrigger")) bookendsV1 += 1;
+    const v1Scored = patchV1(cur, resolved, destroyed);
+    const ghostV2 = cur.synergyEvents.some((e) => e.id === "ghost_echo");
+    const ghostV1 = ghostEchoV1(resolved, destroyed);
+    const bookV2 = cur.synergyEvents.some((e) => e.id === "bookends_retrigger");
+    const bookV1 = v1BookendsWouldFire(resolved, destroyed, ghostV2);
+    if (ghostV2) geV2 += 1;
+    if (ghostV1) geV1 += 1;
+    if (bookV2) bookendsV2 += 1;
+    if (bookV1) bookendsV1 += 1;
+    if (ghostV2 && bookV2) bothFireV2 += 1;
+    if (ghostV1 && bookV1) bothFireV1 += 1;
     if (countPair(cur.chainLinks, "ghost_echo", "bookends_retrigger")) pairV2 += 1;
-    if (countPair(v1.chainLinks, "ghost_echo", "bookends_retrigger")) pairV1 += 1;
+    if (countPair(v1Scored.chainLinks, "ghost_echo", "bookends_retrigger")) pairV1 += 1;
   }
+  const pct = (x) => `${x}/${samples} (${((x / samples) * 100).toFixed(2)}%)`;
   return {
     label: "conditional_prepared_lane_ECHO@2_GHOST@3_independent_pips",
     denominator: `${samples} independent pip vectors (mulberry32), faces fixed; not shop/carve play`,
     ends_value_match: `${endsValueMatch}/${samples}`,
     bookends_via_haunted_only: `${hauntedOnly}/${samples}`,
-    ghost_echo: `${ge}/${samples} (${((ge / samples) * 100).toFixed(2)}%)`,
-    bookends_v2_haunted_bracket: `${bookendsV2}/${samples} (${((bookendsV2 / samples) * 100).toFixed(2)}%)`,
-    bookends_v1_exact_pip_only: `${bookendsV1}/${samples} (${((bookendsV1 / samples) * 100).toFixed(2)}%)`,
-    delta_bookends_rate: ((bookendsV2 - bookendsV1) / samples) * 100,
-    joint_pair_v2: `${pairV2}/${samples} (${((pairV2 / samples) * 100).toFixed(2)}%)`,
-    joint_pair_v1: `${pairV1}/${samples} (${((pairV1 / samples) * 100).toFixed(2)}%)`,
-    delta_joint_pair_pct_points: ((pairV2 - pairV1) / samples) * 100,
+    ghost_echo_v2: pct(geV2),
+    ghost_echo_v1_reach_adj_only: pct(geV1),
+    bookends_hardware_v2: pct(bookendsV2),
+    bookends_hardware_v1_value_or_face_with_ghost: pct(bookendsV1),
+    logical_and_both_fire_v2: pct(bothFireV2),
+    logical_and_both_fire_v1: pct(bothFireV1),
+    delta_logical_and_pp: ((bothFireV2 - bothFireV1) / samples) * 100,
+    link_telemetry_v2: pct(pairV2),
+    link_telemetry_v1_logging_patch: pct(pairV1),
+    delta_link_telemetry_pp: ((pairV2 - pairV1) / samples) * 100,
+    note: "Compare logical_and before link_telemetry; v1 bookends = valueMatch&&(faceMatch||ghost); v2 adds haunted bracket path",
   };
 }
 

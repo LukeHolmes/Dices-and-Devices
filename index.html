@@ -12434,7 +12434,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const needKitFaces = !organicReady && inventory.some((i) => i.id === 'BOOKENDS')
                             && (!hasGhostKit || !hasEchoKit);
                         if (
-                            bossPath && organicReady && inventory.length >= 3 && round >= 3 && !selectedShopPathId
+                            bossPath && organicReady && inventory.length >= 3 && round >= 4 && !selectedShopPathId
                         ) {
                             selectShopPath(bossPath);
                             return true;
@@ -12584,7 +12584,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     shouldLeaveShopForPacing: () => {
                         if (phase !== 'SHOP') return false;
-                        if (window.__GB_E2E__.isOrganicChainReady()) return true;
+                        if (window.__GB_E2E__.isOrganicChainReady()) {
+                            const reserve = shopRefreshCost + 10;
+                            if (inventory.length < 3 && gold >= reserve) return false;
+                            return true;
+                        }
                         const invIdsEarly = new Set(inventory.map((i) => i.id));
                         const chasingGhostBookends = invIdsEarly.has('BOOKENDS')
                             && window.__GB_E2E__.countCarvedFace('ECHO_FACE') >= 1
@@ -12703,7 +12707,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             if (!hasGhost && tryBuy('GHOST_FACE')) return true;
                             if (!hasEcho && tryBuy('ECHO_FACE')) return true;
                         }
-                        if (window.__GB_E2E__.isOrganicChainReady()) return false;
+                        const organicReady = window.__GB_E2E__.isOrganicChainReady?.();
+                        const consistencyHw = [
+                            'BRASS_KNUCKLES', 'LOADED_DIE', 'MAGNET_FACE', 'HOT_STREAK_COIL',
+                            'ODD_EVEN_SPLIT', 'STRAIGHT_FOCUS', 'PIP_SUM', 'HOLD_CHARGE', 'COPY_LAST',
+                        ];
+                        if (organicReady || invIds.has('BOOKENDS')) {
+                            for (const id of consistencyHw) {
+                                if (!invIds.has(id) && tryBuy(id)) return true;
+                            }
+                        }
+                        if (organicReady) return false;
                         const needIds = [];
                         if (!invIds.has('BOOKENDS')) needIds.push('BOOKENDS');
                         if (!hasGhost) needIds.push('GHOST_FACE');
@@ -12974,7 +12988,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     keepDiceForReroll: () => {
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
-                            && window.__GB_E2E_QUERY__();
+                            && window.__GB_E2E_QUERY__()
+                            && !window.__GB_SIM_BOT_SESSION__;
                         const bookendsKit = inventory.some((i) => i.id === 'BOOKENDS');
                         if (e2eGreedy && bookendsKit) {
                             const carvedGhost = dice
@@ -13121,9 +13136,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             }
                             return false;
                         }
+                        const simBuilder = !!window.__GB_SIM_BOT_SESSION__;
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
-                            && window.__GB_E2E_QUERY__();
+                            && window.__GB_E2E_QUERY__()
+                            && !simBuilder;
                         const organicReadyHand = window.__GB_E2E__.isOrganicChainReady?.();
                         const bookendsKit = inventory.some((i) => i.id === 'BOOKENDS');
                         const laneGhost = dice.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
@@ -13191,25 +13208,34 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             })
                         );
                         const organicHuntActive = e2eGreedy && bookendsKit && organicReadyHand && hasRolled;
-                        const mustScore = organicHuntActive && !hasTargetLinkNow
+                        const quotaPace = gap / Math.max(1, hands);
+                        const mustScore = simBuilder
                             ? (
                                 hands <= 1
                                 || discards <= 0
-                                || (score + (best?.total || 0) >= currentTarget && hands <= 2)
-                                || (gap > 0 && hands <= 2 && (best?.total || 0) >= gap * 0.92)
+                                || (best?.total || 0) >= Math.max(10, quotaPace * 0.42)
+                                || (round >= 4 && (best?.total || 0) >= Math.max(8, gap * 0.22))
                             )
-                            : (
-                                hands <= 1
-                                || discards <= 0
-                                || (e2eGreedy && hands <= 2)
-                                || (e2eGreedy && round >= 5)
-                                || (e2eGreedy && gap > Math.max(60, best.total * 1.5))
-                            );
+                            : organicHuntActive && !hasTargetLinkNow
+                                ? (
+                                    hands <= 1
+                                    || discards <= 0
+                                    || (score + (best?.total || 0) >= currentTarget && hands <= 2)
+                                    || (gap > 0 && hands <= 2 && (best?.total || 0) >= gap * 0.92)
+                                )
+                                : (
+                                    hands <= 1
+                                    || discards <= 0
+                                    || (e2eGreedy && hands <= 2)
+                                    || (e2eGreedy && round >= 5)
+                                    || (e2eGreedy && gap > Math.max(60, best.total * 1.5))
+                                );
+                        const endsBookendsReady = organicPreds?.preds?.ends_bookends_ready ?? endsValueMatch;
                         const organicLinkHunt = organicHuntActive
                             && discards > 0
                             && !mustScore
                             && !hasTargetLinkNow
-                            && (!ghostEchoInReach || !endsValueMatch);
+                            && (!ghostEchoInReach || !endsBookendsReady);
                         if (organicLinkHunt && rollBtn) {
                             window.__GB_E2E__.keepDiceForReroll?.();
                             rollBones();
@@ -13220,7 +13246,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             const hasGhost = (layout.synergyEvents || []).some((e) => e.id === 'ghost_echo');
                             const hasBookends = (layout.synergyEvents || []).some((e) => e.id === 'bookends_retrigger');
                             const partialLink = hasGhost !== hasBookends;
-                            const layoutGap = !ghostEchoInReach || !endsValueMatch;
+                            const layoutGap = !ghostEchoInReach || !endsBookendsReady;
                             if (!targetPair(layout.chainLinks) && (partialLink || (layoutGap && discards >= 2))) {
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
@@ -13237,10 +13263,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             rollBones();
                             return true;
                         }
-                        const minPlay = e2eGreedy
-                            ? 1
-                            : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
-                        if (!e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
+                        const minPlay = simBuilder
+                            ? Math.min(gap, Math.max(8, Math.ceil(need * 0.45)))
+                            : e2eGreedy
+                                ? 1
+                                : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
+                        if (!simBuilder && !e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
                             if (rollBtn) {
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();

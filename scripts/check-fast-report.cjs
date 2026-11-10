@@ -31,6 +31,7 @@ code = run("node", [
   "--test-timeout=900000",
   "tests/organic-pairwise-regression.test.cjs",
   "tests/sim/deterministic-replay.test.cjs",
+  "tests/sim/builder-consistency-regression.test.cjs",
 ]);
 if (code !== 0) process.exit(code);
 
