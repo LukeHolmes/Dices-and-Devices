@@ -12990,6 +12990,35 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             && typeof window.__GB_E2E_QUERY__ === 'function'
                             && window.__GB_E2E_QUERY__()
                             && !(window.__GB_SIM_BOT_SESSION__ && !window.__GB_SIM_ORGANIC_TRACE__);
+                        const simConsistency = !!window.__GB_SIM_BOT_SESSION__ && !window.__GB_SIM_ORGANIC_TRACE__;
+                        if (simConsistency) {
+                            const counts = {};
+                            dice.forEach((d) => {
+                                if (typeof d.value === 'number' && d.value > 0) {
+                                    counts[d.value] = (counts[d.value] || 0) + 1;
+                                }
+                            });
+                            let pairV = -1;
+                            let pairN = 0;
+                            Object.entries(counts).forEach(([v, n]) => {
+                                const nv = Number(v);
+                                if (n >= 2 && (n > pairN || (n === pairN && nv > pairV))) {
+                                    pairV = nv;
+                                    pairN = n;
+                                }
+                            });
+                            if (pairV >= 0) {
+                                setKept(dice.map((d) => d.value === pairV));
+                                return true;
+                            }
+                            const ranked = dice
+                                .map((d, i) => ({ v: d.value, i }))
+                                .filter((x) => typeof x.v === 'number')
+                                .sort((a, b) => b.v - a.v);
+                            const keepIdx = new Set(ranked.slice(0, Math.min(3, ranked.length)).map((x) => x.i));
+                            setKept(dice.map((_, i) => keepIdx.has(i)));
+                            return true;
+                        }
                         const bookendsKit = inventory.some((i) => i.id === 'BOOKENDS');
                         if (e2eGreedy && bookendsKit) {
                             const carvedGhost = dice

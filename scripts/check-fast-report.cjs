@@ -32,6 +32,7 @@ code = run("node", [
   "tests/organic-pairwise-regression.test.cjs",
   "tests/sim/deterministic-replay.test.cjs",
   "tests/sim/builder-consistency-regression.test.cjs",
+  "tests/sim/held-out-seeds.test.cjs",
 ]);
 if (code !== 0) process.exit(code);
 
