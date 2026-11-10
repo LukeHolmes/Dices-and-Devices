@@ -2667,6 +2667,415 @@
         #root-gutterbones .felt-smoke-wisp { filter: none; opacity: .05; }
         #root-gutterbones .cash-bill.far { filter: none; }
     }
+
+    /* —— 1977 tabletop UI redesign (presentation-only; mechanics unchanged) —— */
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-hud {
+        background: rgba(24, 24, 27, 0.88);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(63, 63, 70, 0.65);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-hud .boss-banner-scan { display: none !important; }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.4rem 0.65rem;
+        min-height: 2.75rem;
+        flex-wrap: wrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-family: "Courier New", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: max(11px, var(--gb-min-font));
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        border: 1px solid rgba(82, 82, 91, 0.7);
+        background: rgba(9, 9, 11, 0.55);
+        color: #fbbf24;
+        white-space: nowrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--plays { color: #fafafa; }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--pill { color: #22d3ee; border-color: rgba(34, 211, 238, 0.45); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--cash { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--debt { color: #f87171; border-color: rgba(248, 113, 113, 0.45); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota {
+        padding: 0 0.65rem 0.5rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-track {
+        height: 0.55rem;
+        border-radius: 999px;
+        background: rgba(9, 9, 11, 0.9);
+        border: 1px solid rgba(63, 63, 70, 0.8);
+        overflow: hidden;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill {
+        height: 100%;
+        border-radius: inherit;
+        transition: width var(--t-med) var(--ease-out-expo), background-color var(--t-fast) ease;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--low { background: linear-gradient(90deg, #b45309, #f59e0b); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--pace { background: linear-gradient(90deg, #ea580c, #fb923c); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--danger { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--clear { background: linear-gradient(90deg, #059669, #fbbf24); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.25rem;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #a1a1aa;
+        letter-spacing: 0.06em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp {
+        flex: 1 1 12rem;
+        max-width: 22rem;
+        margin: 0 auto;
+        text-align: center;
+        border: 1px dashed rgba(248, 113, 113, 0.55);
+        background: rgba(69, 10, 10, 0.55);
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.35rem;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #fecaca;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-rule { color: #fca5a5; font-weight: 700; }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-history-log"] {
+        min-width: 2.75rem;
+        min-height: var(--gb-min-tap);
+        border: 1px solid rgba(113, 113, 122, 0.8);
+        border-radius: 0.35rem;
+        background: rgba(9, 9, 11, 0.7);
+        color: #e4e4e7;
+        font-family: "Courier New", monospace;
+        letter-spacing: 0.18em;
+        font-size: max(10px, var(--gb-min-font));
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-history-log"]:focus-visible {
+        outline: 2px solid #fbbf24;
+        outline-offset: 2px;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-history-drawer {
+        position: fixed;
+        inset: 0;
+        z-index: 480;
+        background: rgba(0, 0, 0, 0.62);
+        display: flex;
+        justify-content: flex-end;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-history-drawer-panel {
+        width: min(22rem, 92vw);
+        max-height: 100dvh;
+        background: rgba(9, 9, 11, 0.96);
+        border-left: 2px solid rgba(251, 191, 36, 0.35);
+        padding: 1rem;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger {
+        background: rgba(232, 230, 225, 0.94) !important;
+        border: 1px solid rgba(24, 24, 27, 0.85) !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        border-radius: 0.5rem;
+        transform: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger .payout-sheet-rows {
+        divide-color: rgba(39, 39, 42, 0.65);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-done {
+        opacity: 0.35 !important;
+        min-height: 1.75rem !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-done .score-row-name { text-decoration: line-through; }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-idle {
+        opacity: 0.5 !important;
+        min-height: 2rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-live {
+        opacity: 1 !important;
+        min-height: 2.75rem !important;
+        background: rgba(251, 191, 36, 0.12) !important;
+        border-left: 2px solid rgba(245, 158, 11, 0.65) !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-live.payout-tier-best {
+        box-shadow: inset 0 0 0 1px rgba(234, 179, 8, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-heat-pill {
+        font-family: "Courier New", monospace;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        color: #b45309;
+        min-width: 3rem;
+        text-align: right;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-receipt-popover {
+        position: absolute;
+        right: 0.25rem;
+        top: 100%;
+        z-index: 60;
+        width: min(14rem, 72vw);
+        margin-top: 0.15rem;
+        padding: 0.55rem 0.65rem;
+        background: rgba(9, 9, 11, 0.96);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 0.4rem;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #e4e4e7;
+        text-align: left;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-meta-rest { display: none; }
+    #root-gutterbones[data-ui-redesign="1"] .score-row:hover .payout-meta-rest,
+    #root-gutterbones[data-ui-redesign="1"] .score-row:focus-visible .payout-meta-rest,
+    #root-gutterbones[data-ui-redesign="1"] .score-row.payout-receipt-open .payout-meta-rest { display: inline; }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail {
+        position: relative;
+        z-index: 25;
+        width: 100%;
+        padding: 0.35rem 0.75rem 0.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+        border-bottom: 1px solid rgba(63, 63, 70, 0.55);
+        background: rgba(9, 9, 11, 0.55);
+        backdrop-filter: blur(4px);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-wires {
+        position: absolute;
+        left: 0.75rem;
+        right: 0.75rem;
+        top: 50%;
+        height: 2px;
+        pointer-events: none;
+        z-index: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-wire {
+        stroke: rgba(251, 146, 60, 0.75);
+        stroke-width: 2;
+        fill: none;
+        filter: drop-shadow(0 0 4px rgba(251, 146, 60, 0.35));
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket {
+        position: relative;
+        z-index: 2;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.35rem;
+        border: 1px solid rgba(82, 82, 91, 0.85);
+        background: rgba(24, 24, 27, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Courier New", monospace;
+        font-size: max(9px, var(--gb-min-font));
+        color: #e4e4e7;
+        padding: 0.15rem;
+        text-align: center;
+        line-height: 1.05;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--empty { opacity: 0.35; }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--disabled {
+        opacity: 0.35;
+        filter: grayscale(1);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--disabled::after {
+        content: "CONFISCATED";
+        position: absolute;
+        inset: 0;
+        font-size: 7px;
+        letter-spacing: 0.08em;
+        color: #fca5a5;
+        background: repeating-linear-gradient(-12deg, transparent, transparent 4px, rgba(248, 113, 113, 0.25) 4px, rgba(248, 113, 113, 0.25) 6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0.15rem;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket:focus-visible {
+        outline: 2px solid #fbbf24;
+        outline-offset: 2px;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-tip {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: calc(100% + 0.25rem);
+        width: min(14rem, 70vw);
+        z-index: 80;
+        padding: 0.5rem 0.6rem;
+        background: rgba(9, 9, 11, 0.96);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        border-radius: 0.35rem;
+        font-size: max(10px, var(--gb-min-font));
+        color: #e4e4e7;
+        text-align: left;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-stash-column .stash-hardware-panel { display: none !important; }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact {
+        border-top: 1px solid rgba(39, 39, 42, 0.85);
+        padding-top: 0.5rem;
+        margin-top: 0.35rem;
+        flex-shrink: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        justify-content: stretch;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button {
+        flex: 1 1 30%;
+        min-height: 2.35rem;
+        padding: 0.35rem 0.25rem;
+        border-radius: 0.35rem;
+        transform: translateY(0);
+        transition: transform var(--t-fast) ease, box-shadow var(--t-fast) ease;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:not(:disabled) {
+        border-color: rgba(245, 158, 11, 0.45);
+        box-shadow: 0 -2px 0 rgba(245, 158, 11, 0.15);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:not(:disabled):hover,
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:not(:disabled):focus-visible {
+        transform: translateY(-2px);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .felt-surface.gb-alley-stage {
+        border-width: 1px !important;
+        border-color: rgba(63, 63, 70, 0.75) !important;
+        background-image:
+            linear-gradient(180deg, rgba(9, 9, 11, 0.55) 0%, rgba(9, 9, 11, 0.72) 100%),
+            url('assets/scenes/alley-playfield.png');
+        background-size: cover, cover;
+        background-position: center, center 52%;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-die-btn.bone-die-kept {
+        transform: translateY(12px);
+        box-shadow: inset 0 -3px 0 rgba(214, 184, 92, 0.45), 0 6px 14px rgba(0, 0, 0, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-held-label { display: none; }
+    #root-gutterbones[data-ui-redesign="1"] .bone-kept-tray-rim {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 18%;
+        height: 0.35rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, rgba(214, 184, 92, 0.55), transparent);
+        pointer-events: none;
+        z-index: 5;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-loupe-btn {
+        position: absolute;
+        left: 0.15rem;
+        bottom: -0.15rem;
+        z-index: 40;
+        min-width: 2rem;
+        min-height: 2rem;
+        border-radius: 999px;
+        border: 1px solid rgba(113, 113, 122, 0.8);
+        background: rgba(9, 9, 11, 0.85);
+        color: #d4d4d8;
+        font-size: max(9px, var(--gb-min-font));
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-face-loupe {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 0.35rem);
+        transform: translateX(-50%);
+        z-index: 90;
+        width: min(11rem, 70vw);
+        padding: 0.45rem;
+        background: rgba(9, 9, 11, 0.96);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 0.35rem;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-face-loupe-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.2rem;
+        font-family: "Courier New", monospace;
+        font-size: max(9px, var(--gb-min-font));
+        color: #e4e4e7;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .round-clear-receipt {
+        background: #f4f1e8 !important;
+        color: #18181b !important;
+        border: 1px dashed rgba(24, 24, 27, 0.65) !important;
+        font-family: "Courier New", monospace !important;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .round-clear-receipt .round-clear-receipt-title {
+        font-family: Impact, "Arial Black", sans-serif;
+        color: #b91c1c;
+        letter-spacing: 0.04em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-workbench-top {
+        border-bottom: 1px solid rgba(63, 63, 70, 0.65);
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-workbench {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-shelf {
+        flex: 1 1 45%;
+        min-height: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-bone-strip {
+        flex: 0 0 auto;
+        border-top: 1px solid rgba(0, 0, 0, 0.35);
+        padding-top: 0.75rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .route-door-card {
+        border-width: 1px !important;
+        border-radius: 0.35rem !important;
+        background: rgba(9, 9, 11, 0.82) !important;
+        padding: 0.85rem !important;
+        min-height: 5.5rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .route-door-card .route-door-reward {
+        font-size: max(11px, var(--gb-min-font));
+        color: #fbbf24;
+        letter-spacing: 0.12em;
+    }
+    #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .stash-dock-compact .stash-program-grid button:not(:disabled):hover {
+        transform: none;
+    }
+    @media (min-width: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-phase-grid"] {
+            grid-template-columns: 7fr 5fr;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] { grid-column: 1; }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] { grid-column: 2; }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-stash"] {
+            display: none !important;
+        }
+    }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
@@ -6071,6 +6480,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+        const [loupeOpen, setLoupeOpen] = useState(false);
+        const loupeRef = useRef(null);
         const rollStyleRef = useRef({
             '--roll-delay': `${slot * 90}ms`,
             '--roll-dur': '680ms',
@@ -6122,16 +6533,44 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (particleId) clearTimeout(particleId);
             };
         }, [rolling, data.faceId, data.type, data.id, reducedMotion]);
+        useEffect(() => {
+            if (!loupeOpen) return undefined;
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setLoupeOpen(false);
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [loupeOpen]);
+        const faceStrip = (data.faces || []).map((f, idx) => {
+            const label = f.faceLabel || f.label || (typeof f.value === 'number' ? f.value : '?');
+            return `${idx + 1}:${label}`;
+        });
         return (
             <div className={`relative bone-slot-inner ${previewTint ? 'bone-preview-tint' : ''}`} style={previewTint ? { '--preview-tint': previewTint } : undefined}>
+                {kept && !rolling && <div className="bone-kept-tray-rim" aria-hidden />}
                 <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
                 <div className="bone-die-perspective flex items-center justify-center">
                     <button
                         type="button"
                         onClick={onClick}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            setLoupeOpen((v) => !v);
+                        }}
+                        onMouseEnter={() => setLoupeOpen(true)}
+                        onMouseLeave={() => setLoupeOpen(false)}
+                        onFocus={() => setLoupeOpen(true)}
+                        onBlur={(e) => {
+                            if (loupeRef.current?.contains(e.relatedTarget)) return;
+                            setLoupeOpen(false);
+                        }}
                         className={`bone-die-btn relative flex items-center justify-center ${showTumble ? 'bone-die-tumble' : ''} ${kept ? 'bone-die-kept' : ''} ${kept && colorblindHeld ? 'bone-die-kept-cb' : ''} ${selected ? 'ring-4 ring-[#0df] z-50 rounded-lg' : ''}`}
                         style={rollStyleRef.current}
                         aria-label={`Bone slot ${slot + 1}`}
+                        aria-expanded={loupeOpen}
                         title={`Scoring pip ${pipValue}${data.faceLabel ? ` · ${data.faceLabel}` : ''}${showEchoedPip ? ' (resolved)' : ''}`}
                     >
                         {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
@@ -6152,6 +6591,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     </button>
                 </div>
                 {kept && !rolling && <div className="bone-held-label">HELD</div>}
+                {loupeOpen && !rolling && faceStrip.length > 0 && (
+                    <div ref={loupeRef} data-layout-key={`bone-loupe-${slot + 1}`} className="bone-face-loupe" role="dialog" aria-label={`Faces on bone ${slot + 1}`}>
+                        <div className="bone-face-loupe-grid">
+                            {faceStrip.map((line, i) => <div key={i}>{line}</div>)}
+                        </div>
+                    </div>
+                )}
                 {!rolling && (
                     <button
                         type="button"
@@ -6167,6 +6613,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     >
                         PILL
                         {raidPill && canPill && <span className="absolute -bottom-4 text-[8px] font-bold font-mono text-red-500">-$2</span>}
+                    </button>
+                )}
+                {!rolling && (
+                    <button
+                        type="button"
+                        data-layout-key={`bone-loupe-btn-${slot + 1}`}
+                        className="bone-loupe-btn md:hidden"
+                        onClick={(e) => { e.stopPropagation(); setLoupeOpen((v) => !v); }}
+                        aria-expanded={loupeOpen}
+                        aria-label={`Inspect faces on bone ${slot + 1}`}
+                    >
+                        6F
                     </button>
                 )}
             </div>
@@ -6341,17 +6799,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         </div>
     );
 
-    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0 }) => {
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0, isBestPreview = false }) => {
         const [hover, setHover] = useState(false);
+        const [receiptOpen, setReceiptOpen] = useState(false);
         const longPressRef = useRef(null);
         const [bustTipOpen, setBustTipOpen] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
         const masteryBonus = getHandMasteryBonus(handLevel);
-        const showTriggers = canScore && result.valid && triggers.length > 0;
         const chainHot = canScore && result.valid && (result.chainDepth || 0) >= 2;
         const bustHint = canScore && !result.valid && result.reason ? result.reason : '';
         const titleParts = [ruleTooltip, bustHint].filter(Boolean);
         const rowCanScore = canScore && !scoringLocked;
+        const tierClass = used ? 'payout-tier-done' : (rowCanScore && result.valid ? `payout-tier-live${isBestPreview ? ' payout-tier-best' : ''}` : (rowCanScore ? 'payout-tier-bust' : 'payout-tier-idle'));
+        const receiptVisible = (hover || receiptOpen || keyboardFocus) && rowCanScore && result.valid;
         const setPreview = (active) => {
             if (onPreviewChange) onPreviewChange(active ? id : null);
         };
@@ -6367,38 +6827,55 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 data-layout-key={`payout-row-${id}`}
                 onClick={() => onScore(id)}
                 onMouseEnter={() => { setHover(true); setPreview(true); }}
-                onMouseLeave={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); }}
+                onMouseLeave={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); setReceiptOpen(false); }}
                 onFocus={() => { setHover(true); setPreview(true); }}
-                onBlur={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); }}
+                onBlur={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); setReceiptOpen(false); }}
                 onTouchStart={() => {
-                    if (!bustHint) return;
                     clearLongPress();
-                    longPressRef.current = setTimeout(() => setBustTipOpen(true), 480);
+                    if (bustHint) {
+                        longPressRef.current = setTimeout(() => setBustTipOpen(true), 480);
+                    } else if (rowCanScore && result.valid) {
+                        longPressRef.current = setTimeout(() => setReceiptOpen(true), 520);
+                    }
                 }}
                 onTouchEnd={clearLongPress}
                 onTouchCancel={clearLongPress}
                 disabled={!rowCanScore}
                 title={titleParts.join(' — ')}
                 aria-label={titleParts.length ? `${cat.name}. ${titleParts.join(' ')}` : cat.name}
+                aria-describedby={receiptVisible ? `payout-receipt-${id}` : undefined}
                 style={postRollReveal ? { animationDelay: `${postRollDelayMs}ms` } : undefined}
-                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}`}
+                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${tierClass} ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}${receiptOpen ? ' payout-receipt-open' : ''}`}
             >
                 {bustTipOpen && bustHint && (
                     <span className="absolute left-2 right-2 -top-1 z-20 translate-y-[-100%] bg-red-950 border border-red-500/70 text-red-100 text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none">{bustHint}</span>
                 )}
-                {hover && rowCanScore && result.valid && <ScorePreview result={result} />}
+                {receiptVisible && (
+                    <PayoutReceiptPopover
+                        id={`payout-receipt-${id}`}
+                        result={result}
+                        catName={cat.name}
+                        ruleTooltip={ruleTooltip}
+                        bustHint={bustHint}
+                        handLevel={handLevel}
+                        masteryBonus={masteryBonus}
+                        open
+                        onClose={() => { setReceiptOpen(false); setHover(false); }}
+                    />
+                )}
+                {!receiptVisible && hover && rowCanScore && result.valid && <ScorePreview result={result} />}
                 <span className="flex items-center gap-1 min-w-0 truncate max-w-[72%]">
-                    <span className="truncate">{cat.name}</span>
-                    <span className="payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
+                    <span className="score-row-name truncate">{cat.name}</span>
+                    <span className="payout-meta-rest payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
                     {masteryBonus > 0 && (
-                        <span className="text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
+                        <span className="payout-meta-rest text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
                     )}
-                    {showTriggers && (
+                    {triggers.length > 0 && (
                         <span className="sr-only">{triggers.map((t) => `${t.name} ${t.value}`).join(', ')}</span>
                     )}
                 </span>
                 <span className="shrink-0 ml-1 flex items-center justify-end min-w-[2.75rem]">
-                    {used ? <span className="paid-stamp text-[0.65rem] leading-none">PAID</span> : (rowCanScore && result.valid ? result.total : (rowCanScore ? 'BUST' : '-'))}
+                    {used ? <span className="paid-stamp text-[0.65rem] leading-none">PAID</span> : (rowCanScore && result.valid ? <span className="payout-heat-pill">+{result.total}</span> : (rowCanScore ? 'BUST' : '-'))}
                 </span>
             </button>
         );
@@ -6896,11 +7373,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 aria-modal="true"
                 aria-labelledby="round-clear-title"
                 onClick={tryAdvance}
-                className={`round-clear-card font-marker text-4xl md:text-5xl text-[#0df] italic tracking-tight px-5 py-4 md:px-6 md:py-5 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl max-w-md w-full ${reducedMotion ? '' : ''}`}
+                className={`round-clear-card round-clear-receipt font-marker text-2xl md:text-3xl italic tracking-tight px-5 py-4 md:px-6 md:py-5 border-4 border-zinc-700 bg-[#f4f1e8] text-zinc-900 shadow-2xl max-w-md w-full`}
             >
-                <div id="round-clear-title">ROUND {jobRound || '?'} CLEARED</div>
+                <div id="round-clear-title" className="round-clear-receipt-title text-center border-b border-dashed border-zinc-400 pb-2 mb-3">ROUND {jobRound || '?'} · JOB CLEARED</div>
                 {payout && payout.total > 0 && (
-                    <div className="font-mono text-[11px] not-italic text-left mt-4 space-y-1 text-gray-200 tracking-normal">
+                    <div className="font-mono text-[11px] not-italic text-left space-y-1 text-zinc-800 tracking-normal">
+                        <div className="text-[9px] uppercase tracking-[0.28em] text-zinc-500 mb-2">COUNTING CASH — TERMINAL</div>
                         <div className="flex justify-between gap-3"><span>Round bonus</span><span>${payout.base}</span></div>
                         {(payout.unusedPlays || 0) > 0 && (
                             <div className="flex justify-between gap-3">
@@ -6909,7 +7387,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         )}
                         <div className="flex justify-between gap-3"><span>Cash interest</span><span>${payout.interest}</span></div>
-                        <div className="flex justify-between gap-3 border-t border-gray-600 pt-1 text-[#0df] font-bold"><span>Total</span><span>${payout.total}</span></div>
+                        <div className="flex justify-between gap-3 border-t border-zinc-400 pt-1 text-amber-700 font-bold"><span>NET DIRTY CASH</span><span>${payout.total}</span></div>
                     </div>
                 )}
                 <button
@@ -7877,9 +8355,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 onClick={() => onPick(path)}
                 aria-label={aria}
                 aria-pressed={selected}
-                className={`w-full max-w-full box-border h-auto min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all shrink-0 ${compact ? 'shop-route-card--compact' : ''} ${path.color} ${selected ? 'ring-2 ring-[#0df] bg-cyan-950/35 border-[#0df]/70' : ''}`}
+                className={`route-door-card w-full max-w-full box-border h-auto min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all shrink-0 ${compact ? 'shop-route-card--compact' : ''} ${path.color} ${selected ? 'ring-2 ring-[#0df] bg-cyan-950/35 border-[#0df]/70' : ''}`}
             >
                 <div className={`font-bold uppercase tracking-wider break-words ${compact ? 'text-base' : 'text-xl'}`}>{path.name}</div>
+                <div className="route-door-reward mt-1">☷ {path.boss ? 'BOSS' : 'ALLEY'} · {path.id || path.name}</div>
                 <div className="text-xs opacity-70 mt-1 font-mono line-clamp-2 break-words">{path.desc}</div>
                 {projection && (
                     <div className="mt-2 font-mono text-sm text-yellow-200">
@@ -7987,6 +8466,160 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         </button>
                     </div>
                 )}
+            </div>
+        );
+    };
+
+    const BossWarrantStamp = ({ boss }) => {
+        if (!boss) return null;
+        const shortName = (boss.name || '').replace(/^THE\s+/i, '');
+        return (
+            <div
+                data-layout-key="boss-warrant-stamp"
+                className="boss-warrant-stamp"
+                title={boss.desc}
+                aria-label={`Active boss warrant: ${boss.name}. ${boss.desc}`}
+            >
+                <span className="boss-warrant-name">{shortName}: </span>
+                <span className="boss-warrant-rule">{boss.desc}</span>
+            </div>
+        );
+    };
+
+    const PayoutReceiptPopover = ({ result, catName, ruleTooltip, bustHint, handLevel, masteryBonus, open, onClose, id }) => {
+        const ref = useRef(null);
+        useEffect(() => {
+            if (!open) return undefined;
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [open, onClose]);
+        if (!open || !result?.valid) return null;
+        const triggers = (result.triggers || []).slice(0, 6);
+        return (
+            <div
+                ref={ref}
+                id={id}
+                role="tooltip"
+                data-layout-key="payout-receipt-popover"
+                className="payout-receipt-popover"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="font-bold text-amber-300 mb-1">{catName}</div>
+                {ruleTooltip && <div className="text-zinc-400 mb-1 leading-snug">{ruleTooltip}</div>}
+                <div className="flex justify-between gap-2"><span>Base chips</span><span>{result.chips}</span></div>
+                <div className="flex justify-between gap-2"><span>Mult</span><span>×{Number(result.mult || 1).toFixed(2)}</span></div>
+                {masteryBonus > 0 && <div className="flex justify-between gap-2 text-emerald-300"><span>Mastery Lv{handLevel}</span><span>+{masteryBonus}</span></div>}
+                {result.gDelta !== 0 && <div className="flex justify-between gap-2 text-emerald-300"><span>Cash</span><span>{result.gDelta > 0 ? '+' : ''}{result.gDelta}</span></div>}
+                {result.chainDepth > 0 && <div className="text-fuchsia-300">Chain depth {result.chainDepth}</div>}
+                {triggers.length > 0 && (
+                    <div className="mt-1 pt-1 border-t border-zinc-700 space-y-0.5">
+                        {triggers.map((t, i) => (
+                            <div key={i} className="text-cyan-200/90">{t.name}{t.value != null ? ` ${t.value}` : ''}</div>
+                        ))}
+                    </div>
+                )}
+                <div className="flex justify-between gap-2 mt-1 pt-1 border-t border-amber-600/40 font-bold text-amber-300">
+                    <span>Street heat</span><span>{result.total}</span>
+                </div>
+            </div>
+        );
+    };
+
+    const HardwareRail = ({ inventory = [], hardwareDisabled = false }) => {
+        const slots = 6;
+        const [focusIdx, setFocusIdx] = useState(null);
+        const railRef = useRef(null);
+        const pairs = [];
+        for (let i = 0; i < slots - 1; i += 1) {
+            if (inventory[i] && inventory[i + 1]) pairs.push(i);
+        }
+        return (
+            <div data-layout-key="hardware-rail" className="hardware-rail shrink-0" ref={railRef}>
+                {pairs.length > 0 && (
+                    <svg className="hardware-rail-wires" viewBox={`0 0 ${slots * 52} 4`} preserveAspectRatio="none" aria-hidden>
+                        {pairs.map((idx) => (
+                            <line
+                                key={idx}
+                                className="hardware-rail-wire"
+                                x1={24 + idx * 52}
+                                y1="2"
+                                x2={24 + (idx + 1) * 52}
+                                y2="2"
+                            />
+                        ))}
+                    </svg>
+                )}
+                {Array.from({ length: slots }, (_, idx) => {
+                    const item = inventory[idx];
+                    const tipOpen = focusIdx === idx && item;
+                    return (
+                        <button
+                            key={idx}
+                            type="button"
+                            data-layout-key={`hardware-rail-socket-${idx + 1}`}
+                            className={`hardware-rail-socket ${item ? '' : 'hardware-rail-socket--empty'} ${hardwareDisabled && item ? 'hardware-rail-socket--disabled' : ''}`}
+                            onMouseEnter={() => item && setFocusIdx(idx)}
+                            onMouseLeave={() => setFocusIdx((v) => (v === idx ? null : v))}
+                            onFocus={() => item && setFocusIdx(idx)}
+                            onBlur={() => setFocusIdx((v) => (v === idx ? null : v))}
+                            aria-label={item ? `Hardware slot ${idx + 1}: ${item.name}. ${item.desc}` : `Hardware slot ${idx + 1}: empty`}
+                            title={item ? item.name : 'Empty slot'}
+                        >
+                            {item ? <span className="leading-tight line-clamp-3">{item.name.split(' ').slice(0, 2).join(' ')}</span> : <span className="opacity-40">{idx + 1}</span>}
+                            {tipOpen && (
+                                <span className="hardware-rail-tip" role="tooltip">
+                                    <span className="font-bold text-amber-200">{item.name}</span>
+                                    <span className="block text-zinc-200 mt-0.5 leading-snug">{item.desc}</span>
+                                    <RiskBadges item={item} />
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const PlayHandHistoryDrawer = ({ history, open, onClose, round }) => {
+        const panelRef = useRef(null);
+        useEffect(() => {
+            if (!open) return undefined;
+            panelRef.current?.focus?.({ preventScroll: true });
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [open, onClose]);
+        if (!open) return null;
+        return (
+            <div className="play-history-drawer" onClick={onClose} role="presentation">
+                <div
+                    ref={panelRef}
+                    tabIndex={-1}
+                    data-layout-key="play-history-drawer"
+                    className="play-history-drawer-panel"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Police rap sheet hand log"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex justify-between items-center mb-3 border-b border-zinc-700 pb-2">
+                        <div className="tracking-[0.2em] text-amber-300 text-xs font-bold">RAP SHEET · LOG</div>
+                        <button type="button" data-layout-key="play-history-close" onClick={onClose} className="gb-tappable-label px-3 py-1 border border-zinc-600 text-zinc-200 text-xs">CLOSE</button>
+                    </div>
+                    <HistoryPanel history={history} hideMoreLine={false} />
+                    {!history?.length && <div className="text-zinc-400 text-xs">No scored hands yet this run.</div>}
+                </div>
             </div>
         );
     };
@@ -8547,6 +9180,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
+        const [playHistoryDrawerOpen, setPlayHistoryDrawerOpen] = useState(false);
         const [playDock, setPlayDock] = useState('lane');
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
@@ -9393,6 +10027,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!rootEl) return;
             rootEl.classList.toggle('gb-motion-reduce', !!reducedMotion);
         }, [reducedMotion]);
+
+        useEffect(() => {
+            const rootEl = document.getElementById('root-gutterbones');
+            if (!rootEl) return;
+            rootEl.dataset.uiRedesign = '1';
+        }, []);
 
         const scoringDiceResolved = useMemo(() => {
             if (!dice.length || typeof GutterbonesRules?.resolveDice !== 'function') return dice;
@@ -11981,6 +12621,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return result.valid && result.total > max ? result.total : max;
             }, 0)
             : null;
+        const bestPreviewCatId = (phase === 'PLAY' && hasRolled && !rolling)
+            ? getAvailableCategories(meta).reduce((best, catId) => {
+                const result = calculateScore(catId, dice);
+                if (!result.valid || result.total <= 0) return best;
+                if (!best.id || result.total > best.total) return { id: catId, total: result.total };
+                return best;
+            }, { id: null, total: 0 }).id
+            : null;
+        const quotaProgressPct = Math.min(100, Math.round((displayScore / Math.max(1, currentTarget)) * 1000) / 10);
+        const quotaFillTone = displayScore >= currentTarget
+            ? 'street-ledger-quota-fill--clear'
+            : (hands <= 1 && !rolling ? 'street-ledger-quota-fill--danger' : (quotaProgressPct < 50 ? 'street-ledger-quota-fill--low' : 'street-ledger-quota-fill--pace'));
         const shopRoutePreviews = phase === 'SHOP'
             ? paths.map((p) => ({ ...p, _projection: projectPath(p) }))
             : [];
@@ -14017,54 +14669,46 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
                 {phase === 'PLAY' && (
                     <>
-                    <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
+                    <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-6xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <div ref={playHudRef} data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
+                        <div ref={playHudRef} data-layout-key="play-hud" className="street-ledger-hud shrink-0 flex flex-col mb-1 md:mb-2">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
-                            <div className="flex justify-between items-center p-2 md:p-4 gb-hud-compact-tight">
-                                <div className="hidden sm:block gb-hud-compact-hide">
-                                    <div className="text-xs uppercase opacity-50">The Fixer</div>
-                                    <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
-                                    {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
-                                    <div className="mt-1 max-w-[15rem] text-xs font-mono text-gray-300 leading-tight play-hud-fixer-line">{fixerLine}</div>
+                            <div className="street-ledger-top">
+                                <div className="street-ledger-cluster">
+                                    <span className="street-ledger-icon street-ledger-icon--plays" title="Plays remaining">▶ {hands}</span>
+                                    <span className={`street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills remaining">💊 {discards}</span>
+                                    <span className="sr-only play-hud-round-line">Round {displayJobRound('PLAY', round)}</span>
                                 </div>
-                                <div className="text-center" data-tutorial="heat-quota">
-                                    <div className="text-xs opacity-50">STREET HEAT</div>
-                                    <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse score-tick-pop' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
-                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
-                                        FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
-                                    </div>
-                                    <div className="font-mono text-xs text-gray-400 mt-1 tracking-wide play-hud-round-line">Round {displayJobRound('PLAY', round)} · Plays {hands} · Quota {currentTarget}{meta.totalRuns === 0 && round === 1 && !tutorialActive ? ' · First contract quota' : ''} · Pills {discards}</div>
-                                </div>
-                            <div className="flex gap-3 md:gap-6 text-right items-start">
+                                <BossWarrantStamp boss={activeBoss} />
+                                <div className="street-ledger-cluster">
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
-                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> · IOU ${debt}</span>}</div></div>
-                                    <div className="relative" ref={mechanicPillsAnchorRef} onMouseLeave={dismissMechanicPopup}>
-                                        <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
-                                            <span>PILLS</span>
-                                            <button
-                                                onClick={() => toggleMechanicPopup('pills')}
-                                                onBlur={dismissMechanicPopup}
-                                                className="min-w-[var(--gb-min-tap)] min-h-[var(--gb-min-tap)] w-10 h-10 rounded-full border border-cyan-500/60 text-cyan-300 text-sm leading-none hover:border-cyan-300 hover:text-cyan-100 flex items-center justify-center"
-                                                aria-label="Show pills mechanic details"
-                                            >
-                                                ?
-                                            </button>
-                                        </div>
-                                        <div key={pillCountTick} className={`hud-pill-count text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''} ${pillCountTick ? 'pill-count-tick' : ''}`}>{discards}</div>
-                                        {activeMechanicPopup === 'pills' && (
-                                            <div ref={mechanicPopoverRef} data-layout-key="mechanic-popover-hud" className="mechanic-popover text-left overflow-auto" style={mechanicPopoverHudStyle || { position: 'fixed', left: 8, top: 8, width: 288, zIndex: 140 }}>
-                                                <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
-                                                <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
-                                                {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
-                                                    <div className="font-mono text-xs text-emerald-200 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
-                                                )}
-                                            </div>
+                                    <span className={`street-ledger-icon street-ledger-icon--cash ${cashDropFlash ? 'hud-cash-drop' : ''}`} title="Dirty cash">${Math.max(0, displayGold)}</span>
+                                    {debt > 0 && <span className={`street-ledger-icon street-ledger-icon--debt ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`} title="Debt">IOU ${debt}</span>}
+                                    <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
+                                    <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
+                                </div>
+                            </div>
+                            <div className="street-ledger-quota" data-tutorial="heat-quota">
+                                <div className="street-ledger-quota-track" role="progressbar" aria-valuenow={quotaProgressPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Street heat ${displayScore} of quota ${currentTarget}`}>
+                                    <div className={`street-ledger-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
+                                </div>
+                                <div className="street-ledger-quota-labels">
+                                    <span className={`${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-400'}`}>{displayScore.toString().padStart(4, '0')} heat</span>
+                                    <span className="play-hud-fixer-line hidden md:inline truncate max-w-[45%] opacity-70">{fixerLine}</span>
+                                    <span>quota {currentTarget} · flow ×{flowMultiplier.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div className="relative" ref={mechanicPillsAnchorRef} onMouseLeave={dismissMechanicPopup}>
+                                {activeMechanicPopup === 'pills' && (
+                                    <div ref={mechanicPopoverRef} data-layout-key="mechanic-popover-hud" className="mechanic-popover text-left overflow-auto" style={mechanicPopoverHudStyle || { position: 'fixed', left: 8, top: 8, width: 288, zIndex: 140 }}>
+                                        <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
+                                        <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
+                                        {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
+                                            <div className="font-mono text-xs text-emerald-200 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
                                         )}
                                     </div>
-                                    <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
-                                </div>
+                                )}
                             </div>
                             <div data-layout-key="play-next-threat-slot" className="md:hidden px-2 pt-1 pb-0 border-t border-gray-800/80 shrink-0">
                                 <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
@@ -14125,9 +14769,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 )}
                             </div>
                         </div>
-                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 min-w-0 overflow-hidden">
-                            <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 min-w-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
-                                <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
+                        <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
+                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
+                                <h2 className="text-center font-bold border-b border-zinc-800/40 pb-2 mb-2 shrink-0 tracking-[0.2em] text-sm">MATCHBOOK · PAYOUTS</h2>
                                 <PayoutSheetRows>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
@@ -14141,6 +14785,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             const rowRevealIdx = revealIdx;
                                             revealIdx += 1;
                                             const canScoreRow = hasRolled && !usedCats.includes(cat.id) && !rollLocked;
+                                            const rowResult = calculateScore(cat.id, dice);
                                             return (
                                                 <ScoreRow
                                                     key={cat.id}
@@ -14148,7 +14793,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     cat={cat}
                                                     handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel}
                                                     ruleTooltip={CATEGORY_RULE_TOOLTIPS[cat.id] || ''}
-                                                    result={calculateScore(cat.id, dice)}
+                                                    result={rowResult}
                                                     used={usedCats.includes(cat.id)}
                                                     canScore={canScoreRow}
                                                     onScore={executePayout}
@@ -14158,6 +14803,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     keyboardFocus={canScoreRow && cat.id === focusId}
                                                     postRollReveal={false}
                                                     postRollDelayMs={0}
+                                                    isBestPreview={canScoreRow && rowResult.valid && cat.id === bestPreviewCatId}
                                                 />
                                             );
                                         }
@@ -14175,8 +14821,20 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     return rows;
                                 })()}
                                 </PayoutSheetRows>
+                                <div className="stash-dock-compact stash-programs-pinned hidden md:flex flex-col shrink-0">
+                                    <div className="flex items-center justify-between gap-2 border-b border-zinc-700/60 pb-1 mb-2">
+                                        <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-600">STASH {stash}/100</span>
+                                        {activeBoss?.id === 'INFORMANT' && <span className="text-[10px] text-yellow-600">FROZEN</span>}
+                                    </div>
+                                    <div className="stash-program-grid">{PROGRAMS.map((p) => (
+                                        <button key={p.id} type="button" data-layout-key={`stash-program-${p.id}`} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT' || !hasRolled || rolling} onClick={() => handleProgram(p)} title={p.desc} className="gb-tappable-label flex flex-col items-center justify-center py-1 px-1 rounded border border-gray-700 bg-gray-900/40 hover:border-amber-500 disabled:opacity-45 disabled:grayscale min-h-[var(--gb-min-tap)] font-mono text-[10px]">
+                                            <span>{p.name}</span><span className="text-amber-300">{p.cost}%</span>
+                                        </button>
+                                    ))}</div>
+                                </div>
                             </div>
-                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 min-w-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-7 min-h-0 min-w-0 felt-surface gb-alley-stage border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                                <HardwareRail inventory={inventory} hardwareDisabled={hardwareDisabled} />
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
@@ -14304,7 +14962,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         inventory={inventory}
                                     />
                                 </div>
-                                <div className="stash-programs-pinned bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl shrink-0 min-h-0 flex flex-col">
+                                <div className="stash-programs-pinned stash-dock-compact bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl shrink-0 min-h-0 flex flex-col md:hidden">
                                     <div className={`flex items-center justify-center gap-2 border-b pb-2 ${activeBoss?.id === 'INFORMANT' ? 'border-yellow-500' : 'border-[#0df]'}`}>
                                         <h3 className={`text-center font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500' : 'text-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
                                         <button
@@ -14378,6 +15036,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         </div>
                     </div>
+                    <PlayHandHistoryDrawer history={history} open={playHistoryDrawerOpen} onClose={() => setPlayHistoryDrawerOpen(false)} round={round} />
                     </>
                 )}
 
@@ -14642,8 +15301,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 {phase === 'CARVING' && (
                     <div className="gb-screen items-center justify-center z-[400] relative p-[var(--gb-pad)]">
                         <div className="carving-mod-backdrop scene-backdrop-fade" aria-hidden></div>
-                        <div data-layout-key="carving-layout" className="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
-                            <div className="w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
+                        <div data-layout-key="carving-layout" className="carving-workbench flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
+                            <div className="carving-shelf w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
@@ -14671,7 +15330,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     );
                                 })()}
                             </div>
-                            <div className="flex-1 min-h-0 bg-[#2b1414] border-[8px] md:border-[12px] border-[#111] rounded-2xl p-4 md:p-8 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black] overflow-hidden">
+                            <div className="carving-bone-strip flex-1 min-h-0 bg-[#2b1414] border-[8px] md:border-[12px] border-[#111] rounded-2xl p-4 md:p-8 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black] overflow-hidden">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">
                                     {carvingDie === null ? dice.map((d, i) => (
                                         <CarvingDieTile key={d.id} die={d} onClick={() => setCarvingDie(i)} slotLabel={`BONE ${i + 1}`} />
