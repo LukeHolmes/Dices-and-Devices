@@ -281,8 +281,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   try {
     window.__GB_E2E__.goLineup();
     if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
-      if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
-        window.__GB_E2E__.selectPersonaByIndex(1);
+      if (!window.__GB_E2E__.selectPersonaByIndex(1)) {
+        if (!window.__GB_E2E__.selectPersonaByIndex(2)) {
+          window.__GB_E2E__.selectPersonaByIndex(4);
+        }
       }
     } else {
       window.__GB_E2E__.selectFirstPersona();
@@ -377,8 +379,21 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
     }
     if (shopBot && ph === "CARVING") {
+      log._carveTries = (log._carveTries || 0) + 1;
+      if (log._carveTries > 24) {
+        log._carveTries = 0;
+        if (window.__GB_E2E__?.abortCarving?.()) {
+          await wait(80);
+          continue;
+        }
+      }
       if (window.__GB_E2E__?.autoCarvePreferred?.()) {
         await wait(90);
+        continue;
+      }
+      if (window.__GB_E2E__?.abortCarving?.()) {
+        log._carveTries = 0;
+        await wait(80);
         continue;
       }
     }
@@ -413,6 +428,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       } else if (s.phase === "PLAY") {
         window.__GB_E2E__.advanceRunPhase?.();
         window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick("PLAY");
+      } else if (s.phase === "CARVING") {
+        window.__GB_E2E__.autoCarvePreferred?.() || window.__GB_E2E__.abortCarving?.() || e2eUnstick("CARVING");
       } else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;

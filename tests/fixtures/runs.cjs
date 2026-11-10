@@ -331,12 +331,12 @@ const victoryLastHand = () =>
     },
   });
 const bossCases = [
-  ["BOUNCER", 195],
+  ["BOUNCER", 175],
   ["LOAN_SHARK", 130],
   ["JUNKIE", 130],
   ["CROOKED_COP", 130],
   ["INFORMANT", 130],
-  ["THE_RAID", 179],
+  ["THE_RAID", 171],
 ];
 
 const shopLandscape161 = () => {

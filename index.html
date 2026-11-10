@@ -4193,10 +4193,10 @@ const GutterbonesRoutes = (() => {
     const BOSS_TUNING = Object.freeze({
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 4,
+        earlyBossRoundCap: 8,
         earlyBouncerRelief: 0.9,
-        raidQuotaRelief: 0.92,
-        bossPathTargetRelief: 0.93
+        raidQuotaRelief: 0.88,
+        bossPathTargetRelief: 0.84
     });
 
     const EARLY_GAME_TUNING = Object.freeze({
@@ -4208,18 +4208,19 @@ const GutterbonesRoutes = (() => {
         midMaxRound: 5,
         lateMaxRound: 6,
         early: { pathModWeight: 0.92, flatIncrease: 22 },
-        mid: { pathModWeight: 1.02, flatIncrease: 52 },
-        late: { pathModWeight: 1.02, flatIncrease: 52 },
-        extreme: { pathModWeight: 1.14, flatIncrease: 78 },
-        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 36 })
+        mid: { pathModWeight: 1.02, flatIncrease: 48 },
+        late: { pathModWeight: 1.02, flatIncrease: 46 },
+        extreme: { pathModWeight: 1.12, flatIncrease: 70 },
+        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 64 }),
+        postLateCatchUp: Object.freeze({ fromRound: 8, flatBonus: 38 })
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
         minGrowthRate: 1.16,
         earlyMaxGrowthRate: 1.32,
-        midMaxGrowthRate: 1.48,
-        lateMaxGrowthRate: 1.46,
-        extremeMaxGrowthRate: 1.24
+        midMaxGrowthRate: 1.4,
+        lateMaxGrowthRate: 1.36,
+        extremeMaxGrowthRate: 1.18
     });
 
     const INSANE_CONTRACT_MODIFIERS = Object.freeze({
@@ -4345,6 +4346,9 @@ const GutterbonesRoutes = (() => {
             let grown = Math.floor(currentTarget * scaledPathMod) + roundCurve.flatIncrease;
             if (nextRound >= (ROUND_CURVE_TUNING.postEarlyCatchUp?.fromRound || 99)) {
                 grown += ROUND_CURVE_TUNING.postEarlyCatchUp?.flatBonus || 0;
+            }
+            if (nextRound >= (ROUND_CURVE_TUNING.postLateCatchUp?.fromRound || 99)) {
+                grown += ROUND_CURVE_TUNING.postLateCatchUp?.flatBonus || 0;
             }
 
             if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
@@ -5349,8 +5353,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         shortageToDebtRatio: 0.82,
         hustleCashDivisor: 72,
         hustleCashCap: 7,
-        roundClearBaseCash: 11,
-        roundClearPerUnusedPlay: 5,
+        roundClearBaseCash: 12,
+        roundClearPerUnusedPlay: 6,
         roundClearInterestPerFive: 1,
         roundClearInterestCap: 5,
         debtReliefThreshold: 195,
@@ -5368,11 +5372,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         loanSharkDebtToll: 1,
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 6,
+        earlyBossRoundCap: 8,
         earlyBouncerRelief: 0.9,
-        raidQuotaRelief: 0.9,
-        bossPathTargetRelief: 0.91,
-        crookedCopHardwareMult: 0.55
+        raidQuotaRelief: 0.88,
+        bossPathTargetRelief: 0.84,
+        crookedCopHardwareMult: 0.68
     };
 
     const SHOP_TUNING = {
@@ -12324,7 +12328,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const HW = ['ENGINE', 'FUSE_BOX', 'CROWBAR', 'DEBT_COLLECTOR', 'BLACK_BOOK', 'BRASS_KNUCKLES', 'BOOKENDS', 'LOADED_DIE', 'BURNER_PHONE', 'MIRROR_RIG', 'HOT_STREAK_COIL', 'CENTERPIECE'];
                         const FACES = ['BLOOD_6', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_FACE', 'WIREBAG_FACE', 'SHIV_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'];
                         const invIds = new Set(inventory.map((i) => i.id));
-                        const chainHw = ['ENGINE', 'FUSE_BOX', 'CROWBAR'];
+                        const chainFaces = ['BLOOD_6', 'FUSE_FACE', 'WIREBAG_FACE', 'ECHO_FACE', 'GHOST_FACE', 'MULT_FACE'];
+                        if (!invIds.has('CROWBAR')) {
+                            const crow = available.find((i) => i.id === 'CROWBAR');
+                            if (crow && gold + 14 >= shopListPrice(crow)) {
+                                handlePurchase(crow);
+                                return true;
+                            }
+                        }
+                        for (const id of chainFaces) {
+                            const item = available.find((i) => i.id === id);
+                            if (!item) continue;
+                            const price = shopListPrice(item);
+                            if (gold + 14 >= price) {
+                                handlePurchase(item);
+                                return true;
+                            }
+                        }
+                        const chainHw = ['ENGINE', 'FUSE_BOX', 'CROWBAR', 'BOOKENDS'];
                         for (const id of chainHw) {
                             const item = available.find((i) => i.id === id);
                             if (!item || invIds.has(id)) continue;
@@ -12362,15 +12383,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         refreshShop();
                         return true;
                     },
+                    abortCarving: () => {
+                        if (phase !== 'CARVING') return false;
+                        setCarvingDie(null);
+                        setSelectedItem(null);
+                        returnToInRunShop();
+                        return true;
+                    },
                     autoCarvePreferred: () => {
                         if (phase !== 'CARVING') return false;
+                        if (!selectedItem) return window.__GB_E2E__.abortCarving?.() || false;
                         if (carvingDie === null) {
                             setCarvingDie(0);
                             return true;
                         }
-                        if (!selectedItem) return false;
                         const faces = dice[carvingDie]?.faces || [];
-                        let faceIdx = faces.findIndex((f) => !f?.type || f.type === 'standard');
+                        const carveId = selectedItem?.id || selectedItem;
+                        const isStd = (f) => !f?.type || f.type === 'standard';
+                        const preferOrder = ['BLOOD_6', 'FUSE_FACE', 'GHOST_FACE', 'ECHO_FACE', 'WIREBAG_FACE', 'SHIV_FACE'].includes(carveId)
+                            ? [4, 5, 3, 2, 1, 0]
+                            : [0, 1, 2, 3, 4, 5];
+                        let faceIdx = preferOrder.find((i) => faces[i] && isStd(faces[i]));
+                        if (faceIdx == null) faceIdx = faces.findIndex(isStd);
                         if (faceIdx < 0) faceIdx = 0;
                         executeCarve(carvingDie, faceIdx);
                         return true;
@@ -12587,7 +12621,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             && window.__GB_E2E_QUERY__();
                         const gap = Math.max(0, currentTarget - score);
                         const need = gap / Math.max(1, hands);
-                        const mustScore = hands <= 1 || discards <= 0;
+                        const mustScore = hands <= 1 || discards <= 0
+                            || (e2eGreedy && hands <= 2)
+                            || (e2eGreedy && round >= 7);
                         const minPlay = e2eGreedy
                             ? 1
                             : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));

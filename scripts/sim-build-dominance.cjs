@@ -3,7 +3,7 @@ const { spawnSync } = require("node:child_process");
 
 const r = spawnSync(
   process.execPath,
-  ["tests/sim/run.cjs", "--games=30", "--max-steps=12000", "--parallel=2", "--viewports=blocking"],
+  ["tests/sim/run.cjs", "--games=30", "--max-steps=12000", "--parallel=1", "--viewports=blocking"],
   { cwd: require("node:path").join(__dirname, ".."), encoding: "utf8", maxBuffer: 8 * 1024 * 1024 },
 );
 
