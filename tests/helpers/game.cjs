@@ -108,6 +108,8 @@ function createGame(snapshot = {}, options = {}) {
     blueprintRoundFlags: { multEngineUsed: false, flowSaveUsed: false },
     synergyState: { categoryMarks: {}, comboMeter: 0, heatSpikeNextHand: 0 },
     categoryMarkedThisRound: [],
+    bossHardwareDampen: 1,
+    crookedCopActive: false,
     soldItems: [],
     runExclusiveShopIds: [],
     shopItems: [],

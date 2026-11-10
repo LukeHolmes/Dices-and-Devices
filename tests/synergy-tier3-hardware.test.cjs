@@ -11,6 +11,7 @@ function scoreContext(g, overrides = {}) {
     debt: 0,
     inventory: [],
     hardwareDisabled: false,
+    bossHardwareDampen: 1,
     activeBoss: null,
     CATEGORIES: g.api.CATEGORIES,
     HAND_MASTERY_TUNING: { baseLevel: 1, maxLevel: 8, chipPerLevel: 5 },
@@ -38,7 +39,7 @@ test("mirror_rig: swap is scoring-only and match grants +1 mult", () => {
   assert.ok(withMirror.total > withoutMirror.total);
 });
 
-test("debt_collector: +0.5 mult per debt; crooked cop disables", () => {
+test("debt_collector: +0.5 mult per debt; crooked cop dampens hardware", () => {
   const g = createGame(snapshot());
   const d = dice([2, 3, 4, 5, 6]);
   const base = g.api.GutterbonesRules.calculateScore(
@@ -50,17 +51,31 @@ test("debt_collector: +0.5 mult per debt; crooked cop disables", () => {
   assert.ok(base.total > plain.total);
   assert.ok(base.explanationSteps.some((s) => String(s.label).includes("DEBT COLLECTOR")));
 
-  const suppressed = g.api.GutterbonesRules.calculateScore(
+  const hardOff = g.api.GutterbonesRules.calculateScore(
     "C",
     d,
     scoreContext(g, {
       debt: 4,
       inventory: [{ id: "DEBT_COLLECTOR" }],
       hardwareDisabled: true,
+    }),
+  );
+  assert.equal(hardOff.total, plain.total);
+  assert.ok(!hardOff.explanationSteps.some((s) => String(s.label).includes("DEBT COLLECTOR")));
+
+  const dampened = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    scoreContext(g, {
+      debt: 4,
+      inventory: [{ id: "DEBT_COLLECTOR" }],
+      bossHardwareDampen: 0.55,
       activeBoss: { id: "CROOKED_COP", name: "Crooked Cop" },
     }),
   );
-  assert.equal(suppressed.total, plain.total);
+  assert.ok(dampened.total > plain.total);
+  assert.ok(dampened.total < base.total);
+  assert.ok(dampened.explanationSteps.some((s) => String(s.label).includes("CROOKED COP")));
 });
 
 test("hot_streak_coil: retriggers best mult face when flow warm", () => {
