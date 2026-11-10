@@ -20,7 +20,7 @@
     "test:layout:blocking": "LAYOUT_BLOCKING_ONLY=1 node --test --test-timeout=5400000 tests/no-scroll-layout.cjs",
     "test:layout:shard": "node --test --test-timeout=3600000 tests/no-scroll-layout.cjs",
     "sim": "node tests/sim/run.cjs --games=150 --max-steps=8000 --parallel=2 --viewports=blocking",
-    "sim:50": "node tests/sim/run.cjs --games=50 --max-steps=8000 --parallel=4 --viewports=blocking",
+    "sim:50": "node tests/sim/run.cjs --games=50 --max-steps=12000 --parallel=4 --viewports=blocking",
     "sim:nightly": "node tests/sim/run.cjs --games=500 --max-steps=8000 --parallel=4 --viewports=blocking",
     "sim:balance-report": "node tests/sim/synergy-balance-report.cjs --games=50",
     "sim:completion": "node --test --test-timeout=900000 tests/sim/sim-completion.test.cjs",

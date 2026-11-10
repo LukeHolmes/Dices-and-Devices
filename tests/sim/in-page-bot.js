@@ -89,6 +89,63 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (ph === "RAP_SHEET" || ph === "VICTORY") return null;
     let k = find("CONTINUE", "NEXT", "GOT IT", "DISMISS");
     if (k != null && ph !== "SHOP") return k;
+    if (strategy === "builder" && ph === "CARVING") {
+      const done = findContains("RETURN", "BACK TO", "CONFIRM", "DONE");
+      log._carveTries = (log._carveTries || 0) + 1;
+      if (log._carveTries > 6 && done != null) return done;
+      const face = btn.findIndex((b) => /BLOOD|SHIV|GHOST|FUSE|WIRE|MULT/i.test(b.t));
+      if (face >= 0) return face;
+      const bone = btn.findIndex((b) => /BONE \d/i.test(b.t));
+      if (bone >= 0) return bone;
+      return done;
+    }
+    if (strategy === "builder" && ph === "SHOP") {
+      const debt = Number(st?.debt) || 0;
+      const gold = Number(st?.gold) || 0;
+      const payDebt = findContains("PAY DEBT", "PAY DOWN", "CLEAR DEBT", "REDUCE DEBT");
+      if (payDebt != null && debt >= 3 && gold > debt + 6) return payDebt;
+      const scoreBuy = (i) => {
+        const t = U[i];
+        let w = 0;
+        if (t.includes("ENGINE")) w += 100;
+        else if (t.includes("FUSE BOX") || t.includes("FUSE_BOX")) w += 92;
+        else if (t.includes("CROWBAR")) w += 88;
+        else if (t.includes("BLOOD") || t.includes("SHIV")) w += 85;
+        else if (t.includes("GHOST") || t.includes("WIRE")) w += 78;
+        else if (t.includes("CARVE") || t.includes("FACE")) w += 72;
+        else if (t.includes("DEBT COLLECTOR")) w += 55;
+        const price = num(btn[i].t);
+        if (price != null && price <= gold) w += 15;
+        return w - (price || 12) * 0.22;
+      };
+      const buys = btn.map((_, i) => (btn[i].t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
+      if (buys.length) {
+        buys.sort((a, b) => scoreBuy(b) - scoreBuy(a));
+        if (scoreBuy(buys[0]) > 20) return buys[0];
+      }
+      const routes = btn.map((b, i) =>
+        (b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1),
+      ).filter((x) => x >= 0);
+      if (routes.length && !st?.selectedShopPathId) {
+        const hw = routes.find((i) => U[i].includes("HARDWARE") || U[i].includes("MOD") || U[i].includes("PAWN"));
+        return hw != null ? hw : routes[0];
+      }
+      const hit = findContains("HIT THE STREETS");
+      if (hit != null) return hit;
+      return buys[0] != null ? buys[0] : null;
+    }
+    if (strategy === "builder" && ph === "PLAY") {
+      if (bossIntroUp()) {
+        const cont = find("CONTINUE");
+        if (cont != null) return cont;
+        const tap = findContains("TAP TO CONTINUE");
+        if (tap != null) return tap;
+      }
+      const roll = find("ROLL");
+      const hasRolled = window.__GB_E2E__?.getHasRolled?.();
+      if (!hasRolled && roll != null) return roll;
+      return null;
+    }
     if (ph === "PLAY") {
       if (bossIntroUp()) {
         const cont = find("CONTINUE");
@@ -236,7 +293,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
     if (ph === "PLAY") started = true;
-    if (st && st.round > maxRound) maxRound = st.round;
+    if (
+      st
+      && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE")
+      && st.round > maxRound
+      && st.round <= 24
+    ) {
+      maxRound = st.round;
+    }
     if (started && st && st.round != null && st.round < lastRound) {
       return {
         stuck: true,
@@ -276,6 +340,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       continue;
     }
     log._gambleTries = 0;
+
+    if (st?.roundClearVisible) {
+      window.__GB_E2E__?.finishRoundClear?.();
+      await wait(120);
+      continue;
+    }
 
     const names = btn.map((b) => b.t);
     const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
@@ -330,6 +400,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       window.__GB_E2E__?.skipIntroOverlays?.();
       window.__GB_E2E__?.dismissBossIntro?.();
       window.__GB_E2E__?.dismissOverlays?.();
+      if (window.__GB_E2E__?.autoPlayHand?.()) {
+        await wait(strategy === "rapid" ? 40 : 58);
+        continue;
+      }
+      if (window.__GB_E2E__?.isRollDisabled?.() && !window.__GB_E2E__?.getHasRolled?.()) {
+        await wait(95);
+        continue;
+      }
       if (
         (strategy === "edge" || strategy === "random")
         && window.__GB_E2E__?.getHasRolled?.()

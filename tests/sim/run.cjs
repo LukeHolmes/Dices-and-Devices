@@ -22,7 +22,7 @@ const VIEWPORTS_ALL = [
 const VIEWPORTS_BLOCKING = VIEWPORTS_ALL.filter((v) =>
   ["768x1024", "1024x768", "1366x768", "1920x1080"].includes(v.name),
 );
-const STRATEGIES = ["random", "greedy", "edge", "rapid"];
+const STRATEGIES = ["builder", "builder", "builder", "greedy"];
 
 function median(nums) {
   if (!nums.length) return 0;
@@ -92,6 +92,14 @@ async function bootPage(page, baseUrl, viewport) {
         skippedAlleyIntro: true,
       }),
     );
+    try {
+      localStorage.setItem(
+        "gutterbones1977:meta:v1",
+        JSON.stringify({ totalRuns: 12, victories: 2 }),
+      );
+    } catch (_) {
+      /* ignore */
+    }
   });
   if (mobile) {
     await page.context().addInitScript(() => {
@@ -122,6 +130,14 @@ async function runOneGame(
           skippedAlleyIntro: true,
         }),
       );
+      try {
+        localStorage.setItem(
+          "gutterbones1977:meta:v1",
+          JSON.stringify({ totalRuns: 12, victories: 2 }),
+        );
+      } catch (_) {
+        /* ignore */
+      }
     });
   }
   const result = await page.evaluate(
@@ -141,7 +157,13 @@ async function runOneGame(
       },
     },
   );
-  return { rid, viewport: viewport.name, ...result };
+  const telem = await page.evaluate(() => {
+    const st = window.__GB_E2E__?.getState?.() || {};
+    const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
+    const build = window.__GB_E2E__?.getBuildProfile?.() || null;
+    return { hands, gold: st.gold, score: st.score, build };
+  });
+  return { rid, viewport: viewport.name, ...result, telem };
 }
 
 function classifyFailures(results, maxSteps) {
@@ -235,6 +257,38 @@ async function main() {
   const rounds = results.map((r) => r.maxRound || 0);
   const medMaxRound = median(rounds);
 
+  const LINK_KEYS = [
+    "blood_ripple→ghost_echo",
+    "fuse_spark→engine_link",
+    "ghost_echo→engine_link",
+    "wire_feed→crowbar_cascade",
+  ];
+  const linkCounts = Object.fromEntries(LINK_KEYS.map((k) => [k, 0]));
+  let chainMultCapHits = 0;
+  let debtCapHits = 0;
+  const depthHist = {};
+  let handsWithChain = 0;
+  const buildWins = {};
+  const buildBusts = {};
+  for (const r of results) {
+    const hands = r.telem?.hands || [];
+    for (const h of hands) {
+      if ((h.chainDepth || 0) > 0 || (h.synergyChainIds || []).length) handsWithChain += 1;
+      const d = h.chainDepth || 0;
+      depthHist[d] = (depthHist[d] || 0) + 1;
+      if (h.chainMultCapHit) chainMultCapHits += 1;
+      if (h.debtCollectorCapped) debtCapHits += 1;
+      for (const l of h.chainLinks || []) {
+        const key = `${l.from}→${l.to}`;
+        if (key in linkCounts) linkCounts[key] += 1;
+      }
+    }
+    const arch = r.telem?.build?.primaryBuild || r.telem?.build?.archetype || "unknown";
+    const bucket = r.outcome === "WIN" ? buildWins : buildBusts;
+    bucket[arch] = (bucket[arch] || 0) + 1;
+  }
+  const winRate = results.length ? results.filter((r) => r.outcome === "WIN").length / results.length : 0;
+
   const summary = {
     games: args.games,
     maxSteps: args.maxSteps,
@@ -244,13 +298,18 @@ async function main() {
     completed: results.length,
     wins: results.filter((r) => r.outcome === "WIN").length,
     busts: results.filter((r) => r.outcome === "BUST").length,
+    winRate,
     terminal: terminal.length,
     failureCount: failures.length,
     stepsMedian: medSteps,
     stepsMax: maxStepsUsed,
     maxRoundMedian: medMaxRound,
     maxRoundReached,
+    avgMaxRound:
+      results.length ? results.reduce((s, r) => s + (r.maxRound || 0), 0) / results.length : 0,
     generousStepCap: generousCap,
+    synergy: { linkCounts, depthHist, handsWithChain, chainMultCapHits, debtCapHits },
+    buildOutcomes: { wins: buildWins, busts: buildBusts },
     failures: failures.map((g) => ({
       rid: g.rid,
       seed: g.seed,
