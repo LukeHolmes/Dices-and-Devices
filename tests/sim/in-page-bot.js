@@ -6,6 +6,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   let lastSig = null;
   let maxRound = 1;
   let lastRound = 1;
+  let lastPh = null;
   let started = false;
 
   const mulberry32 = (a) => {
@@ -91,6 +92,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (k != null && ph !== "SHOP" && ph !== "PLAY" && ph !== "CARVING") return k;
     const shopBot = strategy === "builder" || strategy === "greedy";
     if (shopBot && ph === "CARVING") {
+      if (strategy === "builder") return null;
       const done = findContains("RETURN", "BACK TO", "CONFIRM", "DONE");
       log._carveTries = (log._carveTries || 0) + 1;
       if (log._carveTries > 6 && done != null) return done;
@@ -105,6 +107,16 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const gold = Number(st?.gold) || 0;
       const payDebt = findContains("PAY DEBT", "PAY DOWN", "CLEAR DEBT", "REDUCE DEBT");
       if (payDebt != null && debt >= 3 && gold > debt + 6) return payDebt;
+      if (strategy === "builder") {
+        const routes = btn.map((b, i) =>
+          (b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1),
+        ).filter((x) => x >= 0);
+        if (routes.length && !st?.selectedShopPathId) {
+          const hw = routes.find((i) => U[i].includes("HARDWARE") || U[i].includes("MOD") || U[i].includes("PAWN"));
+          return hw != null ? hw : routes[0];
+        }
+        return null;
+      }
       const scoreBuy = (i) => {
         const t = U[i];
         let w = 0;
@@ -167,6 +179,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       return null;
     }
     if (ph === "SHOP") {
+      if (strategy === "builder") return null;
       const buys = btn.map((b, i) => (b.t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
       const hit = findContains("HIT THE STREETS");
       const routes = btn.map((b, i) =>
@@ -193,6 +206,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
     }
     if (ph === "CARVING") {
+      if (strategy === "builder") return null;
       k = findContains("RETURN TO SHOP", "BACK TO BONES");
       if (k != null) return k;
       const bone = btn.findIndex((b) => /BONE \d/i.test(b.t));
@@ -301,6 +315,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   for (let step = 0; step < maxSteps; step++) {
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
+    if (ph !== lastPh) {
+      if (lastPh === "CARVING") log._carveTries = 0;
+      lastPh = ph;
+    }
     if (ph === "PLAY") started = true;
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
       maxRound = st.round;
@@ -353,18 +371,34 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     const shopBot = strategy === "builder" || strategy === "greedy";
     if (shopBot && ph === "SHOP") {
+      log._carvingPhase = false;
       log._shopPasses = (log._shopPasses || 0) + 1;
       const invNow = Number(st?.inventoryCount) || 0;
-      const minInv = strategy === "builder" ? 3 : 1;
+      const organicReady = strategy === "builder" && window.__GB_E2E__?.isOrganicChainReady?.();
+      const minInv = strategy === "builder" ? 2 : 1;
+      const kitSnap = strategy === "builder" ? window.__GB_E2E__?.getOrganicChainSnapshot?.() : null;
+      const kitHasHw =
+        kitSnap?.invIds?.includes("ENGINE") && kitSnap?.invIds?.includes("FUSE_BOX");
+      const noBloodOffer = !(kitSnap?.shopOffers || []).some((o) => o.id === "BLOOD_6");
+      const brokeKitShop =
+        kitHasHw
+        && (kitSnap?.bloodOnBoard || 0) < 2
+        && noBloodOffer
+        && ((kitSnap?.shopRefreshes || 0) >= 10 || (Number(st?.gold) || 0) < (kitSnap?.shopRefreshCost || 99));
+      const builderStreets = organicReady || log._shopPasses > 24 || (kitHasHw && brokeKitShop);
       if (
         st?.selectedShopPathId
-        && (invNow >= minInv || log._shopPasses > 14 || (strategy !== "builder" && (st.round || 1) >= 4))
+        && (builderStreets || (strategy !== "builder" && (invNow >= minInv || log._shopPasses > 14 || (st.round || 1) >= 4)))
       ) {
         if (window.__GB_E2E__?.hitStreets?.()) {
           log._shopPasses = 0;
           await wait(120);
           continue;
         }
+      }
+      if (log._shopPasses <= 12 && window.__GB_E2E__?.refreshShopForChainKit?.()) {
+        await wait(90);
+        continue;
       }
       if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
         await wait(90);
@@ -383,6 +417,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
     }
     if (shopBot && ph === "CARVING") {
+      if (!log._carvingPhase) {
+        log._carvingPhase = true;
+        log._carveTries = 0;
+      }
       log._carveTries = (log._carveTries || 0) + 1;
       if (log._carveTries > 24) {
         log._carveTries = 0;
@@ -423,8 +461,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (stuck >= stuckThreshold) {
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") {
-        window.__GB_E2E__.clickShopRouteCard?.();
-        window.__GB_E2E__.hitStreets();
+        if (strategy === "builder" && !window.__GB_E2E__?.isOrganicChainReady?.()) {
+          window.__GB_E2E__.buyPreferredShopItem?.() || window.__GB_E2E__.refreshShopForChainKit?.();
+        } else {
+          window.__GB_E2E__.clickShopRouteCard?.();
+          window.__GB_E2E__.hitStreets();
+        }
       }
       else if (s.phase === "GAMBLE") {
         window.__GB_E2E__.takeSafeCut?.();

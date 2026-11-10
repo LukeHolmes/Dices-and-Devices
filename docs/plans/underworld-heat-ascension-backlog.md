@@ -2,7 +2,7 @@
 
 **Status:** Design backlog only — **not implemented**, **not in scope for PR #78** (builder win rate, organic chain links, CI, save versioning groundwork).
 
-**Ordering (Luke):** Ship after (1) base-game win/link balance confidence, (2) **save versioning / migration**, (3) already-planned **audio** work. Heat is conditional on enhancing gameplay, not arbitrary difficulty stacking on the current sim investigation.
+**Implementation order (repo / #78 — not Luke’s Heat spec):** (1) base-game win / organic **link** balance confidence, (2) already-planned **audio**, (3) **save versioning / migration** (required before Heat). Heat remains backlog until those gates clear; do not stack difficulty on the current sim investigation.
 
 **Principles for any future implementation:**
 
