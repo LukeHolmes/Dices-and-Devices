@@ -12274,6 +12274,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     setScore: (n) => setScore(Math.max(0, Math.floor(Number(n) || 0))),
                     forceRoundWin: () => {
                         if (phase !== "PLAY") return false;
+                        if (pendingPhaseTransitionRef.current || roundClearCardActive) return false;
                         const quotaMet = Math.max(score, currentTarget);
                         setScore(quotaMet);
                         setHands(0);

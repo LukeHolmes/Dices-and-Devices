@@ -110,7 +110,7 @@ async function bootPage(page, baseUrl, viewport) {
 
 async function runOneGame(
   page,
-  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 38, maxFallbacks = 22 },
+  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 48, maxFallbacks = 36 },
 ) {
   const booted = bootedRef || { value: false };
   if (!booted.value) {

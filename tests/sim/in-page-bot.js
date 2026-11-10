@@ -346,7 +346,6 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       await wait(120);
       continue;
     }
-
     const names = btn.map((b) => b.t);
     const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
     stuck = sig === lastSig ? stuck + 1 : 0;
@@ -400,7 +399,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       window.__GB_E2E__?.skipIntroOverlays?.();
       window.__GB_E2E__?.dismissBossIntro?.();
       window.__GB_E2E__?.dismissOverlays?.();
-      if (window.__GB_E2E__?.autoPlayHand?.()) {
+      if (
+        (strategy === "builder" || strategy === "greedy")
+        && window.__GB_E2E__?.autoPlayHand?.()
+      ) {
         await wait(strategy === "rapid" ? 40 : 58);
         continue;
       }
