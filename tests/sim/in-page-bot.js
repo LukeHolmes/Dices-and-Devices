@@ -1,4 +1,6 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
+  window.__GB_SIM_BOT_SESSION__ = true;
+  try {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
@@ -303,8 +305,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     } else {
       window.__GB_E2E__.selectFirstPersona();
     }
-    window.__GB_E2E__.startNewRun();
     window.__GB_E2E__.seedRunRng?.(seed);
+    window.__GB_E2E__.startNewRun();
     window.__GB_E2E__.skipIntroOverlays?.();
     await wait(120);
     window.__GB_E2E__.skipIntroOverlays?.();
@@ -600,4 +602,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     strategy,
     steps: maxSteps,
   };
+  } finally {
+    window.__GB_SIM_BOT_SESSION__ = false;
+  }
 }

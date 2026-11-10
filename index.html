@@ -12859,7 +12859,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         return true;
                     },
                     startNewRun: () => {
-                        e2eRunSeededRef.current = false;
                         beginContract({ tutorial: false });
                     },
                     seedRunRng: (seedNum) => {
@@ -13279,8 +13278,29 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             dismissScoreOverlays();
                             return true;
                         }
-                        if (typeof window.__GB_E2E__.autoPlayHand === 'function') {
+                        if (window.__GB_SIM_BOT_SESSION__ && typeof window.__GB_E2E__.autoPlayHand === 'function') {
                             return window.__GB_E2E__.autoPlayHand();
+                        }
+                        setPlayDock('payouts');
+                        setShowMobileStash(false);
+                        let best = window.__GB_E2E__.pickBestOpenCategory?.();
+                        const rows = ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'].filter((c) => !usedCats.includes(c));
+                        const catId = best?.catId || rows[0];
+                        if (!catId) return false;
+                        let btn = document.querySelector(`button[data-payout-row="${catId}"]:not([disabled])`);
+                        if (!btn) {
+                            const more = document.querySelector('[data-layout-key="payout-sheet-more"]');
+                            if (more && !more.disabled) more.click();
+                            btn = document.querySelector(`button[data-payout-row="${catId}"]:not([disabled])`);
+                        }
+                        if (btn) {
+                            btn.click();
+                            return true;
+                        }
+                        const any = document.querySelector('button[data-payout-row]:not([disabled])');
+                        if (any && any.getAttribute('data-payout-row') !== 'more') {
+                            any.click();
+                            return true;
                         }
                         return false;
                     },

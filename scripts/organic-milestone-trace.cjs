@@ -115,10 +115,20 @@ async function main() {
         chainDepth: h.chainDepth,
       }));
     const synergyHist = {};
+    let handsWithGhostEcho = 0;
+    let pairwiseLinkHands = 0;
     hands.forEach((h) => {
       (h.synergyChainIds || []).forEach((id) => {
         synergyHist[id] = (synergyHist[id] || 0) + 1;
       });
+      if ((h.synergyChainIds || []).includes("ghost_echo")) handsWithGhostEcho += 1;
+      if (
+        (h.chainLinks || []).some(
+          (l) => l.from === "ghost_echo" && l.to === "bookends_retrigger",
+        )
+      ) {
+        pairwiseLinkHands += 1;
+      }
     });
     return {
       events,
@@ -127,6 +137,8 @@ async function main() {
       bloodOnBoard: snap.bloodOnBoard,
       fuseOnBoard: snap.fuseOnBoard,
       handsRecorded: hands.length,
+      handsWithGhostEcho,
+      pairwiseLinkHands,
       handsWithLinks,
       synergyHist,
       laneSim: window.__GB_SIM_LANE_SIM__ || null,
@@ -149,6 +161,8 @@ async function main() {
     result,
     organicReady: telem.organicReady,
     handsRecorded: telem.handsRecorded || 0,
+    handsWithGhostEcho: telem.handsWithGhostEcho || 0,
+    pairwiseLinkHands: telem.pairwiseLinkHands || 0,
     handsWithLinks: telem.handsWithLinks || [],
     synergyHist: telem.synergyHist || {},
     organicLinkTarget: "ghost_echo→bookends_retrigger",

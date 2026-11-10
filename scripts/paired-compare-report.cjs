@@ -154,7 +154,17 @@ function ghostEchoRateByReach(samples, layout) {
   };
 }
 
-function conditionalPreparedLane(samples = 6000) {
+function mulberry32(a) {
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function conditionalPreparedLane(samples = 8000) {
   const g = createGame(snapshot());
   const ctx = linkCtx(g, [{ id: "BOOKENDS" }]);
   let pairV2 = 0;
@@ -162,10 +172,19 @@ function conditionalPreparedLane(samples = 6000) {
   let ge = 0;
   let bookendsV2 = 0;
   let bookendsV1 = 0;
+  let endsValueMatch = 0;
+  let hauntedOnly = 0;
   for (let n = 0; n < samples; n++) {
-    const d = dice(Array.from({ length: 5 }, (_, i) => 1 + ((n * 7 + i * 3) % 6)));
-    d[1] = bone(d[1].value, 1, { faceId: "ECHO_FACE", type: "adjacent" });
-    d[2] = bone(d[2].value, 2, { faceId: "GHOST_FACE", type: "ethereal" });
+    const rand = mulberry32(n + 90210);
+    const values = Array.from({ length: 5 }, () => 1 + Math.floor(rand() * 6));
+    const d = dice(values);
+    d[1] = bone(values[1], 1, { faceId: "ECHO_FACE", type: "adjacent" });
+    d[2] = bone(values[2], 2, { faceId: "GHOST_FACE", type: "ethereal" });
+    const gp = values[2];
+    const vm = values[0] === values[4];
+    const bracket = Math.abs(values[0] - gp) <= 1 && Math.abs(values[4] - gp) <= 1;
+    if (vm) endsValueMatch += 1;
+    if (!vm && bracket) hauntedOnly += 1;
     const cur = g.api.GutterbonesRules.calculateScore("C", d, ctx);
     const { resolved, destroyed } = g.api.GutterbonesRules.resolveDice(d);
     const v1 = patchV1(cur, resolved, destroyed);
@@ -176,8 +195,10 @@ function conditionalPreparedLane(samples = 6000) {
     if (countPair(v1.chainLinks, "ghost_echo", "bookends_retrigger")) pairV1 += 1;
   }
   return {
-    label: "conditional_prepared_lane_ECHO@1_GHOST@2_BOOKENDS",
-    denominator: `${samples} random pip vectors (not die-pool RNG; not shop/carve play)`,
+    label: "conditional_prepared_lane_ECHO@2_GHOST@3_independent_pips",
+    denominator: `${samples} independent pip vectors (mulberry32), faces fixed; not shop/carve play`,
+    ends_value_match: `${endsValueMatch}/${samples}`,
+    bookends_via_haunted_only: `${hauntedOnly}/${samples}`,
     ghost_echo: `${ge}/${samples} (${((ge / samples) * 100).toFixed(2)}%)`,
     bookends_v2_haunted_bracket: `${bookendsV2}/${samples} (${((bookendsV2 / samples) * 100).toFixed(2)}%)`,
     bookends_v1_exact_pip_only: `${bookendsV1}/${samples} (${((bookendsV1 / samples) * 100).toFixed(2)}%)`,

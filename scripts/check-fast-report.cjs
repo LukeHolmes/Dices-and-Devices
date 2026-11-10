@@ -25,8 +25,13 @@ console.log("=== check:fast — test:fast (Node rules/unit, no Playwright playte
 let code = run("npm", ["run", "test:fast"]);
 if (code !== 0) process.exit(code);
 
-console.log("\n=== check:fast — organic pairwise integration (Playwright trace scan) ===\n");
-code = run("node", ["--test", "--test-timeout=900000", "tests/organic-pairwise-integration.test.cjs"]);
+console.log("\n=== check:fast — organic regression (fixed rid) + sim replay determinism ===\n");
+code = run("node", [
+  "--test",
+  "--test-timeout=900000",
+  "tests/organic-pairwise-regression.test.cjs",
+  "tests/sim/deterministic-replay.test.cjs",
+]);
 if (code !== 0) process.exit(code);
 
 console.log("\n=== check:fast — repro-r13 softlocks ===\n");
