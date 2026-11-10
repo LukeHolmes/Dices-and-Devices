@@ -355,9 +355,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (shopBot && ph === "SHOP") {
       log._shopPasses = (log._shopPasses || 0) + 1;
       const invNow = Number(st?.inventoryCount) || 0;
+      const minInv = strategy === "builder" ? 3 : 1;
       if (
         st?.selectedShopPathId
-        && (invNow >= 1 || log._shopPasses > 10 || (st.round || 1) >= 4)
+        && (invNow >= minInv || log._shopPasses > 14 || (strategy !== "builder" && (st.round || 1) >= 4))
       ) {
         if (window.__GB_E2E__?.hitStreets?.()) {
           log._shopPasses = 0;
@@ -369,11 +370,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         await wait(90);
         continue;
       }
-      if (log._shopPasses <= 12 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+      if (log._shopPasses <= 16 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
         await wait(90);
         continue;
       }
-      if (!st?.selectedShopPathId && window.__GB_E2E__?.clickShopRouteCard?.()) {
+      if (
+        !st?.selectedShopPathId
+        && (window.__GB_E2E__?.pickBuilderShopPath?.() || window.__GB_E2E__?.clickShopRouteCard?.())
+      ) {
         await wait(80);
         continue;
       }

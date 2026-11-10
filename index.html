@@ -4193,10 +4193,10 @@ const GutterbonesRoutes = (() => {
     const BOSS_TUNING = Object.freeze({
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 8,
+        earlyBossRoundCap: 10,
         earlyBouncerRelief: 0.9,
         raidQuotaRelief: 0.88,
-        bossPathTargetRelief: 0.84
+        bossPathTargetRelief: 0.87
     });
 
     const EARLY_GAME_TUNING = Object.freeze({
@@ -4211,8 +4211,7 @@ const GutterbonesRoutes = (() => {
         mid: { pathModWeight: 1.02, flatIncrease: 48 },
         late: { pathModWeight: 1.02, flatIncrease: 46 },
         extreme: { pathModWeight: 1.12, flatIncrease: 70 },
-        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 64 }),
-        postLateCatchUp: Object.freeze({ fromRound: 8, flatBonus: 38 })
+        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 72 })
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
@@ -4347,10 +4346,6 @@ const GutterbonesRoutes = (() => {
             if (nextRound >= (ROUND_CURVE_TUNING.postEarlyCatchUp?.fromRound || 99)) {
                 grown += ROUND_CURVE_TUNING.postEarlyCatchUp?.flatBonus || 0;
             }
-            if (nextRound >= (ROUND_CURVE_TUNING.postLateCatchUp?.fromRound || 99)) {
-                grown += ROUND_CURVE_TUNING.postLateCatchUp?.flatBonus || 0;
-            }
-
             if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 let debtPenaltyApplied = Math.min(
                     BOSS_TUNING.debtQuotaPenaltyCap,
@@ -5372,10 +5367,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         loanSharkDebtToll: 1,
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 8,
+        earlyBossRoundCap: 10,
         earlyBouncerRelief: 0.9,
         raidQuotaRelief: 0.88,
-        bossPathTargetRelief: 0.84,
+        bossPathTargetRelief: 0.87,
         crookedCopHardwareMult: 0.68
     };
 
@@ -12321,6 +12316,31 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (!path) return false;
                         return beginShopAdvance(path);
                     },
+                    pickBuilderShopPath: () => {
+                        if (phase !== 'SHOP') return false;
+                        const bossPath = paths?.find((p) => p.boss);
+                        const hasEngine = inventory.some((i) => i.id === 'ENGINE');
+                        const hasFuse = inventory.some((i) => i.id === 'FUSE_BOX')
+                            || (dice || []).some((die) => (die.faces || []).some((f) => f.faceId === 'FUSE_FACE'));
+                        const bloodReady = (dice || []).reduce(
+                            (n, die) => n + (die.faces || []).filter((f) => f.faceId === 'BLOOD_6').length,
+                            0,
+                        ) >= 1;
+                        if (
+                            bossPath && hasEngine && hasFuse && bloodReady
+                            && inventory.length >= 3 && round >= 3 && !selectedShopPathId
+                        ) {
+                            selectShopPath(bossPath);
+                            return true;
+                        }
+                        if (bossPath && hasEngine && inventory.length >= 2 && round >= 5 && !selectedShopPathId) {
+                            selectShopPath(bossPath);
+                            return true;
+                        }
+                        const path = resolveShopAdvancePath();
+                        if (!path) return false;
+                        return beginShopAdvance(path);
+                    },
                     buyPreferredShopItem: () => {
                         if (phase !== 'SHOP') return false;
                         const available = shopItems.filter((i) => !soldItems.includes(i.id));
@@ -12328,27 +12348,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const HW = ['ENGINE', 'FUSE_BOX', 'CROWBAR', 'DEBT_COLLECTOR', 'BLACK_BOOK', 'BRASS_KNUCKLES', 'BOOKENDS', 'LOADED_DIE', 'BURNER_PHONE', 'MIRROR_RIG', 'HOT_STREAK_COIL', 'CENTERPIECE'];
                         const FACES = ['BLOOD_6', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_FACE', 'WIREBAG_FACE', 'SHIV_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'];
                         const invIds = new Set(inventory.map((i) => i.id));
-                        const chainFaces = ['BLOOD_6', 'FUSE_FACE', 'WIREBAG_FACE', 'ECHO_FACE', 'GHOST_FACE', 'MULT_FACE'];
-                        if (!invIds.has('CROWBAR')) {
-                            const crow = available.find((i) => i.id === 'CROWBAR');
-                            if (crow && gold + 14 >= shopListPrice(crow)) {
-                                handlePurchase(crow);
-                                return true;
-                            }
-                        }
-                        for (const id of chainFaces) {
+                        const bloodOnBoard = (dice || []).reduce(
+                            (n, die) => n + (die.faces || []).filter((f) => f.faceId === 'BLOOD_6').length,
+                            0,
+                        );
+                        const chainHw = ['ENGINE', 'FUSE_BOX', 'BOOKENDS', 'CROWBAR'];
+                        for (const id of chainHw) {
                             const item = available.find((i) => i.id === id);
-                            if (!item) continue;
+                            if (!item || invIds.has(id)) continue;
                             const price = shopListPrice(item);
                             if (gold + 14 >= price) {
                                 handlePurchase(item);
                                 return true;
                             }
                         }
-                        const chainHw = ['ENGINE', 'FUSE_BOX', 'CROWBAR', 'BOOKENDS'];
-                        for (const id of chainHw) {
+                        const chainFaces = [];
+                        if (bloodOnBoard < 2) chainFaces.push('BLOOD_6');
+                        chainFaces.push('FUSE_FACE', 'ECHO_FACE', 'GHOST_FACE', 'WIREBAG_FACE');
+                        for (const id of chainFaces) {
                             const item = available.find((i) => i.id === id);
-                            if (!item || invIds.has(id)) continue;
+                            if (!item) continue;
                             const price = shopListPrice(item);
                             if (gold + 14 >= price) {
                                 handlePurchase(item);
@@ -12393,16 +12412,54 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     autoCarvePreferred: () => {
                         if (phase !== 'CARVING') return false;
                         if (!selectedItem) return window.__GB_E2E__.abortCarving?.() || false;
+                        const isStd = (f) => !f?.type || f.type === 'standard';
+                        const dieHasFace = (di, id) =>
+                            (dice[di]?.faces || []).some((f) => f.faceId === id);
                         if (carvingDie === null) {
-                            setCarvingDie(0);
+                            const carveId = selectedItem?.id || selectedItem;
+                            let bestDie = 0;
+                            if (carveId === 'BLOOD_6') {
+                                const without = dice.findIndex((_, di) => !dieHasFace(di, 'BLOOD_6'));
+                                const withFuseNeighbor = dice.findIndex(
+                                    (_, di) => !dieHasFace(di, 'BLOOD_6')
+                                        && (dieHasFace(di - 1, 'FUSE_FACE') || dieHasFace(di + 1, 'FUSE_FACE')),
+                                );
+                                bestDie = withFuseNeighbor >= 0 ? withFuseNeighbor : (without >= 0 ? without : 0);
+                            } else if (carveId === 'FUSE_FACE') {
+                                const bloodDie = dice.findIndex((_, di) => dieHasFace(di, 'BLOOD_6'));
+                                if (bloodDie >= 0) {
+                                    bestDie = bloodDie < 4 ? bloodDie + 1 : bloodDie - 1;
+                                } else {
+                                    bestDie = dieHasFace(0, 'BLOOD_6') ? 1 : (dieHasFace(1, 'BLOOD_6') ? 0 : 1);
+                                }
+                            } else {
+                                let bestScore = -1;
+                                for (let di = 0; di < dice.length; di++) {
+                                    const faces = dice[di]?.faces || [];
+                                    let s = 0;
+                                    if (dieHasFace(di, 'BLOOD_6')) s += 4;
+                                    if (dieHasFace(di, 'FUSE_FACE')) s += 3;
+                                    if (faces[4] && isStd(faces[4])) s += 1;
+                                    if (faces[5] && isStd(faces[5])) s += 1;
+                                    if (s > bestScore) {
+                                        bestScore = s;
+                                        bestDie = di;
+                                    }
+                                }
+                            }
+                            setCarvingDie(bestDie);
                             return true;
                         }
                         const faces = dice[carvingDie]?.faces || [];
                         const carveId = selectedItem?.id || selectedItem;
-                        const isStd = (f) => !f?.type || f.type === 'standard';
-                        const preferOrder = ['BLOOD_6', 'FUSE_FACE', 'GHOST_FACE', 'ECHO_FACE', 'WIREBAG_FACE', 'SHIV_FACE'].includes(carveId)
-                            ? [4, 5, 3, 2, 1, 0]
-                            : [0, 1, 2, 3, 4, 5];
+                        let preferOrder = [0, 1, 2, 3, 4, 5];
+                        if (carveId === 'BLOOD_6') {
+                            preferOrder = [5, 4, 3, 2, 1, 0];
+                        } else if (carveId === 'FUSE_FACE') {
+                            preferOrder = dieHasFace(carvingDie, 'BLOOD_6') ? [4, 5, 3, 2, 1, 0] : [4, 5, 3, 2, 1, 0];
+                        } else if (['GHOST_FACE', 'ECHO_FACE', 'WIREBAG_FACE', 'SHIV_FACE'].includes(carveId)) {
+                            preferOrder = [4, 5, 3, 2, 1, 0];
+                        }
                         let faceIdx = preferOrder.find((i) => faces[i] && isStd(faces[i]));
                         if (faceIdx == null) faceIdx = faces.findIndex(isStd);
                         if (faceIdx < 0) faceIdx = 0;
@@ -12542,6 +12599,46 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         return true;
                     },
                     keepDiceForReroll: () => {
+                        const e2eGreedy = typeof window !== 'undefined'
+                            && typeof window.__GB_E2E_QUERY__ === 'function'
+                            && window.__GB_E2E_QUERY__();
+                        const chainKit = inventory.some((i) => i.id === 'ENGINE' || i.id === 'FUSE_BOX')
+                            && dice.some((d) => d.faceId === 'BLOOD_6' || d.type === 'blood');
+                        if (e2eGreedy && chainKit) {
+                            const bloodSlots = dice
+                                .map((d, i) => (d.faceId === 'BLOOD_6' || d.type === 'blood' ? i : -1))
+                                .filter((i) => i >= 0);
+                            const fuseSlots = dice
+                                .map((d, i) => (d.faceId === 'FUSE_FACE' ? i : -1))
+                                .filter((i) => i >= 0);
+                            const keep = new Set([...bloodSlots, ...fuseSlots]);
+                            bloodSlots.forEach((i) => {
+                                if (i > 0) keep.add(i - 1);
+                                if (i < 4) keep.add(i + 1);
+                            });
+                            fuseSlots.forEach((i) => {
+                                if (i > 0) keep.add(i - 1);
+                                if (i < 4) keep.add(i + 1);
+                            });
+                            if (keep.size > 0) {
+                                setKept(dice.map((_, i) => keep.has(i)));
+                                return true;
+                            }
+                        } else if (e2eGreedy) {
+                            const bloodSlots = dice
+                                .map((d, i) => (d.faceId === 'BLOOD_6' || d.type === 'blood' ? i : -1))
+                                .filter((i) => i >= 0);
+                            if (bloodSlots.length >= 1) {
+                                const fuseAdj = new Set();
+                                bloodSlots.forEach((i) => {
+                                    fuseAdj.add(i);
+                                    if (i > 0) fuseAdj.add(i - 1);
+                                    if (i < 4) fuseAdj.add(i + 1);
+                                });
+                                setKept(dice.map((_, i) => fuseAdj.has(i)));
+                                return true;
+                            }
+                        }
                         const counts = {};
                         dice.forEach((d) => {
                             const v = d.value;
@@ -12614,8 +12711,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             }
                             return false;
                         }
-                        const best = window.__GB_E2E__.pickBestOpenCategory?.();
+                        let best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
+                        const layoutBloodFuseAdj = () => {
+                            const blood = dice
+                                .map((d, i) => (d.faceId === 'BLOOD_6' || d.type === 'blood' ? i : -1))
+                                .filter((i) => i >= 0);
+                            const fuse = dice
+                                .map((d, i) => (d.faceId === 'FUSE_FACE' ? i : -1))
+                                .filter((i) => i >= 0);
+                            if (!blood.length || !fuse.length) return false;
+                            return blood.some((b) => fuse.some((f) => Math.abs(b - f) === 1));
+                        };
+                        if (chainKit && layoutBloodFuseAdj() && !usedCats.includes('C')) {
+                            const cTry = calculateScore('C', dice);
+                            if (cTry.valid && cTry.total >= best.total * 0.7) {
+                                best = { catId: 'C', total: cTry.total };
+                            }
+                        }
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
                             && window.__GB_E2E_QUERY__();
@@ -12623,7 +12736,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const need = gap / Math.max(1, hands);
                         const mustScore = hands <= 1 || discards <= 0
                             || (e2eGreedy && hands <= 2)
-                            || (e2eGreedy && round >= 7);
+                            || (e2eGreedy && round >= 5)
+                            || (e2eGreedy && gap > Math.max(60, best.total * 1.5));
+                        const chainKit = inventory.some((i) => i.id === 'ENGINE')
+                            && dice.filter((d) => d.faceId === 'BLOOD_6').length >= 1
+                            && dice.some((d) => d.faceId === 'FUSE_FACE');
+                        const chainHunt = e2eGreedy
+                            && chainKit
+                            && discards > 0
+                            && !mustScore
+                            && best.total < Math.max(52, gap * 0.48);
+                        if (chainHunt && rollBtn) {
+                            window.__GB_E2E__.keepDiceForReroll?.();
+                            rollBones();
+                            return true;
+                        }
                         const minPlay = e2eGreedy
                             ? 1
                             : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
@@ -12689,6 +12816,40 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             if (delta > 6) bad.push({ idx, label: label.textContent, delta });
                         });
                         return { ok: bad.length === 0, bad, rowCount: rows.length };
+                    },
+                    prepareCarvedPayout: (catId, slots) => {
+                        if (phase !== 'PLAY' || hands <= 0) return false;
+                        openingSniffPendingRef.current = false;
+                        setRollLock(false);
+                        pendingPayoutRef.current = null;
+                        setRollingSlots(Array(5).fill(false));
+                        setOpeningSniffBanner(null);
+                        const next = slots.map((slot, i) => {
+                            const base = dice[i] || makeBone();
+                            const faceId = slot?.faceId || null;
+                            const face = faceId ? FACE_DATABASE[faceId] : null;
+                            return {
+                                ...base,
+                                value: Math.max(0, Math.min(6, Number(slot?.value ?? base.value) || 0)),
+                                faceId,
+                                faceLabel: face?.label || null,
+                                faceStyle: face?.style || null,
+                                type: face?.type || 'standard',
+                            };
+                        });
+                        if (typeof window.__GB_SIM_TELEM__ === 'undefined') {
+                            window.__GB_SIM_TELEM__ = { hands: [], roundEvents: [], record(h) { this.hands.push(h); } };
+                        }
+                        e2ePendingDiceRef.current = next;
+                        setDice(next);
+                        setHasRolled(true);
+                        setKept([false, false, false, false, false]);
+                        scheduleTimeout(() => {
+                            setRollLock(false);
+                            setRollingSlots(Array(5).fill(false));
+                            executePayout(catId);
+                        }, 0);
+                        return true;
                     },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
