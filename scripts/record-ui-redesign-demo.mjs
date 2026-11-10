@@ -30,16 +30,22 @@ await page.evaluate(
 await page.reload({ waitUntil: "domcontentloaded" });
 await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
 await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-await page.waitForTimeout(1000);
-await page.click('[data-layout-key="play-history-log"]');
 await page.waitForTimeout(900);
-await page.click('[data-layout-key="play-history-close"]');
+await page.click('[data-layout-key="payout-unlock-open"]').catch(() => {});
+await page.waitForTimeout(700);
+await page.click('[data-layout-key="payout-unlock-close"]').catch(() => {});
 await page.waitForTimeout(500);
+await page.click('[data-layout-key="play-history-log"]');
+await page.waitForTimeout(700);
+await page.click('[data-layout-key="play-history-close"]');
+await page.waitForTimeout(450);
 const row = await page.$("button[data-payout-row]:not([disabled])");
 if (row) {
   await row.hover();
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(900);
 }
+await page.click('[data-tutorial="roll-btn"]').catch(() => {});
+await page.waitForTimeout(1200);
 const vid = page.video();
 await page.close();
 if (vid) await vid.saveAs(out);

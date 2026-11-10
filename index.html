@@ -3066,6 +3066,124 @@
     #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .stash-dock-compact .stash-program-grid button:not(:disabled):hover {
         transform: none;
     }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button {
+        color: #18181b;
+        background: rgba(250, 250, 249, 0.96);
+        border-color: rgba(41, 37, 36, 0.55);
+        font-weight: 600;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:disabled {
+        color: #78716c;
+        background: rgba(231, 229, 228, 0.65);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button span:last-child {
+        color: #b45309;
+        font-weight: 700;
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="system-menu-global"] {
+        display: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="system-menu-street"] {
+        min-height: var(--gb-min-tap);
+        min-width: var(--gb-min-tap);
+        border: 1px solid rgba(113, 113, 122, 0.85);
+        border-radius: 0.35rem;
+        background: rgba(9, 9, 11, 0.75);
+        color: #e4e4e7;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        letter-spacing: 0.14em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-top {
+        padding-right: 0.35rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        margin: -1px;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-dice-lane {
+        margin-top: 0.35rem;
+        padding-top: 0.15rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-name {
+        white-space: normal;
+        line-height: 1.15;
+        word-break: break-word;
+        text-align: left;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-name-block {
+        flex: 1 1 55%;
+        min-width: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .locked-payout-row-compact {
+        min-height: 1.65rem !important;
+        padding-top: 0.15rem !important;
+        padding-bottom: 0.15rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .locked-payout-row-compact .locked-payout-sub {
+        display: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-unlock-inspector-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-workbench {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1 1 auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-mercenary-shelf {
+        flex: 1 1 58%;
+        min-height: 0;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(63, 63, 70, 0.75);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-bone-inspection-strip {
+        flex: 0 0 auto;
+        padding-top: 0.65rem;
+        background: rgba(9, 9, 11, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-bone-inspection-strip .shop-bone-row {
+        display: flex;
+        gap: 0.35rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-workbench {
+        flex-direction: column !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-shelf {
+        flex: 0 0 auto;
+        max-height: 42%;
+        overflow-y: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-bone-strip {
+        flex: 1 1 auto;
+        min-height: 12rem;
+    }
+    @media (max-width: 1024px) {
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--empty {
+            display: none;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 0.25rem;
+            max-height: 3.5rem;
+            overflow: hidden;
+        }
+    }
     @media (min-width: 768px) {
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-phase-grid"] {
             grid-template-columns: 7fr 5fr;
@@ -6551,7 +6669,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         return (
             <div className={`relative bone-slot-inner ${previewTint ? 'bone-preview-tint' : ''}`} style={previewTint ? { '--preview-tint': previewTint } : undefined}>
                 {kept && !rolling && <div className="bone-kept-tray-rim" aria-hidden />}
-                <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
+                <div className="bone-slot-label text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
                 <div className="bone-die-perspective flex items-center justify-center">
                     <button
                         type="button"
@@ -6707,6 +6825,92 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
+    const PayoutUnlockInspector = ({ meta, open, onClose }) => {
+        const panelRef = useRef(null);
+        const info = getCategoryUnlockInfo(meta);
+        useEffect(() => {
+            if (!open) return undefined;
+            panelRef.current?.focus?.({ preventScroll: true });
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [open, onClose]);
+        if (!open || !info.locked.length) return null;
+        return (
+            <div className="payout-unlock-inspector-panel" onClick={onClose} role="presentation">
+                <div
+                    ref={panelRef}
+                    tabIndex={-1}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="payout-unlock-title"
+                    data-layout-key="payout-unlock-inspector"
+                    className="matchbook-ledger w-full max-w-md max-h-[min(85dvh,28rem)] overflow-y-auto p-4 text-zinc-900 font-mono text-xs"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <h3 id="payout-unlock-title" className="font-bold tracking-[0.15em] text-sm border-b border-zinc-400 pb-2 mb-2">LOCKED PAYOUTS</h3>
+                    <p className="text-zinc-600 leading-snug mb-3">
+                        The fixer holds rows back until you survive more contracts. Completed runs: <b>{info.totalRuns}</b>.
+                    </p>
+                    <ul className="space-y-2">
+                        {info.lockedDetails.map((row) => (
+                            <li key={row.id} className="border-b border-zinc-300/80 pb-1.5">
+                                <span className="font-bold">{CATEGORIES[row.id]?.name || row.id}</span>
+                                {row.unlockAtRun > 0 && (
+                                    <span className="text-zinc-600">
+                                        {row.runsUntil > 0
+                                            ? ` — unlocks at ${row.unlockAtRun} runs (${row.runsUntil} to go)`
+                                            : ` — unlocks at ${row.unlockAtRun} runs`}
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                    <button type="button" data-layout-key="payout-unlock-close" onClick={onClose} className="gb-tappable-label mt-3 w-full min-h-[var(--gb-min-tap)] border border-zinc-600 bg-zinc-900/5 text-zinc-800 font-bold">CLOSE</button>
+                </div>
+            </div>
+        );
+    };
+
+    const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem }) => (
+        <div data-layout-key="shop-bone-inspection-strip" className="shop-bone-inspection-strip shrink-0">
+            <div className="font-mono text-[10px] tracking-[0.2em] text-amber-200/90 mb-2 px-1">
+                {previewItem?.label || previewItem?.name
+                    ? `INSPECT · ${previewItem.label || previewItem.name} — pick a bone`
+                    : 'BONE STRIP · tap a bone to inspect faces before you carve'}
+            </div>
+            <div className="shop-bone-row">
+                {dice.map((d, i) => (
+                    <button
+                        key={d.id}
+                        type="button"
+                        data-layout-key={`shop-inspect-bone-${i + 1}`}
+                        onClick={() => onPickBone(inspectBone === i ? null : i)}
+                        className={`gb-tappable-label min-h-[var(--gb-min-tap)] px-2 py-1 rounded border font-mono text-[10px] ${inspectBone === i ? 'border-amber-400 bg-amber-950/40 text-amber-100' : 'border-zinc-600 text-zinc-300 bg-black/50'}`}
+                        aria-pressed={inspectBone === i}
+                        aria-label={`Inspect bone ${i + 1}`}
+                    >
+                        B{i + 1}
+                    </button>
+                ))}
+            </div>
+            {inspectBone != null && dice[inspectBone] && (
+                <div data-layout-key="shop-face-preview-grid" className="bone-face-loupe-grid mt-2 mx-auto max-w-md" role="region" aria-label={`Faces on bone ${inspectBone + 1}`}>
+                    {(dice[inspectBone].faces || []).map((f, faceIdx) => (
+                        <div key={faceIdx} className="text-[10px] text-zinc-200 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                            {f.faceLabel || f.label || f.value}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
     const PayoutSheetRows = ({ children }) => {
         const containerRef = useRef(null);
         const [moreCount, setMoreCount] = useState(0);
@@ -6781,23 +6985,45 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun }) => (
-        <div
-            data-payout-row={cat.id}
-            data-layout-key={`payout-row-${cat.id}`}
-            className="locked-payout-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed border-gray-400 text-xs md:text-base opacity-55 cursor-not-allowed min-h-[2rem]"
-            aria-disabled="true"
-            title={runsUntil > 0 ? `Unlocks after ${unlockAtRun} completed runs (${runsUntil} to go)` : `Unlocks after ${unlockAtRun} completed runs`}
-        >
-            <span className="flex flex-col items-start text-gray-600 min-w-0">
-                <span className="font-bold line-through decoration-gray-500/80 truncate max-w-full">{cat.name}</span>
-                <span className="locked-payout-sub text-[11px] font-mono text-gray-500 mt-0.5">
-                    {runsUntil > 0 ? `Unlocks after ${unlockAtRun} runs · ${runsUntil} to go` : `Unlocks after ${unlockAtRun} runs`}
+    const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun, compact = true }) => {
+        const [tipOpen, setTipOpen] = useState(false);
+        const detail = runsUntil > 0
+            ? `Unlocks after ${unlockAtRun} completed runs (${runsUntil} to go)`
+            : `Unlocks after ${unlockAtRun} completed runs`;
+        return (
+            <div
+                data-payout-row={cat.id}
+                data-layout-key={`payout-row-${cat.id}`}
+                className={`locked-payout-row locked-payout-row-compact relative w-full flex justify-between items-center gap-1 py-2 px-2 border-b border-dashed border-gray-400 text-xs md:text-sm opacity-50 min-h-[2rem] ${compact ? 'payout-tier-idle' : ''}`}
+            >
+                <span className="score-row-name-block flex items-center gap-1 min-w-0 text-gray-600">
+                    <span className="score-row-name font-bold line-through decoration-gray-500/80">{cat.name}</span>
+                    {!compact && (
+                        <span className="locked-payout-sub text-[11px] font-mono text-gray-500 mt-0.5">
+                            {runsUntil > 0 ? `Unlocks after ${unlockAtRun} runs · ${runsUntil} to go` : `Unlocks after ${unlockAtRun} runs`}
+                        </span>
+                    )}
                 </span>
-            </span>
-            <span className="text-[10px] font-mono font-bold text-gray-500 tracking-wide">LOCKED</span>
-        </div>
-    );
+                <button
+                    type="button"
+                    data-layout-key={`payout-locked-info-${cat.id}`}
+                    className="gb-tappable-label min-h-8 min-w-8 border border-gray-500/50 rounded text-[10px] text-gray-600 shrink-0"
+                    aria-expanded={tipOpen}
+                    aria-label={`${cat.name} locked. ${detail}`}
+                    onClick={() => setTipOpen((v) => !v)}
+                    onBlur={() => setTipOpen(false)}
+                >
+                    ?
+                </button>
+                <span className="text-[10px] font-mono font-bold text-gray-500 tracking-wide shrink-0">LOCK</span>
+                {tipOpen && (
+                    <div role="tooltip" className="absolute left-2 right-2 z-50 mt-1 p-2 bg-zinc-950 border border-amber-500/35 text-zinc-100 text-[10px] rounded shadow-lg pointer-events-none" style={{ top: '100%' }}>
+                        {detail}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0, isBestPreview = false }) => {
         const [hover, setHover] = useState(false);
@@ -6864,8 +7090,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     />
                 )}
                 {!receiptVisible && hover && rowCanScore && result.valid && <ScorePreview result={result} />}
-                <span className="flex items-center gap-1 min-w-0 truncate max-w-[72%]">
-                    <span className="score-row-name truncate">{cat.name}</span>
+                <span className="score-row-name-block flex items-start gap-1 min-w-0">
+                    <span className="score-row-name">{cat.name}</span>
                     <span className="payout-meta-rest payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
                     {masteryBonus > 0 && (
                         <span className="payout-meta-rest text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
@@ -8532,7 +8758,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const HardwareRail = ({ inventory = [], hardwareDisabled = false }) => {
-        const slots = 6;
+        const filled = inventory.length;
+        const slots = Math.min(6, Math.max(filled + (filled < 6 ? 1 : 0), filled || 3));
         const [focusIdx, setFocusIdx] = useState(null);
         const railRef = useRef(null);
         const pairs = [];
@@ -8540,7 +8767,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (inventory[i] && inventory[i + 1]) pairs.push(i);
         }
         return (
-            <div data-layout-key="hardware-rail" className="hardware-rail shrink-0" ref={railRef}>
+            <div data-layout-key="hardware-rail" className="hardware-rail shrink-0" ref={railRef} aria-label="Hardware rail">
                 {pairs.length > 0 && (
                     <svg className="hardware-rail-wires" viewBox={`0 0 ${slots * 52} 4`} preserveAspectRatio="none" aria-hidden>
                         {pairs.map((idx) => (
@@ -8571,7 +8798,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             aria-label={item ? `Hardware slot ${idx + 1}: ${item.name}. ${item.desc}` : `Hardware slot ${idx + 1}: empty`}
                             title={item ? item.name : 'Empty slot'}
                         >
-                            {item ? <span className="leading-tight line-clamp-3">{item.name.split(' ').slice(0, 2).join(' ')}</span> : <span className="opacity-40">{idx + 1}</span>}
+                            {item ? <span className="leading-tight line-clamp-3">{item.name.split(' ').slice(0, 2).join(' ')}</span> : <span className="opacity-40" aria-hidden>—</span>}
                             {tipOpen && (
                                 <span className="hardware-rail-tip" role="tooltip">
                                     <span className="font-bold text-amber-200">{item.name}</span>
@@ -9181,6 +9408,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
         const [playHistoryDrawerOpen, setPlayHistoryDrawerOpen] = useState(false);
+        const [payoutUnlockOpen, setPayoutUnlockOpen] = useState(false);
+        const [shopInspectBone, setShopInspectBone] = useState(null);
+        const [shopPreviewItem, setShopPreviewItem] = useState(null);
         const [playDock, setPlayDock] = useState('lane');
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
@@ -9980,6 +10210,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         useEffect(() => {
             if (phase === 'SHOP') setShopItemPage(0);
         }, [phase, shopItems?.length, round]);
+
+        useEffect(() => {
+            if (phase !== 'SHOP') {
+                setShopInspectBone(null);
+                setShopPreviewItem(null);
+            }
+        }, [phase]);
 
         useEffect(() => {
             if (phase !== 'SHOP') return;
@@ -14239,7 +14476,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
                 {inRunPhase && (
-                    <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-2 min-h-[44px] min-w-[44px] border border-gray-600 bg-black/70 text-xs font-mono tracking-widest hover:border-[#ff007f]">
+                    <button type="button" data-layout-key="system-menu-global" onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-2 min-h-[44px] min-w-[44px] border border-gray-600 bg-black/70 text-xs font-mono tracking-widest hover:border-[#ff007f]">
                         SYSTEM
                     </button>
                 )}
@@ -14685,6 +14922,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
                                     <span className={`street-ledger-icon street-ledger-icon--cash ${cashDropFlash ? 'hud-cash-drop' : ''}`} title="Dirty cash">${Math.max(0, displayGold)}</span>
                                     {debt > 0 && <span className={`street-ledger-icon street-ledger-icon--debt ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`} title="Debt">IOU ${debt}</span>}
+                                    <button type="button" data-layout-key="system-menu-street" onClick={() => setShowSystemMenu(true)} aria-label="Open system menu" title="System settings">SYS</button>
                                     <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
                                     <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
                                 </div>
@@ -14771,7 +15009,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         </div>
                         <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
                             <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
-                                <h2 className="text-center font-bold border-b border-zinc-800/40 pb-2 mb-2 shrink-0 tracking-[0.2em] text-sm">MATCHBOOK · PAYOUTS</h2>
+                                {(() => {
+                                    const unlockInfo = getCategoryUnlockInfo(meta);
+                                    return (
+                                        <div className="flex items-center justify-between gap-2 border-b border-zinc-800/40 pb-2 mb-2 shrink-0">
+                                            <h2 className="font-bold tracking-[0.2em] text-sm flex-1 text-center">MATCHBOOK · PAYOUTS</h2>
+                                            {unlockInfo.locked.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    data-layout-key="payout-unlock-open"
+                                                    onClick={() => setPayoutUnlockOpen(true)}
+                                                    className="gb-tappable-label shrink-0 min-h-8 px-2 border border-zinc-600 text-zinc-700 font-mono text-[10px] tracking-wide"
+                                                    aria-label={`Show ${unlockInfo.locked.length} locked payout unlock requirements`}
+                                                >
+                                                    LOCKED ({unlockInfo.locked.length})
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                                 <PayoutSheetRows>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
@@ -14817,7 +15073,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             />
                                         );
                                     });
-                                    if (unlockInfo.locked.length) rows.push(<CategoryUnlockFooter key="cat-unlock" meta={meta} />);
                                     return rows;
                                 })()}
                                 </PayoutSheetRows>
@@ -14855,7 +15110,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         Hit ROLL 'EM to throw your bones.
                                     </div>
                                 )}
-                                <div className={`relative flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
+                                <div data-layout-key="play-dice-lane" className={`play-dice-lane relative flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
                                     {synergyLinks.length > 0 && !reducedMotion && (
                                         <div className="synergy-link-layer" aria-hidden="true">
                                             {synergyLinks.map((link) => {
@@ -15037,6 +15292,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         </div>
                     </div>
                     <PlayHandHistoryDrawer history={history} open={playHistoryDrawerOpen} onClose={() => setPlayHistoryDrawerOpen(false)} round={round} />
+                    <PayoutUnlockInspector meta={meta} open={payoutUnlockOpen} onClose={() => setPayoutUnlockOpen(false)} />
                     </>
                 )}
 
@@ -15109,7 +15365,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     <div className="gb-screen p-[var(--gb-pad)] z-[300] relative">
                         <div className="shop-counting-cash-backdrop scene-backdrop-fade" aria-hidden></div>
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
-                            <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
+                            <div data-tutorial="shop-panel" className="shop-workbench flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 ? <span className="block text-sm text-red-300 font-normal">IOU ${debt}</span> : null}</div></div></div>
                                 <p className="text-xs font-mono text-amber-200/85 mb-2 leading-snug line-clamp-2 md:line-clamp-none">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
@@ -15118,7 +15374,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         {routeModifiers.shopDiscount ? ` · prices -${Math.round(routeModifiers.shopDiscount * 100)}%` : ''}
                                     </div>
                                 )}
-                                <div ref={shopItemsShellRef} className="shop-items-shell flex-1 min-h-0 overflow-hidden">
+                                <div ref={shopItemsShellRef} className="shop-mercenary-shelf shop-items-shell flex-1 min-h-0 overflow-hidden flex flex-col">
                                 {(() => {
                                     const perPage = Math.max(1, shopItemsPerPage || 1);
                                     const pageCount = Math.max(1, Math.ceil((shopItems?.length || 0) / perPage));
@@ -15152,13 +15408,32 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
                                         <div className="flex items-start gap-3 mb-2">{isFace ? <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-xs font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
-                                        <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50">{buyLabel}</button>
+                                        <div className="flex gap-2 mt-auto">
+                                            {isFace && !sold && (
+                                                <button
+                                                    type="button"
+                                                    data-layout-key="shop-inspect-offer"
+                                                    onClick={() => { setShopPreviewItem(item); setShopInspectBone(null); }}
+                                                    className={`gb-tappable-label flex-1 py-2 min-h-[var(--gb-min-tap)] border font-mono text-[10px] tracking-wide ${shopPreviewItem?.id === item.id ? 'border-cyan-400 text-cyan-100 bg-cyan-950/35' : 'border-gray-600 text-gray-300 bg-black/40'}`}
+                                                    aria-pressed={shopPreviewItem?.id === item.id}
+                                                >
+                                                    INSPECT
+                                                </button>
+                                            )}
+                                        <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className={`gb-btn-shop gb-tappable-label relative z-[5] ${isFace && !sold ? 'flex-[1.4]' : 'w-full'} py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50`}>{buyLabel}</button>
+                                        </div>
                                     </div>;
                                 })}</div>
                                         </>
                                     );
                                 })()}
                                 </div>
+                                <ShopBoneInspectionStrip
+                                    dice={dice}
+                                    inspectBone={shopInspectBone}
+                                    onPickBone={setShopInspectBone}
+                                    previewItem={shopPreviewItem}
+                                />
                             </div>
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
