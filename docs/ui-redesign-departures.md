@@ -13,10 +13,10 @@ Presentation-only scope on `data-ui-redesign="1"`. No scoring, quota, economy, o
 | Carving workbench | Shelf-over-strip column under redesign CSS; carve actions unchanged. |
 | Stash program contrast | Ledger stash dock uses higher-contrast paper tokens under redesign scoped CSS (buttons keep existing `handleProgram` wiring). |
 
-## Hand roll overlay (Luke add-on) — not feature-complete
+## Hand roll overlay (Luke add-on)
 
-- Production sprites `assets/scenes/hand-closed.png` / `hand-open.png` are **not committed**; runtime probes both and skips overlay until parent art lands (see `assets/scenes/HAND-ROLL-SPRITES.md`).
-- Positive animation QA uses **test-only** `tests/fixtures/hand-roll/*.png` (`tests/hand-roll-overlay.test.cjs`) — never ship as final art.
+- Production sprites `assets/scenes/hand-closed.png` / `hand-open.png` (768×768 RGBA, shared wrist anchor 226×432). Layout uses `transform-origin` / `object-position` at that anchor so frame swap stays continuous.
+- Fixture PNGs under `tests/fixtures/hand-roll/` remain for offline fallback only; primary QA uses production assets (`tests/hand-roll-overlay.test.cjs`).
 - Animation is cosmetic only: `pointer-events: none`, `aria-hidden`, gated on successful roll in `rollBones` (not pill rerolls / disabled button), cleared on timer + unmount; hidden under `gb-motion-reduce`.
 
 ## Still partial vs. aspirational brief

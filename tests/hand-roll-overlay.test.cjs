@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Hand-roll overlay — fixture sprites only (tests/fixtures/hand-roll/*), not production art.
+ * Hand-roll overlay — production sprites in assets/scenes (tests/fixtures/hand-roll for legacy stubs only).
  */
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
@@ -11,8 +11,8 @@ const { createGame, plain } = require("./helpers/game.cjs");
 const fixtures = require("./fixtures/runs.cjs");
 
 const ROOT = path.join(__dirname, "..");
-const FIXTURE_CLOSED = path.join(__dirname, "fixtures/hand-roll/hand-closed.png");
-const FIXTURE_OPEN = path.join(__dirname, "fixtures/hand-roll/hand-open.png");
+const PROD_CLOSED = path.join(ROOT, "assets/scenes/hand-closed.png");
+const PROD_OPEN = path.join(ROOT, "assets/scenes/hand-open.png");
 const RUN_KEY = "gutterbones1977:run:v1";
 
 let server;
@@ -21,20 +21,10 @@ let chromium;
 
 before(async () => {
   chromium = require("playwright").chromium;
-  assert.ok(fs.existsSync(FIXTURE_CLOSED), "fixture hand-closed.png");
-  assert.ok(fs.existsSync(FIXTURE_OPEN), "fixture hand-open.png");
+  assert.ok(fs.existsSync(PROD_CLOSED), "production hand-closed.png");
+  assert.ok(fs.existsSync(PROD_OPEN), "production hand-open.png");
   server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
-    if (urlPath === "/assets/scenes/hand-closed.png") {
-      res.setHeader("Content-Type", "image/png");
-      fs.createReadStream(FIXTURE_CLOSED).pipe(res);
-      return;
-    }
-    if (urlPath === "/assets/scenes/hand-open.png") {
-      res.setHeader("Content-Type", "image/png");
-      fs.createReadStream(FIXTURE_OPEN).pipe(res);
-      return;
-    }
     const rel = urlPath === "/" ? "/index.html" : urlPath;
     const filePath = path.join(ROOT, rel.replace(/^\//, ""));
     if (!filePath.startsWith(ROOT) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
@@ -73,7 +63,7 @@ async function bootPlay(page) {
   );
 }
 
-test("hand overlay — fixture sprites enable sweep on eligible roll", async () => {
+test("hand overlay — production sprites enable sweep on eligible roll", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {

@@ -1,6 +1,6 @@
 # Hand roll throw sprites (draft PR #79)
 
-**Status: missing** — overlay code probes both files and stays hidden when either fails to load (no broken `<img>` tags).
+**Status: committed** — `hand-closed.png` / `hand-open.png` (768×768 RGBA, wrist anchor 226×432). Overlay probes both and stays hidden if either fails to load.
 
 | File | Frame |
 |------|--------|
