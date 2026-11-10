@@ -49,13 +49,30 @@ async function main() {
           "MULT_FACE",
           "GOLD_FACE",
           "BLOOD_6",
-          "FUSE_FACE",
+          "WILD_FACE",
           "ECHO_FACE",
           "GHOST_FACE",
           "SHIV_FACE",
           "WIREBAG_FACE",
+          "MAGNET_FACE",
+          "MARK_FACE",
+          "FUSE_FACE",
+          "DOUBLE_DOWN_FACE",
         ],
-        unlockedHardwareIds: ["ENGINE", "FUSE_BOX", "CROWBAR", "BOOKENDS"],
+        unlockedHardwareIds: [
+          "BOOKENDS",
+          "LOADED_DIE",
+          "BRASS_KNUCKLES",
+          "BLACK_BOOK",
+          "BURNER_PHONE",
+          "CROWBAR",
+          "ENGINE",
+          "FUSE_BOX",
+          "MIRROR_RIG",
+          "DEBT_COLLECTOR",
+          "HOT_STREAK_COIL",
+          "CENTERPIECE",
+        ],
         purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
       }),
     );
@@ -72,7 +89,16 @@ async function main() {
       eval(botSource);
       return runBotSession(opts);
     },
-    { botSource: BOT, opts: { maxSteps: 24000, seed, strategy: "builder" } },
+    {
+      botSource: BOT,
+      opts: {
+        maxSteps: Number(process.env.MILESTONE_STEPS || 36000),
+        seed,
+        strategy: "builder",
+        stuckThreshold: 48,
+        maxFallbacks: 36,
+      },
+    },
   );
 
   const telem = await page.evaluate(() => {
@@ -80,12 +106,29 @@ async function main() {
     const hands = window.__GB_SIM_TELEM__?.hands || [];
     const links = hands.flatMap((h) => h.chainLinks || []);
     const snap = window.__GB_E2E__?.getOrganicChainSnapshot?.() || {};
+    const handsWithLinks = hands
+      .filter((h) => (h.chainLinks || []).length > 0)
+      .map((h) => ({
+        chainLinks: h.chainLinks,
+        synergyChainIds: h.synergyChainIds,
+        total: h.total,
+        chainDepth: h.chainDepth,
+      }));
+    const synergyHist = {};
+    hands.forEach((h) => {
+      (h.synergyChainIds || []).forEach((id) => {
+        synergyHist[id] = (synergyHist[id] || 0) + 1;
+      });
+    });
     return {
       events,
       links,
       organicReady: snap.organicReady,
       bloodOnBoard: snap.bloodOnBoard,
       fuseOnBoard: snap.fuseOnBoard,
+      handsRecorded: hands.length,
+      handsWithLinks,
+      synergyHist,
       laneSim: window.__GB_SIM_LANE_SIM__ || null,
     };
   });
@@ -105,6 +148,9 @@ async function main() {
     seed,
     result,
     organicReady: telem.organicReady,
+    handsRecorded: telem.handsRecorded || 0,
+    handsWithLinks: telem.handsWithLinks || [],
+    synergyHist: telem.synergyHist || {},
     organicLinkTarget: "ghost_echo→bookends_retrigger",
     bloodOnBoard: telem.bloodOnBoard,
     fuseOnBoard: telem.fuseOnBoard,

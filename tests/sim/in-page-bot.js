@@ -304,6 +304,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       window.__GB_E2E__.selectFirstPersona();
     }
     window.__GB_E2E__.startNewRun();
+    window.__GB_E2E__.seedRunRng?.(seed);
     window.__GB_E2E__.skipIntroOverlays?.();
     await wait(120);
     window.__GB_E2E__.skipIntroOverlays?.();
@@ -377,10 +378,21 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const organicReady = strategy === "builder" && window.__GB_E2E__?.isOrganicChainReady?.();
       const minInv = strategy === "builder" ? 2 : 1;
       const shopRound = Number(st?.round) || 1;
+      const kitStalled =
+        strategy === "builder"
+        && !organicReady
+        && log._shopPasses > 10
+        && shopRound >= 2;
       const builderStreets =
-        organicReady
-        || log._shopPasses > 18
-        || (strategy === "builder" && window.__GB_E2E__?.shouldLeaveShopForPacing?.());
+        strategy === "builder"
+          ? organicReady || kitStalled || log._shopPasses > 28
+          : organicReady
+            || log._shopPasses > 18
+            || window.__GB_E2E__?.shouldLeaveShopForPacing?.();
+      if (log._shopPasses <= 20 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+        await wait(90);
+        continue;
+      }
       if (
         st?.selectedShopPathId
         && (builderStreets || (strategy !== "builder" && (invNow >= minInv || log._shopPasses > 14 || (st.round || 1) >= 4)))
@@ -391,9 +403,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
           continue;
         }
       }
+      const kitIncomplete = strategy === "builder" && !window.__GB_E2E__?.isOrganicChainReady?.();
       if (
-        shopRound >= 3
-        && log._shopPasses <= 14
+        kitIncomplete
+        && shopRound >= 2
+        && log._shopPasses <= 18
         && window.__GB_E2E__?.refreshShopForChainKit?.()
       ) {
         await wait(90);
@@ -404,10 +418,6 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         && log._shopPasses <= 2
         && window.__GB_E2E__?.refreshShopIfDry?.()
       ) {
-        await wait(90);
-        continue;
-      }
-      if (log._shopPasses <= 16 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
         await wait(90);
         continue;
       }

@@ -176,6 +176,7 @@ function createGame(snapshot = {}, options = {}) {
       current: { sacrificeUsed: false, shopInterestRound: null },
     },
     runRandomRef: { current: () => (options.random || (() => 0.99))() },
+    e2eRunSeededRef: { current: false },
     sacrificePlayPenaltyRef: { current: 0 },
     sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],

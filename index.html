@@ -2869,14 +2869,28 @@ const GutterbonesRules = (() => {
 
     const neighborIndices = (i) => [i - 1, i + 1].filter(j => j >= 0 && j <= 4);
 
-    const ghostEchoHauntedValue = (resolved, destroyed) => {
+    const GHOST_ECHO_LINK_REACH = 3;
+
+    const ghostEchoPartnerIndices = (i) => {
+        const out = [];
+        for (let j = 0; j < 5; j++) {
+            if (j === i) continue;
+            if (Math.abs(i - j) <= GHOST_ECHO_LINK_REACH) out.push(j);
+        }
+        return out;
+    };
+
+    const slotHasEchoPartner = (resolved, destroyed, j) =>
+        !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed);
+
+    const ghostEchoPartnersGhostSlot = (resolved, destroyed) => {
         for (let i = 0; i < 5; i++) {
-            if (destroyed.has(i)) continue;
-            if (resolved[i].faceId !== 'GHOST_FACE') continue;
-            const hasEchoNeighbor = neighborIndices(i).some(
-                (j) => !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed)
-            );
-            if (hasEchoNeighbor) return resolved[i].value;
+            if (destroyed.has(i) || resolved[i].faceId !== 'GHOST_FACE') continue;
+            const hasEcho = ghostEchoPartnerIndices(i).some((j) => slotHasEchoPartner(resolved, destroyed, j));
+            if (hasEcho) {
+                const pip = resolved[i].value;
+                return typeof pip === 'number' ? pip : null;
+            }
         }
         return null;
     };
@@ -2961,8 +2975,8 @@ const GutterbonesRules = (() => {
                 if (destroyed.has(i)) continue;
                 const d = resolved[i];
                 if (d.faceId !== 'GHOST_FACE') continue;
-                const hasEchoNeighbor = neighborIndices(i).some(j => !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed));
-                if (hasEchoNeighbor) { ghostEcho = true; break; }
+                const hasEchoPartner = ghostEchoPartnerIndices(i).some((j) => slotHasEchoPartner(resolved, destroyed, j));
+                if (hasEchoPartner) { ghostEcho = true; break; }
             }
             if (ghostEcho) {
                 const appliedMult = applySynergyChainMultBonus(state, tuning, 1);
@@ -3173,25 +3187,23 @@ const GutterbonesRules = (() => {
                 }
             }
             if (item.id === 'BOOKENDS' && !destroyed.has(0) && !destroyed.has(4)) {
-                let valueMatch = resolved[0].value === resolved[4].value;
-                let hauntedValueMatch = false;
-                if (!valueMatch && chainLinkingOn(hwTuning) && state.chainGhostEchoFired) {
-                    const haunted = ghostEchoHauntedValue(resolved, destroyed);
-                    if (haunted != null) {
-                        hauntedValueMatch = resolved[0].value === haunted && resolved[4].value === haunted;
-                        if (hauntedValueMatch) valueMatch = true;
-                    }
-                }
+                const valueMatch = resolved[0].value === resolved[4].value;
                 const faceMatch = valueMatch && resolved[0].faceId === resolved[4].faceId;
-                const ghostValueLink = chainLinkingOn(hwTuning) && state.chainGhostEchoFired && valueMatch;
-                const matched = valueMatch && (faceMatch || ghostValueLink);
+                const ghostValueLink = chainLinkingOn(hwTuning) && state.chainGhostEchoFired;
+                const hauntedSlot = state.chainGhostEchoFired ? ghostEchoPartnersGhostSlot(resolved, destroyed) : null;
+                const hauntedBracket = hauntedSlot != null
+                    && typeof resolved[0].value === 'number'
+                    && typeof resolved[4].value === 'number'
+                    && Math.abs(resolved[0].value - hauntedSlot) <= 1
+                    && Math.abs(resolved[4].value - hauntedSlot) <= 1;
+                const matched = (valueMatch && (faceMatch || ghostValueLink)) || (ghostValueLink && hauntedBracket);
                 if (matched) {
                     state.chips += 30;
                     triggers.push({ name: 'BOOKENDS', value: '+30' });
                     state.hardwareTriggerCount += 1;
                     meta.bookendsMatched = true;
-                    meta.bookendsGhostValueLink = valueMatch && !faceMatch && ghostValueLink;
-                    meta.bookendsHauntedValueMatch = hauntedValueMatch;
+                    meta.bookendsGhostValueLink = (valueMatch && !faceMatch && ghostValueLink) || hauntedBracket;
+                    meta.bookendsHauntedBracket = hauntedBracket;
                     pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
                 }
             }
@@ -4888,7 +4900,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const DEVISES = {
         CENTERPIECE: { id: 'CENTERPIECE', name: 'The Centerpiece', desc: 'Slot 3 bone triggers base value and face bonuses twice.', cost: 20, rarity: 'rare' },
-        BOOKENDS: { id: 'BOOKENDS', name: 'The Bookends', desc: 'Slots 1 & 5: +30 when carved faces match, or pip values match with Ghost Echo linking.', cost: 18, rarity: 'common' },
+        BOOKENDS: { id: 'BOOKENDS', name: 'The Bookends', desc: 'Slots 1 & 5: +30 on a face match, matching pips, or “haunted bracket” (±1 of Ghost Echo pip).', cost: 18, rarity: 'common' },
         ENGINE: { id: 'ENGINE', name: 'The Engine', desc: 'Slot 1 adds mult for each higher-value bone to its right. Max +4.', cost: 25, rarity: 'rare' },
         LOADED_DIE: { id: 'LOADED_DIE', name: 'Weighted Core', desc: '+10 chips on Triad.', cost: 12, rarity: 'common' },
         BLOOD_PACT: { id: 'BLOOD_PACT', name: 'Blood Pact', desc: 'x3 mult, but -$1 per roll.', cost: 20, rarity: 'danger' },
@@ -5051,14 +5063,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const SYNERGY_HINTS = {
         BLOOD_6: 'Adjacency: blood ripple with blood or destructive neighbors.',
         SHIV_FACE: 'Destructive — pairs with Blood 6 for ripple mult; destroys right slot on roll.',
-        ECHO_FACE: 'Adjacency: ghost echo when next to Ghost.',
+        ECHO_FACE: 'Ghost Echo synergy when Echo is within two slots of Ghost on the lane.',
         GHOST_FACE: 'Ethereal — ghost echo mult with Echo neighbors; lowers scoring bones.',
         GOLD_FACE: 'Adjacency: wire feed bonus with Wirebag neighbors.',
         WIREBAG_FACE: 'Parasite cash — wire feed with Gold neighbors.',
         MULT_FACE: 'Modifier mult — engine link with Hardware: Engine.',
         ENGINE: 'Hardware: engine link adds mult per modifier face in hand.',
         CROWBAR: 'Hardware: scales mult with blood/destructive faces on the lane.',
-        BOOKENDS: 'End slots retrigger on a match; Ghost Echo lets pip-only matches count (ends can match each other or the haunted pair’s pip).',
+        BOOKENDS: 'End slots retrigger on a match; with Ghost Echo, ends within ±1 of the ghost pip qualify; pairwise chain logs when both synergies fire.',
         FUSE_FACE: 'Adjacent modifier faces trigger +10 chips (fuse spark chain).',
         MAGNET_FACE: 'Copies the left face for scoring (after Echo).',
         MARK_FACE: 'First score per category each round marks +1 mult on that category for the run.',
@@ -5574,10 +5586,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         if (events.some((e) => e.id === 'ghost_echo')) {
             for (let i = 0; i < 5; i += 1) {
                 if (destroyed.has(i) || resolved[i].faceId !== 'GHOST_FACE') continue;
-                [i - 1, i + 1].forEach((j) => {
-                    if (j < 0 || j > 4 || destroyed.has(j)) return;
+                for (let j = 0; j < 5; j += 1) {
+                    if (j === i || j < 0 || j > 4 || destroyed.has(j)) continue;
+                    if (Math.abs(i - j) > 2) continue;
                     if (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed) add(i, j, 'ghost_echo');
-                });
+                }
             }
         }
         if (events.some((e) => e.id === 'wire_feed')) {
@@ -8584,6 +8597,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [lineupToast, setLineupToast] = useState(null);
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const runRandomRef = useRef(() => Math.random());
+        const e2eRunSeededRef = useRef(false);
         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
@@ -10611,7 +10625,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 runRandomRef.current = () => Math.random();
             } else {
                 setRunModifierIds([]);
-                runRandomRef.current = () => Math.random();
+                if (!e2eRunSeededRef.current) {
+                    runRandomRef.current = () => Math.random();
+                }
             }
             setTutorialActive(tutorial);
             setTutorialStepIndex(0);
@@ -10907,7 +10923,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             const junkieBoss = activeBoss?.id === 'JUNKIE';
-            const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
+            const runRandomFn = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
             const e2eFastDice = typeof window !== 'undefined'
                 && typeof window.__GB_E2E_QUERY__ === 'function'
                 && window.__GB_E2E_QUERY__();
@@ -11202,7 +11218,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     valid: !!result.valid,
                     chainDepth: result.chainDepth || 0,
                     chainLinks: result.chainLinks || [],
-                    synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId).filter(Boolean),
+                    synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId || e.id).filter(Boolean),
                     chainMultBonusUsed: result.chainMultBonusUsed || 0,
                     chainMultCapHit: !!result.chainMultCapHit,
                     debtCollectorCapped: !!result.debtCollectorCapped,
@@ -11693,7 +11709,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!preservePaths) setSelectedShopPathId(null);
             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
             setActiveShopTag(offerTag);
-            const rng = dailyRunActive ? runRandomRef.current : Math.random;
+            const rng = (dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current : Math.random;
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
@@ -12413,6 +12429,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const fuseOnBoard = window.__GB_E2E__.countCarvedFace('FUSE_FACE');
                         const organicReady = window.__GB_E2E__.isOrganicChainReady();
                         const needBookends = !inventory.some((i) => i.id === 'BOOKENDS');
+                        const hasGhostKit = window.__GB_E2E__.ownsFaceKitPiece('GHOST_FACE');
+                        const hasEchoKit = window.__GB_E2E__.ownsFaceKitPiece('ECHO_FACE');
+                        const needKitFaces = !organicReady && inventory.some((i) => i.id === 'BOOKENDS')
+                            && (!hasGhostKit || !hasEchoKit);
                         if (
                             bossPath && organicReady && inventory.length >= 3 && round >= 3 && !selectedShopPathId
                         ) {
@@ -12422,9 +12442,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (!organicReady) {
                             if (!selectedShopPathId) {
                                 const dangerGate = SHOP_TUNING.earlyDangerRoundGate;
-                                const routePick = round < dangerGate
+                                const routePick = (round < dangerGate && !needKitFaces && !needBookends)
                                     ? (paths?.find((p) => p.id === 'LOCAL') || paths?.[0])
-                                    : (needBookends
+                                    : (needBookends || needKitFaces
                                         ? (paths?.find((p) => p.id === 'PAWN')
                                             || paths?.find((p) => p.id === 'LOCAL')
                                             || paths?.[0])
@@ -12458,25 +12478,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const lane = laneDice || dice;
                         const laneGhost = lane.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
                         const laneEcho = lane.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
-                        const ghostEchoAdj = laneGhost.some((g) => laneEcho.some((e) => Math.abs(g - e) === 1));
+                        const ghostEchoInReach = laneGhost.some(
+                            (g) => laneEcho.some((e) => e !== g && Math.abs(g - e) <= 3),
+                        );
                         const endsValueMatch = typeof lane[0]?.value === 'number' && lane[0].value === lane[4]?.value;
                         const endsFaceMatch = !!lane[0]?.faceId && lane[0].faceId === lane[4]?.faceId;
-                        let endsHauntedValueMatch = false;
-                        if (!endsValueMatch && ghostEchoAdj) {
+                        let hauntedBracket = false;
+                        if (ghostEchoInReach) {
                             for (const g of laneGhost) {
                                 const haunted = lane[g]?.value;
                                 if (typeof haunted !== 'number') continue;
                                 if (
-                                    laneEcho.some((e) => Math.abs(g - e) === 1)
-                                    && lane[0]?.value === haunted
-                                    && lane[4]?.value === haunted
+                                    Math.abs((lane[0]?.value ?? 0) - haunted) <= 1
+                                    && Math.abs((lane[4]?.value ?? 0) - haunted) <= 1
                                 ) {
-                                    endsHauntedValueMatch = true;
+                                    hauntedBracket = true;
                                     break;
                                 }
                             }
                         }
-                        const endsBookendsReady = endsValueMatch || endsHauntedValueMatch;
+                        const endsBookendsReady = endsValueMatch || hauntedBracket;
                         const preds = {
                             inventory_bookends: inventory.some((i) => i.id === 'BOOKENDS'),
                             carved_ghost: window.__GB_E2E__.countCarvedFace('GHOST_FACE'),
@@ -12484,9 +12505,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             organic_kit_ready: window.__GB_E2E__.isOrganicChainReady(),
                             lane_ghost_slots: laneGhost,
                             lane_echo_slots: laneEcho,
-                            ghost_echo_adjacent: ghostEchoAdj,
+                            ghost_echo_in_reach: ghostEchoInReach,
                             ends_value_match: endsValueMatch,
-                            ends_haunted_value_match: endsHauntedValueMatch,
+                            ends_haunted_bracket: hauntedBracket,
                             ends_bookends_ready: endsBookendsReady,
                             ends_face_match: endsFaceMatch,
                             chain_linking_on: !!SYNERGY_TUNING?.chainLinkingEnabled,
@@ -12495,7 +12516,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (!preds.inventory_bookends) unfulfilled.push('missing_BOOKENDS');
                         if (preds.carved_ghost < 1) unfulfilled.push('missing_carved_GHOST');
                         if (preds.carved_echo < 1) unfulfilled.push('missing_carved_ECHO');
-                        if (!preds.ghost_echo_adjacent) unfulfilled.push('lane_ghost_echo_not_adjacent');
+                        if (!preds.ghost_echo_in_reach) unfulfilled.push('lane_ghost_echo_not_in_reach');
                         if (!preds.ends_bookends_ready) unfulfilled.push('ends_value_mismatch');
                         const byCat = {};
                         const catOrder = ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'];
@@ -12564,6 +12585,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     shouldLeaveShopForPacing: () => {
                         if (phase !== 'SHOP') return false;
                         if (window.__GB_E2E__.isOrganicChainReady()) return true;
+                        const invIdsEarly = new Set(inventory.map((i) => i.id));
+                        const chasingGhostBookends = invIdsEarly.has('BOOKENDS')
+                            && window.__GB_E2E__.countCarvedFace('ECHO_FACE') >= 1
+                            && window.__GB_E2E__.countCarvedFace('GHOST_FACE') < 1;
+                        const chasingEchoBookends = invIdsEarly.has('BOOKENDS')
+                            && window.__GB_E2E__.countCarvedFace('GHOST_FACE') >= 1
+                            && window.__GB_E2E__.countCarvedFace('ECHO_FACE') < 1;
+                        if (chasingGhostBookends || chasingEchoBookends) return false;
                         const invIds = new Set(inventory.map((i) => i.id));
                         const hasGhost = window.__GB_E2E__.ownsFaceKitPiece('GHOST_FACE');
                         const hasEcho = window.__GB_E2E__.ownsFaceKitPiece('ECHO_FACE');
@@ -12656,8 +12685,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             const price = shopListPrice(item);
                             if (gold >= price) {
                                 if (!KIT_IDS.has(item.id) && gold - price < 14) return false;
-                                if (KIT_IDS.has(item.id) && gold - price < 6 && shopRefreshes < 2) return false;
-                            } else if (gold + 14 < price) {
+                                const kitIncomplete = !window.__GB_E2E__.isOrganicChainReady?.();
+                                if (KIT_IDS.has(item.id) && !kitIncomplete && gold - price < 4 && shopRefreshes < 1) {
+                                    return false;
+                                }
+                            } else if (!KIT_IDS.has(item.id) && gold + 14 < price) {
+                                return false;
+                            } else if (KIT_IDS.has(item.id) && gold + 30 < price) {
                                 return false;
                             }
                             handlePurchase(item);
@@ -12686,8 +12720,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (
                             !canBuyAnyNeeded
                             && needIds.some((id) => !offerHas(id))
-                            && shopRefreshes < 3
-                            && gold >= shopRefreshCost + 6
+                            && shopRefreshes < 5
+                            && gold >= shopRefreshCost + 4
                         ) {
                             refreshShop();
                             return true;
@@ -12709,7 +12743,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const canBuyAnyNeeded = needIds.some((id) => offerHas(id));
                         const stale = needIds.length > 0 && needIds.every((id) => !offerHas(id));
                         if (!stale || canBuyAnyNeeded) return false;
-                        if (shopRefreshes >= 3 || gold < shopRefreshCost + 6) return false;
+                        if (shopRefreshes >= 5 || gold < shopRefreshCost + 4) return false;
                         refreshShop();
                         return true;
                     },
@@ -12760,15 +12794,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     bestDie = anchor < 4 ? anchor + 1 : anchor - 1;
                                 } else bestDie = 1;
                             } else if (carveId === 'GHOST_FACE') {
-                                bestDie = dieHasFace(0, 'ECHO_FACE') ? 1 : 0;
+                                bestDie = 0;
                             } else if (carveId === 'ECHO_FACE') {
-                                const ghostDice = dice
-                                    .map((_, di) => (dieHasFace(di, 'GHOST_FACE') ? di : -1))
-                                    .filter((di) => di >= 0);
-                                if (ghostDice.length) {
-                                    const anchor = ghostDice[0];
-                                    bestDie = anchor < 4 ? anchor + 1 : anchor - 1;
-                                } else bestDie = 1;
+                                bestDie = dieHasFace(0, 'GHOST_FACE') ? 1 : 1;
                             } else {
                                 let bestScore = -1;
                                 for (let di = 0; di < dice.length; di++) {
@@ -12830,7 +12858,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         setPersonaIdx(i);
                         return true;
                     },
-                    startNewRun: () => beginContract({ tutorial: false }),
+                    startNewRun: () => {
+                        e2eRunSeededRef.current = false;
+                        beginContract({ tutorial: false });
+                    },
+                    seedRunRng: (seedNum) => {
+                        if (typeof GutterbonesReplay?.mulberry32 !== 'function') return false;
+                        e2eRunSeededRef.current = true;
+                        runRandomRef.current = GutterbonesReplay.mulberry32(Number(seedNum) || 1);
+                        return true;
+                    },
                     setPlaysRemaining: (n) => setHands(Math.max(0, Math.floor(Number(n) || 0))),
                     setScore: (n) => setScore(Math.max(0, Math.floor(Number(n) || 0))),
                     forceRoundWin: () => {
@@ -12951,22 +12988,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 const ghostUp = dice.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
                                 const echoUp = dice.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
                                 const laneReady = ghostUp.length && echoUp.length
-                                    && ghostUp.some((g) => echoUp.some((e) => Math.abs(g - e) === 1));
+                                    && ghostUp.some((g) => echoUp.some((e) => e !== g && Math.abs(g - e) <= 3));
                                 if (!laneReady) {
                                     setKept(dice.map(() => false));
                                     return true;
                                 }
                                 const haunted = ghostUp.length ? dice[ghostUp[0]]?.value : null;
                                 const endsDirect = typeof dice[0]?.value === 'number' && dice[0].value === dice[4]?.value;
-                                const endsHaunted = typeof haunted === 'number'
-                                    && dice[0]?.value === haunted
-                                    && dice[4]?.value === haunted;
+                                const endsHauntedBracket = typeof haunted === 'number'
+                                    && typeof dice[0]?.value === 'number'
+                                    && typeof dice[4]?.value === 'number'
+                                    && Math.abs(dice[0].value - haunted) <= 1
+                                    && Math.abs(dice[4].value - haunted) <= 1;
                                 const keep = new Set([...ghostUp, ...echoUp]);
                                 ghostUp.forEach((g) => {
                                     if (g > 0) keep.add(g - 1);
                                     if (g < 4) keep.add(g + 1);
                                 });
-                                if (laneReady && (endsDirect || endsHaunted || discards > 0)) {
+                                if (laneReady && (endsDirect || endsHauntedBracket || discards > 0)) {
                                     keep.add(0);
                                     keep.add(4);
                                 }
@@ -13090,9 +13129,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const bookendsKit = inventory.some((i) => i.id === 'BOOKENDS');
                         const laneGhost = dice.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
                         const laneEcho = dice.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
-                        const ghostEchoAdj = laneGhost.some((g) => laneEcho.some((e) => Math.abs(g - e) === 1));
+                        const ghostEchoInReach = laneGhost.some(
+                            (g) => laneEcho.some((e) => e !== g && Math.abs(g - e) <= 3),
+                        );
                         const organicPreds = window.__GB_E2E__.evaluateOrganicPredicates?.(dice);
-                        const endsBookendsReady = organicPreds?.preds?.ends_bookends_ready
+                        const endsValueMatch = organicPreds?.preds?.ends_bookends_ready
                             ?? (typeof dice[0]?.value === 'number' && dice[0].value === dice[4]?.value);
                         let best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
@@ -13108,17 +13149,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 chosen_before_link_hunt: best,
                             });
                         }
-                        if (bookendsKit && organicReadyHand && ghostEchoAdj && endsBookendsReady) {
-                            for (const catId of ['FH', 'C', 'SS', 'LS', 'Y']) {
+                        const targetPair = (links) => (links || []).some(
+                            (l) => l.from === 'ghost_echo' && l.to === 'bookends_retrigger',
+                        );
+                        if (bookendsKit && organicReadyHand) {
+                            for (const catId of ['FH', 'C', 'SS', 'LS', 'Y', 'TH', 'FOK']) {
                                 if (usedCats.includes(catId)) continue;
                                 const r = calculateScore(catId, dice);
                                 if (!r.valid) continue;
-                                if (r.chainLinks?.some((l) => l.from === 'ghost_echo' && l.to === 'bookends_retrigger')) {
+                                if (targetPair(r.chainLinks)) {
                                     best = { catId, total: r.total };
                                     break;
-                                }
-                                if (!best || r.total > best.total * 0.85) {
-                                    best = { catId, total: r.total };
                                 }
                             }
                         }
@@ -13143,10 +13184,50 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         }
                         const gap = Math.max(0, currentTarget - score);
                         const need = gap / Math.max(1, hands);
-                        const mustScore = hands <= 1 || discards <= 0
-                            || (e2eGreedy && hands <= 2)
-                            || (e2eGreedy && round >= 5)
-                            || (e2eGreedy && gap > Math.max(60, best.total * 1.5));
+                        const hasTargetLinkNow = bookendsKit && organicReadyHand && hasRolled && (
+                            ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'].some((catId) => {
+                                if (usedCats.includes(catId)) return false;
+                                const r = calculateScore(catId, dice);
+                                return r.valid && targetPair(r.chainLinks);
+                            })
+                        );
+                        const organicHuntActive = e2eGreedy && bookendsKit && organicReadyHand && hasRolled;
+                        const mustScore = organicHuntActive && !hasTargetLinkNow
+                            ? (
+                                hands <= 1
+                                || discards <= 0
+                                || (score + (best?.total || 0) >= currentTarget && hands <= 2)
+                                || (gap > 0 && hands <= 2 && (best?.total || 0) >= gap * 0.92)
+                            )
+                            : (
+                                hands <= 1
+                                || discards <= 0
+                                || (e2eGreedy && hands <= 2)
+                                || (e2eGreedy && round >= 5)
+                                || (e2eGreedy && gap > Math.max(60, best.total * 1.5))
+                            );
+                        const organicLinkHunt = organicHuntActive
+                            && discards > 0
+                            && !mustScore
+                            && !hasTargetLinkNow
+                            && (!ghostEchoInReach || !endsValueMatch);
+                        if (organicLinkHunt && rollBtn) {
+                            window.__GB_E2E__.keepDiceForReroll?.();
+                            rollBones();
+                            return true;
+                        }
+                        if (organicHuntActive && hasRolled && best && !hasTargetLinkNow && discards > 0 && !mustScore && rollBtn) {
+                            const layout = calculateScore(best.catId, dice);
+                            const hasGhost = (layout.synergyEvents || []).some((e) => e.id === 'ghost_echo');
+                            const hasBookends = (layout.synergyEvents || []).some((e) => e.id === 'bookends_retrigger');
+                            const partialLink = hasGhost !== hasBookends;
+                            const layoutGap = !ghostEchoInReach || !endsValueMatch;
+                            if (!targetPair(layout.chainLinks) && (partialLink || (layoutGap && discards >= 2))) {
+                                window.__GB_E2E__.keepDiceForReroll?.();
+                                rollBones();
+                                return true;
+                            }
+                        }
                         const chainHunt = e2eGreedy
                             && chainKit
                             && discards > 0
