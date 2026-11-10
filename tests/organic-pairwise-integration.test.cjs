@@ -14,9 +14,14 @@ test(
   { timeout: 1_800_000 },
   () => {
     const scan = path.join(__dirname, "../scripts/organic-milestone-scan.cjs");
-    const r = spawnSync(process.execPath, [scan, "0", "32"], {
+    const seedCount = Number(process.env.ORGANIC_SCAN_COUNT || 64);
+    const r = spawnSync(process.execPath, [scan, "0", String(seedCount)], {
       cwd: path.join(__dirname, ".."),
-      env: { ...process.env, MILESTONE_STEPS: "40000" },
+      env: {
+        ...process.env,
+        MILESTONE_STEPS: process.env.MILESTONE_STEPS || "40000",
+        MILESTONE_PARALLEL: process.env.MILESTONE_PARALLEL || "3",
+      },
       encoding: "utf8",
       maxBuffer: 4 * 1024 * 1024,
     });
