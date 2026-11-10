@@ -100,7 +100,11 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
         break;
       }
     }
-    assert.ok(sawVisible, "hand intersects viewport and stacks above playfield during sweep");
+    assert.ok(sawVisible, "hand intersects viewport during sweep");
+    const pixels = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels());
+    assert.ok(pixels?.ok, `hand sprite has opaque pixels (got ${JSON.stringify(pixels)})`);
+    const shuffle = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureHandShuffleOverlap());
+    if (!shuffle?.skipped) assert.ok(shuffle?.ok, `hand should not cover SHUFFLE (overlap ${shuffle?.ratio})`);
     let openDominant = false;
     for (const delay of [140, 170, 200, 230]) {
       await page.waitForTimeout(delay);

@@ -135,6 +135,19 @@ async function captureSuite(serveRoot, outDir, label) {
     await page.waitForTimeout(800);
     if (await page.$('[data-layout-key="carving-layout"]')) {
       await page.screenshot({ path: path.join(outDir, `carving-mod-bench-${label}.png`), fullPage: false });
+      if (label === "after") {
+        await page.setViewportSize(vpTablet);
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
+        await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+        await page.waitForTimeout(900);
+        if (await page.$('[data-layout-key="carving-layout"]')) {
+          await page.screenshot({
+            path: path.join(outDir, "carving-mod-bench-tablet-after.png"),
+            fullPage: false,
+          });
+        }
+      }
     }
   } catch (err) {
     console.warn(`${label} carving capture skipped:`, err.message);
@@ -161,6 +174,7 @@ const flat = [
   ["after-redesign/shop-workbench-inspect-bones.png", "ui-redesign-after-shop-inspect-bones-1920x1080.png"],
   ["after-redesign/shop-tablet-768x1024-after.png", "ui-redesign-after-shop-tablet-768x1024.png"],
   ["after-redesign/carving-mod-bench-after.png", "ui-redesign-after-carving-1920x1080.png"],
+  ["after-redesign/carving-mod-bench-tablet-after.png", "ui-redesign-after-carving-tablet-768x1024.png"],
 ];
 for (const [rel, name] of flat) {
   const src = path.join(outRoot, rel);
