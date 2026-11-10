@@ -4250,17 +4250,6 @@ const GutterbonesRoutes = (() => {
         }
         if (boss.id === 'THE_RAID') {
             adjusted = Math.floor(adjusted * BOSS_TUNING.raidQuotaRelief);
-            if (typeof window !== 'undefined' && typeof window.__GB_E2E_QUERY__ === 'function' && window.__GB_E2E_QUERY__()) {
-                adjusted = Math.floor(adjusted * 0.76);
-            }
-        }
-        if (
-            typeof window !== 'undefined'
-            && typeof window.__GB_E2E_QUERY__ === 'function'
-            && window.__GB_E2E_QUERY__()
-            && roundNum >= 7
-        ) {
-            adjusted = Math.floor(adjusted * 0.88);
         }
         return adjusted;
     };
