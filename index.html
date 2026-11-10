@@ -66,6 +66,14 @@
             return false;
         }
     };
+    try {
+        if (typeof URLSearchParams !== 'undefined'
+            && new URLSearchParams(window.location.search).get('organicDiag') === '1') {
+            window.__GB_ORGANIC_PREDICATE_DIAG__ = [];
+        }
+    } catch (_) {
+        /* noop */
+    }
 
     var pathname = window.location.pathname || '/';
     var assetBase = pathname.indexOf('/Dices-and-Devices') === 0 ? '/Dices-and-Devices/' : '';
@@ -11137,6 +11145,36 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
             const result = calculateScore(catId, diceForScore);
+            if (
+                typeof window !== 'undefined'
+                && Array.isArray(window.__GB_ORGANIC_PREDICATE_DIAG__)
+                && window.__GB_E2E__?.isOrganicChainReady?.()
+            ) {
+                const evalPred = window.__GB_E2E__.evaluateOrganicPredicates?.(diceForScore);
+                const snap = window.__GB_E2E__.getOrganicChainSnapshot?.();
+                const snapLinks = snap?.linkPreview?.chainLinks || [];
+                const execLinks = result.chainLinks || [];
+                const catRow = evalPred?.byCat?.[catId];
+                const sameDiceCatsMatch = catId === 'C'
+                    && JSON.stringify(snapLinks) === JSON.stringify(execLinks);
+                window.__GB_ORGANIC_PREDICATE_DIAG__.push({
+                    kind: 'executePayout',
+                    catId,
+                    unfulfilled: evalPred?.unfulfilled || [],
+                    preds: evalPred?.preds,
+                    byCat: evalPred?.byCat,
+                    snapshotPreviewC: snap?.linkPreview || null,
+                    parity: {
+                        preview_uses_only_category_C: true,
+                        executed_category: catId,
+                        snapshot_chainLinks: snapLinks,
+                        execute_chainLinks: execLinks,
+                        calculateScore_C_matches_execute_when_cat_C: sameDiceCatsMatch,
+                        evalPred_has_target_pair: !!catRow?.has_target_pair,
+                    },
+                    round,
+                });
+            }
             if (typeof window !== "undefined" && window.__GB_SIM_TELEM__?.record) {
                 window.__GB_SIM_TELEM__.record({
                     total: result.total || 0,
@@ -12395,6 +12433,61 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const sel = selectedItem?.id || selectedItem;
                         return sel === faceId;
                     },
+                    evaluateOrganicPredicates: (laneDice = dice) => {
+                        const lane = laneDice || dice;
+                        const laneGhost = lane.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
+                        const laneEcho = lane.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
+                        const ghostEchoAdj = laneGhost.some((g) => laneEcho.some((e) => Math.abs(g - e) === 1));
+                        const endsValueMatch = typeof lane[0]?.value === 'number' && lane[0].value === lane[4]?.value;
+                        const endsFaceMatch = !!lane[0]?.faceId && lane[0].faceId === lane[4]?.faceId;
+                        const preds = {
+                            inventory_bookends: inventory.some((i) => i.id === 'BOOKENDS'),
+                            carved_ghost: window.__GB_E2E__.countCarvedFace('GHOST_FACE'),
+                            carved_echo: window.__GB_E2E__.countCarvedFace('ECHO_FACE'),
+                            organic_kit_ready: window.__GB_E2E__.isOrganicChainReady(),
+                            lane_ghost_slots: laneGhost,
+                            lane_echo_slots: laneEcho,
+                            ghost_echo_adjacent: ghostEchoAdj,
+                            ends_value_match: endsValueMatch,
+                            ends_face_match: endsFaceMatch,
+                            chain_linking_on: !!SYNERGY_TUNING?.chainLinkingEnabled,
+                        };
+                        const unfulfilled = [];
+                        if (!preds.inventory_bookends) unfulfilled.push('missing_BOOKENDS');
+                        if (preds.carved_ghost < 1) unfulfilled.push('missing_carved_GHOST');
+                        if (preds.carved_echo < 1) unfulfilled.push('missing_carved_ECHO');
+                        if (!preds.ghost_echo_adjacent) unfulfilled.push('lane_ghost_echo_not_adjacent');
+                        if (!preds.ends_value_match) unfulfilled.push('ends_value_mismatch');
+                        const byCat = {};
+                        const catOrder = ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'];
+                        for (const catId of catOrder) {
+                            if (usedCats.includes(catId)) continue;
+                            const r = calculateScore(catId, lane);
+                            const synergyIds = (r.synergyEvents || []).map((e) => e.chainId || e.id).filter(Boolean);
+                            byCat[catId] = {
+                                valid: !!r.valid,
+                                total: r.total || 0,
+                                chainLinks: r.chainLinks || [],
+                                synergyIds,
+                                has_target_pair: (r.chainLinks || []).some(
+                                    (l) => l.from === 'ghost_echo' && l.to === 'bookends_retrigger',
+                                ),
+                                ghost_echo_synergy: synergyIds.includes('ghost_echo'),
+                                bookends_synergy: synergyIds.includes('bookends_retrigger'),
+                            };
+                        }
+                        return {
+                            preds,
+                            unfulfilled,
+                            byCat,
+                            usedCats: [...usedCats],
+                            discards,
+                            hands,
+                            hasRolled,
+                            round,
+                            lane: lane.map((d, i) => ({ slot: i, value: d.value, faceId: d.faceId || null, type: d.type || null })),
+                        };
+                    },
                     organicChainLaneSim: (trials = 240) => {
                         if (!window.__GB_E2E_QUERY__?.()) return null;
                         let ghostEchoHits = 0;
@@ -12956,29 +13049,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const laneEcho = dice.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
                         const ghostEchoAdj = laneGhost.some((g) => laneEcho.some((e) => Math.abs(g - e) === 1));
                         const endsMatch = typeof dice[0]?.value === 'number' && dice[0].value === dice[4]?.value;
-                        const organicPairOnLane = () => {
-                            if (!organicReadyHand) return null;
-                            for (const catId of ['C', 'FH', 'SS', 'LS', 'Y']) {
-                                if (usedCats.includes(catId)) continue;
-                                const r = calculateScore(catId, dice);
-                                if (!r.valid) continue;
-                                if (r.chainLinks?.some((l) => l.from === 'ghost_echo' && l.to === 'bookends_retrigger')) {
-                                    return { ...r, catId };
-                                }
-                            }
-                            return null;
-                        };
-                        if (e2eGreedy && organicReadyHand && discards > 0 && !organicPairOnLane()) {
-                            window.__GB_E2E__.keepDiceForReroll?.();
-                            rollBones();
-                            return true;
-                        }
                         let best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
-                        const pairLane = organicPairOnLane();
-                        if (pairLane) {
-                            best = { catId: pairLane.catId || 'C', total: pairLane.total };
-                        } else if (bookendsKit && ghostEchoAdj && endsMatch) {
+                        if (typeof window.__GB_ORGANIC_PREDICATE_DIAG__ !== 'undefined' && organicReadyHand && hasRolled) {
+                            const pre = window.__GB_E2E__.evaluateOrganicPredicates?.(dice);
+                            window.__GB_ORGANIC_PREDICATE_DIAG__.push({
+                                kind: 'pre_payout_bot',
+                                round,
+                                discards,
+                                hands,
+                                unfulfilled: pre?.unfulfilled,
+                                byCat: pre?.byCat,
+                                chosen_before_link_hunt: best,
+                            });
+                        }
+                        if (bookendsKit && organicReadyHand && ghostEchoAdj && endsMatch) {
                             for (const catId of ['FH', 'C', 'SS', 'LS', 'Y']) {
                                 if (usedCats.includes(catId)) continue;
                                 const r = calculateScore(catId, dice);

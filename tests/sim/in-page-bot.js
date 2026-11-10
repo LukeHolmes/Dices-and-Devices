@@ -320,15 +320,6 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       lastPh = ph;
     }
     if (ph === "PLAY") started = true;
-    if (
-      strategy === "builder"
-      && window.__GB_E2E__?.isOrganicChainReady?.()
-      && !log._organicLaneSim
-      && typeof window.__GB_E2E__.organicChainLaneSim === "function"
-    ) {
-      log._organicLaneSim = window.__GB_E2E__.organicChainLaneSim(800);
-      window.__GB_SIM_LANE_SIM__ = log._organicLaneSim;
-    }
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
       maxRound = st.round;
     }
