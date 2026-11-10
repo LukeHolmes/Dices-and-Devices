@@ -7,16 +7,23 @@ const r = spawnSync(
   { cwd: require("node:path").join(__dirname, ".."), encoding: "utf8", maxBuffer: 8 * 1024 * 1024 },
 );
 
-const jsonLine = (r.stdout || "")
-  .trim()
-  .split("\n")
-  .filter((l) => l.startsWith("{"))
-  .pop();
-if (!jsonLine) {
+function extractSimSummary(stdout) {
+  const text = String(stdout || "");
+  const marker = '\n{\n  "games"';
+  const start = text.lastIndexOf(marker);
+  if (start < 0) {
+    const alt = text.lastIndexOf('{"games"');
+    if (alt < 0) return null;
+    return JSON.parse(text.slice(alt));
+  }
+  return JSON.parse(text.slice(start + 1));
+}
+
+const summary = extractSimSummary(r.stdout);
+if (!summary) {
   console.error(r.stdout, r.stderr);
   process.exit(1);
 }
-const summary = JSON.parse(jsonLine);
 const wins = summary.buildOutcomes?.wins || {};
 const entries = Object.entries(wins);
 const totalWins = entries.reduce((s, [, n]) => s + n, 0);
