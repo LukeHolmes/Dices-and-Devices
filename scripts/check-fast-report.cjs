@@ -29,7 +29,7 @@ console.log("\n=== check:fast — repro-r13 softlocks ===\n");
 code = run("node", ["--test", "--test-timeout=420000", "tests/repro-r13-softlocks.test.cjs"]);
 if (code !== 0) process.exit(code);
 
-console.log("\n=== check:fast — hand-roll overlay (fixture sprites only) ===\n");
+console.log("\n=== check:fast — hand-roll overlay (production sprites) ===\n");
 code = run("node", ["--test", "--test-timeout=180000", "tests/hand-roll-overlay.test.cjs"]);
 if (code !== 0) process.exit(code);
 

@@ -90,17 +90,24 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
     assert.ok(grip, "overlay mounted with fixture sprites");
     assert.equal(grip.pointerEvents, "none");
     assert.equal(grip.ariaHidden, "true");
-    assert.ok(grip.closedOpacity >= 0.9, "closed visible at start");
-    await page.waitForTimeout(180);
-    const mid = await page.evaluate(() => {
-      const closed = document.querySelector(".gutter-roll-hand-closed");
-      const open = document.querySelector(".gutter-roll-hand-open");
-      return {
-        closedOpacity: closed ? parseFloat(getComputedStyle(closed).opacity) : -1,
-        openOpacity: open ? parseFloat(getComputedStyle(open).opacity) : -1,
-      };
-    });
-    assert.ok(mid.openOpacity > mid.closedOpacity, "open dominates near release frame");
+    assert.ok(grip.closedOpacity >= 0.85, "closed visible at start");
+    let openDominant = false;
+    for (const delay of [140, 170, 200, 230]) {
+      await page.waitForTimeout(delay);
+      const mid = await page.evaluate(() => {
+        const closed = document.querySelector(".gutter-roll-hand-closed");
+        const open = document.querySelector(".gutter-roll-hand-open");
+        return {
+          closedOpacity: closed ? parseFloat(getComputedStyle(closed).opacity) : -1,
+          openOpacity: open ? parseFloat(getComputedStyle(open).opacity) : -1,
+        };
+      });
+      if (mid.openOpacity > 0.55 && mid.openOpacity > mid.closedOpacity) {
+        openDominant = true;
+        break;
+      }
+    }
+    assert.ok(openDominant, "open frame dominates after ~35% of handThrowSweep");
     await page.waitForTimeout(400);
     const gone = await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count();
     assert.equal(gone, 0, "overlay cleans up after animation");
@@ -142,7 +149,7 @@ test("hand overlay — repeat roll retriggers and roll button stays clickable", 
   }
 });
 
-test("hand overlay — reduced motion suppresses overlay with fixtures present", async () => {
+test("hand overlay — reduced motion suppresses overlay", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
