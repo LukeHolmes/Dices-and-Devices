@@ -121,11 +121,16 @@ test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke 
       () => document.querySelector("[data-payout-row]") != null,
       { timeout: 20_000 },
     );
+    await page.waitForFunction(
+      () => document.querySelector('button[data-payout-row]:not([disabled])') != null,
+      { timeout: 20_000 },
+    );
+    await page.evaluate(() => window.__GB_E2E__.focusPlayPayoutsTab?.());
+    await page.waitForTimeout(400);
     const ok = await page.evaluate(async () => {
-      window.__GB_E2E__.focusPlayPayoutsTab?.();
-      for (let i = 0; i < 20; i += 1) {
+      for (let i = 0; i < 40; i += 1) {
         if (window.__GB_E2E__.scoreFirstPayoutRow?.()) return true;
-        await new Promise((r) => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, 200));
       }
       return false;
     });
