@@ -13823,6 +13823,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     return false;
                 },
                 freezeRollHandThrowAt: (ms) => {
+                    if (rollHandFxTimerRef.current) {
+                        clearTimeout(rollHandFxTimerRef.current);
+                        rollHandFxTimerRef.current = null;
+                    }
                     const root = document.querySelector('.gutter-roll-hand-sprite');
                     if (!root) return { ok: false, reason: 'no sprite node' };
                     const anims = root.getAnimations({ subtree: true });
@@ -13950,6 +13954,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         layoutKey: 'mechanic-toast',
                     });
                     return true;
+                },
+                prepareHandThrowStripCapture: () => {
+                    setKept([false, false, false, false, false]);
+                    return { ok: true };
+                },
+                stabilizePlayChromeForCapture: () => {
+                    const screen = document.querySelector('.gb-screen');
+                    if (screen) {
+                        screen.classList.remove('camera-kick-soft', 'camera-kick-hard');
+                        screen.style.transform = 'none';
+                    }
+                    window.scrollTo(0, 0);
+                    const hud = document.querySelector('[data-layout-key="play-hud"]');
+                    const hudTop = hud ? hud.getBoundingClientRect().top : 0;
+                    return { ok: true, hudTop };
                 },
                 setHandReviewSlowMo: (on) => {
                     const root = document.getElementById('root-gutterbones');

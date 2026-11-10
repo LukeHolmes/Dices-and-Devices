@@ -18,20 +18,17 @@ const VPs = [
   { tag: "1366x768", width: 1366, height: 768 },
   { tag: "1920x1080", width: 1920, height: 1080 },
 ];
-function phaseMs(_vp, phase) {
+function handPhaseMs(vp, phase) {
+  if (vp.tag === "1024x768") return phase === "closed" ? 70 : 210;
   return phase === "closed" ? 75 : 195;
 }
 
-async function viewportShot(page, out, vp) {
-  await page.evaluate(() => {
+async function viewportShot(page, out, { stabilizeChrome = false } = {}) {
+  await page.evaluate((stabilize) => {
     window.scrollTo(0, 0);
-    document.documentElement.style.height = "100%";
-    document.body.style.margin = "0";
-  });
-  await page.screenshot({
-    path: out,
-    clip: { x: 0, y: 0, width: vp.width, height: vp.height },
-  });
+    if (stabilize) window.__GB_LAYOUT_AUDIT__?.stabilizePlayChromeForCapture?.();
+  }, stabilizeChrome);
+  await page.screenshot({ path: out, fullPage: false });
 }
 
 const PORT = 8816;
@@ -69,13 +66,17 @@ async function assertHandFrame(page, vp, phaseMs, frameKind = "auto") {
     (kind) => window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels(kind),
     frameKind,
   );
+  let shotMs = phaseMs;
   if (!px?.ok && frameKind === "open") {
     for (const retryMs of [phaseMs - 25, phaseMs + 30, phaseMs + 55]) {
       if (retryMs <= 0) continue;
       await page.evaluate((ms) => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(ms), retryMs);
       await page.waitForTimeout(30);
       px = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels("open"));
-      if (px?.ok) break;
+      if (px?.ok) {
+        shotMs = retryMs;
+        break;
+      }
     }
   }
   const vis = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandVisibility());
@@ -85,16 +86,19 @@ async function assertHandFrame(page, vp, phaseMs, frameKind = "auto") {
   if (frameKind === "closed" && !overlap?.ok) {
     throw new Error(`${vp.tag} shuffle overlap@${phaseMs}: ${JSON.stringify(overlap)}`);
   }
-  return { vis, px, overlap };
+  return { vis, px, overlap, shotMs };
 }
 
-async function captureHandFrame(browser, vp, phaseMs, suffix) {
+async function captureHandFrame(browser, vp, suffix) {
   const page = await browser.newPage();
   try {
     await bootPlay(page, { width: vp.width, height: vp.height });
-    const meta = await assertHandFrame(page, vp, phaseMs, suffix);
+    const freezeAt = handPhaseMs(vp, suffix);
+    const meta = await assertHandFrame(page, vp, freezeAt, suffix);
+    await page.evaluate((ms) => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(ms), meta.shotMs ?? freezeAt);
+    await page.waitForTimeout(30);
     const out = `${ART}/ui-redesign-hand-${suffix}-${vp.tag}.png`;
-    await viewportShot(page, out, vp);
+    await viewportShot(page, out, { stabilizeChrome: true });
     console.log("saved", out, meta.px.frame, `opaque=${meta.px.opaque}`);
     return out;
   } finally {
@@ -105,14 +109,20 @@ async function captureHandFrame(browser, vp, phaseMs, suffix) {
 const browser = await chromium.launch({ headless: true });
 const paths = [];
 for (const vp of VPs) {
-  paths.push(await captureHandFrame(browser, vp, phaseMs(vp, "closed"), "closed"));
-  paths.push(await captureHandFrame(browser, vp, phaseMs(vp, "open"), "open"));
+  paths.push(await captureHandFrame(browser, vp, "closed"));
+  paths.push(await captureHandFrame(browser, vp, "open"));
   const apexPage = await browser.newPage();
   try {
     await bootPlay(apexPage, { width: vp.width, height: vp.height });
-    await assertHandFrame(apexPage, vp, phaseMs(vp, "open"), "open");
+    const openMs = handPhaseMs(vp, "open");
+    const apexMeta = await assertHandFrame(apexPage, vp, openMs, "open");
+    await apexPage.evaluate(
+      (ms) => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(ms),
+      apexMeta.shotMs ?? openMs,
+    );
+    await apexPage.waitForTimeout(30);
     const apex = `${ART}/ui-redesign-hand-roll-apex-${vp.tag}.png`;
-    await viewportShot(apexPage, apex, vp);
+    await viewportShot(apexPage, apex, { stabilizeChrome: true });
     console.log("saved", apex);
     if (vp.tag === "768x1024") {
       fs.copyFileSync(apex, `${ART}/ui-redesign-hand-roll-apex-production.png`);
@@ -198,29 +208,36 @@ const vid2 = v2.video();
 await v2.close();
 const slowOut = `${ART}/ui-redesign-hand-roll-review-slowmo-4x.webm`;
 if (vid2) await vid2.saveAs(slowOut);
-// Realtime throw frame strip @ 40ms (unfrozen, one live roll)
+// Throw frame strip — one live roll, audit-freeze at 40ms steps (hand timeline proof)
 const stripVp = { tag: "768x1024", width: 768, height: 1024 };
 const stripPage = await browser.newPage();
 await bootPlay(stripPage, stripVp);
-await stripPage.click('[data-tutorial="roll-btn"]');
+const stripArmed = await stripPage.evaluate(() => window.__GB_LAYOUT_AUDIT__.triggerRollHandOverlayFx());
+if (!stripArmed) throw new Error("strip: triggerRollHandOverlayFx failed");
+await stripPage.waitForSelector('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand', {
+  timeout: 8000,
+});
 const stripPaths = [];
-for (let ms = 0; ms <= 480; ms += 40) {
-  if (ms > 0) await stripPage.waitForTimeout(40);
+await stripPage.evaluate(() => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(0));
+for (let ms = 0; ms <= 560; ms += 40) {
+  await stripPage.evaluate((t) => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(t), ms);
   const fp = `${ART}/hand-throw-realtime-${String(ms).padStart(3, "0")}ms.png`;
-  await viewportShot(stripPage, fp, stripVp);
-  const px = await stripPage.evaluate((kind) => {
+  await viewportShot(stripPage, fp, { stabilizeChrome: false });
+  const px = await stripPage.evaluate(() => {
     const closed = document.querySelector(".gutter-roll-hand-closed");
     const open = document.querySelector(".gutter-roll-hand-open");
     const cOp = closed ? parseFloat(getComputedStyle(closed).opacity) : 0;
     const oOp = open ? parseFloat(getComputedStyle(open).opacity) : 0;
     const frame = cOp >= oOp ? "closed" : "open";
-    return window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels(frame);
+    const sample = window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels(frame);
+    const vis = window.__GB_LAYOUT_AUDIT__.sampleRollHandVisibility();
+    return { ...sample, frame, visOk: vis?.ok, clipArea: vis?.clipArea };
   });
   stripPaths.push({ ms, fp, px });
-  console.log("strip", ms, px?.frame, px?.palmOpaque);
+  console.log("strip", ms, px?.frame, px?.palmOpaque, px?.visOk);
 }
 const stripHtml = `<!doctype html><html><body style="margin:0;background:#0a0a0a;">
-<div style="font:12px monospace;color:#0df;padding:6px">REALTIME HAND THROW — 40ms steps (unfrozen)</div>
+<div style="font:12px monospace;color:#0df;padding:6px">HAND THROW — overlay FX · 40ms pose samples (audit freeze, 0–560ms)</div>
 <div style="display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:6px;">${stripPaths
   .map(({ ms, fp }) => {
     const b64 = fs.readFileSync(fp).toString("base64");
