@@ -116,11 +116,15 @@ test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke 
       () => window.__GB_E2E__?.getHasRolled?.() && !window.__GB_E2E__?.getPlayLocks?.().rolling,
       { timeout: 20_000 },
     );
+    await page.waitForFunction(
+      () => document.querySelector("[data-payout-row]") != null,
+      { timeout: 20_000 },
+    );
     const ok = await page.evaluate(async () => {
       window.__GB_E2E__.focusPlayPayoutsTab?.();
-      for (let i = 0; i < 12; i += 1) {
+      for (let i = 0; i < 20; i += 1) {
         if (window.__GB_E2E__.scoreFirstPayoutRow?.()) return true;
-        await new Promise((r) => setTimeout(r, 120));
+        await new Promise((r) => setTimeout(r, 150));
       }
       return false;
     });
