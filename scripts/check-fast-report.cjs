@@ -25,16 +25,19 @@ console.log("=== check:fast — test:fast (Node rules/unit, no Playwright playte
 let code = run("npm", ["run", "test:fast"]);
 if (code !== 0) process.exit(code);
 
-console.log("\n=== check:fast — organic regression (fixed rid) + sim replay determinism ===\n");
-code = run("node", [
-  "--test",
-  "--test-timeout=900000",
-  "tests/organic-pairwise-regression.test.cjs",
+console.log("\n=== check:fast — organic regression (fixed rid, serial) ===\n");
+code = run("node", ["--test", "--test-timeout=900000", "tests/organic-pairwise-regression.test.cjs"]);
+if (code !== 0) process.exit(code);
+
+console.log("\n=== check:fast — sim replay determinism + builder regression (serial) ===\n");
+for (const file of [
   "tests/sim/deterministic-replay.test.cjs",
   "tests/sim/builder-consistency-regression.test.cjs",
   "tests/sim/held-out-seeds.test.cjs",
-]);
-if (code !== 0) process.exit(code);
+]) {
+  code = run("node", ["--test", "--test-timeout=900000", file]);
+  if (code !== 0) process.exit(code);
+}
 
 console.log("\n=== check:fast — repro-r13 softlocks ===\n");
 code = run("node", ["--test", "--test-timeout=420000", "tests/repro-r13-softlocks.test.cjs"]);
