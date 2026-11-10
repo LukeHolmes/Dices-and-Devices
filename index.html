@@ -3101,8 +3101,11 @@ const GutterbonesRules = (() => {
             debt = 0,
             flowStreak = 0,
             mirrorMatched = false,
-            synergyEnabled = false
+            synergyEnabled = false,
+            bossHardwareDampen = 1,
         } = handContext;
+        const chipsBeforeHw = state.chips;
+        const multBeforeHw = state.mult;
         const MULT_ENGINE_HARDWARE = new Set([
             'ENGINE', 'CROWBAR', 'FUSE_BOX', 'HOT_STREAK_COIL', 'CENTERPIECE', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'COPY_LAST'
         ]);
@@ -3121,6 +3124,7 @@ const GutterbonesRules = (() => {
             }
             return meta;
         }
+        const damp = Math.max(0, Math.min(1, Number(bossHardwareDampen) || 1));
         const { pushStep, triggers } = state;
         inventory.forEach(item => {
             if (item.id === 'CENTERPIECE') {
@@ -3230,11 +3234,25 @@ const GutterbonesRules = (() => {
                 }
             }
         });
+        if (damp < 1 && inventory.length > 0) {
+            const dChips = state.chips - chipsBeforeHw;
+            const dMult = state.mult - multBeforeHw;
+            if (dChips !== 0 || dMult !== 0) {
+                state.chips = chipsBeforeHw + dChips * damp;
+                state.mult = multBeforeHw + dMult * damp;
+                state.pushStep(
+                    'penalty',
+                    'BOSS: CROOKED COP',
+                    `Hardware dampened to ${Math.round(damp * 100)}%`,
+                    'COP PRESSURE',
+                );
+            }
+        }
         return meta;
     };
 
     const calculateScore = (catId, currentDice, context) => {
-        const { handLevels, flowStreak, inventory, hardwareDisabled, activeBoss, debt = 0,
+        const { handLevels, flowStreak, inventory, hardwareDisabled, bossHardwareDampen = 1, activeBoss, debt = 0,
             CATEGORIES, HAND_MASTERY_TUNING, getFlowMultiplier, getHandMasteryBonus,
             synergyTuning = { enabled: false }, synergyState = {}, roundFirstCategories = [],
             blueprintIds = [], blueprintRound = {} } = context;
@@ -3245,7 +3263,7 @@ const GutterbonesRules = (() => {
         const synergyTuningHand = synergyTuningForHand(
             synergyTuning, inventory, hardwareDisabled, resolved, destroyed, synergyEnabled
         );
-        const handHardwareContext = { debt, flowStreak, mirrorMatched, synergyEnabled };
+        const handHardwareContext = { debt, flowStreak, mirrorMatched, synergyEnabled, bossHardwareDampen };
         const standardVals = resolved.filter((d, i) => {
             if (destroyed.has(i) || d.faceId === 'GHOST_FACE') return false;
             const v = effectiveScoringValue(d);
@@ -5305,7 +5323,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/bouncer.png', portraitAlt: 'The Bouncer' },
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500', portraitSrc: 'assets/bosses/loan-shark.png', portraitAlt: 'The Loan Shark' },
         JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]', portraitSrc: 'assets/bosses/junkie.png', portraitAlt: 'The Junkie' },
-        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware disabled', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
+        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware dampened (55%)', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
         INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
         THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota ×1.38 (~+38%). Pills cost $2. Clear R10 to escape — beating this boss does not end the run.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
     };
@@ -5345,7 +5363,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         earlyBossRoundCap: 4,
         earlyBouncerRelief: 0.9,
         raidQuotaRelief: 0.92,
-        bossPathTargetRelief: 0.93
+        bossPathTargetRelief: 0.93,
+        crookedCopHardwareMult: 0.55
     };
 
     const SHOP_TUNING = {
@@ -5380,9 +5399,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const SHOP_AGENCY_TUNING = {
         refreshBaseCost: 8,
-        refreshRoundTax: 1,
-        refreshEscalation: 3,
-        sellRate: 0.6
+        refreshRoundTax: 2,
+        refreshEscalation: 4,
+        sellRate: 0.6,
+        lateCarrySinkMinRound: 6,
+        lateCarrySinkGoldFloor: 48,
+        lateCarrySinkRate: 0.07,
+        lateCarrySinkCap: 22
     };
 
     const getShopRefreshCost = (roundNum, refreshCount) => Math.max(
@@ -9186,7 +9209,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         runTargetRef.current = currentTarget;
         runHandsRef.current = hands;
         bossIntroActiveRef.current = !!bossIntro;
-        const hardwareDisabled = activeBoss?.id === 'CROOKED_COP';
+        const crookedCopActive = activeBoss?.id === 'CROOKED_COP';
+        const bossHardwareDampen = crookedCopActive ? (BOSS_TUNING.crookedCopHardwareMult ?? 0.55) : 1;
+        const hardwareDisabled = false;
         const scoreOverlayOpen = !!(scoreBreakdown || scoreResolution);
         scoreOverlayLockRef.current = scoreOverlayOpen;
         const rollBlockedByPresentation = scoreOverlayOpen || payoutInputLock || !!bossIntro || !!storyBeat
@@ -10655,7 +10680,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const calculateScore = (catId, currentDice) => {
             const flowCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
             const base = GutterbonesRules.calculateScore(catId, currentDice, {
-                handLevels, flowStreak, debt, inventory, hardwareDisabled, activeBoss,
+                handLevels, flowStreak, debt, inventory, hardwareDisabled, bossHardwareDampen, activeBoss,
                 CATEGORIES, HAND_MASTERY_TUNING,
                 getFlowMultiplier: (streak) => getFlowMultiplier(streak, flowCap),
                 getHandMasteryBonus,
@@ -11079,6 +11104,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
             const result = calculateScore(catId, diceForScore);
+            if (typeof window !== "undefined" && window.__GB_SIM_TELEM__?.record) {
+                window.__GB_SIM_TELEM__.record({
+                    total: result.total || 0,
+                    valid: !!result.valid,
+                    chainDepth: result.chainDepth || 0,
+                    chainLinks: result.chainLinks || [],
+                    synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId).filter(Boolean),
+                    chainMultBonusUsed: result.chainMultBonusUsed || 0,
+                    chainMultCapHit: !!result.chainMultCapHit,
+                    debtCollectorCapped: !!result.debtCollectorCapped,
+                });
+            }
             const wager = activeWager;
             let wagerNet = 0;
             let projectedCash = gold;
@@ -11959,6 +11996,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const shopAdvancePathReady = phase === 'SHOP' ? !!resolveShopAdvancePath() : false;
 
         const handleAdvanceCore = (path) => {
+            if (
+                round >= SHOP_AGENCY_TUNING.lateCarrySinkMinRound
+                && gold > SHOP_AGENCY_TUNING.lateCarrySinkGoldFloor
+            ) {
+                const sink = Math.min(
+                    SHOP_AGENCY_TUNING.lateCarrySinkCap,
+                    Math.floor(gold * SHOP_AGENCY_TUNING.lateCarrySinkRate),
+                );
+                if (sink > 0) {
+                    setGold((g) => Math.max(0, g - sink));
+                    setFixerLine(`Street tax skimmed $${sink} off the stash.`);
+                }
+            }
             pendingPhaseTransitionRef.current = null;
             pendingRoundFinalizeRef.current = null;
             finalizeRoundAfterHandRef.current = null;
@@ -12145,6 +12195,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (typeof window === 'undefined') return;
             const params = new URLSearchParams(window.location.search);
             if (params.get('e2e') === '1') {
+                window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
+                    hands: [],
+                    record(entry) {
+                        this.hands.push({ ...entry, at: this.hands.length });
+                    },
+                    reset() {
+                        this.hands.length = 0;
+                    },
+                };
                 window.__GB_E2E__ = {
                     resumeSavedRun: () => {
                         const saved = loadSavedRun();
@@ -12156,11 +12215,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         target,
                         score,
                         gold,
+                        debt,
                         hands,
+                        discards,
                         selectedShopPathId,
                         roundClearVisible: !!roundClearCardActive,
                         roundClearCanContinue: !!roundClearCanContinue,
                     }),
+                    getBuildProfile: () => analyzeBuild({ inventory, dice, history, flowStreak }),
                     debugStuck: () => ({
                         hasFinalizeRef: !!finalizeRoundAfterHandRef.current,
                         pendingFinalize: !!pendingRoundFinalizeRef.current,
@@ -12175,7 +12237,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         setScoreOverlayCanDismiss(true);
                         dismissScoreOverlays();
                     },
-                    finishRoundClear: () => finishRoundClearCard(),
+                    finishRoundClear: () => finishRoundClearCard(true),
                     selectRoute: (id) => {
                         const path = paths.find((p) => p.id === id);
                         if (path) selectShopPath(path);
@@ -12294,19 +12356,79 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         forfeitRun();
                         return true;
                     },
-                    scoreFirstPayoutRow: () => {
-                        if (phase !== 'PLAY' || rolling) return false;
-                        if (hasRolled) {
-                            setPlayDock('payouts');
-                            setShowMobileStash(false);
+                    keepDiceForReroll: () => {
+                        const counts = {};
+                        dice.forEach((d) => {
+                            const v = d.value;
+                            counts[v] = (counts[v] || 0) + 1;
+                        });
+                        let pairV = -1;
+                        let pairN = 0;
+                        Object.keys(counts).forEach((v) => {
+                            const n = counts[v];
+                            if (n >= 2 && (n > pairN || (n === pairN && Number(v) > pairV))) {
+                                pairV = Number(v);
+                                pairN = n;
+                            }
+                        });
+                        if (pairV >= 0) {
+                            setKept(dice.map((d) => d.value === pairV));
+                            return true;
                         }
+                        const ranked = dice
+                            .map((d, i) => ({ v: d.value, i }))
+                            .sort((a, b) => b.v - a.v);
+                        const keepIdx = new Set(ranked.slice(0, Math.min(3, ranked.length)).map((x) => x.i));
+                        setKept(dice.map((_, i) => keepIdx.has(i)));
+                        return true;
+                    },
+                    pickBestOpenCategory: () => {
+                        let best = null;
+                        Object.keys(CATEGORIES).forEach((catId) => {
+                            if (usedCats.includes(catId)) return;
+                            const r = calculateScore(catId, dice);
+                            if (!r.valid) return;
+                            if (!best || r.total > best.total) best = { catId, total: r.total };
+                        });
+                        return best;
+                    },
+                    autoPlayHand: () => {
+                        if (phase !== 'PLAY' || rolling || hands <= 0 || swapMode) return false;
+                        if (roundClearCardActive) {
+                            finishRoundClearCard(!!roundClearCanContinue);
+                            return true;
+                        }
+                        if (score >= currentTarget && !roundClearCardActive) {
+                            return window.__GB_E2E__.forceRoundWin?.() || false;
+                        }
+                        if (scoreOverlayActiveRef.current || scoreBreakdown || scoreResolution) {
+                            dismissScoreOverlays();
+                            return true;
+                        }
+                        const rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
                         if (!hasRolled) {
-                            const rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
                             if (rollBtn) {
                                 rollBones();
                                 return true;
                             }
+                            return false;
                         }
+                        const best = window.__GB_E2E__.pickBestOpenCategory?.();
+                        if (!best) return false;
+                        const gap = Math.max(0, currentTarget - score);
+                        const need = gap / Math.max(1, hands);
+                        const mustScore = hands <= 1 || discards <= 0;
+                        const minPlay = Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
+                        if (!mustScore && best.total < minPlay && discards > 0) {
+                            if (rollBtn) {
+                                window.__GB_E2E__.keepDiceForReroll?.();
+                                rollBones();
+                                return true;
+                            }
+                            return false;
+                        }
+                        setPlayDock('payouts');
+                        setShowMobileStash(false);
                         if (typeof window !== 'undefined' && window.innerWidth < 900) {
                             const tabs = document.querySelectorAll('button.gb-tappable-label');
                             for (const tab of tabs) {
@@ -12316,22 +12438,27 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 }
                             }
                         }
-                        const pickRow = () => {
-                            const rows = [...document.querySelectorAll('button[data-payout-row]:not([disabled])')].filter(
-                                (r) => r.getAttribute('data-payout-row') !== 'more',
-                            );
-                            if (rows.length) {
-                                rows[0].scrollIntoView({ block: 'nearest', inline: 'nearest' });
-                                rows[0].click();
-                                return true;
-                            }
-                            return false;
-                        };
-                        if (pickRow()) return true;
-                        const more = document.querySelector('[data-layout-key="payout-sheet-more"]');
-                        if (more && !more.disabled) {
-                            more.click();
-                            return pickRow() || true;
+                        let btn = document.querySelector(`button[data-payout-row="${best.catId}"]:not([disabled])`);
+                        if (!btn) {
+                            const more = document.querySelector('[data-layout-key="payout-sheet-more"]');
+                            if (more && !more.disabled) more.click();
+                            btn = document.querySelector(`button[data-payout-row="${best.catId}"]:not([disabled])`);
+                        }
+                        if (btn) {
+                            btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                            btn.click();
+                            return true;
+                        }
+                        return false;
+                    },
+                    scoreFirstPayoutRow: () => {
+                        if (phase !== 'PLAY' || rolling) return false;
+                        if (scoreOverlayActiveRef.current || scoreBreakdown || scoreResolution) {
+                            dismissScoreOverlays();
+                            return true;
+                        }
+                        if (typeof window.__GB_E2E__.autoPlayHand === 'function') {
+                            return window.__GB_E2E__.autoPlayHand();
                         }
                         return false;
                     },
