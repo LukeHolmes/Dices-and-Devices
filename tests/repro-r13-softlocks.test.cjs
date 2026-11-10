@@ -98,7 +98,7 @@ test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke 
         "gutterbones1977:settings:v1",
         JSON.stringify({
           pacing: "fast",
-          reducedMotion: true,
+          reducedMotionPref: true,
           tutorialCompleted: true,
           skippedAlleyIntro: true,
         }),
@@ -202,7 +202,7 @@ test("r15 — harness seed 483059 greedy tablet_portrait no R9 shop softlock", {
         "gutterbones1977:settings:v1",
         JSON.stringify({
           pacing: "fast",
-          reducedMotion: true,
+          reducedMotionPref: true,
           tutorialCompleted: true,
           skippedAlleyIntro: true,
         }),
@@ -239,7 +239,7 @@ test("r15 — harness seed 831495 greedy phone_landscape no R9 shop softlock", {
         "gutterbones1977:settings:v1",
         JSON.stringify({
           pacing: "fast",
-          reducedMotion: true,
+          reducedMotionPref: true,
           tutorialCompleted: true,
           skippedAlleyIntro: true,
         }),
@@ -276,7 +276,7 @@ test("r13 — harness seed 546411 greedy desktop_fhd reaches terminal without sh
         "gutterbones1977:settings:v1",
         JSON.stringify({
           pacing: "fast",
-          reducedMotion: true,
+          reducedMotionPref: true,
           tutorialCompleted: true,
           skippedAlleyIntro: true,
         }),

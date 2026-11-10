@@ -88,7 +88,54 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
     if (ph === "RAP_SHEET" || ph === "VICTORY") return null;
     let k = find("CONTINUE", "NEXT", "GOT IT", "DISMISS");
-    if (k != null && ph !== "SHOP") return k;
+    if (k != null && ph !== "SHOP" && ph !== "PLAY" && ph !== "CARVING") return k;
+    const shopBot = strategy === "builder" || strategy === "greedy";
+    if (shopBot && ph === "CARVING") {
+      const done = findContains("RETURN", "BACK TO", "CONFIRM", "DONE");
+      log._carveTries = (log._carveTries || 0) + 1;
+      if (log._carveTries > 6 && done != null) return done;
+      const face = btn.findIndex((b) => /BLOOD|SHIV|GHOST|FUSE|WIRE|MULT/i.test(b.t));
+      if (face >= 0) return face;
+      const bone = btn.findIndex((b) => /BONE \d/i.test(b.t));
+      if (bone >= 0) return bone;
+      return done;
+    }
+    if (shopBot && ph === "SHOP") {
+      const debt = Number(st?.debt) || 0;
+      const gold = Number(st?.gold) || 0;
+      const payDebt = findContains("PAY DEBT", "PAY DOWN", "CLEAR DEBT", "REDUCE DEBT");
+      if (payDebt != null && debt >= 3 && gold > debt + 6) return payDebt;
+      const scoreBuy = (i) => {
+        const t = U[i];
+        let w = 0;
+        if (t.includes("ENGINE")) w += 100;
+        else if (t.includes("FUSE BOX") || t.includes("FUSE_BOX")) w += 92;
+        else if (t.includes("CROWBAR")) w += 88;
+        else if (t.includes("BLOOD") || t.includes("SHIV")) w += 85;
+        else if (t.includes("GHOST") || t.includes("WIRE")) w += 78;
+        else if (t.includes("CARVE") || t.includes("FACE")) w += 72;
+        else if (t.includes("DEBT COLLECTOR")) w += 55;
+        const price = num(btn[i].t);
+        if (price != null && price <= gold) w += 15;
+        return w - (price || 12) * 0.22;
+      };
+      const buys = btn.map((_, i) => (btn[i].t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
+      if (buys.length) {
+        buys.sort((a, b) => scoreBuy(b) - scoreBuy(a));
+        if (scoreBuy(buys[0]) > 8) return buys[0];
+      }
+      const routes = btn.map((b, i) =>
+        (b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1),
+      ).filter((x) => x >= 0);
+      if (routes.length && !st?.selectedShopPathId) {
+        const hw = routes.find((i) => U[i].includes("HARDWARE") || U[i].includes("MOD") || U[i].includes("PAWN"));
+        return hw != null ? hw : routes[0];
+      }
+      const inv = Number(st?.inventoryCount) || 0;
+      const hit = findContains("HIT THE STREETS");
+      if (hit != null && st?.selectedShopPathId && (inv >= 1 || (st.round || 1) >= 4 || buys.length === 0)) return hit;
+      return buys[0] != null ? buys[0] : null;
+    }
     if (ph === "PLAY") {
       if (bossIntroUp()) {
         const cont = find("CONTINUE");
@@ -202,6 +249,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       e.rollOnce?.();
       return true;
     }
+    e.advanceRunPhase?.();
     e.focusPlayPayoutsTab?.();
     if (innerWidth < 900) {
       const tabs = document.querySelectorAll("button.gb-tappable-label");
@@ -210,6 +258,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
           tab.click();
           break;
         }
+      }
+    }
+    const best = e.pickBestOpenCategory?.();
+    if (best) {
+      const btn = document.querySelector(`button[data-payout-row="${best.catId}"]:not([disabled])`);
+      if (btn) {
+        btn.click();
+        return true;
       }
     }
     const rows = [...document.querySelectorAll('button[data-payout-row]:not([disabled])')].filter(
@@ -224,8 +280,16 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   try {
     window.__GB_E2E__.goLineup();
-    window.__GB_E2E__.selectFirstPersona();
+    if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
+      if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
+        window.__GB_E2E__.selectPersonaByIndex(1);
+      }
+    } else {
+      window.__GB_E2E__.selectFirstPersona();
+    }
     window.__GB_E2E__.startNewRun();
+    window.__GB_E2E__.skipIntroOverlays?.();
+    await wait(120);
     window.__GB_E2E__.skipIntroOverlays?.();
   } catch (e) {
     return { stuck: true, reason: "boot_failed", detail: String(e), seed, strategy, steps: 0, maxRound: 1 };
@@ -236,7 +300,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
     if (ph === "PLAY") started = true;
-    if (st && st.round > maxRound) maxRound = st.round;
+    if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
+      maxRound = st.round;
+    }
     if (started && st && st.round != null && st.round < lastRound) {
       return {
         stuck: true,
@@ -277,14 +343,54 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
     log._gambleTries = 0;
 
+    if (st?.roundClearVisible) {
+      window.__GB_E2E__?.finishRoundClear?.();
+      await wait(120);
+      continue;
+    }
+
+    const shopBot = strategy === "builder" || strategy === "greedy";
+    if (shopBot && ph === "SHOP") {
+      log._shopPasses = (log._shopPasses || 0) + 1;
+      const invNow = Number(st?.inventoryCount) || 0;
+      if (
+        st?.selectedShopPathId
+        && (invNow >= 1 || log._shopPasses > 10 || (st.round || 1) >= 4)
+      ) {
+        if (window.__GB_E2E__?.hitStreets?.()) {
+          log._shopPasses = 0;
+          await wait(120);
+          continue;
+        }
+      }
+      if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
+        await wait(90);
+        continue;
+      }
+      if (log._shopPasses <= 12 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+        await wait(90);
+        continue;
+      }
+      if (!st?.selectedShopPathId && window.__GB_E2E__?.clickShopRouteCard?.()) {
+        await wait(80);
+        continue;
+      }
+    }
+    if (shopBot && ph === "CARVING") {
+      if (window.__GB_E2E__?.autoCarvePreferred?.()) {
+        await wait(90);
+        continue;
+      }
+    }
+
     const names = btn.map((b) => b.t);
     const sig = JSON.stringify([ph, st && st.score, st && st.gold, st && st.hands, st && st.round, names.slice(0, 12)]);
     stuck = sig === lastSig ? stuck + 1 : 0;
     lastSig = sig;
 
     if (started && ph === "PLAY" && st && st.hands === 0 && st.score >= st.target) {
-      window.__GB_E2E__.dismissOverlays();
-      window.__GB_E2E__.forceRoundWin();
+      window.__GB_E2E__?.advanceRunPhase?.();
+      window.__GB_E2E__?.dismissOverlays?.();
       await wait(120);
       continue;
     }
@@ -305,6 +411,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         window.__GB_E2E__.takeSafeCut?.();
         window.__GB_E2E__.abortGamble?.();
       } else if (s.phase === "PLAY") {
+        window.__GB_E2E__.advanceRunPhase?.();
         window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick("PLAY");
       } else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
@@ -329,13 +436,42 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (ph === "PLAY") {
       window.__GB_E2E__?.skipIntroOverlays?.();
       window.__GB_E2E__?.dismissBossIntro?.();
-      window.__GB_E2E__?.dismissOverlays?.();
+      if (
+        st?.roundClearVisible
+        || bossIntroUp()
+        || document.querySelector('[data-layout-key="score-breakdown-overlay"]')
+        || document.querySelector('[data-layout-key="score-resolution-overlay"]')
+      ) {
+        window.__GB_E2E__?.dismissOverlays?.();
+      }
+      const locks = window.__GB_E2E__?.getPlayLocks?.();
+      if (locks?.rolling || locks?.rollLocked) {
+        await wait(60);
+        continue;
+      }
+      if (!window.__GB_E2E__?.getHasRolled?.()) {
+        window.__GB_E2E__?.rollOnce?.();
+        await wait(50);
+        continue;
+      }
+      if (
+        (strategy === "builder" || strategy === "greedy")
+        && window.__GB_E2E__?.autoPlayHand?.()
+      ) {
+        await wait(50);
+        continue;
+      }
       if (
         (strategy === "edge" || strategy === "random")
         && window.__GB_E2E__?.getHasRolled?.()
         && window.__GB_E2E__?.scoreFirstPayoutRow?.()
       ) {
         await wait(45);
+        continue;
+      }
+      if (st?.score >= st?.target && st?.hands > 0) {
+        window.__GB_E2E__?.advanceRunPhase?.();
+        await wait(80);
         continue;
       }
       if (st?.roundClearVisible) {
