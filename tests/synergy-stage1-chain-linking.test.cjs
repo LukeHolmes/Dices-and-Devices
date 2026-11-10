@@ -19,21 +19,28 @@ function synergyContext(g, overrides = {}) {
     HAND_MASTERY_TUNING: { baseLevel: 1, maxLevel: 8, chipPerLevel: 5 },
     getFlowMultiplier: g.api.getFlowMultiplier,
     getHandMasteryBonus: g.api.getHandMasteryBonus,
-    synergyTuning: { enabled: true, chainLinkingEnabled: false, maxChainPasses: 8 },
+    synergyTuning: { enabled: true, chainLinkingEnabled: true, maxChainPasses: 8, maxChainBonusMultPerHand: 6, debtCollectorMaxMult: 4 },
     ...overrides,
   };
 }
 
-test("SYNERGY_TUNING.chainLinkingEnabled defaults false in shipped tuning", () => {
-  assert.match(html, /chainLinkingEnabled:\s*false/);
+test("SYNERGY_TUNING.chainLinkingEnabled defaults true in shipped tuning", () => {
+  assert.match(html, /chainLinkingEnabled:\s*true/);
+  assert.match(html, /maxChainBonusMultPerHand:\s*6/);
+  assert.match(html, /debtCollectorMaxMult:\s*4/);
 });
 
 test("chain linking off — no link markers or links on score result", () => {
+  // explicit OFF in synergyTuning override
   const g = createGame(snapshot());
   const d = dice([6, 0, 2, 3, 4]);
   d[0] = bone(6, 0, { faceId: "BLOOD_6", type: "blood" });
   d[1] = bone(0, 1, { faceId: "SHIV_FACE", type: "destructive" });
-  const r = g.api.GutterbonesRules.calculateScore("C", d, synergyContext(g));
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    synergyContext(g, { synergyTuning: { enabled: true, chainLinkingEnabled: false, maxChainPasses: 8 } }),
+  );
   assert.ok(r.synergyEvents.length > 0);
   assert.equal(Array.isArray(r.chainLinks), true);
   assert.equal(r.chainLinks.length, 0);
