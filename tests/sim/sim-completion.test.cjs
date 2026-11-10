@@ -71,6 +71,27 @@ test("sim — seed 118785 rapid @1920x1080 reaches terminal (R2 boss intro regre
   assert.equal(result.stuck, false, JSON.stringify(result));
 });
 
+test("sim — seed 546411 greedy @1920x1080 reaches terminal (PLAY roll/score regression)", { timeout: 180_000 }, async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  page.__baseUrl = baseUrl;
+  const vp = VIEWPORTS_BLOCKING.find((v) => v.name === "1920x1080");
+  const result = await runOneGame(page, {
+    rid: 69,
+    seed: 546411,
+    strategy: "greedy",
+    viewport: vp,
+    maxSteps: 8000,
+    stuckThreshold: 28,
+    maxFallbacks: 20,
+    booted: { value: false },
+  });
+  await browser.close();
+  assert.equal(result.stuck, false, JSON.stringify(result));
+  assert.equal(result.reason, undefined, JSON.stringify(result));
+  assert.ok(result.outcome === "WIN" || result.outcome === "BUST", JSON.stringify(result));
+});
+
 test("sim — seed 364274 edge @1920x1080 reaches terminal (score overlay regression)", { timeout: 180_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();

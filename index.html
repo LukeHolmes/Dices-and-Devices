@@ -58,6 +58,14 @@
     var isDevHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '';
     var isDev = isDevHost || params.get('dev') === '1';
     window.__GUTTERBONES_DEV__ = isDev;
+    window.__GB_E2E_QUERY__ = function () {
+        try {
+            return typeof URLSearchParams !== 'undefined'
+                && new URLSearchParams(window.location.search).get('e2e') === '1';
+        } catch (_) {
+            return false;
+        }
+    };
 
     var pathname = window.location.pathname || '/';
     var assetBase = pathname.indexOf('/Dices-and-Devices') === 0 ? '/Dices-and-Devices/' : '';
@@ -9021,12 +9029,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             };
             setRoundClearCardActive(true);
             setRoundClearCanContinue(false);
+            const roundClearGateMs = (typeof window !== 'undefined'
+                && new URLSearchParams(window.location.search).get('e2e') === '1')
+                ? 0
+                : GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion);
             scheduleTimeout(
                 () => {
                     setRoundClearCanContinue(true);
                     if (roundClearContinueQueuedRef.current) finishRoundClearCard(true);
                 },
-                GutterbonesPresentation.gateMinMs('roundClear', presentationPacing(), reducedMotion)
+                roundClearGateMs
             );
         };
 
@@ -9727,9 +9739,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return undefined;
             }
             setScoreOverlayCanDismiss(false);
-            const minHold = GutterbonesPresentation.gateMinMs('scoreOverlay', presentationPacing(), reducedMotion);
             const e2eMode = typeof window !== 'undefined'
                 && new URLSearchParams(window.location.search).get('e2e') === '1';
+            const minHold = e2eMode
+                ? 0
+                : GutterbonesPresentation.gateMinMs('scoreOverlay', presentationPacing(), reducedMotion);
             const minId = scheduleTimeout(() => {
                 setScoreOverlayCanDismiss(true);
                 if (scoreOverlayDismissQueuedRef.current || scoreOverlayEarlyDismissRef.current) {
@@ -9741,7 +9755,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 scoreBreakdownTimeoutRef.current = null;
             }
             const autoDismissMs = e2eMode
-                ? Math.max(minHold + 120, reducedMotion ? 280 : 520)
+                ? Math.max(48, minHold + 60)
                 : (presentationPacing() === 'fast' ? GutterbonesPresentation.AUTO_DISMISS_CAP_MS : null);
             if (autoDismissMs != null) {
                 scoreBreakdownTimeoutRef.current = scheduleTimeout(() => {
@@ -10663,7 +10677,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     grantBlueprint(pickRandomBlueprintId());
                 }
                 setPhase('PLAY');
-                if (!tutorial && meta.totalRuns === 0 && !audioSettings.tutorialCompleted && !audioSettings.skippedAlleyIntro) {
+                const e2eMode = typeof window !== 'undefined'
+                    && new URLSearchParams(window.location.search).get('e2e') === '1';
+                if (
+                    !e2eMode
+                    && !tutorial
+                    && meta.totalRuns === 0
+                    && !audioSettings.tutorialCompleted
+                    && !audioSettings.skippedAlleyIntro
+                ) {
                     setShowFirstRunOverlay(true);
                 }
             };
@@ -10857,7 +10879,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             const junkieBoss = activeBoss?.id === 'JUNKIE';
             const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
-            if (reducedMotion) {
+            const e2eFastDice = typeof window !== 'undefined'
+                && typeof window.__GB_E2E_QUERY__ === 'function'
+                && window.__GB_E2E_QUERY__();
+            if (reducedMotion || e2eFastDice) {
                 setDice(prev => prev.map((d, i) => (activeMask[i] ? resolveDieAfterRoll(d, i, { tutRollIdx, dailyRunActive, runRandomFn, junkieBoss }) : d)));
                 setRollingSlots(prev => prev.map(() => false));
                 completeRoll();
@@ -10948,6 +10973,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         useEffect(() => {
+            const e2eSniffOff = typeof window !== 'undefined'
+                && typeof window.__GB_E2E_QUERY__ === 'function'
+                && window.__GB_E2E_QUERY__();
+            if (e2eSniffOff) {
+                openingSniffPendingRef.current = false;
+                return;
+            }
             if (phase !== 'PLAY' || storyBeat || !openingSniffPendingRef.current || dice.length !== 5) return;
             openingSniffPendingRef.current = false;
             const tutGrant = tutorialActiveRef.current && GutterbonesTutorial
@@ -12327,6 +12359,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         return !!(btn && btn.disabled);
                     },
                     getHasRolled: () => !!hasRolled,
+                    getPlayLocks: () => ({
+                        rollLocked: !!rollLocked,
+                        rolling: !!rolling,
+                        payoutInputLock: !!payoutInputLock,
+                        hasRolled: !!hasRolled,
+                    }),
                     getDiceValues: () => dice.map((d) => d.value),
                     getDiscards: () => discards,
                     dismissBossIntro: () => {
@@ -12344,6 +12382,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     rollOnce: () => rollBones(),
                     recoverLastHand: () => {
                         recoverLastHandStuckState();
+                        return true;
+                    },
+                    advanceRunPhase: () => {
+                        if (phase !== "PLAY") return false;
+                        setScoreOverlayCanDismiss(true);
+                        dismissScoreOverlays(true);
+                        recoverLastHandStuckState();
+                        if (roundClearCardActive) {
+                            finishRoundClearCard(!!roundClearCanContinue);
+                            return true;
+                        }
                         return true;
                     },
                     focusPlayPayoutsTab: () => {
@@ -12399,15 +12448,31 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             finishRoundClearCard(!!roundClearCanContinue);
                             return true;
                         }
-                        if (score >= currentTarget && !roundClearCardActive) {
-                            return window.__GB_E2E__.forceRoundWin?.() || false;
+                        if (score >= currentTarget && (hands <= 0 || roundClearCardActive || !hasRolled)) {
+                            if (hasRolled || roundClearCardActive) {
+                                setScoreOverlayCanDismiss(true);
+                                dismissScoreOverlays(true);
+                                recoverLastHandStuckState();
+                                if (roundClearCardActive) {
+                                    finishRoundClearCard(!!roundClearCanContinue);
+                                }
+                                return true;
+                            }
                         }
                         if (scoreOverlayActiveRef.current || scoreBreakdown || scoreResolution) {
                             dismissScoreOverlays();
                             return true;
                         }
-                        const rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
+                        let rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
                         if (!hasRolled) {
+                            if (!rollBtn) {
+                                setScoreOverlayCanDismiss(true);
+                                dismissScoreOverlays(true);
+                                setPayoutInputLock(false);
+                                setRollLock(false);
+                                recoverLastHandStuckState();
+                                rollBtn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
+                            }
                             if (rollBtn) {
                                 rollBones();
                                 return true;
@@ -12416,11 +12481,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         }
                         const best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
+                        const e2eGreedy = typeof window !== 'undefined'
+                            && typeof window.__GB_E2E_QUERY__ === 'function'
+                            && window.__GB_E2E_QUERY__();
                         const gap = Math.max(0, currentTarget - score);
                         const need = gap / Math.max(1, hands);
                         const mustScore = hands <= 1 || discards <= 0;
-                        const minPlay = Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
-                        if (!mustScore && best.total < minPlay && discards > 0) {
+                        const minPlay = e2eGreedy
+                            ? 1
+                            : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
+                        if (!e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
                             if (rollBtn) {
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
@@ -13374,7 +13444,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 },
                 stashProgramLayoutKeys: () => ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER']
             };
-        }, [phase, round, target, score, gold, hands, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
+        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>

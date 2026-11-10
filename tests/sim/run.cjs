@@ -87,7 +87,7 @@ async function bootPage(page, baseUrl, viewport) {
       "gutterbones1977:settings:v1",
       JSON.stringify({
         pacing: "fast",
-        reducedMotion: true,
+        reducedMotionPref: true,
         tutorialCompleted: true,
         skippedAlleyIntro: true,
       }),
@@ -100,7 +100,10 @@ async function bootPage(page, baseUrl, viewport) {
     } catch (_) {
       /* ignore */
     }
+    localStorage.removeItem("gutterbones1977:run:v1");
   });
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
   if (mobile) {
     await page.context().addInitScript(() => {
       Object.defineProperty(navigator, "maxTouchPoints", { value: 1 });
@@ -125,7 +128,7 @@ async function runOneGame(
         "gutterbones1977:settings:v1",
         JSON.stringify({
           pacing: "fast",
-          reducedMotion: true,
+          reducedMotionPref: true,
           tutorialCompleted: true,
           skippedAlleyIntro: true,
         }),
@@ -138,7 +141,10 @@ async function runOneGame(
       } catch (_) {
         /* ignore */
       }
+      localStorage.removeItem("gutterbones1977:run:v1");
     });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
   }
   const result = await page.evaluate(
     async ({ botSource, opts }) => {
