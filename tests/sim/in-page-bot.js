@@ -2,7 +2,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   window.__GB_SIM_BOT_SESSION__ = true;
   try {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
+  const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false, _maxInv: 0 };
   let fallbacks = 0;
   let stuck = 0;
   let lastSig = null;
@@ -326,11 +326,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
       maxRound = st.round;
     }
+    if (st && typeof st.inventoryCount === "number" && st.inventoryCount > (log._maxInv || 0)) {
+      log._maxInv = st.inventoryCount;
+    }
     if (started && st && st.round != null && st.round < lastRound) {
       return {
         stuck: true,
         reason: "round_regression",
         maxRound,
+        maxInventoryObserved: log._maxInv || 0,
         phase: ph,
         seed,
         strategy,
@@ -344,6 +348,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         stuck: false,
         outcome: ph === "VICTORY" ? "WIN" : "BUST",
         maxRound,
+        maxInventoryObserved: log._maxInv || 0,
         phase: ph,
         seed,
         strategy,
@@ -500,6 +505,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
           reason: "softlock_no_progress",
           detail: "fallbacks>" + maxFallbacks,
           maxRound,
+          maxInventoryObserved: log._maxInv || 0,
           phase: ph,
           seed,
           strategy,
@@ -582,6 +588,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       stuck: false,
       outcome: afterForfeit.phase === "VICTORY" ? "WIN" : "BUST",
       maxRound,
+      maxInventoryObserved: log._maxInv || 0,
       phase: afterForfeit.phase,
       seed,
       strategy,
@@ -597,6 +604,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     detail: "max_steps:" + maxSteps + ",phase:" + final.phase,
     outcome: "INCOMPLETE:" + final.phase,
     maxRound,
+    maxInventoryObserved: log._maxInv || 0,
     phase: final.phase,
     seed,
     strategy,

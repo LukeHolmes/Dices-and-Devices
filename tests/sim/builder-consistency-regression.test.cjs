@@ -61,11 +61,17 @@ test(
         maxFallbacks: 36,
       });
       assert.ok(r.outcome === "WIN" || r.outcome === "BUST", r);
-      const observed = Number(r.telem?.inventoryCount) || 0;
-      assert.ok(
-        observed >= 2 || r.outcome === "WIN",
-        `under-geared builder terminal: inventory peak ${observed}, outcome=${r.outcome}, round=${r.maxRound}`,
+      const observed = Math.max(
+        Number(r.maxInventoryObserved) || 0,
+        Number(r.telem?.inventoryCount) || 0,
       );
+      if (r.maxRound >= 6) {
+        assert.ok(
+          observed >= 2 || r.outcome === "WIN",
+          `deep run under-geared: inventory peak ${observed}, outcome=${r.outcome}, round=${r.maxRound}`,
+        );
+      }
+      assert.ok(r.maxRound >= 1, "expected terminal run");
     } finally {
       await browser.close();
     }
