@@ -123,6 +123,7 @@ async function captureSuite(serveRoot, outDir, label) {
   }
 
   try {
+    await page.setViewportSize(vpDesk);
     const carvePayload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.carving()));
     await page.evaluate(
       ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),

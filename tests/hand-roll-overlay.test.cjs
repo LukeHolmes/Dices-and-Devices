@@ -87,10 +87,20 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
         ariaHidden: overlay.getAttribute("aria-hidden"),
       };
     });
-    assert.ok(grip, "overlay mounted with fixture sprites");
+    assert.ok(grip, "overlay mounted with production sprites");
     assert.equal(grip.pointerEvents, "none");
     assert.equal(grip.ariaHidden, "true");
     assert.ok(grip.closedOpacity >= 0.85, "closed visible at start");
+    let sawVisible = false;
+    for (let i = 0; i < 12; i += 1) {
+      await page.waitForTimeout(40);
+      const vis = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandVisibility());
+      if (vis?.ok) {
+        sawVisible = true;
+        break;
+      }
+    }
+    assert.ok(sawVisible, "hand intersects viewport and stacks above playfield during sweep");
     let openDominant = false;
     for (const delay of [140, 170, 200, 230]) {
       await page.waitForTimeout(delay);

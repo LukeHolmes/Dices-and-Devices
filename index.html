@@ -3110,12 +3110,11 @@
         padding-top: 0.15rem;
     }
     @keyframes handThrowSweep {
-        0% { transform: translate(-110%, 80%) rotate(-22deg) scale(0.95); opacity: 0; }
-        18% { transform: translate(-25%, 22%) rotate(-12deg) translateY(-6px); opacity: 1; }
-        26% { transform: translate(-20%, 18%) rotate(-8deg) translateY(6px); opacity: 1; }
-        35% { transform: translate(-5%, 5%) rotate(6deg) scale(1.02); opacity: 1; }
-        55% { transform: translate(-8%, 8%) rotate(4deg) scale(1); opacity: 1; }
-        100% { transform: translate(-120%, 95%) rotate(-15deg) scale(0.95); opacity: 0; }
+        0% { transform: translate(-58%, 12%) rotate(-18deg) scale(0.97); opacity: 1; }
+        20% { transform: translate(-14%, 6%) rotate(-11deg); opacity: 1; }
+        35% { transform: translate(6%, -4%) rotate(5deg) scale(1.03); opacity: 1; }
+        58% { transform: translate(2%, 2%) rotate(2deg) scale(1); opacity: 1; }
+        100% { transform: translate(-65%, 16%) rotate(-14deg) scale(0.96); opacity: 0; }
     }
     @keyframes handGripClosedVisible {
         0%, 34.9% { opacity: 1; }
@@ -3128,19 +3127,20 @@
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-overlay {
         position: absolute;
         inset: 0;
-        z-index: 22;
+        z-index: 38;
         pointer-events: none;
-        overflow: hidden;
+        overflow: visible;
     }
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
         --hand-anchor-x: 29.427%;
         --hand-anchor-y: 56.25%;
         position: absolute;
-        left: 8%;
-        bottom: 16%;
-        width: clamp(6.5rem, min(38vw, 28vh), 13.5rem);
-        height: clamp(6.5rem, min(38vw, 28vh), 13.5rem);
+        left: -6%;
+        bottom: 10%;
+        width: clamp(7rem, min(44vw, 32vh), 15rem);
+        height: clamp(7rem, min(44vw, 32vh), 15rem);
         transform-origin: var(--hand-anchor-x) var(--hand-anchor-y);
+        will-change: transform, opacity;
     }
     #root-gutterbones[data-ui-redesign="1"] .animate-gutter-hand {
         animation: handThrowSweep 460ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -3167,28 +3167,56 @@
     }
     @media (max-width: 1024px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            left: 6%;
-            bottom: 20%;
-            width: clamp(5.75rem, min(40vw, 26vh), 11rem);
-            height: clamp(5.75rem, min(40vw, 26vh), 11rem);
+            left: -8%;
+            bottom: 8%;
+            width: clamp(6.5rem, min(46vw, 30vh), 13rem);
+            height: clamp(6.5rem, min(46vw, 30vh), 13rem);
         }
     }
     @media (max-height: 768px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            bottom: 22%;
-            width: clamp(5rem, min(34vw, 22vh), 9.5rem);
-            height: clamp(5rem, min(34vw, 22vh), 9.5rem);
+            left: -10%;
+            bottom: 6%;
+            width: clamp(6rem, min(38vw, 36vh), 12rem);
+            height: clamp(6rem, min(38vw, 36vh), 12rem);
         }
     }
-    #root-gutterbones[data-ui-redesign="1"] .score-row-name {
-        white-space: normal;
-        line-height: 1.15;
-        word-break: break-word;
-        text-align: left;
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger .payout-sheet-rows {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows .score-row-fixed,
+    #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows .locked-payout-row {
+        max-height: none !important;
+        min-height: 1.85rem !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
+        align-items: center;
     }
     #root-gutterbones[data-ui-redesign="1"] .score-row-name-block {
-        flex: 1 1 55%;
+        flex: 1 1 auto;
         min-width: 0;
+        max-width: calc(100% - 3.25rem);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-name {
+        display: block;
+        line-height: 1.2;
+        text-align: left;
+        font-size: max(10px, 0.72rem);
+        letter-spacing: 0.01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="Y"] .score-row-name,
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="FH"] .score-row-name,
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="SS"] .score-row-name,
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="LS"] .score-row-name {
+        font-size: max(10px, 0.68rem);
+        letter-spacing: 0.02em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-heat-pill {
+        flex-shrink: 0;
+        margin-left: 0.35rem;
     }
     #root-gutterbones[data-ui-redesign="1"] .locked-payout-row-compact {
         min-height: 1.65rem !important;
@@ -13743,6 +13771,72 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (params.get('layoutAudit') !== '1') return;
             window.__GB_LAYOUT_AUDIT__ = {
                 resumeSavedRun: () => { const saved = loadSavedRun(); if (saved) resumeRun(); },
+                triggerRollHandOverlayFx: () => {
+                    if (typeof pulseRollHandFx === 'function') {
+                        pulseRollHandFx();
+                        return true;
+                    }
+                    return false;
+                },
+                freezeRollHandThrowAt: (ms) => {
+                    const root = document.querySelector('.gutter-roll-hand-sprite');
+                    if (!root) return { ok: false, reason: 'no sprite node' };
+                    const anims = root.getAnimations({ subtree: true });
+                    if (!anims.length) return { ok: false, reason: 'no active animations' };
+                    const target = Math.max(0, Number(ms) || 0);
+                    anims.forEach((a) => {
+                        try {
+                            const timing = a.effect?.getComputedTiming?.();
+                            const dur = timing?.duration;
+                            const clamped = typeof dur === 'number' && Number.isFinite(dur)
+                                ? Math.min(target, dur)
+                                : target;
+                            a.pause();
+                            a.currentTime = clamped;
+                        } catch (_) { /* noop */ }
+                    });
+                    return { ok: true, ms: target, paused: anims.length };
+                },
+                sampleRollHandVisibility: () => {
+                    const closed = document.querySelector('.gutter-roll-hand-closed');
+                    const open = document.querySelector('.gutter-roll-hand-open');
+                    let pick = null;
+                    let pickOpacity = 0;
+                    if (closed) {
+                        const op = parseFloat(getComputedStyle(closed).opacity);
+                        if (op > pickOpacity) { pick = closed; pickOpacity = op; }
+                    }
+                    if (open) {
+                        const op = parseFloat(getComputedStyle(open).opacity);
+                        if (op > pickOpacity) { pick = open; pickOpacity = op; }
+                    }
+                    if (!pick) return { ok: false, reason: 'no hand frame' };
+                    const r = pick.getBoundingClientRect();
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const ix = Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0));
+                    const iy = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+                    const area = ix * iy;
+                    const overlay = document.querySelector('.gutter-roll-hand-overlay');
+                    const oz = overlay ? parseInt(getComputedStyle(overlay).zIndex, 10) : 0;
+                    const alley = document.querySelector('[data-layout-key="play-alley"]');
+                    const alleyClip = alley ? alley.getBoundingClientRect() : null;
+                    const clipIx = alleyClip
+                        ? Math.max(0, Math.min(r.right, alleyClip.right) - Math.max(r.left, alleyClip.left))
+                        : ix;
+                    const clipIy = alleyClip
+                        ? Math.max(0, Math.min(r.bottom, alleyClip.bottom) - Math.max(r.top, alleyClip.top))
+                        : iy;
+                    const clipArea = clipIx * clipIy;
+                    return {
+                        ok: clipArea > 3200 && pickOpacity > 0.4 && oz >= 30,
+                        area,
+                        clipArea,
+                        opacity: pickOpacity,
+                        z: oz,
+                        rect: { left: r.left, top: r.top, width: r.width, height: r.height },
+                    };
+                },
                 openHelp: () => setShowHelpOverlay(true),
                 openSystemMenu: () => setShowSystemMenu(true),
                 openLore: () => setShowLorePanel(true),
@@ -15262,7 +15356,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <div className="felt-smoke-wisp left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
                                 </div>
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
-                                <RollHandThrowOverlay generation={rollHandFxGen} spritesReady={rollHandSpritesReady} />
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 {swapMode && (
                                     <div className="absolute top-14 left-2 right-2 z-40 px-3 py-2 bg-black/80 border border-[#0df]/50 font-mono text-[10px] md:text-xs text-cyan-100 text-center">
@@ -15353,6 +15446,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         </div>
                                     ))}
                                 </div>
+                                <RollHandThrowOverlay generation={rollHandFxGen} spritesReady={rollHandSpritesReady} />
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
                                     <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 relative bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight disabled:grayscale disabled:opacity-50 py-3 overflow-visible ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>
