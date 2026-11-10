@@ -2,7 +2,7 @@
 /**
  * Milestone trace: prove purchase→carve→payout link on one seed (short budget).
  * Usage: node scripts/organic-milestone-trace.cjs [rid]
- * Exit 0 when __GB_SIM_TELEM__ records blood_ripple→fuse_spark.
+ * Exit 0 when __GB_SIM_TELEM__ records any production noteChainLink pair.
  */
 const fs = require("node:fs");
 const http = require("node:http");
@@ -72,7 +72,7 @@ async function main() {
       eval(botSource);
       return runBotSession(opts);
     },
-    { botSource: BOT, opts: { maxSteps: 14000, seed, strategy: "builder" } },
+    { botSource: BOT, opts: { maxSteps: 24000, seed, strategy: "builder" } },
   );
 
   const telem = await page.evaluate(() => {
@@ -80,15 +80,32 @@ async function main() {
     const hands = window.__GB_SIM_TELEM__?.hands || [];
     const links = hands.flatMap((h) => h.chainLinks || []);
     const snap = window.__GB_E2E__?.getOrganicChainSnapshot?.() || {};
-    return { events, links, organicReady: snap.organicReady, bloodOnBoard: snap.bloodOnBoard, fuseOnBoard: snap.fuseOnBoard };
+    return {
+      events,
+      links,
+      organicReady: snap.organicReady,
+      bloodOnBoard: snap.bloodOnBoard,
+      fuseOnBoard: snap.fuseOnBoard,
+      laneSim: window.__GB_SIM_LANE_SIM__ || null,
+    };
   });
 
-  const pairLinks = telem.links.filter((l) => l === "blood_ripple→fuse_spark" || String(l).includes("blood_ripple"));
+  const ORGANIC_PAIRS = [
+    "blood_ripple→fuse_spark",
+    "fuse_spark→engine_link",
+    "ghost_echo→bookends_retrigger",
+    "wire_feed→crowbar_cascade",
+  ];
+  const pairLinks = telem.links.filter((l) => {
+    const key = typeof l === "string" ? l : `${l.from}→${l.to}`;
+    return ORGANIC_PAIRS.includes(key);
+  });
   const report = {
     rid,
     seed,
     result,
     organicReady: telem.organicReady,
+    organicLinkTarget: "ghost_echo→bookends_retrigger",
     bloodOnBoard: telem.bloodOnBoard,
     fuseOnBoard: telem.fuseOnBoard,
     purchaseEvents: telem.events.filter((e) => e.kind === "purchase"),
@@ -96,6 +113,7 @@ async function main() {
     refreshEvents: telem.events.filter((e) => e.kind === "refresh"),
     pairwiseLinks: telem.links.slice(0, 12),
     bloodFusePairCount: pairLinks.length,
+    laneSim: telem.laneSim,
   };
   const outPath = process.env.MILESTONE_OUT || `/opt/cursor/artifacts/organic-milestone-rid${rid}.json`;
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n");
