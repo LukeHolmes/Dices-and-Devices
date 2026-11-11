@@ -32,6 +32,11 @@ test("rerollBoneSlot uses functional setDice inside timeout", () => {
   assert.doesNotMatch(rerollBlock, /diceLiveRef/);
 });
 
+test("dice watch arms lastSeenDice for post-commit ref tracking", () => {
+  assert.match(html, /lastSeenDice:\s*dice/);
+  assert.match(html, /pending\.lastSeenDice\s*!==\s*dice/);
+});
+
 test("gameplay hooks gate on balanceObserverActive not global API alone", () => {
   const rollBlock = html.slice(html.indexOf("const rollBones = () => {"), html.indexOf("const rerollBoneSlot ="));
   assert.match(rollBlock, /balanceObserverActive\(\)/);

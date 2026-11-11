@@ -11147,14 +11147,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             const pending = balanceObserverPendingDiceRef.current;
             if (!pending) return;
+            const diceCommitted = pending.lastSeenDice !== dice;
+            if (!diceCommitted) return;
+            pending.lastSeenDice = dice;
             const afterDice = api.snapshotRawLane(dice);
             const afterJson = JSON.stringify(afterDice);
-            if (afterJson === pending.beforeDiceJson) return;
+            const laneSnapshotUnchanged = afterJson === pending.beforeDiceJson;
             if (pending.staggered && pending.slotsRemaining > 1) {
                 const slotBefore = pending.lastAfter || pending.before.dice;
                 api.notify((o) => o.recordAction({
                     kind: 'roll_slot',
-                    reason: { status: 'ok', value: 'executed' },
+                    reason: { status: 'ok', value: laneSnapshotUnchanged ? 'executed_unchanged_lane' : 'executed' },
                     before: { dice: slotBefore, kept: pending.before.kept },
                     after: {
                         dice: { status: 'ok', value: afterDice },
@@ -11172,7 +11175,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const lane = api.scoringLaneForObserver(GutterbonesRules, dice, inventory, hardwareDisabled);
             api.notify((o) => o.recordAction({
                 kind: pending.kind,
-                reason: { status: 'ok', value: pending.reason },
+                reason: {
+                    status: 'ok',
+                    value: laneSnapshotUnchanged ? `${pending.reason}_unchanged_lane` : pending.reason
+                },
                 before: pending.before,
                 after: {
                     dice: { status: 'ok', value: afterDice },
@@ -12938,6 +12944,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         dice: api.snapshotRawLane(dice)
                     },
                     beforeDiceJson: JSON.stringify(api.snapshotRawLane(dice)),
+                    lastSeenDice: dice,
                     staggered: !(reducedMotion || e2eFastDice),
                     slotsRemaining: (reducedMotion || e2eFastDice) ? 1 : activeIndices.length
                 });
@@ -13016,6 +13023,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         dice: api.snapshotRawLane(dice)
                     },
                     beforeDiceJson: JSON.stringify(api.snapshotRawLane(dice)),
+                    lastSeenDice: dice,
                     staggered: false,
                     slotsRemaining: 1
                 });
