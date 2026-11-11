@@ -401,6 +401,16 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         continue;
       }
       if (
+        strategy === "builder"
+        && organicReady
+        && invNow < 2
+        && log._shopPasses <= 10
+        && window.__GB_E2E__?.buyPreferredShopItem?.()
+      ) {
+        await wait(90);
+        continue;
+      }
+      if (
         st?.selectedShopPathId
         && (builderStreets || (strategy !== "builder" && (invNow >= minInv || log._shopPasses > 14 || (st.round || 1) >= 4)))
       ) {
