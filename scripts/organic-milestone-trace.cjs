@@ -155,9 +155,12 @@ async function main() {
     const key = typeof l === "string" ? l : `${l.from}→${l.to}`;
     return ORGANIC_PAIRS.includes(key);
   });
+  const attempt = Number(process.env.ORGANIC_TRACE_ATTEMPT || 0);
   const report = {
     rid,
     seed,
+    attempt,
+    milestoneSteps: Number(process.env.MILESTONE_STEPS || 36000),
     result,
     organicReady: telem.organicReady,
     handsRecorded: telem.handsRecorded || 0,

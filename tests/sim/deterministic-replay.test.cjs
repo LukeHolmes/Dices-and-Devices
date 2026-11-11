@@ -20,11 +20,16 @@ const vp = VIEWPORTS_BLOCKING.find((v) => v.name === "1024x768") || VIEWPORTS_BL
 let server;
 let baseUrl;
 
-function fingerprint(r) {
+function fingerprint(r, bootstrap) {
   const links = (r.telem?.hands || []).flatMap((h) =>
     (h.chainLinks || []).map((l) => `${l.from}→${l.to}`),
   );
   return {
+    policyRevision: bootstrap?.policyRevision ?? r.telem?.build?.policyRevision ?? null,
+    policyMode: bootstrap?.policyMode ?? null,
+    rngCalls: bootstrap?.rngCalls ?? null,
+    seed: bootstrap?.seed ?? null,
+    arcId: bootstrap?.arcId ?? null,
     outcome: r.outcome,
     maxRound: r.maxRound,
     stuck: !!r.stuck,
@@ -33,6 +38,7 @@ function fingerprint(r) {
     hands: r.telem?.hands?.length || 0,
     inventoryCount: r.telem?.inventoryCount ?? null,
     terminalScore: r.telem?.score ?? null,
+    terminalTarget: r.telem?.target ?? null,
   };
 }
 
@@ -55,7 +61,8 @@ async function replayRid(rid) {
         stuckThreshold: 48,
         maxFallbacks: 36,
       });
-      runs.push(fingerprint(r));
+      const bootstrap = await page.evaluate(() => window.__GB_E2E__?.getBootstrapFingerprint?.() || null);
+      runs.push(fingerprint(r, bootstrap));
     } finally {
       await browser.close();
     }

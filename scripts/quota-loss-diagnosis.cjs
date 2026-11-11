@@ -54,6 +54,10 @@ async function main() {
         maxFallbacks: 36,
       });
       const hands = r.telem?.hands || [];
+      const missedClears = hands.filter(
+        (h) => h.total > 0 && typeof h.scoreBefore === "number" && typeof h.targetBefore === "number"
+          && h.scoreBefore + h.total >= h.targetBefore,
+      ).length;
       const totals = hands.map((h) => h.total || 0).filter((t) => t > 0);
       const scored = totals.reduce((a, b) => a + b, 0);
       const roundEvents = r.telem?.roundEvents || [];
@@ -78,6 +82,7 @@ async function main() {
         maxHand: totals.length ? Math.max(...totals) : 0,
         zeroHands: hands.length - totals.length,
         pairwiseLinkHands: pairwise,
+        missedQuotaClearHands: missedClears,
         cop: { starts: copStarts, clears: copClears },
         causal_hint:
           (r.telem?.target || 0) > (r.telem?.score || 0)
