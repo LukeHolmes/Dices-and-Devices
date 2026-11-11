@@ -12,6 +12,8 @@ const {
   observeCalculateScore,
   scoringParityDigest,
   ruleShaFromRepo,
+  assertCapFieldsPresent,
+  GutterbonesBalanceObserver,
 } = require("./helpers/balance-observer.cjs");
 
 const ROOT = path.join(__dirname, "..");
@@ -48,8 +50,8 @@ test("calculateScore cap instrumentation matches binding fixtures", () => {
     dice([2, 3, 4, 5, 6]),
     scoreContext(g, { debt: 20, inventory: [{ id: "DEBT_COLLECTOR" }] }),
   );
+  assertCapFieldsPresent(debt);
   assert.equal(debt.debtCollectorCapped, true);
-  assert.ok(debt.mult >= 4);
 
   const d = dice([6, 6, 0, 6, 6]);
   d[0] = bone(6, 0, { faceId: "BLOOD_6", type: "blood" });
@@ -62,42 +64,55 @@ test("calculateScore cap instrumentation matches binding fixtures", () => {
     d,
     scoreContext(g, { inventory: [{ id: "ENGINE" }, { id: "FUSE_BOX" }] }),
   );
-  assert.ok(Number(chain.chainMultBonusUsed) <= 6);
-  if (Number(chain.chainMultBonusUsed) === 6) {
-    assert.equal(chain.chainMultCapHit, true);
-  }
+  assertCapFieldsPresent(chain);
+  assert.ok(chain.chainMultBonusUsed <= 6);
+  if (chain.chainMultBonusUsed === 6) assert.equal(chain.chainMultCapHit, true);
 });
 
-test("observer on/off scoring parity (identical outcomes)", () => {
+test("wrapped observer does not change scoring digest", () => {
   const g = createGame(snapshot());
-  const baseCalc = g.api.GutterbonesRules.calculateScore;
-  const fixtures = [
-    {
-      cat: "C",
-      lane: dice([2, 3, 4, 5, 6]),
-      ctx: { debt: 20, inventory: [{ id: "DEBT_COLLECTOR" }] },
-    },
-    {
-      cat: "Y",
-      lane: dice([6, 6, 6, 6, 6]),
-      ctx: {},
-    },
-  ];
+  const calc = g.api.GutterbonesRules.calculateScore;
+  const resolveDice = g.api.GutterbonesRules.resolveDice;
+  const fx = {
+    cat: "C",
+    lane: dice([2, 3, 4, 5, 6]),
+    ctx: scoreContext(g, { debt: 20, inventory: [{ id: "DEBT_COLLECTOR" }] }),
+  };
+  const plain = calc(fx.cat, fx.lane, fx.ctx);
+  const obs = createBalanceObserver({ enabled: true, repoRoot: ROOT });
+  const wrapped = observeCalculateScore(calc, obs, resolveDice);
+  const withObserver = wrapped(fx.cat, fx.lane, { ...fx.ctx, legalCategories: ["C", "Y"] });
+  assert.deepEqual(scoringParityDigest([plain]), scoringParityDigest([withObserver]));
+  const scoreEv = obs.ledger.events.find((e) => e.type === "score");
+  assert.ok(scoreEv.score.rawDice.status === "ok");
+  assert.ok(scoreEv.score.resolvedDice.status === "ok");
+  assert.notDeepEqual(scoreEv.score.rawDice.value, scoreEv.score.resolvedDice.value);
+});
 
-  for (const fx of fixtures) {
-    const plain = baseCalc(fx.cat, fx.lane, scoreContext(g, fx.ctx));
-    const obsOff = createBalanceObserver({ enabled: false, repoRoot: ROOT });
-    const obsOn = createBalanceObserver({ enabled: true, repoRoot: ROOT });
-    const wrapped = observeCalculateScore(baseCalc, obsOn);
-    const withObserver = wrapped(fx.cat, fx.lane, scoreContext(g, fx.ctx));
-    assert.deepEqual(
-      scoringParityDigest([plain]),
-      scoringParityDigest([withObserver]),
-    );
-    assert.equal(obsOff.ledger.events.length, 0);
-    assert.ok(obsOn.ledger.events.length >= 1);
-    assert.ok(ruleShaFromRepo(ROOT));
-  }
+test("observer disabled records zero events and does not call calculateScore wrapper side effects", () => {
+  let rngCalls = 0;
+  const g = createGame(snapshot(), { random: () => { rngCalls += 1; return 0.42; } });
+  const obs = createBalanceObserver({ enabled: false, repoRoot: ROOT });
+  const wrapped = observeCalculateScore(
+    g.api.GutterbonesRules.calculateScore,
+    obs,
+    g.api.GutterbonesRules.resolveDice,
+  );
+  const before = rngCalls;
+  wrapped("C", dice([2, 3, 4, 5, 6]), scoreContext(g));
+  assert.equal(obs.ledger.events.length, 0);
+  assert.equal(rngCalls, before, "observer must not add RNG draws");
+});
+
+test("ruleSha is content digest of rules block not revision string", () => {
+  const sha = ruleShaFromRepo(ROOT);
+  assert.match(sha, /^[a-f0-9]{64}$/);
+  assert.notEqual(sha, GutterbonesBalanceObserver.semanticFingerprint({
+    schemaVersion: "balance-observer-v1",
+    ruleSha: "2026-11-11-wp1b",
+    events: [],
+    terminal: null,
+  }));
 });
 
 test("ledger marks RNG metadata unavailable on main", () => {

@@ -11,6 +11,8 @@ const ARTIFACT_DIR = process.env.BALANCE_DIAG_ARTIFACT_DIR
 const HOLDOUT_RIDS = new Set([55, 56, 57, 58, 59]);
 const LOCK_PATH = path.join(ROOT, "tests/fixtures/holdout-seeds-lock.json");
 
+const { assertCapFieldsPresent } = require(path.join(ROOT, "tests/helpers/balance-observer.cjs"));
+
 function writeFailureArtifact(payload) {
   fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
   const file = path.join(ARTIFACT_DIR, "balance-diagnostic-failure.json");
@@ -26,6 +28,26 @@ function parseArgs(argv) {
     else if (arg === "--caps-only") out.capsOnly = true;
   }
   return out;
+}
+
+function requireCapNumber(result, key) {
+  if (!Object.prototype.hasOwnProperty.call(result, key) || result[key] == null) {
+    return { ok: false, reason: `missing_${key}`, value: result[key] };
+  }
+  if (typeof result[key] !== "number" || Number.isNaN(result[key])) {
+    return { ok: false, reason: `invalid_${key}_type`, value: result[key] };
+  }
+  return { ok: true, value: result[key] };
+}
+
+function requireCapBoolean(result, key) {
+  if (!Object.prototype.hasOwnProperty.call(result, key) || result[key] == null) {
+    return { ok: false, reason: `missing_${key}`, value: result[key] };
+  }
+  if (typeof result[key] !== "boolean") {
+    return { ok: false, reason: `invalid_${key}_type`, value: result[key] };
+  }
+  return { ok: true, value: result[key] };
 }
 
 async function main() {
@@ -82,8 +104,14 @@ async function main() {
     dice([2, 3, 4, 5, 6]),
     scoreContext(g, { debt: 20, inventory: [{ id: "DEBT_COLLECTOR" }] }),
   );
-  if (!debtCase.debtCollectorCapped) {
-    failures.push({ check: "debt_collector_cap_flag", debt: 20, got: debtCase.debtCollectorCapped });
+  try {
+    assertCapFieldsPresent(debtCase);
+  } catch (err) {
+    failures.push({ check: "debt_cap_fields_present", error: String(err) });
+  }
+  const debtCapped = requireCapBoolean(debtCase, "debtCollectorCapped");
+  if (!debtCapped.ok || !debtCapped.value) {
+    failures.push({ check: "debt_collector_cap_flag", detail: debtCapped });
   }
   const debtStep = (debtCase.explanationSteps || []).find((s) =>
     String(s.label).includes("DEBT COLLECTOR"),
@@ -104,9 +132,23 @@ async function main() {
     chainLane,
     scoreContext(g, { inventory: [{ id: "ENGINE" }, { id: "FUSE_BOX" }] }),
   );
-  const chainUsed = Number(chainCase.chainMultBonusUsed) || 0;
-  if (chainUsed > 6) {
-    failures.push({ check: "chain_mult_cap_binding", chainMultBonusUsed: chainUsed });
+  try {
+    assertCapFieldsPresent(chainCase);
+  } catch (err) {
+    failures.push({ check: "chain_cap_fields_present", error: String(err) });
+  }
+  const chainUsed = requireCapNumber(chainCase, "chainMultBonusUsed");
+  if (!chainUsed.ok) {
+    failures.push({ check: "chain_mult_bonus_used_present", detail: chainUsed });
+  } else if (chainUsed.value > 6) {
+    failures.push({ check: "chain_mult_cap_binding", chainMultBonusUsed: chainUsed.value });
+  }
+
+  const weakChain = calc("C", dice([2, 3, 4, 5, 6]), scoreContext(g, {}));
+  const weakUsed = requireCapNumber(weakChain, "chainMultBonusUsed");
+  const weakHit = requireCapBoolean(weakChain, "chainMultCapHit");
+  if (weakUsed.ok && weakUsed.value === 0 && weakHit.ok && weakHit.value) {
+    failures.push({ check: "nonbinding_cap_hit_false_when_unused", weakHit: weakHit.value });
   }
 
   if (failures.length) {
@@ -115,7 +157,16 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(JSON.stringify({ ok: true, checks: ["debt_collector_cap_flag", "chain_mult_cap_binding"] }, null, 2));
+  console.log(JSON.stringify({
+    ok: true,
+    checks: [
+      "debt_cap_fields_present",
+      "debt_collector_cap_flag",
+      "chain_cap_fields_present",
+      "chain_mult_cap_binding",
+      "nonbinding_cap_hit_sanity",
+    ],
+  }, null, 2));
 }
 
 main().catch((err) => {
