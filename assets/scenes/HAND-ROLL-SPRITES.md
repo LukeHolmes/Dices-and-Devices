@@ -5,7 +5,9 @@
 | File | Frame |
 |------|--------|
 | `hand-closed.png` | Fist rattling bones (pre-release) |
-| `hand-open.png` | Fingers open at release (crossfade peaks ~42–68% of `handThrowSweep`, ~1.36s normal) |
+| `hand-open.png` | Fingers open at release (crossfade peaks ~54–72% of `handThrowSweep`, ~1.36s normal) |
+
+While the throw runs, `play-alley` temporarily allows `overflow: visible` via `:has(.animate-gutter-hand)` so the wrist/sleeve are not clipped at the alley rim.
 
 **Do not** drop the noir reference JPG (`hand-roll-reference.jpg` from Luke) into the repo as these sprites — it is a full-scene illustration, not a transparent cut-out. Export two **transparent PNGs** cropped to the hand (noir ink, amber rim light) using the reference for composition only.
 
