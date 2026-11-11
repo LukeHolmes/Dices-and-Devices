@@ -66,6 +66,14 @@
             return false;
         }
     };
+    try {
+        if (typeof URLSearchParams !== 'undefined'
+            && new URLSearchParams(window.location.search).get('organicDiag') === '1') {
+            window.__GB_ORGANIC_PREDICATE_DIAG__ = [];
+        }
+    } catch (_) {
+        /* noop */
+    }
 
     var pathname = window.location.pathname || '/';
     var assetBase = pathname.indexOf('/Dices-and-Devices') === 0 ? '/Dices-and-Devices/' : '';
@@ -3544,6 +3552,32 @@ const GutterbonesRules = (() => {
 
     const neighborIndices = (i) => [i - 1, i + 1].filter(j => j >= 0 && j <= 4);
 
+    const GHOST_ECHO_LINK_REACH = 3;
+
+    const ghostEchoPartnerIndices = (i) => {
+        const out = [];
+        for (let j = 0; j < 5; j++) {
+            if (j === i) continue;
+            if (Math.abs(i - j) <= GHOST_ECHO_LINK_REACH) out.push(j);
+        }
+        return out;
+    };
+
+    const slotHasEchoPartner = (resolved, destroyed, j) =>
+        !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed);
+
+    const ghostEchoPartnersGhostSlot = (resolved, destroyed) => {
+        for (let i = 0; i < 5; i++) {
+            if (destroyed.has(i) || resolved[i].faceId !== 'GHOST_FACE') continue;
+            const hasEcho = ghostEchoPartnerIndices(i).some((j) => slotHasEchoPartner(resolved, destroyed, j));
+            if (hasEcho) {
+                const pip = resolved[i].value;
+                return typeof pip === 'number' ? pip : null;
+            }
+        }
+        return null;
+    };
+
     const applyFaceModifiersForDie = (d, state, { pushStep, triggers, slotLabel = '' }) => {
         const face = d.faceId;
         const prefix = slotLabel ? `SLOT ${slotLabel}: ` : '';
@@ -3624,8 +3658,8 @@ const GutterbonesRules = (() => {
                 if (destroyed.has(i)) continue;
                 const d = resolved[i];
                 if (d.faceId !== 'GHOST_FACE') continue;
-                const hasEchoNeighbor = neighborIndices(i).some(j => !destroyed.has(j) && (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed));
-                if (hasEchoNeighbor) { ghostEcho = true; break; }
+                const hasEchoPartner = ghostEchoPartnerIndices(i).some((j) => slotHasEchoPartner(resolved, destroyed, j));
+                if (hasEchoPartner) { ghostEcho = true; break; }
             }
             if (ghostEcho) {
                 const appliedMult = applySynergyChainMultBonus(state, tuning, 1);
@@ -3737,7 +3771,7 @@ const GutterbonesRules = (() => {
             });
             pushSynergyEvent(state, { chainId: 'bookends_retrigger', kind: 'retrigger', label: 'Bookends retrigger', impact: 'faces 1 & 5' });
             applied.add('bookends_retrigger');
-            if (chainLinkingOn(tuning) && hwMeta.bookendsGhostValueLink && state.chainGhostEchoFired) {
+            if (chainLinkingOn(tuning) && state.chainGhostEchoFired && hwMeta.bookendsMatched) {
                 noteChainLink(state, 'ghost_echo', 'bookends_retrigger');
             }
         }
@@ -3839,13 +3873,20 @@ const GutterbonesRules = (() => {
                 const valueMatch = resolved[0].value === resolved[4].value;
                 const faceMatch = valueMatch && resolved[0].faceId === resolved[4].faceId;
                 const ghostValueLink = chainLinkingOn(hwTuning) && state.chainGhostEchoFired;
-                const matched = valueMatch && (faceMatch || ghostValueLink);
+                const hauntedSlot = state.chainGhostEchoFired ? ghostEchoPartnersGhostSlot(resolved, destroyed) : null;
+                const hauntedBracket = hauntedSlot != null
+                    && typeof resolved[0].value === 'number'
+                    && typeof resolved[4].value === 'number'
+                    && Math.abs(resolved[0].value - hauntedSlot) <= 1
+                    && Math.abs(resolved[4].value - hauntedSlot) <= 1;
+                const matched = (valueMatch && (faceMatch || ghostValueLink)) || (ghostValueLink && hauntedBracket);
                 if (matched) {
                     state.chips += 30;
                     triggers.push({ name: 'BOOKENDS', value: '+30' });
                     state.hardwareTriggerCount += 1;
                     meta.bookendsMatched = true;
-                    meta.bookendsGhostValueLink = valueMatch && !faceMatch && ghostValueLink;
+                    meta.bookendsGhostValueLink = (valueMatch && !faceMatch && ghostValueLink) || hauntedBracket;
+                    meta.bookendsHauntedBracket = hauntedBracket;
                     pushStep('modifier', 'HARDWARE: BOOKENDS', '+30 chips', 30);
                 }
             }
@@ -4876,10 +4917,10 @@ const GutterbonesRoutes = (() => {
     const BOSS_TUNING = Object.freeze({
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 4,
+        earlyBossRoundCap: 8,
         earlyBouncerRelief: 0.9,
-        raidQuotaRelief: 0.92,
-        bossPathTargetRelief: 0.93
+        raidQuotaRelief: 0.88,
+        bossPathTargetRelief: 0.84
     });
 
     const EARLY_GAME_TUNING = Object.freeze({
@@ -4891,18 +4932,18 @@ const GutterbonesRoutes = (() => {
         midMaxRound: 5,
         lateMaxRound: 6,
         early: { pathModWeight: 0.92, flatIncrease: 22 },
-        mid: { pathModWeight: 1.02, flatIncrease: 52 },
-        late: { pathModWeight: 1.02, flatIncrease: 52 },
-        extreme: { pathModWeight: 1.14, flatIncrease: 78 },
-        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 36 })
+        mid: { pathModWeight: 1.02, flatIncrease: 48 },
+        late: { pathModWeight: 1.02, flatIncrease: 46 },
+        extreme: { pathModWeight: 1.12, flatIncrease: 70 },
+        postEarlyCatchUp: Object.freeze({ fromRound: 5, flatBonus: 58 })
     });
 
     const PROGRESSION_GUARDRAILS = Object.freeze({
         minGrowthRate: 1.16,
         earlyMaxGrowthRate: 1.32,
-        midMaxGrowthRate: 1.48,
-        lateMaxGrowthRate: 1.46,
-        extremeMaxGrowthRate: 1.24
+        midMaxGrowthRate: 1.4,
+        lateMaxGrowthRate: 1.36,
+        extremeMaxGrowthRate: 1.18
     });
 
     const INSANE_CONTRACT_MODIFIERS = Object.freeze({
@@ -5029,7 +5070,6 @@ const GutterbonesRoutes = (() => {
             if (nextRound >= (ROUND_CURVE_TUNING.postEarlyCatchUp?.fromRound || 99)) {
                 grown += ROUND_CURVE_TUNING.postEarlyCatchUp?.flatBonus || 0;
             }
-
             if (!hasLedger && debt > 0 && nextRound >= EARLY_GAME_TUNING.debtPenaltyStartsRound) {
                 let debtPenaltyApplied = Math.min(
                     BOSS_TUNING.debtQuotaPenaltyCap,
@@ -5543,7 +5583,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const DEVISES = {
         CENTERPIECE: { id: 'CENTERPIECE', name: 'The Centerpiece', desc: 'Slot 3 bone triggers base value and face bonuses twice.', cost: 20, rarity: 'rare' },
-        BOOKENDS: { id: 'BOOKENDS', name: 'The Bookends', desc: 'If Slot 1 and 5 match exactly, +30 chips.', cost: 18, rarity: 'common' },
+        BOOKENDS: { id: 'BOOKENDS', name: 'The Bookends', desc: 'Slots 1 & 5: +30 on a face match, matching pips, or “haunted bracket” (±1 of Ghost Echo pip).', cost: 18, rarity: 'common' },
         ENGINE: { id: 'ENGINE', name: 'The Engine', desc: 'Slot 1 adds mult for each higher-value bone to its right. Max +4.', cost: 25, rarity: 'rare' },
         LOADED_DIE: { id: 'LOADED_DIE', name: 'Weighted Core', desc: '+10 chips on Triad.', cost: 12, rarity: 'common' },
         BLOOD_PACT: { id: 'BLOOD_PACT', name: 'Blood Pact', desc: 'x3 mult, but -$1 per roll.', cost: 20, rarity: 'danger' },
@@ -5706,14 +5746,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const SYNERGY_HINTS = {
         BLOOD_6: 'Adjacency: blood ripple with blood or destructive neighbors.',
         SHIV_FACE: 'Destructive — pairs with Blood 6 for ripple mult; destroys right slot on roll.',
-        ECHO_FACE: 'Adjacency: ghost echo when next to Ghost.',
+        ECHO_FACE: 'Ghost Echo synergy when Echo is within two slots of Ghost on the lane.',
         GHOST_FACE: 'Ethereal — ghost echo mult with Echo neighbors; lowers scoring bones.',
         GOLD_FACE: 'Adjacency: wire feed bonus with Wirebag neighbors.',
         WIREBAG_FACE: 'Parasite cash — wire feed with Gold neighbors.',
         MULT_FACE: 'Modifier mult — engine link with Hardware: Engine.',
         ENGINE: 'Hardware: engine link adds mult per modifier face in hand.',
         CROWBAR: 'Hardware: scales mult with blood/destructive faces on the lane.',
-        BOOKENDS: 'Matching carved ends retrigger face modifiers (bookends chain).',
+        BOOKENDS: 'End slots retrigger on a match; with Ghost Echo, ends within ±1 of the ghost pip qualify; pairwise chain logs when both synergies fire.',
         FUSE_FACE: 'Adjacent modifier faces trigger +10 chips (fuse spark chain).',
         MAGNET_FACE: 'Copies the left face for scoring (after Echo).',
         MARK_FACE: 'First score per category each round marks +1 mult on that category for the run.',
@@ -6014,7 +6054,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/bouncer.png', portraitAlt: 'The Bouncer' },
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500', portraitSrc: 'assets/bosses/loan-shark.png', portraitAlt: 'The Loan Shark' },
         JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]', portraitSrc: 'assets/bosses/junkie.png', portraitAlt: 'The Junkie' },
-        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware dampened (55%)', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
+        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware bonuses dampened to 68%', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
         INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
         THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota ×1.38 (~+38%). Pills cost $2. Clear R10 to escape — beating this boss does not end the run.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
     };
@@ -6032,8 +6072,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         shortageToDebtRatio: 0.82,
         hustleCashDivisor: 72,
         hustleCashCap: 7,
-        roundClearBaseCash: 11,
-        roundClearPerUnusedPlay: 5,
+        roundClearBaseCash: 12,
+        roundClearPerUnusedPlay: 6,
         roundClearInterestPerFive: 1,
         roundClearInterestCap: 5,
         debtReliefThreshold: 195,
@@ -6051,11 +6091,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         loanSharkDebtToll: 1,
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
-        earlyBossRoundCap: 6,
+        earlyBossRoundCap: 8,
         earlyBouncerRelief: 0.9,
-        raidQuotaRelief: 0.9,
-        bossPathTargetRelief: 0.91,
-        crookedCopHardwareMult: 0.55
+        raidQuotaRelief: 0.88,
+        bossPathTargetRelief: 0.84,
+        crookedCopHardwareMult: 0.68
     };
 
     const SHOP_TUNING = {
@@ -6229,10 +6269,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         if (events.some((e) => e.id === 'ghost_echo')) {
             for (let i = 0; i < 5; i += 1) {
                 if (destroyed.has(i) || resolved[i].faceId !== 'GHOST_FACE') continue;
-                [i - 1, i + 1].forEach((j) => {
-                    if (j < 0 || j > 4 || destroyed.has(j)) return;
+                for (let j = 0; j < 5; j += 1) {
+                    if (j === i || j < 0 || j > 4 || destroyed.has(j)) continue;
+                    if (Math.abs(i - j) > 2) continue;
                     if (resolved[j].faceId === 'ECHO_FACE' || resolved[j].isEchoed) add(i, j, 'ghost_echo');
-                });
+                }
             }
         }
         if (events.some((e) => e.id === 'wire_feed')) {
@@ -6676,14 +6717,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }
         const face = d.faces[Math.floor(runRandomFn() * d.faces.length)];
         const isStandard = face.type === 'standard';
+        const carvedId = face.id || face.faceId || null;
         let value = face.value;
         if (junkieBoss && value === 6) value = 1;
         return {
             ...d,
             value,
-            faceId: isStandard ? null : face.id,
-            faceLabel: isStandard ? null : face.label,
-            faceStyle: isStandard ? null : face.style,
+            faceId: isStandard ? null : carvedId,
+            faceLabel: isStandard ? null : (face.label || face.faceLabel || null),
+            faceStyle: isStandard ? null : (face.style || face.faceStyle || null),
             type: isStandard ? 'standard' : face.type
         };
     };
@@ -9623,6 +9665,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [lineupToast, setLineupToast] = useState(null);
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const runRandomRef = useRef(() => Math.random());
+        const e2eRunSeededRef = useRef(false);
+        const e2eRngCallCountRef = useRef(0);
+        const e2eRunSeedValueRef = useRef(null);
         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
@@ -11695,13 +11740,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 runRandomRef.current = () => Math.random();
             } else {
                 setRunModifierIds([]);
-                runRandomRef.current = () => Math.random();
+                if (!e2eRunSeededRef.current) {
+                    runRandomRef.current = () => Math.random();
+                }
             }
             setTutorialActive(tutorial);
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
-            const arcPickRng = daily ? runRandomRef.current() : Math.random();
+            const arcPickRng = (dailyRunActive || e2eRunSeededRef.current)
+                ? runRandomRef.current()
+                : Math.random();
             const runArcId = tutorial
                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
                 : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
@@ -11992,7 +12041,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             const junkieBoss = activeBoss?.id === 'JUNKIE';
-            const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
+            const runRandomFn = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
             const e2eFastDice = typeof window !== 'undefined'
                 && typeof window.__GB_E2E_QUERY__ === 'function'
                 && window.__GB_E2E_QUERY__();
@@ -12044,20 +12093,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setRollingSlots(prev => prev.map((_, i) => i === idx));
             const settleMs = reducedMotion ? 0 : getDiceSettleMs(typeof audioSettings !== 'undefined' ? audioSettings : {}, reducedMotion) + 120;
             scheduleTimeout(() => {
+                const pillRng = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
                 setDice(prev => {
                     const next = [...prev];
                     const die = next[idx];
                     if (!die) return prev;
-                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
+                    const face = die.faces[Math.floor(pillRng() * die.faces.length)];
                     const isStandard = face.type === 'standard';
+                    const carvedId = face.id || face.faceId || null;
                     let value = face.value;
                     if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
                     next[idx] = {
                         ...die,
                         value,
-                        faceId: isStandard ? null : face.id,
-                        faceLabel: isStandard ? null : face.label,
-                        faceStyle: isStandard ? null : face.style,
+                        faceId: isStandard ? null : carvedId,
+                        faceLabel: isStandard ? null : (face.label || face.faceLabel || null),
+                        faceStyle: isStandard ? null : (face.style || face.faceStyle || null),
                         type: isStandard ? 'standard' : face.type,
                         id: Math.random()
                     };
@@ -12102,9 +12153,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const grant = tutGrant || EARLY_GAME_TUNING.openingStashGrant || 0;
             if (grant <= 0) return;
             setStash(grant);
+            const sniffRng = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
             const slot = tutorialActiveRef.current && GutterbonesTutorial
                 ? GutterbonesTutorial.TUNING.openingSniffSlot
-                : Math.floor(Math.random() * 5);
+                : Math.floor(sniffRng() * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
@@ -12250,13 +12302,50 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
             const result = calculateScore(catId, diceForScore);
+            if (
+                typeof window !== 'undefined'
+                && Array.isArray(window.__GB_ORGANIC_PREDICATE_DIAG__)
+                && window.__GB_E2E__?.isOrganicChainReady?.()
+            ) {
+                const evalPred = window.__GB_E2E__.evaluateOrganicPredicates?.(diceForScore);
+                const snap = window.__GB_E2E__.getOrganicChainSnapshot?.();
+                const snapLinks = snap?.linkPreview?.chainLinks || [];
+                const execLinks = result.chainLinks || [];
+                const catRow = evalPred?.byCat?.[catId];
+                const sameDiceCatsMatch = catId === 'C'
+                    && JSON.stringify(snapLinks) === JSON.stringify(execLinks);
+                window.__GB_ORGANIC_PREDICATE_DIAG__.push({
+                    kind: 'executePayout',
+                    catId,
+                    unfulfilled: evalPred?.unfulfilled || [],
+                    preds: evalPred?.preds,
+                    byCat: evalPred?.byCat,
+                    snapshotPreviewC: snap?.linkPreview || null,
+                    parity: {
+                        preview_uses_only_category_C: true,
+                        executed_category: catId,
+                        snapshot_chainLinks: snapLinks,
+                        execute_chainLinks: execLinks,
+                        calculateScore_C_matches_execute_when_cat_C: sameDiceCatsMatch,
+                        evalPred_has_target_pair: !!catRow?.has_target_pair,
+                    },
+                    round,
+                });
+            }
             if (typeof window !== "undefined" && window.__GB_SIM_TELEM__?.record) {
+                const targetAtPlay = (typeof runTargetRef !== 'undefined' && runTargetRef)
+                    ? runTargetRef.current
+                    : currentTarget;
                 window.__GB_SIM_TELEM__.record({
                     total: result.total || 0,
                     valid: !!result.valid,
+                    scoreBefore: scoreAtPlay,
+                    targetBefore: targetAtPlay,
+                    handsBefore: handsBeforePlay,
+                    round,
                     chainDepth: result.chainDepth || 0,
                     chainLinks: result.chainLinks || [],
-                    synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId).filter(Boolean),
+                    synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId || e.id).filter(Boolean),
                     chainMultBonusUsed: result.chainMultBonusUsed || 0,
                     chainMultCapHit: !!result.chainMultCapHit,
                     debtCollectorCapped: !!result.debtCollectorCapped,
@@ -12747,7 +12836,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!preservePaths) setSelectedShopPathId(null);
             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
             setActiveShopTag(offerTag);
-            const rng = dailyRunActive ? runRandomRef.current : Math.random;
+            const rng = (dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current : Math.random;
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
@@ -12938,8 +13027,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const refreshShop = () => {
             if (phase !== 'SHOP') return;
-            const cost = getShopRefreshCost(round, shopRefreshes);
+            const cost = shopRefreshCost;
             if (gold < cost) return;
+            const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
+            pushOrganicTrace('refresh', { cost, offerTag, refreshCountBefore: shopRefreshes });
             setGold(g => Math.max(0, g - cost));
             setShopRefreshes(count => count + 1);
             setSoldItems([]);
@@ -13007,6 +13098,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (typeof AudioSystem.bust === 'function') AudioSystem.bust();
         };
 
+        const pushOrganicTrace = (kind, detail = {}) => {
+            const tr = typeof window !== 'undefined' ? window.__GB_SIM_ORGANIC_TRACE__ : null;
+            if (!tr) return;
+            if (!Array.isArray(tr.events)) tr.events = [];
+            tr.events.push({
+                kind,
+                phase,
+                round,
+                gold,
+                shopRefreshes,
+                debt,
+                ...detail,
+                t: Date.now(),
+            });
+        };
+
         const handlePurchase = (item) => {
             if (soldItems.includes(item.id)) return;
             if (RUN_EXCLUSIVE_SHOP_IDS.has(item.id) && runExclusiveShopIds.includes(item.id)) return;
@@ -13049,10 +13156,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 setInventory(prev => [...prev, item]);
                 setShopItems(prev => prev.filter(i => i.id !== item.id));
             }
+            pushOrganicTrace('purchase', {
+                id: item.id,
+                label: item.name || item.label,
+                price,
+                paidFromGold: gold >= price,
+                itemType: item.type || 'hardware',
+            });
         };
 
         const executeCarve = (dieIdx, faceIdx) => {
             if (!selectedItem) return;
+            const carvedId = selectedItem.id || selectedItem;
+            pushOrganicTrace('carve', { dieIdx, faceIdx, faceId: carvedId });
             setDice(prev => {
                 const next = [...prev];
                 const target = { ...next[dieIdx], faces: [...next[dieIdx].faces] };
@@ -13381,6 +13497,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (typeof window === 'undefined') return;
             const params = new URLSearchParams(window.location.search);
             if (params.get('e2e') === '1') {
+                window.__GB_SIM_POLICY__ = Object.freeze({
+                    revision: '2026-11-11-phase-b-v1',
+                    simBuilderClearQuotaBank: true,
+                });
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
@@ -13443,6 +13563,256 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (!path) return false;
                         return beginShopAdvance(path);
                     },
+                    pickBuilderShopPath: () => {
+                        if (phase !== 'SHOP') return false;
+                        const bossPath = paths?.find((p) => p.boss);
+                        const hasEngine = inventory.some((i) => i.id === 'ENGINE');
+                        const hasFuseBox = inventory.some((i) => i.id === 'FUSE_BOX');
+                        const bloodOnBoard = window.__GB_E2E__.countCarvedFace('BLOOD_6');
+                        const fuseOnBoard = window.__GB_E2E__.countCarvedFace('FUSE_FACE');
+                        const organicReady = window.__GB_E2E__.isOrganicChainReady();
+                        const needBookends = !inventory.some((i) => i.id === 'BOOKENDS');
+                        const hasGhostKit = window.__GB_E2E__.ownsFaceKitPiece('GHOST_FACE');
+                        const hasEchoKit = window.__GB_E2E__.ownsFaceKitPiece('ECHO_FACE');
+                        const needKitFaces = !organicReady && inventory.some((i) => i.id === 'BOOKENDS')
+                            && (!hasGhostKit || !hasEchoKit);
+                        if (
+                            bossPath && organicReady && inventory.length >= 3 && round >= 4 && !selectedShopPathId
+                        ) {
+                            selectShopPath(bossPath);
+                            return true;
+                        }
+                        if (!organicReady) {
+                            if (!selectedShopPathId) {
+                                const dangerGate = SHOP_TUNING.earlyDangerRoundGate;
+                                const routePick = (round < dangerGate && !needKitFaces && !needBookends)
+                                    ? (paths?.find((p) => p.id === 'LOCAL') || paths?.[0])
+                                    : (needBookends || needKitFaces
+                                        ? (paths?.find((p) => p.id === 'PAWN')
+                                            || paths?.find((p) => p.id === 'LOCAL')
+                                            || paths?.[0])
+                                        : (paths?.find((p) => p.id === 'LOCAL') || paths?.[0]));
+                                if (routePick) {
+                                    selectShopPath(routePick);
+                                    return true;
+                                }
+                            }
+                            if (selectedShopPathId && window.__GB_E2E__.shouldLeaveShopForPacing?.()) {
+                                const path = resolveShopAdvancePath();
+                                if (path) return beginShopAdvance(path);
+                            }
+                            return false;
+                        }
+                        const path = resolveShopAdvancePath();
+                        if (!path) return false;
+                        return beginShopAdvance(path);
+                    },
+                    countCarvedFace: (faceId) => (dice || []).reduce(
+                        (n, die) => n + (die.faces || []).filter((f) => (f.faceId || f.id) === faceId).length,
+                        0,
+                    ),
+                    ownsFaceKitPiece: (faceId) => {
+                        if (window.__GB_E2E__.countCarvedFace(faceId) >= 1) return true;
+                        if (inventory.some((i) => i.id === faceId)) return true;
+                        const sel = selectedItem?.id || selectedItem;
+                        return sel === faceId;
+                    },
+                    evaluateOrganicPredicates: (laneDice = dice) => {
+                        const lane = laneDice || dice;
+                        const laneGhost = lane.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
+                        const laneEcho = lane.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
+                        const ghostEchoInReach = laneGhost.some(
+                            (g) => laneEcho.some((e) => e !== g && Math.abs(g - e) <= 3),
+                        );
+                        const endsValueMatch = typeof lane[0]?.value === 'number' && lane[0].value === lane[4]?.value;
+                        const endsFaceMatch = !!lane[0]?.faceId && lane[0].faceId === lane[4]?.faceId;
+                        let hauntedBracket = false;
+                        if (ghostEchoInReach) {
+                            for (const g of laneGhost) {
+                                const haunted = lane[g]?.value;
+                                if (typeof haunted !== 'number') continue;
+                                if (
+                                    Math.abs((lane[0]?.value ?? 0) - haunted) <= 1
+                                    && Math.abs((lane[4]?.value ?? 0) - haunted) <= 1
+                                ) {
+                                    hauntedBracket = true;
+                                    break;
+                                }
+                            }
+                        }
+                        const endsBookendsReady = endsValueMatch || hauntedBracket;
+                        const preds = {
+                            inventory_bookends: inventory.some((i) => i.id === 'BOOKENDS'),
+                            carved_ghost: window.__GB_E2E__.countCarvedFace('GHOST_FACE'),
+                            carved_echo: window.__GB_E2E__.countCarvedFace('ECHO_FACE'),
+                            organic_kit_ready: window.__GB_E2E__.isOrganicChainReady(),
+                            lane_ghost_slots: laneGhost,
+                            lane_echo_slots: laneEcho,
+                            ghost_echo_in_reach: ghostEchoInReach,
+                            ends_value_match: endsValueMatch,
+                            ends_haunted_bracket: hauntedBracket,
+                            ends_bookends_ready: endsBookendsReady,
+                            ends_face_match: endsFaceMatch,
+                            chain_linking_on: !!SYNERGY_TUNING?.chainLinkingEnabled,
+                        };
+                        const unfulfilled = [];
+                        if (!preds.inventory_bookends) unfulfilled.push('missing_BOOKENDS');
+                        if (preds.carved_ghost < 1) unfulfilled.push('missing_carved_GHOST');
+                        if (preds.carved_echo < 1) unfulfilled.push('missing_carved_ECHO');
+                        if (!preds.ghost_echo_in_reach) unfulfilled.push('lane_ghost_echo_not_in_reach');
+                        if (!preds.ends_bookends_ready) unfulfilled.push('ends_value_mismatch');
+                        const byCat = {};
+                        const catOrder = ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'];
+                        for (const catId of catOrder) {
+                            if (usedCats.includes(catId)) continue;
+                            const r = calculateScore(catId, lane);
+                            const synergyIds = (r.synergyEvents || []).map((e) => e.chainId || e.id).filter(Boolean);
+                            byCat[catId] = {
+                                valid: !!r.valid,
+                                total: r.total || 0,
+                                chainLinks: r.chainLinks || [],
+                                synergyIds,
+                                has_target_pair: (r.chainLinks || []).some(
+                                    (l) => l.from === 'ghost_echo' && l.to === 'bookends_retrigger',
+                                ),
+                                ghost_echo_synergy: synergyIds.includes('ghost_echo'),
+                                bookends_synergy: synergyIds.includes('bookends_retrigger'),
+                            };
+                        }
+                        return {
+                            preds,
+                            unfulfilled,
+                            byCat,
+                            usedCats: [...usedCats],
+                            discards,
+                            hands,
+                            hasRolled,
+                            round,
+                            lane: lane.map((d, i) => ({ slot: i, value: d.value, faceId: d.faceId || null, type: d.type || null })),
+                        };
+                    },
+                    organicChainLaneSim: (trials = 240) => {
+                        if (!window.__GB_E2E_QUERY__?.()) return null;
+                        let ghostEchoHits = 0;
+                        let endMatchHits = 0;
+                        let linkLayoutHits = 0;
+                        for (let t = 0; t < trials; t++) {
+                            const next = dice.map((d, i) => resolveDieAfterRoll(d, i, { runRandomFn: Math.random }));
+                            const g = next.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
+                            const e = next.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
+                            const adj = g.length && e.length && g.some((gi) => e.some((ei) => Math.abs(gi - ei) === 1));
+                            const ends = typeof next[0]?.value === 'number' && next[0].value === next[4]?.value;
+                            if (adj) ghostEchoHits++;
+                            if (ends) endMatchHits++;
+                            if (adj && ends) linkLayoutHits++;
+                        }
+                        return { trials, ghostEchoHits, endMatchHits, linkLayoutHits };
+                    },
+                    organicLinkTarget: () => 'ghost_echo→bookends_retrigger',
+                    isOrganicChainReady: () => {
+                        const invIds = new Set(inventory.map((i) => i.id));
+                        const ghostOnBoard = window.__GB_E2E__.countCarvedFace('GHOST_FACE');
+                        const echoOnBoard = window.__GB_E2E__.countCarvedFace('ECHO_FACE');
+                        return (
+                            invIds.has('BOOKENDS')
+                            && ghostOnBoard >= 1
+                            && echoOnBoard >= 1
+                        );
+                    },
+                    getShopOffers: () => {
+                        if (phase !== 'SHOP') return [];
+                        return shopItems
+                            .filter((i) => !soldItems.includes(i.id))
+                            .map((i) => ({ id: i.id, type: i.type || 'hardware', price: shopListPrice(i), rarity: i.rarity || null }));
+                    },
+                    shouldLeaveShopForPacing: () => {
+                        if (phase !== 'SHOP') return false;
+                        if (window.__GB_E2E__.isOrganicChainReady()) {
+                            const reserve = shopRefreshCost + 10;
+                            if (inventory.length < 3 && gold >= reserve) return false;
+                            return true;
+                        }
+                        const invIdsEarly = new Set(inventory.map((i) => i.id));
+                        const chasingGhostBookends = invIdsEarly.has('BOOKENDS')
+                            && window.__GB_E2E__.countCarvedFace('ECHO_FACE') >= 1
+                            && window.__GB_E2E__.countCarvedFace('GHOST_FACE') < 1;
+                        const chasingEchoBookends = invIdsEarly.has('BOOKENDS')
+                            && window.__GB_E2E__.countCarvedFace('GHOST_FACE') >= 1
+                            && window.__GB_E2E__.countCarvedFace('ECHO_FACE') < 1;
+                        if (chasingGhostBookends || chasingEchoBookends) return false;
+                        const invIds = new Set(inventory.map((i) => i.id));
+                        const hasGhost = window.__GB_E2E__.ownsFaceKitPiece('GHOST_FACE');
+                        const hasEcho = window.__GB_E2E__.ownsFaceKitPiece('ECHO_FACE');
+                        const offers = window.__GB_E2E__.getShopOffers();
+                        const reserve = shopRefreshCost + 12;
+                        if (round <= 3) {
+                            if (shopRefreshes >= 1 && gold < reserve + 14) return true;
+                            if (invIds.has('BOOKENDS') && hasGhost && gold < reserve) return true;
+                            return false;
+                        }
+                        const kitPartial = invIds.has('BOOKENDS') && (hasGhost || hasEcho);
+                        const miss = (id, have) => !have && !offers.some((o) => o.id === id);
+                        if (kitPartial && (!hasGhost || !hasEcho)) {
+                            if (offers.some((o) => o.id === 'GHOST_FACE' || o.id === 'ECHO_FACE')) return false;
+                            if (shopRefreshes < 3 && gold >= reserve) return false;
+                        }
+                        if (
+                            miss('BOOKENDS', invIds.has('BOOKENDS'))
+                            || miss('GHOST_FACE', hasGhost)
+                            || miss('ECHO_FACE', hasEcho)
+                        ) {
+                            if (shopRefreshes >= 3 || gold < reserve) return true;
+                        }
+                        return false;
+                    },
+                    getOrganicChainSnapshot: () => {
+                        const invIds = inventory.map((i) => i.id);
+                        const lane = (dice || []).map((d) => ({
+                            value: d.value,
+                            faceId: d.faceId || null,
+                            type: d.type || null,
+                        }));
+                        const carved = (dice || []).map((die, di) => ({
+                            die: di,
+                            faces: (die.faces || []).map((f, fi) => ({
+                                idx: fi,
+                                faceId: f?.faceId || f?.id || null,
+                                value: f?.value,
+                            })),
+                        }));
+                        const bloodOnBoard = window.__GB_E2E__.countCarvedFace('BLOOD_6');
+                        const fuseOnBoard = window.__GB_E2E__.countCarvedFace('FUSE_FACE');
+                        const ghostOnBoard = window.__GB_E2E__.countCarvedFace('GHOST_FACE');
+                        const echoOnBoard = window.__GB_E2E__.countCarvedFace('ECHO_FACE');
+                        let linkPreview = null;
+                        if (phase === 'PLAY' && hasRolled) {
+                            const tryC = calculateScore('C', dice);
+                            linkPreview = {
+                                catCValid: !!tryC.valid,
+                                catCTotal: tryC.total || 0,
+                                chainLinks: tryC.chainLinks || [],
+                                synergyIds: (tryC.synergyEvents || []).map((e) => e.chainId),
+                            };
+                        }
+                        return {
+                            phase,
+                            round,
+                            invIds,
+                            bloodOnBoard,
+                            fuseOnBoard,
+                            ghostOnBoard,
+                            echoOnBoard,
+                            organicLinkTarget: window.__GB_E2E__.organicLinkTarget?.(),
+                            organicReady: window.__GB_E2E__.isOrganicChainReady(),
+                            shopOffers: phase === 'SHOP' ? window.__GB_E2E__.getShopOffers() : [],
+                            gold,
+                            shopRefreshes,
+                            shopRefreshCost,
+                            lane,
+                            carved,
+                            linkPreview,
+                        };
+                    },
                     buyPreferredShopItem: () => {
                         if (phase !== 'SHOP') return false;
                         const available = shopItems.filter((i) => !soldItems.includes(i.id));
@@ -13450,55 +13820,172 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const HW = ['ENGINE', 'FUSE_BOX', 'CROWBAR', 'DEBT_COLLECTOR', 'BLACK_BOOK', 'BRASS_KNUCKLES', 'BOOKENDS', 'LOADED_DIE', 'BURNER_PHONE', 'MIRROR_RIG', 'HOT_STREAK_COIL', 'CENTERPIECE'];
                         const FACES = ['BLOOD_6', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_FACE', 'WIREBAG_FACE', 'SHIV_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'];
                         const invIds = new Set(inventory.map((i) => i.id));
-                        const chainHw = ['ENGINE', 'FUSE_BOX', 'CROWBAR'];
-                        for (const id of chainHw) {
+                        const hasGhost = window.__GB_E2E__.ownsFaceKitPiece('GHOST_FACE');
+                        const hasEcho = window.__GB_E2E__.ownsFaceKitPiece('ECHO_FACE');
+                        const KIT_IDS = new Set(['BOOKENDS', 'GHOST_FACE', 'ECHO_FACE']);
+                        const tryBuy = (id) => {
                             const item = available.find((i) => i.id === id);
-                            if (!item || invIds.has(id)) continue;
+                            if (!item) return false;
+                            if (item.id === 'GHOST_FACE' && hasGhost) return false;
+                            if (item.id === 'ECHO_FACE' && hasEcho) return false;
+                            if (!item.type && invIds.has(item.id)) return false;
                             const price = shopListPrice(item);
-                            if (gold + 14 >= price) {
-                                handlePurchase(item);
-                                return true;
+                            if (gold >= price) {
+                                if (!KIT_IDS.has(item.id) && gold - price < 14) return false;
+                                const kitIncomplete = !window.__GB_E2E__.isOrganicChainReady?.();
+                                if (KIT_IDS.has(item.id) && !kitIncomplete && gold - price < 4 && shopRefreshes < 1) {
+                                    return false;
+                                }
+                            } else if (!KIT_IDS.has(item.id) && gold + 14 < price) {
+                                return false;
+                            } else if (KIT_IDS.has(item.id) && gold + 30 < price) {
+                                return false;
                             }
-                        }
-                        const scoreItem = (item) => {
-                            let w = 0;
-                            if (!item.type) {
-                                if (invIds.has(item.id)) return -100;
-                                if (HW.includes(item.id)) w += 120 - HW.indexOf(item.id);
-                            } else if (item.type !== 'consumable') {
-                                if (FACES.includes(item.id)) w += 90 - FACES.indexOf(item.id);
-                            } else w += 12;
-                            const price = shopListPrice(item);
-                            const canLoan = gold + 12 >= price;
-                            if (!canLoan) w -= 50;
-                            else if (gold >= price) w += 24;
-                            return w - price * 0.12;
+                            handlePurchase(item);
+                            return true;
                         };
-                        const ranked = [...available].sort((a, b) => scoreItem(b) - scoreItem(a));
-                        const pick = ranked[0];
-                        if (scoreItem(pick) < 0) return false;
-                        handlePurchase(pick);
+                        if (!invIds.has('BOOKENDS')) {
+                            if (tryBuy('BOOKENDS')) return true;
+                        } else {
+                            if (!hasGhost && tryBuy('GHOST_FACE')) return true;
+                            if (!hasEcho && tryBuy('ECHO_FACE')) return true;
+                        }
+                        const organicReady = window.__GB_E2E__.isOrganicChainReady?.();
+                        const consistencyHw = [
+                            'BRASS_KNUCKLES', 'LOADED_DIE', 'MAGNET_FACE', 'HOT_STREAK_COIL',
+                            'ODD_EVEN_SPLIT', 'STRAIGHT_FOCUS', 'PIP_SUM', 'HOLD_CHARGE', 'COPY_LAST',
+                        ];
+                        if (organicReady) {
+                            for (const id of consistencyHw) {
+                                if (!invIds.has(id) && tryBuy(id)) return true;
+                            }
+                            return false;
+                        }
+                        const needIds = [];
+                        if (!invIds.has('BOOKENDS')) needIds.push('BOOKENDS');
+                        if (!hasGhost) needIds.push('GHOST_FACE');
+                        if (!hasEcho) needIds.push('ECHO_FACE');
+                        const offerHas = (id) => available.some((i) => i.id === id);
+                        const missingOnlyEcho = (
+                            invIds.has('BOOKENDS')
+                            && hasGhost
+                            && !hasEcho
+                            && needIds.length === 1
+                        );
+                        if (missingOnlyEcho && !offerHas('ECHO_FACE')) return false;
+                        const canBuyAnyNeeded = needIds.some((id) => offerHas(id));
+                        if (
+                            !canBuyAnyNeeded
+                            && needIds.some((id) => !offerHas(id))
+                            && shopRefreshes < 5
+                            && gold >= shopRefreshCost + 4
+                        ) {
+                            refreshShop();
+                            return true;
+                        }
+                        return false;
+                    },
+                    refreshShopForChainKit: () => {
+                        if (phase !== 'SHOP') return false;
+                        if (window.__GB_E2E__.isOrganicChainReady()) return false;
+                        const invIds = new Set(inventory.map((i) => i.id));
+                        const hasGhost = window.__GB_E2E__.ownsFaceKitPiece('GHOST_FACE');
+                        const hasEcho = window.__GB_E2E__.ownsFaceKitPiece('ECHO_FACE');
+                        const available = shopItems.filter((i) => !soldItems.includes(i.id));
+                        const offerHas = (id) => available.some((i) => i.id === id);
+                        const needIds = [];
+                        if (!invIds.has('BOOKENDS')) needIds.push('BOOKENDS');
+                        if (!hasGhost) needIds.push('GHOST_FACE');
+                        if (!hasEcho) needIds.push('ECHO_FACE');
+                        const canBuyAnyNeeded = needIds.some((id) => offerHas(id));
+                        const stale = needIds.length > 0 && needIds.every((id) => !offerHas(id));
+                        if (!stale || canBuyAnyNeeded) return false;
+                        if (shopRefreshes >= 5 || gold < shopRefreshCost + 4) return false;
+                        refreshShop();
+                        return true;
+                    },
+                    refreshShopStock: () => {
+                        refreshShop();
                         return true;
                     },
                     refreshShopIfDry: () => {
                         if (phase !== 'SHOP') return false;
+                        if (window.__GB_E2E__.refreshShopForChainKit?.()) return true;
                         const available = shopItems.filter((i) => !soldItems.includes(i.id));
                         const cost = shopRefreshCost;
                         if (available.length >= 2 || shopRefreshes >= 3 || gold < cost + 8) return false;
                         refreshShop();
                         return true;
                     },
+                    abortCarving: () => {
+                        if (phase !== 'CARVING') return false;
+                        setCarvingDie(null);
+                        setSelectedItem(null);
+                        returnToInRunShop();
+                        return true;
+                    },
                     autoCarvePreferred: () => {
                         if (phase !== 'CARVING') return false;
-                        if (carvingDie === null) {
-                            setCarvingDie(0);
-                            return true;
+                        if (!selectedItem) return window.__GB_E2E__.abortCarving?.() || false;
+                        const isStd = (f) => !f?.type || f.type === 'standard';
+                        const dieHasFace = (di, id) =>
+                            (dice[di]?.faces || []).some((f) => (f.faceId || f.id) === id);
+                        const carveId = selectedItem?.id || selectedItem;
+                        let dieIdx = carvingDie;
+                        if (dieIdx === null) {
+                            let bestDie = 0;
+                            const bloodDice = dice
+                                .map((_, di) => (dieHasFace(di, 'BLOOD_6') ? di : -1))
+                                .filter((di) => di >= 0);
+                            if (carveId === 'BLOOD_6') {
+                                if (bloodDice.length === 0) bestDie = 0;
+                                else if (bloodDice.length === 1) bestDie = bloodDice[0] === 0 ? 1 : 0;
+                                else {
+                                    const without = dice.findIndex((_, di) => !dieHasFace(di, 'BLOOD_6'));
+                                    bestDie = without >= 0 ? without : 0;
+                                }
+                            } else if (carveId === 'FUSE_FACE') {
+                                if (bloodDice.includes(0) && bloodDice.includes(1)) bestDie = 2;
+                                else if (bloodDice.length >= 1) {
+                                    const anchor = bloodDice[bloodDice.length - 1];
+                                    bestDie = anchor < 4 ? anchor + 1 : anchor - 1;
+                                } else bestDie = 1;
+                            } else if (carveId === 'GHOST_FACE') {
+                                bestDie = 0;
+                            } else if (carveId === 'ECHO_FACE') {
+                                bestDie = dieHasFace(0, 'GHOST_FACE') ? 1 : 1;
+                            } else {
+                                let bestScore = -1;
+                                for (let di = 0; di < dice.length; di++) {
+                                    const faces = dice[di]?.faces || [];
+                                    let s = 0;
+                                    if (dieHasFace(di, 'BLOOD_6')) s += 4;
+                                    if (dieHasFace(di, 'FUSE_FACE')) s += 3;
+                                    if (faces[4] && isStd(faces[4])) s += 1;
+                                    if (faces[5] && isStd(faces[5])) s += 1;
+                                    if (s > bestScore) {
+                                        bestScore = s;
+                                        bestDie = di;
+                                    }
+                                }
+                                bestDie = bestScore >= 0 ? bestDie : 0;
+                            }
+                            dieIdx = bestDie;
+                            setCarvingDie(bestDie);
                         }
-                        if (!selectedItem) return false;
-                        const faces = dice[carvingDie]?.faces || [];
-                        let faceIdx = faces.findIndex((f) => !f?.type || f.type === 'standard');
+                        const faces = dice[dieIdx]?.faces || [];
+                        let preferOrder = [0, 1, 2, 3, 4, 5];
+                        if (carveId === 'BLOOD_6') {
+                            preferOrder = [5, 4, 3, 2, 1, 0];
+                        } else if (carveId === 'FUSE_FACE') {
+                            preferOrder = dieHasFace(dieIdx, 'BLOOD_6') ? [4, 5, 3, 2, 1, 0] : [4, 5, 3, 2, 1, 0];
+                        } else if (['GHOST_FACE', 'ECHO_FACE', 'WIREBAG_FACE', 'SHIV_FACE'].includes(carveId)) {
+                            preferOrder = [4, 5, 3, 2, 1, 0];
+                        }
+                        let faceIdx = preferOrder.find((i) => faces[i] && isStd(faces[i]));
+                        if (faceIdx == null) faceIdx = faces.findIndex(isStd);
                         if (faceIdx < 0) faceIdx = 0;
-                        executeCarve(carvingDie, faceIdx);
+                        executeCarve(dieIdx, faceIdx);
                         return true;
                     },
                     clickShopRouteCard: () => {
@@ -13528,7 +14015,31 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         setPersonaIdx(i);
                         return true;
                     },
-                    startNewRun: () => beginContract({ tutorial: false }),
+                    startNewRun: () => {
+                        beginContract({ tutorial: false });
+                    },
+                    seedRunRng: (seedNum) => {
+                        if (typeof GutterbonesReplay?.mulberry32 !== 'function') return false;
+                        const seedVal = Number(seedNum) || 1;
+                        e2eRunSeededRef.current = true;
+                        e2eRunSeedValueRef.current = seedVal;
+                        e2eRngCallCountRef.current = 0;
+                        const base = GutterbonesReplay.mulberry32(seedVal);
+                        runRandomRef.current = () => {
+                            e2eRngCallCountRef.current += 1;
+                            return base();
+                        };
+                        return true;
+                    },
+                    getBootstrapFingerprint: () => ({
+                        policyRevision: window.__GB_SIM_POLICY__?.revision || null,
+                        policyMode: window.__GB_SIM_ORGANIC_TRACE__ ? 'organic_trace' : (window.__GB_SIM_BOT_SESSION__ ? 'sim_bot' : 'human'),
+                        seed: e2eRunSeedValueRef.current,
+                        rngSeeded: !!e2eRunSeededRef.current,
+                        rngCalls: e2eRngCallCountRef.current,
+                        arcId,
+                        runModifierIds: [...(runModifierIds || [])],
+                    }),
                     setPlaysRemaining: (n) => setHands(Math.max(0, Math.floor(Number(n) || 0))),
                     setScore: (n) => setScore(Math.max(0, Math.floor(Number(n) || 0))),
                     forceRoundWin: () => {
@@ -13634,6 +14145,113 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         return true;
                     },
                     keepDiceForReroll: () => {
+                        const e2eGreedy = typeof window !== 'undefined'
+                            && typeof window.__GB_E2E_QUERY__ === 'function'
+                            && window.__GB_E2E_QUERY__()
+                            && !(window.__GB_SIM_BOT_SESSION__ && !window.__GB_SIM_ORGANIC_TRACE__);
+                        const simConsistency = !!window.__GB_SIM_BOT_SESSION__ && !window.__GB_SIM_ORGANIC_TRACE__;
+                        if (simConsistency) {
+                            const counts = {};
+                            dice.forEach((d) => {
+                                if (typeof d.value === 'number' && d.value > 0) {
+                                    counts[d.value] = (counts[d.value] || 0) + 1;
+                                }
+                            });
+                            let pairV = -1;
+                            let pairN = 0;
+                            Object.entries(counts).forEach(([v, n]) => {
+                                const nv = Number(v);
+                                if (n >= 2 && (n > pairN || (n === pairN && nv > pairV))) {
+                                    pairV = nv;
+                                    pairN = n;
+                                }
+                            });
+                            if (pairV >= 0) {
+                                setKept(dice.map((d) => d.value === pairV));
+                                return true;
+                            }
+                            const ranked = dice
+                                .map((d, i) => ({ v: d.value, i }))
+                                .filter((x) => typeof x.v === 'number')
+                                .sort((a, b) => b.v - a.v);
+                            const keepIdx = new Set(ranked.slice(0, Math.min(3, ranked.length)).map((x) => x.i));
+                            setKept(dice.map((_, i) => keepIdx.has(i)));
+                            return true;
+                        }
+                        const bookendsKit = inventory.some((i) => i.id === 'BOOKENDS');
+                        if (e2eGreedy && bookendsKit) {
+                            const carvedGhost = dice
+                                .map((die, di) => (die.faces || []).some((f) => (f.faceId || f.id) === 'GHOST_FACE') ? di : -1)
+                                .filter((di) => di >= 0);
+                            const carvedEcho = dice
+                                .map((die, di) => (die.faces || []).some((f) => (f.faceId || f.id) === 'ECHO_FACE') ? di : -1)
+                                .filter((di) => di >= 0);
+                            if (carvedGhost.length && carvedEcho.length) {
+                                const ghostUp = dice.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
+                                const echoUp = dice.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
+                                const laneReady = ghostUp.length && echoUp.length
+                                    && ghostUp.some((g) => echoUp.some((e) => e !== g && Math.abs(g - e) <= 3));
+                                if (!laneReady) {
+                                    setKept(dice.map(() => false));
+                                    return true;
+                                }
+                                const haunted = ghostUp.length ? dice[ghostUp[0]]?.value : null;
+                                const endsDirect = typeof dice[0]?.value === 'number' && dice[0].value === dice[4]?.value;
+                                const endsHauntedBracket = typeof haunted === 'number'
+                                    && typeof dice[0]?.value === 'number'
+                                    && typeof dice[4]?.value === 'number'
+                                    && Math.abs(dice[0].value - haunted) <= 1
+                                    && Math.abs(dice[4].value - haunted) <= 1;
+                                const keep = new Set([...ghostUp, ...echoUp]);
+                                ghostUp.forEach((g) => {
+                                    if (g > 0) keep.add(g - 1);
+                                    if (g < 4) keep.add(g + 1);
+                                });
+                                if (laneReady && (endsDirect || endsHauntedBracket || discards > 0)) {
+                                    keep.add(0);
+                                    keep.add(4);
+                                }
+                                setKept(dice.map((_, i) => keep.has(i)));
+                                return true;
+                            }
+                        }
+                        const chainKit = inventory.some((i) => i.id === 'ENGINE' || i.id === 'FUSE_BOX')
+                            && dice.some((d) => d.faceId === 'BLOOD_6' || d.type === 'blood');
+                        if (e2eGreedy && chainKit) {
+                            const bloodSlots = dice
+                                .map((d, i) => (d.faceId === 'BLOOD_6' || d.type === 'blood' ? i : -1))
+                                .filter((i) => i >= 0);
+                            const fuseSlots = dice
+                                .map((d, i) => (d.faceId === 'FUSE_FACE' ? i : -1))
+                                .filter((i) => i >= 0);
+                            const keep = new Set([...bloodSlots, ...fuseSlots]);
+                            bloodSlots.forEach((i) => {
+                                if (i > 0) keep.add(i - 1);
+                                if (i < 4) keep.add(i + 1);
+                            });
+                            fuseSlots.forEach((i) => {
+                                if (i > 0) keep.add(i - 1);
+                                if (i < 4) keep.add(i + 1);
+                            });
+                            if (keep.size > 0) {
+                                setKept(dice.map((_, i) => keep.has(i)));
+                                return true;
+                            }
+                        } else if (e2eGreedy) {
+                            const bloodSlots = dice
+                                .map((d, i) => (d.faceId === 'BLOOD_6' || d.type === 'blood' ? i : -1))
+                                .filter((i) => i >= 0);
+                            if (bloodSlots.length >= 1) {
+                                const fuseAdj = new Set();
+                                bloodSlots.forEach((i) => {
+                                    fuseAdj.add(i);
+                                    if (i > 0) fuseAdj.add(i - 1);
+                                    if (i < 4) fuseAdj.add(i + 1);
+                                });
+                                setKept(dice.map((_, i) => fuseAdj.has(i)));
+                                return true;
+                            }
+                        }
                         const counts = {};
                         dice.forEach((d) => {
                             const v = d.value;
@@ -13706,18 +14324,142 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             }
                             return false;
                         }
-                        const best = window.__GB_E2E__.pickBestOpenCategory?.();
-                        if (!best) return false;
+                        const organicTrace = !!window.__GB_SIM_ORGANIC_TRACE__;
+                        const simBuilder = !!window.__GB_SIM_BOT_SESSION__ && !organicTrace;
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
-                            && window.__GB_E2E_QUERY__();
+                            && window.__GB_E2E_QUERY__()
+                            && !simBuilder;
+                        const organicReadyHand = window.__GB_E2E__.isOrganicChainReady?.();
+                        const bookendsKit = inventory.some((i) => i.id === 'BOOKENDS');
+                        const laneGhost = dice.map((d, i) => (d.faceId === 'GHOST_FACE' ? i : -1)).filter((i) => i >= 0);
+                        const laneEcho = dice.map((d, i) => (d.faceId === 'ECHO_FACE' || d.isEchoed ? i : -1)).filter((i) => i >= 0);
+                        const ghostEchoInReach = laneGhost.some(
+                            (g) => laneEcho.some((e) => e !== g && Math.abs(g - e) <= 3),
+                        );
+                        const organicPreds = window.__GB_E2E__.evaluateOrganicPredicates?.(dice);
+                        const endsValueMatch = organicPreds?.preds?.ends_bookends_ready
+                            ?? (typeof dice[0]?.value === 'number' && dice[0].value === dice[4]?.value);
+                        let best = window.__GB_E2E__.pickBestOpenCategory?.();
+                        if (!best) return false;
+                        if (typeof window.__GB_ORGANIC_PREDICATE_DIAG__ !== 'undefined' && organicReadyHand && hasRolled) {
+                            const pre = window.__GB_E2E__.evaluateOrganicPredicates?.(dice);
+                            window.__GB_ORGANIC_PREDICATE_DIAG__.push({
+                                kind: 'pre_payout_bot',
+                                round,
+                                discards,
+                                hands,
+                                unfulfilled: pre?.unfulfilled,
+                                byCat: pre?.byCat,
+                                chosen_before_link_hunt: best,
+                            });
+                        }
+                        const targetPair = (links) => (links || []).some(
+                            (l) => l.from === 'ghost_echo' && l.to === 'bookends_retrigger',
+                        );
+                        if (bookendsKit && organicReadyHand) {
+                            for (const catId of ['FH', 'C', 'SS', 'LS', 'Y', 'TH', 'FOK']) {
+                                if (usedCats.includes(catId)) continue;
+                                const r = calculateScore(catId, dice);
+                                if (!r.valid) continue;
+                                if (targetPair(r.chainLinks)) {
+                                    best = { catId, total: r.total };
+                                    break;
+                                }
+                            }
+                        }
+                        const chainKit = inventory.some((i) => i.id === 'ENGINE')
+                            && dice.filter((d) => d.faceId === 'BLOOD_6').length >= 1
+                            && dice.some((d) => d.faceId === 'FUSE_FACE');
+                        const layoutBloodFuseAdj = () => {
+                            const blood = dice
+                                .map((d, i) => (d.faceId === 'BLOOD_6' || d.type === 'blood' ? i : -1))
+                                .filter((i) => i >= 0);
+                            const fuse = dice
+                                .map((d, i) => (d.faceId === 'FUSE_FACE' ? i : -1))
+                                .filter((i) => i >= 0);
+                            if (!blood.length || !fuse.length) return false;
+                            return blood.some((b) => fuse.some((f) => Math.abs(b - f) === 1));
+                        };
+                        if (chainKit && layoutBloodFuseAdj() && !usedCats.includes('C')) {
+                            const cTry = calculateScore('C', dice);
+                            if (cTry.valid && cTry.total >= best.total * 0.7) {
+                                best = { catId: 'C', total: cTry.total };
+                            }
+                        }
                         const gap = Math.max(0, currentTarget - score);
                         const need = gap / Math.max(1, hands);
-                        const mustScore = hands <= 1 || discards <= 0;
-                        const minPlay = e2eGreedy
-                            ? 1
-                            : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
-                        if (!e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
+                        const hasTargetLinkNow = bookendsKit && organicReadyHand && hasRolled && (
+                            ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'].some((catId) => {
+                                if (usedCats.includes(catId)) return false;
+                                const r = calculateScore(catId, dice);
+                                return r.valid && targetPair(r.chainLinks);
+                            })
+                        );
+                        const organicHuntActive = e2eGreedy && bookendsKit && organicReadyHand && hasRolled;
+                        const quotaPace = gap / Math.max(1, hands);
+                        const clearsQuotaThisHand = (score + (best?.total || 0)) >= currentTarget;
+                        const mustScore = simBuilder
+                            ? (
+                                hands <= 1
+                                || discards <= 0
+                                || clearsQuotaThisHand
+                                || (best?.total || 0) >= Math.max(10, quotaPace * 0.42)
+                                || (round >= 4 && (best?.total || 0) >= Math.max(8, gap * 0.22))
+                            )
+                            : organicHuntActive && !hasTargetLinkNow
+                                ? (
+                                    hands <= 1
+                                    || discards <= 0
+                                    || (score + (best?.total || 0) >= currentTarget && hands <= 2)
+                                    || (gap > 0 && hands <= 2 && (best?.total || 0) >= gap * 0.92)
+                                )
+                                : (
+                                    hands <= 1
+                                    || discards <= 0
+                                    || (e2eGreedy && hands <= 2)
+                                    || (e2eGreedy && round >= 5)
+                                    || (e2eGreedy && gap > Math.max(60, best.total * 1.5))
+                                );
+                        const endsBookendsReady = organicPreds?.preds?.ends_bookends_ready ?? endsValueMatch;
+                        const organicLinkHunt = organicHuntActive
+                            && discards > 0
+                            && !mustScore
+                            && !hasTargetLinkNow
+                            && (!ghostEchoInReach || !endsBookendsReady);
+                        if (organicLinkHunt && rollBtn) {
+                            window.__GB_E2E__.keepDiceForReroll?.();
+                            rollBones();
+                            return true;
+                        }
+                        if (organicHuntActive && hasRolled && best && !hasTargetLinkNow && discards > 0 && !mustScore && rollBtn) {
+                            const layout = calculateScore(best.catId, dice);
+                            const hasGhost = (layout.synergyEvents || []).some((e) => e.id === 'ghost_echo');
+                            const hasBookends = (layout.synergyEvents || []).some((e) => e.id === 'bookends_retrigger');
+                            const partialLink = hasGhost !== hasBookends;
+                            const layoutGap = !ghostEchoInReach || !endsBookendsReady;
+                            if (!targetPair(layout.chainLinks) && (partialLink || (layoutGap && discards >= 2))) {
+                                window.__GB_E2E__.keepDiceForReroll?.();
+                                rollBones();
+                                return true;
+                            }
+                        }
+                        const chainHunt = e2eGreedy
+                            && chainKit
+                            && discards > 0
+                            && !mustScore
+                            && best.total < Math.max(52, gap * 0.48);
+                        if (chainHunt && rollBtn) {
+                            window.__GB_E2E__.keepDiceForReroll?.();
+                            rollBones();
+                            return true;
+                        }
+                        const minPlay = simBuilder
+                            ? Math.min(gap, Math.max(8, Math.ceil(need * 0.45)))
+                            : e2eGreedy
+                                ? 1
+                                : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
+                        if (!simBuilder && !e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
                             if (rollBtn) {
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
@@ -13755,8 +14497,29 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             dismissScoreOverlays();
                             return true;
                         }
-                        if (typeof window.__GB_E2E__.autoPlayHand === 'function') {
+                        if (window.__GB_SIM_BOT_SESSION__ && typeof window.__GB_E2E__.autoPlayHand === 'function') {
                             return window.__GB_E2E__.autoPlayHand();
+                        }
+                        setPlayDock('payouts');
+                        setShowMobileStash(false);
+                        let best = window.__GB_E2E__.pickBestOpenCategory?.();
+                        const rows = ['C', 'FH', 'SS', 'LS', 'Y', 'TH', 'FOK'].filter((c) => !usedCats.includes(c));
+                        const catId = best?.catId || rows[0];
+                        if (!catId) return false;
+                        let btn = document.querySelector(`button[data-payout-row="${catId}"]:not([disabled])`);
+                        if (!btn) {
+                            const more = document.querySelector('[data-layout-key="payout-sheet-more"]');
+                            if (more && !more.disabled) more.click();
+                            btn = document.querySelector(`button[data-payout-row="${catId}"]:not([disabled])`);
+                        }
+                        if (btn) {
+                            btn.click();
+                            return true;
+                        }
+                        const any = document.querySelector('button[data-payout-row]:not([disabled])');
+                        if (any && any.getAttribute('data-payout-row') !== 'more') {
+                            any.click();
+                            return true;
                         }
                         return false;
                     },
@@ -13779,6 +14542,40 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             if (delta > 6) bad.push({ idx, label: label.textContent, delta });
                         });
                         return { ok: bad.length === 0, bad, rowCount: rows.length };
+                    },
+                    prepareCarvedPayout: (catId, slots) => {
+                        if (phase !== 'PLAY' || hands <= 0) return false;
+                        openingSniffPendingRef.current = false;
+                        setRollLock(false);
+                        pendingPayoutRef.current = null;
+                        setRollingSlots(Array(5).fill(false));
+                        setOpeningSniffBanner(null);
+                        const next = slots.map((slot, i) => {
+                            const base = dice[i] || makeBone();
+                            const faceId = slot?.faceId || null;
+                            const face = faceId ? FACE_DATABASE[faceId] : null;
+                            return {
+                                ...base,
+                                value: Math.max(0, Math.min(6, Number(slot?.value ?? base.value) || 0)),
+                                faceId,
+                                faceLabel: face?.label || null,
+                                faceStyle: face?.style || null,
+                                type: face?.type || 'standard',
+                            };
+                        });
+                        if (typeof window.__GB_SIM_TELEM__ === 'undefined') {
+                            window.__GB_SIM_TELEM__ = { hands: [], roundEvents: [], record(h) { this.hands.push(h); } };
+                        }
+                        e2ePendingDiceRef.current = next;
+                        setDice(next);
+                        setHasRolled(true);
+                        setKept([false, false, false, false, false]);
+                        scheduleTimeout(() => {
+                            setRollLock(false);
+                            setRollingSlots(Array(5).fill(false));
+                            executePayout(catId);
+                        }, 0);
+                        return true;
                     },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;

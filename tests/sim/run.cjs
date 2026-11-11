@@ -87,7 +87,7 @@ async function bootPage(page, baseUrl, viewport) {
   page.setDefaultTimeout(120_000);
   const mobile = viewport.width < 700 || viewport.height < 500;
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
-  await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "networkidle", timeout: 120_000 });
+  await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded", timeout: 120_000 });
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
   await page.evaluate(() => {
     localStorage.setItem(
@@ -242,7 +242,15 @@ async function runOneGame(
     const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
     const roundEvents = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.roundEvents) || [];
     const build = window.__GB_E2E__?.getBuildProfile?.() || null;
-    return { hands, gold: st.gold, score: st.score, build, roundEvents };
+    return {
+      hands,
+      gold: st.gold,
+      score: st.score,
+      target: st.target,
+      inventoryCount: st.inventoryCount,
+      build,
+      roundEvents,
+    };
   });
   return { rid, viewport: viewport.name, ...result, telem };
 }
@@ -296,16 +304,19 @@ async function main() {
   let cursor = 0;
 
   async function worker() {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    page.setDefaultTimeout(120_000);
-    page.__baseUrl = baseUrl;
-    const booted = { value: false };
     while (true) {
       const job = jobs[cursor++];
       if (!job) break;
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.setDefaultTimeout(120_000);
+      page.__baseUrl = baseUrl;
       try {
-        const r = await runOneGame(page, { ...job, maxSteps: args.maxSteps, booted });
+        const r = await runOneGame(page, {
+          ...job,
+          maxSteps: args.maxSteps,
+          booted: { value: false },
+        });
         results.push(r);
         process.stderr.write(
           `sim ${results.length}/${args.games} rid=${r.rid} outcome=${r.outcome || r.reason} steps=${r.steps} maxRound=${r.maxRound}\n`,
@@ -322,9 +333,10 @@ async function main() {
           steps: 0,
           maxRound: 0,
         });
+      } finally {
+        await context.close();
       }
     }
-    await context.close();
   }
 
   await Promise.all(Array.from({ length: parallel }, () => worker()));

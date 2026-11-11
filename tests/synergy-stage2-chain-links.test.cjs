@@ -63,6 +63,69 @@ test("link: sparked slots count toward engine link (fuse_spark → engine_link)"
   assert.ok(rOn.total >= rOff.total);
 });
 
+test("link: ghost echo + bookends records pairwise link on exact face match", () => {
+  const g = createGame(snapshot());
+  const d = dice([5, 0, 0, 4, 5]);
+  d[0] = bone(5, 0, { faceId: "MULT_FACE", type: "modifier" });
+  d[1] = bone(0, 1, { faceId: "ECHO_FACE", type: "adjacent" });
+  d[2] = bone(0, 2, { faceId: "GHOST_FACE", type: "ethereal" });
+  d[4] = bone(5, 4, { faceId: "MULT_FACE", type: "modifier" });
+  const on = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "BOOKENDS" }] }),
+  );
+  assert.ok(on.synergyEvents.some((e) => e.id === "ghost_echo"));
+  assert.ok(on.synergyEvents.some((e) => e.id === "bookends_retrigger"));
+  assert.ok(on.chainLinks.some((l) => l.from === "ghost_echo" && l.to === "bookends_retrigger"));
+});
+
+test("link: ghost echo within three slots (gap) still fires", () => {
+  const g = createGame(snapshot());
+  const d = dice([3, 0, 4, 0, 3]);
+  d[0] = bone(3, 0, { faceId: "GHOST_FACE", type: "ethereal" });
+  d[2] = bone(0, 2, { faceId: "ECHO_FACE", type: "adjacent" });
+  d[4] = bone(3, 4, { faceId: "MULT_FACE", type: "modifier" });
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "BOOKENDS" }] }),
+  );
+  assert.ok(r.synergyEvents.some((e) => e.id === "ghost_echo"));
+  assert.ok(r.synergyEvents.some((e) => e.id === "bookends_retrigger"));
+  assert.ok(r.chainLinks.some((l) => l.from === "ghost_echo" && l.to === "bookends_retrigger"));
+});
+
+test("link: ghost echo haunted bracket bookends (±1 pip) with pairwise link", () => {
+  const g = createGame(snapshot());
+  const d = dice([4, 0, 5, 0, 5]);
+  d[0] = bone(4, 0, { faceId: "MULT_FACE", type: "modifier" });
+  d[1] = bone(0, 1, { faceId: "ECHO_FACE", type: "adjacent" });
+  d[2] = bone(5, 2, { faceId: "GHOST_FACE", type: "ethereal" });
+  d[4] = bone(5, 4, { faceId: "GOLD_FACE", type: "modifier" });
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "BOOKENDS" }] }),
+  );
+  assert.ok(r.synergyEvents.some((e) => e.id === "ghost_echo"));
+  assert.ok(r.synergyEvents.some((e) => e.id === "bookends_retrigger"));
+  assert.ok(r.chainLinks.some((l) => l.from === "ghost_echo" && l.to === "bookends_retrigger"));
+});
+
+test("link: ghost echo beyond reach does not fire (no phantom)", () => {
+  const g = createGame(snapshot());
+  const d = dice([0, 0, 0, 0, 3]);
+  d[0] = bone(0, 0, { faceId: "GHOST_FACE", type: "ethereal" });
+  d[4] = bone(0, 4, { faceId: "ECHO_FACE", type: "adjacent" });
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    linkContext(g, { inventory: [{ id: "BOOKENDS" }] }),
+  );
+  assert.equal(r.synergyEvents.some((e) => e.id === "ghost_echo"), false);
+});
+
 test("link: ghost echo enables bookends value-only match", () => {
   const g = createGame(snapshot());
   const d = dice([5, 0, 0, 4, 5]);

@@ -1,11 +1,14 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
+  window.__GB_SIM_BOT_SESSION__ = true;
+  try {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
+  const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false, _maxInv: 0 };
   let fallbacks = 0;
   let stuck = 0;
   let lastSig = null;
   let maxRound = 1;
   let lastRound = 1;
+  let lastPh = null;
   let started = false;
 
   const mulberry32 = (a) => {
@@ -91,6 +94,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (k != null && ph !== "SHOP" && ph !== "PLAY" && ph !== "CARVING") return k;
     const shopBot = strategy === "builder" || strategy === "greedy";
     if (shopBot && ph === "CARVING") {
+      if (strategy === "builder") return null;
       const done = findContains("RETURN", "BACK TO", "CONFIRM", "DONE");
       log._carveTries = (log._carveTries || 0) + 1;
       if (log._carveTries > 6 && done != null) return done;
@@ -105,6 +109,16 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const gold = Number(st?.gold) || 0;
       const payDebt = findContains("PAY DEBT", "PAY DOWN", "CLEAR DEBT", "REDUCE DEBT");
       if (payDebt != null && debt >= 3 && gold > debt + 6) return payDebt;
+      if (strategy === "builder") {
+        const routes = btn.map((b, i) =>
+          (b.lk === "shop-route-card" || U[i].includes("NEXT QUOTA") ? i : -1),
+        ).filter((x) => x >= 0);
+        if (routes.length && !st?.selectedShopPathId) {
+          const hw = routes.find((i) => U[i].includes("HARDWARE") || U[i].includes("MOD") || U[i].includes("PAWN"));
+          return hw != null ? hw : routes[0];
+        }
+        return null;
+      }
       const scoreBuy = (i) => {
         const t = U[i];
         let w = 0;
@@ -167,6 +181,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       return null;
     }
     if (ph === "SHOP") {
+      if (strategy === "builder") return null;
       const buys = btn.map((b, i) => (b.t.includes("$") && !U[i].includes("HIT") ? i : -1)).filter((x) => x >= 0);
       const hit = findContains("HIT THE STREETS");
       const routes = btn.map((b, i) =>
@@ -193,6 +208,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
     }
     if (ph === "CARVING") {
+      if (strategy === "builder") return null;
       k = findContains("RETURN TO SHOP", "BACK TO BONES");
       if (k != null) return k;
       const bone = btn.findIndex((b) => /BONE \d/i.test(b.t));
@@ -281,12 +297,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   try {
     window.__GB_E2E__.goLineup();
     if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
-      if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
-        window.__GB_E2E__.selectPersonaByIndex(1);
+      if (!window.__GB_E2E__.selectPersonaByIndex(0)) {
+        if (!window.__GB_E2E__.selectPersonaByIndex(3)) {
+          window.__GB_E2E__.selectPersonaByIndex(1);
+        }
       }
     } else {
       window.__GB_E2E__.selectFirstPersona();
     }
+    window.__GB_E2E__.seedRunRng?.(seed);
     window.__GB_E2E__.startNewRun();
     window.__GB_E2E__.skipIntroOverlays?.();
     await wait(120);
@@ -299,15 +318,23 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   for (let step = 0; step < maxSteps; step++) {
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
+    if (ph !== lastPh) {
+      if (lastPh === "CARVING") log._carveTries = 0;
+      lastPh = ph;
+    }
     if (ph === "PLAY") started = true;
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
       maxRound = st.round;
+    }
+    if (st && typeof st.inventoryCount === "number" && st.inventoryCount > (log._maxInv || 0)) {
+      log._maxInv = st.inventoryCount;
     }
     if (started && st && st.round != null && st.round < lastRound) {
       return {
         stuck: true,
         reason: "round_regression",
         maxRound,
+        maxInventoryObserved: log._maxInv || 0,
         phase: ph,
         seed,
         strategy,
@@ -321,6 +348,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         stuck: false,
         outcome: ph === "VICTORY" ? "WIN" : "BUST",
         maxRound,
+        maxInventoryObserved: log._maxInv || 0,
         phase: ph,
         seed,
         strategy,
@@ -351,11 +379,40 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     const shopBot = strategy === "builder" || strategy === "greedy";
     if (shopBot && ph === "SHOP") {
+      log._carvingPhase = false;
       log._shopPasses = (log._shopPasses || 0) + 1;
       const invNow = Number(st?.inventoryCount) || 0;
+      const organicReady = strategy === "builder" && window.__GB_E2E__?.isOrganicChainReady?.();
+      const minInv = strategy === "builder" ? 2 : 1;
+      const shopRound = Number(st?.round) || 1;
+      const kitStalled =
+        strategy === "builder"
+        && !organicReady
+        && log._shopPasses > 10
+        && shopRound >= 2;
+      const builderStreets =
+        strategy === "builder"
+          ? (organicReady && invNow >= 2) || kitStalled || log._shopPasses > 22
+          : organicReady
+            || log._shopPasses > 18
+            || window.__GB_E2E__?.shouldLeaveShopForPacing?.();
+      if (log._shopPasses <= 14 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+        await wait(90);
+        continue;
+      }
+      if (
+        strategy === "builder"
+        && organicReady
+        && invNow < 2
+        && log._shopPasses <= 10
+        && window.__GB_E2E__?.buyPreferredShopItem?.()
+      ) {
+        await wait(90);
+        continue;
+      }
       if (
         st?.selectedShopPathId
-        && (invNow >= 1 || log._shopPasses > 10 || (st.round || 1) >= 4)
+        && (builderStreets || (strategy !== "builder" && (invNow >= minInv || log._shopPasses > 14 || (st.round || 1) >= 4)))
       ) {
         if (window.__GB_E2E__?.hitStreets?.()) {
           log._shopPasses = 0;
@@ -363,22 +420,52 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
           continue;
         }
       }
-      if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
+      const kitIncomplete = strategy === "builder" && !window.__GB_E2E__?.isOrganicChainReady?.();
+      if (
+        kitIncomplete
+        && shopRound >= 2
+        && log._shopPasses <= 18
+        && window.__GB_E2E__?.refreshShopForChainKit?.()
+      ) {
         await wait(90);
         continue;
       }
-      if (log._shopPasses <= 12 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
+      if (
+        shopRound < 3
+        && log._shopPasses <= 2
+        && window.__GB_E2E__?.refreshShopIfDry?.()
+      ) {
         await wait(90);
         continue;
       }
-      if (!st?.selectedShopPathId && window.__GB_E2E__?.clickShopRouteCard?.()) {
+      if (
+        !st?.selectedShopPathId
+        && (window.__GB_E2E__?.pickBuilderShopPath?.() || window.__GB_E2E__?.clickShopRouteCard?.())
+      ) {
         await wait(80);
         continue;
       }
     }
     if (shopBot && ph === "CARVING") {
+      if (!log._carvingPhase) {
+        log._carvingPhase = true;
+        log._carveTries = 0;
+      }
+      log._carveTries = (log._carveTries || 0) + 1;
+      if (log._carveTries > 24) {
+        log._carveTries = 0;
+        if (window.__GB_E2E__?.abortCarving?.()) {
+          await wait(80);
+          continue;
+        }
+      }
       if (window.__GB_E2E__?.autoCarvePreferred?.()) {
-        await wait(90);
+        await wait(180);
+        continue;
+      }
+      if (window.__GB_E2E__?.abortCarving?.()) {
+        log._carveTries = 0;
+        await wait(80);
         continue;
       }
     }
@@ -404,8 +491,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (stuck >= stuckThreshold) {
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") {
-        window.__GB_E2E__.clickShopRouteCard?.();
-        window.__GB_E2E__.hitStreets();
+        if (strategy === "builder" && !window.__GB_E2E__?.isOrganicChainReady?.()) {
+          window.__GB_E2E__.buyPreferredShopItem?.() || window.__GB_E2E__.refreshShopForChainKit?.();
+        } else {
+          window.__GB_E2E__.clickShopRouteCard?.();
+          window.__GB_E2E__.hitStreets();
+        }
       }
       else if (s.phase === "GAMBLE") {
         window.__GB_E2E__.takeSafeCut?.();
@@ -413,6 +504,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       } else if (s.phase === "PLAY") {
         window.__GB_E2E__.advanceRunPhase?.();
         window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick("PLAY");
+      } else if (s.phase === "CARVING") {
+        window.__GB_E2E__.autoCarvePreferred?.() || window.__GB_E2E__.abortCarving?.() || e2eUnstick("CARVING");
       } else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;
@@ -422,6 +515,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
           reason: "softlock_no_progress",
           detail: "fallbacks>" + maxFallbacks,
           maxRound,
+          maxInventoryObserved: log._maxInv || 0,
           phase: ph,
           seed,
           strategy,
@@ -504,6 +598,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       stuck: false,
       outcome: afterForfeit.phase === "VICTORY" ? "WIN" : "BUST",
       maxRound,
+      maxInventoryObserved: log._maxInv || 0,
       phase: afterForfeit.phase,
       seed,
       strategy,
@@ -519,9 +614,13 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     detail: "max_steps:" + maxSteps + ",phase:" + final.phase,
     outcome: "INCOMPLETE:" + final.phase,
     maxRound,
+    maxInventoryObserved: log._maxInv || 0,
     phase: final.phase,
     seed,
     strategy,
     steps: maxSteps,
   };
+  } finally {
+    window.__GB_SIM_BOT_SESSION__ = false;
+  }
 }

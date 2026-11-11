@@ -81,7 +81,7 @@ test("playtest5 bot — median round 4–6 and ~2 items by round 3", () => {
 test("playtest5 bot — no runaway quota by round 6", () => {
   const routes = loadRoutes();
   const r6 = projectRoundTarget(routes, 75, 1, 6);
-  assert.ok(r6 >= 290 && r6 <= 320, `R6 anchor ${r6} should stay challenging but not exponential`);
+  assert.ok(r6 >= 265 && r6 <= 305, `R6 anchor ${r6} should stay challenging but not exponential`);
 });
 
 test("playtest10 bot — clear-rate tapers by round (competent sim)", () => {

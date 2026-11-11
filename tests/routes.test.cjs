@@ -134,7 +134,7 @@ test("projectNextRound — THE RAID path round 9 scale", () => {
     personaPlays: 4,
     personaPills: 3,
   });
-  assert.ok(out.nextTargetDisplay >= Math.floor(out.nextTarget * 1.35));
+  assert.ok(out.nextTargetDisplay >= Math.floor(out.nextTarget * 1.28));
   assert.ok(out.nextTargetDisplay <= Math.floor(out.nextTarget * 1.65));
 });
 

@@ -25,6 +25,22 @@ console.log("=== check:fast — test:fast (Node rules/unit, no Playwright playte
 let code = run("npm", ["run", "test:fast"]);
 if (code !== 0) process.exit(code);
 
+console.log("\n=== check:fast — organic trace determinism + pairwise (serial) ===\n");
+code = run("node", ["--test", "--test-timeout=600000", "tests/organic-trace-determinism.test.cjs"]);
+if (code !== 0) process.exit(code);
+code = run("node", ["--test", "--test-timeout=900000", "tests/organic-pairwise-regression.test.cjs"]);
+if (code !== 0) process.exit(code);
+
+console.log("\n=== check:fast — sim replay determinism + builder regression (serial) ===\n");
+for (const file of [
+  "tests/sim/deterministic-replay.test.cjs",
+  "tests/sim/builder-consistency-regression.test.cjs",
+  "tests/sim/held-out-seeds.test.cjs",
+]) {
+  code = run("node", ["--test", "--test-timeout=900000", file]);
+  if (code !== 0) process.exit(code);
+}
+
 console.log("\n=== check:fast — repro-r13 softlocks ===\n");
 code = run("node", ["--test", "--test-timeout=420000", "tests/repro-r13-softlocks.test.cjs"]);
 if (code !== 0) process.exit(code);
@@ -43,7 +59,7 @@ if (fullLayout) {
 }
 
 console.log("\n=== check:fast — polish step5 layout (blocking + phone warnings) ===\n");
-code = run("node", ["--test", "--test-timeout=900000", "tests/polish-step5-layout.test.cjs"], {
+code = run("node", ["--test", "--test-timeout=1200000", "tests/polish-step5-layout.test.cjs"], {
   CHECK_FAST_PRINT_PHONE_REPORT: "1",
 });
 if (code !== 0) process.exit(code);

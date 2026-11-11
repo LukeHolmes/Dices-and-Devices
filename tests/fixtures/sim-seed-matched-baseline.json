@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-11-10T14:04:00.591Z",
+  "games": 10,
+  "winRate": 0,
+  "wins": 0,
+  "failureCount": 0,
+  "maxRoundMedian": 8,
+  "maxRoundReached": 9,
+  "linkCounts": {
+    "blood_ripple→fuse_spark": 0,
+    "blood_ripple→ghost_echo": 0,
+    "fuse_spark→engine_link": 0,
+    "ghost_echo→bookends_retrigger": 0,
+    "ghost_echo→engine_link": 0,
+    "wire_feed→crowbar_cascade": 0
+  },
+  "linkTotal": 0,
+  "crookedCop": {
+    "roundStarts": 0,
+    "roundsCleared": 0,
+    "survivalRate": 0
+  },
+  "buildOutcomes": {
+    "wins": {},
+    "busts": {
+      "MULT_ENGINE": 9,
+      "SET_CONSISTENCY": 1
+    }
+  }
+}
