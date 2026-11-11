@@ -22,6 +22,8 @@ test("Crooked Cop dampens hardware; Loan Shark toll tuning", () => {
   const fs = require("node:fs");
   const html = fs.readFileSync(require("node:path").join(__dirname, "../index.html"), "utf8");
   assert.match(html, /crookedCopHardwareMult/);
+  assert.match(html, /Hardware bonuses dampened to 68%/);
+  assert.match(html, /crookedCopHardwareMult:\s*0\.68/);
   assert.match(html, /loanSharkToll:\s*2/);
   assert.match(html, /loanSharkDebtToll:\s*1/);
   assert.doesNotMatch(html, /hardwareDisabled\s*=\s*crookedCopActive/s);
