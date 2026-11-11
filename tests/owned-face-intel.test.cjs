@@ -93,10 +93,7 @@ test("owned Blood 6 — die ? affordance and intel panel", async () => {
       { timeout: 8000 },
     );
     const focused = await page.evaluate(() => document.activeElement?.getAttribute("data-layout-key"));
-    assert.ok(
-      focused === "bone-face-intel-1" || focused === null,
-      `focus after bone intel: ${focused}`,
-    );
+    assert.equal(focused, "bone-face-intel-1", `focus after bone intel: ${focused}`);
   } finally {
     await browser.close();
   }

@@ -592,6 +592,27 @@
     #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="play-alley"] {
         overflow: hidden !important;
     }
+    #root-gutterbones[data-upgrade-intel-open="1"] .gb-app-shell {
+        pointer-events: none !important;
+        user-select: none;
+    }
+    #root-gutterbones[data-upgrade-intel-open="1"] [data-layout-key="upgrade-intel-backdrop"] {
+        pointer-events: auto !important;
+        z-index: 9850 !important;
+        isolation: isolate;
+    }
+    #root-gutterbones[data-upgrade-intel-open="1"] [data-layout-key="upgrade-intel-panel"] {
+        position: relative;
+        z-index: 1;
+        isolation: isolate;
+        background: #0a0a0a;
+    }
+    #root-gutterbones[data-upgrade-intel-open="1"] .bone-pill-control,
+    #root-gutterbones[data-upgrade-intel-open="1"] .bone-face-loupe,
+    #root-gutterbones[data-upgrade-intel-open="1"] .gutter-roll-hand-overlay {
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
     #root-gutterbones .hud-pill-count.pill-count-tick {
         animation: pillCountTick 0.42s ease-out;
     }
@@ -8447,7 +8468,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             intel.synergies && { label: 'SYNERGIES', body: intel.synergies }
         ].filter(Boolean);
         return (
-            <div className="fixed inset-0 z-[820] flex items-end sm:items-center justify-center p-[var(--gb-pad)] bg-black/70" data-layout-key="upgrade-intel-backdrop" onClick={onClose}>
+            <div className="fixed inset-0 z-[9850] flex items-end sm:items-center justify-center p-[var(--gb-pad)] bg-black/80" data-layout-key="upgrade-intel-backdrop" onClick={onClose}>
                 <div
                     ref={panelRef}
                     tabIndex={-1}
@@ -11480,6 +11501,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!root) return;
             root.dataset.scoreOverlayOpen = (scoreBreakdown || scoreResolution) ? '1' : '0';
         }, [scoreBreakdown, scoreResolution]);
+
+        useEffect(() => {
+            const root = document.getElementById('root-gutterbones');
+            const shell = root?.querySelector('.gb-app-shell');
+            if (!root) return undefined;
+            const open = !!upgradeIntelId;
+            root.dataset.upgradeIntelOpen = open ? '1' : '0';
+            if (shell) {
+                if (open && typeof shell.inert !== 'undefined') shell.inert = true;
+                else if (typeof shell.inert !== 'undefined') shell.inert = false;
+            }
+            return () => {
+                if (root) delete root.dataset.upgradeIntelOpen;
+                if (shell && typeof shell.inert !== 'undefined') shell.inert = false;
+            };
+        }, [upgradeIntelId]);
 
         useEffect(() => {
             const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
@@ -15491,10 +15528,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     />
                 )}
                 {toastStack.length > 0 && <ToastStack items={toastStack} onDismissToast={dismissToast} />}
-                <UpgradeIntelPanel
-                    intel={upgradeIntelId && typeof GutterbonesIntel !== 'undefined' ? GutterbonesIntel.getUpgradeIntel(upgradeIntelId) : null}
-                    onClose={closeUpgradeIntel}
-                />
                 {storyBeat && (
                     <StoryPanelOverlay
                         beat={storyBeat}
@@ -16768,6 +16801,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     </div>
                 )}
                 </div>
+                <UpgradeIntelPanel
+                    intel={upgradeIntelId && typeof GutterbonesIntel !== 'undefined' ? GutterbonesIntel.getUpgradeIntel(upgradeIntelId) : null}
+                    onClose={closeUpgradeIntel}
+                />
             </div>
         );
     }
