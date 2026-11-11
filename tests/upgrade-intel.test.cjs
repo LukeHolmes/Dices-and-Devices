@@ -42,6 +42,20 @@ test("GutterbonesIntel — ambiguous upgrades have trigger and payoff sections",
   }
 });
 
+test("GutterbonesIntel — every carved face type in FACE_DATABASE has intel", () => {
+  const missing = GI.missingFaceIntelIds();
+  assert.equal(missing.length, 0, `missing face intel: ${missing.join(", ")}`);
+  for (const id of GI.FACE_INTEL_IDS) {
+    const intel = GI.getUpgradeIntel(id);
+    assert.ok(intel?.trigger && intel?.benefits, id);
+  }
+});
+
+test("GutterbonesIntel — every hardware devise has intel", () => {
+  const missing = GI.missingHardwareIntelIds();
+  assert.equal(missing.length, 0, `missing hardware intel: ${missing.join(", ")}`);
+});
+
 test("GutterbonesIntel — every shop face, hardware, and consumable has detailed intel", () => {
   const catalog = GI.SHOP_INTEL_IDS;
   assert.ok(Array.isArray(catalog) && catalog.length === 29, `catalog size ${catalog?.length}`);

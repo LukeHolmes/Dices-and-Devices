@@ -870,10 +870,19 @@
     }
     @media (min-width: 821px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
-            max-height: min(58dvh, calc(100dvh - 11rem)) !important;
+            max-height: min(62dvh, calc(100dvh - 8.5rem)) !important;
+            min-height: 9rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
-            max-height: min(42dvh, 16rem) !important;
+            max-height: none !important;
+            flex: 1 1 auto !important;
+            min-height: 6.5rem !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
@@ -1806,6 +1815,28 @@
         }
         #root-gutterbones[data-phase="SHOP"] .shop-route-pagination button {
             z-index: 22;
+        }
+        @media (min-height: 880px) {
+            #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+                max-height: min(58dvh, calc(100dvh - 12.5rem)) !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+                max-height: none !important;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-gutter: stable;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+                min-height: 5.5rem !important;
+            }
         }
     }
     /* Polish step 4: short landscape — shop/gamble fit */
@@ -2985,6 +3016,10 @@
         background: linear-gradient(90deg, transparent, rgba(214, 184, 92, 0.55), transparent);
         pointer-events: none;
         z-index: 5;
+    }
+    #root-gutterbones .bone-face-intel-btn {
+        pointer-events: auto;
+        border-radius: 0.2rem;
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-loupe-btn {
         position: absolute;
@@ -5645,12 +5680,22 @@ const GutterbonesIntel = (() => {
         }
     });
 
+    const FACE_INTEL_IDS = Object.freeze([
+        'MULT_FACE', 'GOLD_FACE', 'WILD_FACE', 'BLOOD_6', 'ECHO_FACE', 'SHIV_FACE', 'WIREBAG_FACE',
+        'GHOST_FACE', 'FUSE_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'
+    ]);
+
     const SHOP_INTEL_IDS = Object.freeze([
         'MULT_FACE', 'GOLD_FACE', 'WILD_FACE', 'BLOOD_6', 'ECHO_FACE', 'SHIV_FACE', 'WIREBAG_FACE',
         'GHOST_FACE', 'FUSE_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE',
         'CENTERPIECE', 'BOOKENDS', 'ENGINE', 'LOADED_DIE', 'BLOOD_PACT', 'BRASS_KNUCKLES', 'BLACK_BOOK',
         'BURNER_PHONE', 'SHADY_LEDGER', 'CROWBAR', 'FUSE_BOX', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL',
         'SECOND_WIND', 'SMELLING_SALTS', 'DIRTY_WAD'
+    ]);
+
+    const HARDWARE_INTEL_IDS = Object.freeze([
+        'CENTERPIECE', 'BOOKENDS', 'ENGINE', 'LOADED_DIE', 'BLOOD_PACT', 'BRASS_KNUCKLES', 'BLACK_BOOK',
+        'BURNER_PHONE', 'SHADY_LEDGER', 'CROWBAR', 'FUSE_BOX', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL'
     ]);
 
     const getUpgradeIntel = (itemId) => {
@@ -5671,13 +5716,20 @@ const GutterbonesIntel = (() => {
     };
     if (typeof window !== 'undefined' && window.__GUTTERBONES_DEV__) assertShopCatalogCoverage();
 
+    const missingFaceIntelIds = () => FACE_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]);
+    const missingHardwareIntelIds = () => HARDWARE_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]);
+
     return Object.freeze({
         UPGRADE_INTEL,
+        FACE_INTEL_IDS,
         SHOP_INTEL_IDS,
+        HARDWARE_INTEL_IDS,
         getUpgradeIntel,
         hasUpgradeIntel,
         listUpgradeIntelIds: () => Object.keys(UPGRADE_INTEL),
-        missingShopIntelIds: () => SHOP_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id])
+        missingShopIntelIds: () => SHOP_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]),
+        missingFaceIntelIds,
+        missingHardwareIntelIds
     });
 })();
 if (typeof window !== 'undefined') window.GutterbonesIntel = GutterbonesIntel;
@@ -7094,9 +7146,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, onOpenUpgradeIntel, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
         const [loupeOpen, setLoupeOpen] = useState(false);
         const loupeRef = useRef(null);
+        const faceIntelBtnRef = useRef(null);
         const rollStyleRef = useRef({
             '--roll-delay': `${slot * 90}ms`,
             '--roll-dur': '680ms',
@@ -7159,15 +7212,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             window.addEventListener('keydown', onKey);
             return () => window.removeEventListener('keydown', onKey);
         }, [loupeOpen]);
-        const faceStrip = (data.faces || []).map((f, idx) => {
-            const label = f.faceLabel || f.label || (typeof f.value === 'number' ? f.value : '?');
-            return `${idx + 1}:${label}`;
-        });
+        const faceIntelFor = (f) => {
+            if (!f) return null;
+            const fid = (f.id && f.id !== 'standard' ? f.id : null) || f.faceId || null;
+            if (!fid || typeof GutterbonesIntel === 'undefined' || !GutterbonesIntel.hasUpgradeIntel(fid)) return null;
+            return fid;
+        };
+        const openFaceIntel = (faceId, returnEl = null) => {
+            setLoupeOpen(false);
+            if (faceId && onOpenUpgradeIntel) onOpenUpgradeIntel(faceId, returnEl || faceIntelBtnRef.current);
+        };
+        const showingFaceIntelId = data.faceId && data.faceId !== 'standard' && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(data.faceId) ? data.faceId : null;
         return (
             <div className={`relative bone-slot-inner ${previewTint ? 'bone-preview-tint' : ''}`} style={previewTint ? { '--preview-tint': previewTint } : undefined}>
                 {kept && !rolling && <div className="bone-kept-tray-rim" aria-hidden />}
                 <div className="bone-slot-label text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <div className="bone-die-perspective flex items-center justify-center">
+                <div className="bone-die-perspective relative flex items-center justify-center">
                     <button
                         type="button"
                         onClick={onClick}
@@ -7204,12 +7264,49 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             )
                         )}
                     </button>
+                    {!rolling && showingFaceIntelId && (
+                        <button
+                            ref={faceIntelBtnRef}
+                            type="button"
+                            data-layout-key={`bone-face-intel-${slot + 1}`}
+                            className="bone-face-intel-btn gb-tappable-label absolute left-0 bottom-0 z-[55] min-h-8 min-w-8 border border-amber-500/80 bg-black/85 font-mono text-[10px] text-amber-100 shadow-md"
+                            aria-label={`Details for ${data.faceLabel || showingFaceIntelId} on slot ${slot + 1}`}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setLoupeOpen(false);
+                                if (onOpenUpgradeIntel) onOpenUpgradeIntel(showingFaceIntelId, faceIntelBtnRef.current);
+                            }}
+                        >
+                            ?
+                        </button>
+                    )}
                 </div>
                 {kept && !rolling && <div className="bone-held-label">HELD</div>}
-                {loupeOpen && !rolling && faceStrip.length > 0 && (
+                {loupeOpen && !rolling && (data.faces || []).length > 0 && (
                     <div ref={loupeRef} data-layout-key={`bone-loupe-${slot + 1}`} className="bone-face-loupe" role="dialog" aria-label={`Faces on bone ${slot + 1}`}>
                         <div className="bone-face-loupe-grid">
-                            {faceStrip.map((line, i) => <div key={i}>{line}</div>)}
+                            {(data.faces || []).map((f, i) => {
+                                const label = f.faceLabel || f.label || (typeof f.value === 'number' ? f.value : '?');
+                                const intelId = faceIntelFor(f);
+                                return (
+                                    <div key={i} className="flex flex-col items-center gap-0.5 border border-zinc-700/60 rounded px-0.5 py-0.5">
+                                        <span className="text-center leading-tight">{i + 1}:{label}</span>
+                                        {intelId && (
+                                            <button
+                                                type="button"
+                                                data-layout-key={`bone-loupe-intel-${slot + 1}-${i + 1}`}
+                                                className="gb-tappable-label min-h-7 min-w-7 border border-amber-600/70 text-amber-100 bg-black/60 font-mono text-[9px]"
+                                                aria-label={`Details for ${label}`}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => openFaceIntel(intelId, e)}
+                                            >
+                                                ?
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -7418,7 +7515,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem }) => {
+    const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem, onOpenFaceIntel }) => {
         if (!previewItem) return null;
         return (
         <div data-layout-key="shop-bone-inspection-strip" className="shop-bone-inspection-strip shrink-0">
@@ -7444,11 +7541,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             </div>
             {inspectBone != null && dice[inspectBone] && (
                 <div data-layout-key="shop-face-preview-grid" className="bone-face-loupe-grid mt-2 mx-auto max-w-md" role="region" aria-label={`Faces on bone ${inspectBone + 1}`}>
-                    {(dice[inspectBone].faces || []).map((f, faceIdx) => (
-                        <div key={faceIdx} className="text-[10px] text-zinc-200 border border-zinc-700 rounded px-1 py-0.5 text-center">
-                            {f.faceLabel || f.label || f.value}
-                        </div>
-                    ))}
+                    {(dice[inspectBone].faces || []).map((f, faceIdx) => {
+                        const intelId = f?.id && f.id !== 'standard' && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(f.id) ? f.id : null;
+                        return (
+                            <div key={faceIdx} className="text-[10px] text-zinc-200 border border-zinc-700 rounded px-1 py-0.5 text-center flex flex-col items-center gap-0.5">
+                                <span>{f.faceLabel || f.label || f.value}</span>
+                                {intelId && onOpenFaceIntel && (
+                                    <button
+                                        type="button"
+                                        data-layout-key="shop-owned-face-intel"
+                                        className="gb-tappable-label min-h-7 min-w-7 border border-amber-600/70 text-amber-100 bg-black/60 font-mono text-[9px]"
+                                        aria-label={`Details for ${f.label || intelId}`}
+                                        onClick={(e) => { e.stopPropagation(); onOpenFaceIntel(intelId); }}
+                                    >
+                                        ?
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -10066,10 +10177,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [toastStack, setToastStack] = useState([]);
         const [upgradeIntelId, setUpgradeIntelId] = useState(null);
         const upgradeIntelReturnRef = useRef(null);
-        const openUpgradeIntel = (id) => {
+        const openUpgradeIntel = (id, returnFocusEl = null) => {
             if (typeof GutterbonesIntel === 'undefined' || !GutterbonesIntel.hasUpgradeIntel(id)) return;
             setActiveMechanicPopup(null);
-            upgradeIntelReturnRef.current = document.activeElement;
+            upgradeIntelReturnRef.current = returnFocusEl || document.activeElement;
             setUpgradeIntelId(id);
         };
         const closeUpgradeIntel = () => {
@@ -14458,6 +14569,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     openUpgradeIntel(id);
                     return true;
                 },
+                seedPlayBlood6: () => {
+                    setPhase('PLAY', { skipGuard: true });
+                    const bones = Array.from({ length: 5 }, () => makeBone());
+                    bones[0] = carvedDieFromFace(bones[0], 'BLOOD_6');
+                    setDice(bones);
+                    setHasRolled(true);
+                    setRollingSlots([false, false, false, false, false]);
+                    return !!bones[0]?.faceId;
+                },
                 getRollHandFxMs: () => GutterbonesPresentation.rollHandFxMs(presentationPacing(), reducedMotion),
                 openMechanicPillsPopover: () => {
                     setPhase('PLAY');
@@ -16010,6 +16130,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                 onExplainPill={() => showMechanicPopup('PILL')}
                                                 onDismissPillHint={dismissMechanicToasts}
                                                 onPill={() => popPill(i)}
+                                                onOpenUpgradeIntel={openUpgradeIntel}
                                                 onClick={() => {
                                                     if (swapMode) {
                                                         if (swapIdx === null) setSwapIdx(i);
@@ -16258,7 +16379,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     <button type="button" aria-label="Next stock page" disabled={safePage >= pageCount - 1} onClick={() => setShopItemPage((p) => Math.min(pageCount - 1, p + 1))} className="border border-gray-600 text-gray-200 px-3 py-2 min-h-[44px] disabled:opacity-40">→</button>
                                                 </div>
                                             )}
-                                <div ref={shopItemsBodyRef} className="shop-items-panel gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 content-start min-h-0">{visibleShopItems.map(item => {
+                                <div ref={shopItemsBodyRef} data-layout-key="shop-items-panel" className="shop-items-panel gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 content-start min-h-0">{visibleShopItems.map(item => {
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
@@ -16315,6 +16436,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     inspectBone={shopInspectBone}
                                     onPickBone={setShopInspectBone}
                                     previewItem={shopPreviewItem}
+                                    onOpenFaceIntel={(id) => openUpgradeIntel(id)}
                                 />
                                 </div>
                             </div>
