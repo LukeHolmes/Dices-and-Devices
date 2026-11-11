@@ -81,7 +81,12 @@ test("wrapped observer does not change scoring digest", () => {
   const plain = calc(fx.cat, fx.lane, fx.ctx);
   const obs = createBalanceObserver({ enabled: true, repoRoot: ROOT });
   const wrapped = observeCalculateScore(calc, obs, resolveDice);
-  const withObserver = wrapped(fx.cat, fx.lane, { ...fx.ctx, legalCategories: ["C", "Y"] });
+  const withObserver = wrapped(fx.cat, fx.lane, {
+    ...fx.ctx,
+    legalCategories: ["C", "Y"],
+    rules: g.api.GutterbonesRules,
+    hardwareDisabled: false,
+  });
   assert.deepEqual(scoringParityDigest([plain]), scoringParityDigest([withObserver]));
   const scoreEv = obs.ledger.events.find((e) => e.type === "score");
   assert.ok(scoreEv.score.rawDice.status === "ok");

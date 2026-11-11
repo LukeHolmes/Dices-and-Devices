@@ -196,6 +196,161 @@ this.buy = (item) => handlePurchase(item);
   assert.equal(action.action.kind, "purchase");
   assert.equal(action.action.reason.status, "ok");
   assert.equal(action.action.reason.value, "loan");
+  assert.equal(action.action.after.inventoryIds.status, "ok");
+  assert.ok(action.action.after.inventoryIds.value.includes("BOOKENDS"));
+});
+
+test("live refreshShop records rejections and successful refresh without extra RNG", () => {
+  const g = createGame(snapshot({ phase: "SHOP", round: 2, gold: 3, shopRefreshes: 0 }));
+  const observer = createBalanceObserver({ enabled: true, repoRoot: ROOT });
+  const routesCtx = vm.createContext({ Math });
+  vm.runInContext(routesSource, routesCtx);
+  let rngCalls = 0;
+  const rng = () => { rngCalls += 1; return 0.2; };
+  const refreshCostBlock = appSource.match(
+    /const SHOP_AGENCY_TUNING = \{[\s\S]*?\};\s*const getShopRefreshCost = \(roundNum, refreshCount\) => Math\.max\([\s\S]*?\);/,
+  );
+  assert.ok(refreshCostBlock, "getShopRefreshCost block in index.html");
+  const source = `
+${refreshCostBlock[0]}
+${sliceAction("generateShop", "refreshShop")}
+${sliceAction("shopListPrice", "forfeitRun")}
+${sliceAction("refreshShop", "sellInventoryItem")}
+this.doRefresh = () => refreshShop();
+`;
+  const sandbox = {
+    Math,
+    phase: "SHOP",
+    round: 2,
+    gold: 3,
+    stash: 0,
+    debt: 0,
+    shopRefreshes: 0,
+    dice: dice([1, 2, 3, 4, 5]),
+    inventory: [],
+    history: [],
+    flowStreak: 0,
+    meta: { unlockedFaceIds: Object.keys(g.api.FACE_DATABASE), unlockedHardwareIds: Object.keys(g.api.DEVISES) },
+    soldItems: [],
+    runExclusiveShopIds: [],
+    routeModifiers: {},
+    nextShopTag: "balanced",
+    nextShopTagRef: { current: "balanced" },
+    dailyRunActive: true,
+    runRandomRef: { current: rng },
+    paths: [{ id: "LOCAL" }],
+    GutterbonesRoutes: routesCtx.GutterbonesRoutes,
+    GutterbonesReplay: { modifierShopOffers: () => [], filterPathsForMeta: (x) => x, EXTRA_PATHS: [] },
+    FACE_DATABASE: g.api.FACE_DATABASE,
+    DEVISES: g.api.DEVISES,
+    CONSUMABLES: g.api.CONSUMABLES,
+    BOSSES: g.api.BOSSES,
+    PATHS: [{ id: "LOCAL" }],
+    SHOP_TUNING: { maxAffordableBuffer: 12, earlyDangerRoundGate: 5, priceScaleFromRound: 1.045 },
+    PROGRESSION_GUARDRAILS: { dangerCapRound: 6, maxEarlyDangerOffers: 1 },
+    EARLY_GAME_TUNING: { bossPathStartsRound: 4 },
+    BUILD_IDS: { UNKNOWN: "UNKNOWN", CHAOS: "CHAOS" },
+    ECONOMY_TUNING: { shortageToDebtRatio: 0.82 },
+    analyzeBuild: () => ({ primaryBuild: "UNKNOWN" }),
+    getArchetypeTagsForItemId: () => [],
+    itemFitsCurrentBuild: () => false,
+    isShopFaceAvailable: () => true,
+    syncShopRouteSelectionAfterStockRoll: () => {},
+    shopAdvanceLockRef: { current: false },
+    shopRewardGrantedRef: { current: null },
+    setGold: (fn) => { sandbox.gold = typeof fn === "function" ? fn(sandbox.gold) : fn; },
+    setShopRefreshes: (fn) => { sandbox.shopRefreshes = typeof fn === "function" ? fn(sandbox.shopRefreshes) : fn; },
+    setSoldItems: () => {},
+    setShopItems: () => {},
+    setPaths: () => {},
+    setSelectedShopPathId: () => {},
+    setActiveShopTag: () => {},
+    setRouteModifiers: () => {},
+    scheduleTimeout: (fn) => fn(),
+    spawnPaperStamp: () => {},
+    AudioSystem: { playTone: () => {} },
+    window: { __GB_BALANCE_OBSERVER__: observer },
+    __GB_BALANCE_OBSERVER__: observer,
+    globalThis: null,
+  };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(observerSource, sandbox);
+  vm.runInContext(source, sandbox);
+  const callsBeforeReject = rngCalls;
+  sandbox.doRefresh();
+  const reject = observer.ledger.events.find((e) => e.type === "action" && e.action.kind === "shop_refresh");
+  assert.ok(reject);
+  assert.equal(reject.action.reason.value, "rejected_insufficient_gold");
+  assert.equal(rngCalls, callsBeforeReject, "rejected refresh must not consume shop RNG");
+  sandbox.gold = 50;
+  sandbox.doRefresh();
+  const ok = observer.ledger.events.filter((e) => e.type === "action" && e.action.kind === "shop_refresh").at(-1);
+  assert.equal(ok.action.reason.value, "executed");
+});
+
+test("live handleProgram records informant rejection", () => {
+  const observer = createBalanceObserver({ enabled: true, repoRoot: ROOT });
+  const source = `${sliceAction("handleProgram", "useConsumable")}\nthis.run=(p)=>handleProgram(p);`;
+  const p = { id: "BRIBE", name: "BRIBE", cost: 60 };
+  const sandbox = {
+    Math,
+    hasRolled: true,
+    rolling: false,
+    stash: 100,
+    target: 200,
+    debt: 0,
+    phase: "PLAY",
+    round: 3,
+    dice: dice([1, 2, 3, 4, 5]),
+    kept: [false, false, false, false, false],
+    activeBoss: { id: "INFORMANT" },
+    showMechanicPopup: () => {},
+    setStash: () => {},
+    setTarget: () => {},
+    setDebt: () => {},
+    setActiveMechanicPopup: () => {},
+    setShowMobileStash: () => {},
+    rerollBoneSlot: () => {},
+    setDice: () => {},
+    window: { __GB_BALANCE_OBSERVER__: observer },
+    __GB_BALANCE_OBSERVER__: observer,
+    globalThis: null,
+  };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(observerSource, sandbox);
+  vm.runInContext(source, sandbox);
+  sandbox.run(p);
+  const action = observer.ledger.events.find((e) => e.type === "action");
+  assert.equal(action.action.reason.value, "rejected_informant");
+});
+
+test("setTerminalOnce dedupes second terminal", () => {
+  const o = createBalanceObserver({ enabled: true, repoRoot: ROOT });
+  assert.equal(o.setTerminalOnce({ reason: "quota_loss", round: 2 }), true);
+  assert.equal(o.setTerminalOnce({ reason: "victory", round: 10 }), false);
+  const terminals = o.ledger.events.filter((e) => e.type === "terminal");
+  assert.equal(terminals.length, 1);
+  assert.equal(terminals[0].terminal.reason, "quota_loss");
+});
+
+test("scoringLaneForObserver uses prepScoringDice (mirror rig)", () => {
+  const g = createGame(snapshot());
+  const lane = dice([1, 2, 3, 4, 5]);
+  const rules = g.api.GutterbonesRules;
+  const plain = rules.resolveDice(lane);
+  const prep = GutterbonesBalanceObserver.scoringLaneForObserver(
+    rules,
+    lane,
+    [{ id: "MIRROR_RIG" }],
+    false,
+  );
+  assert.ok(prep.missing === null);
+  assert.notDeepEqual(
+    GutterbonesBalanceObserver.snapshotResolvedLane(plain.resolved, plain.destroyed),
+    GutterbonesBalanceObserver.snapshotResolvedLane(prep.resolved, prep.destroyed),
+  );
 });
 
 test("observer on/off preserves generateShop RNG draws and offer ids", () => {

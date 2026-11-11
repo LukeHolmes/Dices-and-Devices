@@ -71,7 +71,20 @@ function observeCalculateScore(calculateScore, observer, resolveDice) {
     };
     const result = calculateScore(catId, dice, context);
     let resolvedSnapshot = GBO.missingField("resolveDice unavailable");
-    if (typeof resolveDice === "function") {
+    if (context?.rules?.prepScoringDice && context?.rules?.resolveDice) {
+      const lane = GBO.scoringLaneForObserver(
+        context.rules,
+        dice,
+        context.inventory || [],
+        context.hardwareDisabled,
+      );
+      if (!lane.missing) {
+        resolvedSnapshot = {
+          status: "ok",
+          value: GBO.snapshotResolvedLane(lane.resolved, lane.destroyed),
+        };
+      }
+    } else if (typeof resolveDice === "function") {
       const { resolved, destroyed } = resolveDice(dice);
       resolvedSnapshot = {
         status: "ok",
