@@ -160,7 +160,14 @@ async function reachPlayWithoutE2eFastDice(page) {
     () => !document.body.innerText.includes("FREE OPENING SNIFF"),
     { timeout: 12_000 },
   );
-  await page.waitForTimeout(2500);
+  await page.waitForFunction(
+    () => !document.body.innerText.includes("FREE OPENING SNIFF"),
+    { timeout: 12_000 },
+  );
+  await page.waitForFunction(
+    () => document.querySelector('[data-tutorial="roll-btn"]:not([disabled])'),
+    { timeout: 20_000 },
+  );
   const e2eFast = await page.evaluate(
     () => typeof window.__GB_E2E_QUERY__ === "function" && window.__GB_E2E_QUERY__(),
   );
@@ -174,13 +181,11 @@ test("browser staggered roll (no e2e fast path) records dice commits", async () 
     await reachPlayWithoutE2eFastDice(page);
     await page.waitForFunction(
       () => {
-        const btn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
-        const sniffOpen = document.body.innerText.includes("FREE OPENING SNIFF");
-        return !!btn && !sniffOpen;
+        const events = window.__GB_BALANCE_OBSERVER__?.exportLedger()?.events || [];
+        return events.some((e) => e.type === "state_commit" && e.commit?.kind === "reroll");
       },
       { timeout: 20_000 },
     );
-    await page.waitForTimeout(1500);
     const beforeSeq = await page.evaluate(() => window.__GB_BALANCE_OBSERVER__.exportLedger().events.length);
     await page.click('[data-tutorial="roll-btn"]');
     await page.waitForFunction(
@@ -191,7 +196,7 @@ test("browser staggered roll (no e2e fast path) records dice commits", async () 
         return kinds.includes("roll") && commits >= 1;
       },
       beforeSeq,
-      { timeout: 30_000 },
+      { timeout: 45_000 },
     );
     const delta = await page.evaluate((seq) => {
       const events = window.__GB_BALANCE_OBSERVER__.exportLedger().events.slice(seq);

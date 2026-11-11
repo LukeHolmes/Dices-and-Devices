@@ -232,7 +232,13 @@ function createGame(snapshot = {}, options = {}) {
       }
     },
     overlayInputGuardUntilRef: { current: 0 },
+    balanceObserverActive: () => sandbox.window?.__GB_BALANCE_OBSERVER__?.enabled === true,
+    armBalanceObserverDiceWatch: noOp,
+    queueBalanceObserverStateCommit: noOp,
   };
+  sandbox.window.__GB_BALANCE_OBSERVER__ = options.balanceObserverEnabled
+    ? { enabled: true }
+    : null;
   sandbox.setRollLock = (locked) => {
     sandbox.rollLocked = !!locked;
     sandbox.rollLockRef.current = !!locked;
