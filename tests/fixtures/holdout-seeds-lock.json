@@ -1,7 +1,7 @@
 {
   "lockedAt": "2026-11-11T09:46:00+00:00",
   "policyRevision": "2026-11-11-phase-b-v1",
-  "note": "Do not tune on this holdout. Seeds 50–54 partially used in prior reports.",
+  "note": "Diagnostic CLI must reject these holdout rids until separately approved. Seeds 50–54 partially used in prior reports.",
   "rids": [55, 56, 57, 58, 59],
   "seedFormula": "rid * 7919"
 }
