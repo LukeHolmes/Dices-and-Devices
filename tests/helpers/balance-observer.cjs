@@ -55,10 +55,19 @@ function createBalanceObserver(options = {}) {
   });
 }
 
+function balanceObserverActiveFromWindow(win) {
+  return win?.__GB_BALANCE_OBSERVER__?.enabled === true;
+}
+
 function installBrowserObserverShim(sandbox, observer) {
   sandbox.window = sandbox.window || {};
   sandbox.window.__GB_BALANCE_OBSERVER__ = observer;
   sandbox.GutterbonesBalanceObserver = GBO;
+  sandbox.__GB_BALANCE_OBSERVER__ = observer;
+  sandbox.balanceObserverActive = () => balanceObserverActiveFromWindow(sandbox.window);
+  if (!sandbox.window.GutterbonesBalanceObserver) {
+    sandbox.window.GutterbonesBalanceObserver = GBO;
+  }
 }
 
 function observeCalculateScore(calculateScore, observer, resolveDice) {
@@ -150,6 +159,7 @@ module.exports = {
   GutterbonesBalanceObserver: GBO,
   createBalanceObserver,
   installBrowserObserverShim,
+  balanceObserverActiveFromWindow,
   observeCalculateScore,
   ruleShaFromRepo,
   scoringParityDigest,

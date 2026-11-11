@@ -13,6 +13,7 @@ const {
   GutterbonesBalanceObserver,
   ruleShaFromRepo,
   observerSource,
+  installBrowserObserverShim,
 } = require("./helpers/balance-observer.cjs");
 
 const ROOT = path.join(__dirname, "..");
@@ -112,10 +113,9 @@ this.run = () => generateShop();
   setActiveShopTag: () => {},
   setRouteModifiers: () => {},
   setSoldItems: () => {},
-  window: { __GB_BALANCE_OBSERVER__: observer },
   };
   sandbox.globalThis = sandbox;
-  sandbox.__GB_BALANCE_OBSERVER__ = observer;
+  installBrowserObserverShim(sandbox, observer);
 
   vm.createContext(sandbox);
   vm.runInContext(observerSource, sandbox);
@@ -181,13 +181,11 @@ this.buy = (item) => handlePurchase(item);
     registerDebtSpike: (shortage) => Math.max(1, Math.ceil(shortage * 0.82)),
     AudioSystem: { playTone: () => {} },
     spawnPaperStamp: () => {},
-    GutterbonesBalanceObserver: null,
     queueBalanceObserverStateCommit: () => {},
-    window: { __GB_BALANCE_OBSERVER__: observer },
     globalThis: null,
-    __GB_BALANCE_OBSERVER__: observer,
   };
   sandbox.globalThis = sandbox;
+  installBrowserObserverShim(sandbox, observer);
   vm.createContext(sandbox);
   vm.runInContext(observerSource, sandbox);
   vm.runInContext(source, sandbox);
@@ -270,11 +268,10 @@ this.doRefresh = () => refreshShop();
     scheduleTimeout: (fn) => fn(),
     spawnPaperStamp: () => {},
     AudioSystem: { playTone: () => {} },
-    window: { __GB_BALANCE_OBSERVER__: observer },
-    __GB_BALANCE_OBSERVER__: observer,
     globalThis: null,
   };
   sandbox.globalThis = sandbox;
+  installBrowserObserverShim(sandbox, observer);
   vm.createContext(sandbox);
   vm.runInContext(observerSource, sandbox);
   vm.runInContext(source, sandbox);
@@ -314,11 +311,10 @@ test("live handleProgram records informant rejection", () => {
     setShowMobileStash: () => {},
     rerollBoneSlot: () => {},
     setDice: () => {},
-    window: { __GB_BALANCE_OBSERVER__: observer },
-    __GB_BALANCE_OBSERVER__: observer,
     globalThis: null,
   };
   sandbox.globalThis = sandbox;
+  installBrowserObserverShim(sandbox, observer);
   vm.createContext(sandbox);
   vm.runInContext(observerSource, sandbox);
   vm.runInContext(source, sandbox);
@@ -486,11 +482,10 @@ test("placeSideWager records rejection and executed wager", () => {
     spawnPaperStamp: () => {},
     AudioSystem: { playTone: () => {} },
     queueBalanceObserverStateCommit: () => {},
-    window: { __GB_BALANCE_OBSERVER__: observer },
-    __GB_BALANCE_OBSERVER__: observer,
     globalThis: null,
   };
   sandbox.globalThis = sandbox;
+  installBrowserObserverShim(sandbox, observer);
   vm.createContext(sandbox);
   vm.runInContext(observerSource, sandbox);
   vm.runInContext(source, sandbox);

@@ -6099,6 +6099,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 <script type="text/babel">
     const { useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
+    const balanceObserverActive = () => (
+        typeof window !== 'undefined' && window.__GB_BALANCE_OBSERVER__?.enabled === true
+    );
+
     const GAME_BRANDING = window.__GUTTERBONES_BRANDING__ || Object.freeze({
         title: 'GUTTERBONES',
         year: '1977',
@@ -10472,7 +10476,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const synergyCalloutAtRef = useRef(0);
         const rollLockRef = useRef(false);
         const balanceObserverCommitQueueRef = useRef(null);
-        const diceLiveRef = useRef([]);
+        const balanceObserverPendingDiceRef = useRef(null);
         const [rollLocked, setRollLocked] = useState(false);
         const setRollLock = (locked) => {
             rollLockRef.current = !!locked;
@@ -11103,44 +11107,92 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const flowMultiplier = getFlowMultiplier(flowStreak, flowStreakCap);
         const wagerThreshold = GutterbonesRoutes.wagerThresholdForRound(round, WAGER_TUNING);
         const canPlaceWager = phase === 'PLAY' && !rolling && !hasRolled && !activeWager && hands > 0;
-        diceLiveRef.current = dice;
         const queueBalanceObserverStateCommit = (job) => {
-            if (typeof window === 'undefined' || !window.__GB_BALANCE_OBSERVER__?.enabled) return;
+            if (!balanceObserverActive()) return;
             balanceObserverCommitQueueRef.current = job;
         };
-        const flushBalanceObserverStateCommit = () => {
-            const obs = typeof window !== 'undefined' ? window.__GB_BALANCE_OBSERVER__ : null;
-            const job = balanceObserverCommitQueueRef.current;
-            if (!obs?.enabled || !job) return;
-            balanceObserverCommitQueueRef.current = null;
-            const actual = {
-                inventoryIds: inventory.map((item) => item.id),
-                phase,
-                dice: window.GutterbonesBalanceObserver.snapshotRawLane(dice),
-                discards,
-                gold,
-                hands
-            };
-            const expected = job.expected || {};
-            const matchInventory = expected.inventoryIds == null
-                || JSON.stringify(actual.inventoryIds) === JSON.stringify(expected.inventoryIds);
-            const matchPhase = expected.phase == null || actual.phase === expected.phase;
-            const matchDice = expected.dice == null
-                || JSON.stringify(actual.dice) === JSON.stringify(expected.dice);
-            const matchGold = expected.gold == null || actual.gold === expected.gold;
-            const match = matchInventory && matchPhase && matchDice && matchGold;
+        const armBalanceObserverDiceWatch = (watch) => {
+            if (!balanceObserverActive()) return;
+            balanceObserverPendingDiceRef.current = watch;
+        };
+        const flushBalanceObserverPostCommit = () => {
+            if (!balanceObserverActive()) return;
+            const obs = window.__GB_BALANCE_OBSERVER__;
+            const api = window.GutterbonesBalanceObserver;
+            const commitJob = balanceObserverCommitQueueRef.current;
+            if (commitJob) {
+                balanceObserverCommitQueueRef.current = null;
+                const actual = {
+                    inventoryIds: inventory.map((item) => item.id),
+                    phase,
+                    dice: api.snapshotRawLane(dice),
+                    discards,
+                    gold,
+                    hands
+                };
+                const expected = commitJob.expected || {};
+                const match = (
+                    (expected.inventoryIds == null || JSON.stringify(actual.inventoryIds) === JSON.stringify(expected.inventoryIds))
+                    && (expected.phase == null || actual.phase === expected.phase)
+                    && (expected.dice == null || JSON.stringify(actual.dice) === JSON.stringify(expected.dice))
+                    && (expected.gold == null || actual.gold === expected.gold)
+                );
+                obs.recordStateCommit({
+                    kind: commitJob.kind,
+                    match: { status: 'ok', value: match },
+                    expected,
+                    actual,
+                    reason: { status: 'ok', value: match ? 'react_state_committed' : 'react_state_mismatch' }
+                });
+            }
+            const pending = balanceObserverPendingDiceRef.current;
+            if (!pending) return;
+            const afterDice = api.snapshotRawLane(dice);
+            const afterJson = JSON.stringify(afterDice);
+            if (afterJson === pending.beforeDiceJson) return;
+            if (pending.staggered && pending.slotsRemaining > 1) {
+                const slotBefore = pending.lastAfter || pending.before.dice;
+                api.notify((o) => o.recordAction({
+                    kind: 'roll_slot',
+                    reason: { status: 'ok', value: 'executed' },
+                    before: { dice: slotBefore, kept: pending.before.kept },
+                    after: {
+                        dice: { status: 'ok', value: afterDice },
+                        rollRng: api.missingField('per-die face draws use runRandomRef/Math.random without per-draw replay ledger on main')
+                    }
+                }));
+                pending.slotsRemaining -= 1;
+                pending.beforeDiceJson = afterJson;
+                pending.lastAfter = afterDice;
+                return;
+            }
+            if (pending.staggered && pending.slotsRemaining === 1) {
+                pending.slotsRemaining = 0;
+            }
+            const lane = api.scoringLaneForObserver(GutterbonesRules, dice, inventory, hardwareDisabled);
+            api.notify((o) => o.recordAction({
+                kind: pending.kind,
+                reason: { status: 'ok', value: pending.reason },
+                before: pending.before,
+                after: {
+                    dice: { status: 'ok', value: afterDice },
+                    resolvedDice: lane.missing || { status: 'ok', value: api.snapshotResolvedLane(lane.resolved, lane.destroyed) },
+                    kept: pending.before.kept,
+                    rollRng: api.missingField(pending.kind === 'reroll'
+                        ? 'pill reroll uses Math.random without per-draw replay ledger on main'
+                        : 'per-die face draws use runRandomRef/Math.random without per-draw replay ledger on main')
+                }
+            }));
             obs.recordStateCommit({
-                kind: job.kind,
-                match: { status: 'ok', value: match },
-                expected,
-                actual,
-                reason: match
-                    ? { status: 'ok', value: 'react_state_committed' }
-                    : { status: 'ok', value: 'react_state_mismatch' }
+                kind: pending.kind,
+                match: { status: 'ok', value: true },
+                actual: { dice: afterDice, kept: pending.before.kept },
+                reason: { status: 'ok', value: 'react_state_committed' }
             });
+            balanceObserverPendingDiceRef.current = null;
         };
         useLayoutEffect(() => {
-            flushBalanceObserverStateCommit();
+            flushBalanceObserverPostCommit();
         }, [inventory, dice, phase, discards, gold, hands]);
         const debtClearCashNeeded = Math.min(gold, Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier));
         const selectedPersonaUnlocked = meta.unlockedPersonaIds.includes(PERSONAS[personaIdx].id);
@@ -12774,20 +12826,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const rollBones = () => {
             const overlayOpen = !!(scoreBreakdown || scoreResolution);
             const rollReject = (value) => {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
-                    window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
-                        kind: 'roll',
-                        reason: { status: 'ok', value },
-                        before: {
-                            phase,
-                            kept: [...kept],
-                            discards,
-                            hands,
-                            dice: window.GutterbonesBalanceObserver.snapshotRawLane(dice)
-                        },
-                        after: window.GutterbonesBalanceObserver.missingField('roll did not execute')
-                    }));
-                }
+                if (!balanceObserverActive()) return;
+                window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+                    kind: 'roll',
+                    reason: { status: 'ok', value },
+                    before: {
+                        phase,
+                        kept: [...kept],
+                        discards,
+                        hands,
+                        dice: window.GutterbonesBalanceObserver.snapshotRawLane(dice)
+                    },
+                    after: window.GutterbonesBalanceObserver.missingField('roll did not execute')
+                }));
             };
             if (overlayOpen || payoutInputLock || bossIntro || storyBeat || roundClearCardActive || lossExplanation) {
                 rollReject(overlayOpen ? 'rejected_overlay_open' : payoutInputLock ? 'rejected_payout_lock' : bossIntro ? 'rejected_boss_intro' : storyBeat ? 'rejected_story_beat' : roundClearCardActive ? 'rejected_round_clear' : 'rejected_loss_explanation');
@@ -12870,92 +12921,36 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             const junkieBoss = activeBoss?.id === 'JUNKIE';
             const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
-            const rollOpts = { tutRollIdx, dailyRunActive, runRandomFn, junkieBoss };
-            const applyRollToLane = (prev) => prev.map((d, i) => (activeMask[i] ? resolveDieAfterRoll(d, i, rollOpts) : d));
-            const rollBeforeObserver = {
-                phase,
-                round,
-                kept: [...kept],
-                discards,
-                hands,
-                dice: GutterbonesBalanceObserver?.snapshotRawLane(dice) || null
-            };
             const e2eFastDice = typeof window !== 'undefined'
                 && typeof window.__GB_E2E_QUERY__ === 'function'
                 && window.__GB_E2E_QUERY__();
-            if (reducedMotion || e2eFastDice) {
-                const nextDice = applyRollToLane(dice);
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
-                    const lane = window.GutterbonesBalanceObserver.scoringLaneForObserver(
-                        GutterbonesRules,
-                        nextDice,
-                        inventory,
-                        hardwareDisabled
-                    );
-                    window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
-                        kind: 'roll',
-                        reason: { status: 'ok', value: hasRolled ? 'executed_reroll_hand' : 'executed_opening_roll' },
-                        before: rollBeforeObserver,
-                        after: {
-                            dice: { status: 'ok', value: window.GutterbonesBalanceObserver.snapshotRawLane(nextDice) },
-                            resolvedDice: lane.missing || { status: 'ok', value: window.GutterbonesBalanceObserver.snapshotResolvedLane(lane.resolved, lane.destroyed) },
-                            kept: [...kept],
-                            rollRng: window.GutterbonesBalanceObserver.missingField('per-die face draws use runRandomRef/Math.random without per-draw replay ledger on main')
-                        }
-                    }));
-                }
-                queueBalanceObserverStateCommit({
+            if (balanceObserverActive()) {
+                const api = window.GutterbonesBalanceObserver;
+                armBalanceObserverDiceWatch({
                     kind: 'roll',
-                    expected: { dice: window.GutterbonesBalanceObserver.snapshotRawLane(nextDice) }
+                    reason: hasRolled ? 'executed_reroll_hand' : 'executed_opening_roll',
+                    before: {
+                        phase,
+                        round,
+                        kept: [...kept],
+                        discards,
+                        hands,
+                        dice: api.snapshotRawLane(dice)
+                    },
+                    beforeDiceJson: JSON.stringify(api.snapshotRawLane(dice)),
+                    staggered: !(reducedMotion || e2eFastDice),
+                    slotsRemaining: (reducedMotion || e2eFastDice) ? 1 : activeIndices.length
                 });
-                setDice(nextDice);
+            }
+            if (reducedMotion || e2eFastDice) {
+                setDice(prev => prev.map((d, i) => (activeMask[i] ? resolveDieAfterRoll(d, i, { tutRollIdx, dailyRunActive, runRandomFn, junkieBoss }) : d)));
                 setRollingSlots(prev => prev.map(() => false));
                 completeRoll();
                 return;
             }
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
-                window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
-                    kind: 'roll',
-                    reason: { status: 'ok', value: 'executed_staggered_roll' },
-                    before: rollBeforeObserver,
-                    after: {
-                        kept: [...kept],
-                        activeSlots: activeIndices,
-                        settlement: window.GutterbonesBalanceObserver.missingField('staggered roll resolves per-slot on animation schedule; see roll_slot commits')
-                    }
-                }));
-            }
             activeIndices.forEach((slotIdx, order) => {
                 scheduleTimeout(() => {
-                    setDice((prev) => {
-                        const nextDice = prev.map((d, i) => (i === slotIdx ? resolveDieAfterRoll(d, i, rollOpts) : d));
-                        if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
-                            const lane = window.GutterbonesBalanceObserver.scoringLaneForObserver(
-                                GutterbonesRules,
-                                nextDice,
-                                inventory,
-                                hardwareDisabled
-                            );
-                            window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
-                                kind: 'roll_slot',
-                                reason: { status: 'ok', value: 'executed' },
-                                before: { slot: slotIdx + 1, dice: window.GutterbonesBalanceObserver.snapshotRawLane(prev) },
-                                after: {
-                                    slot: slotIdx + 1,
-                                    dice: { status: 'ok', value: window.GutterbonesBalanceObserver.snapshotRawLane(nextDice) },
-                                    resolvedDice: lane.missing || { status: 'ok', value: window.GutterbonesBalanceObserver.snapshotResolvedLane(lane.resolved, lane.destroyed) },
-                                    rollRng: window.GutterbonesBalanceObserver.missingField('per-die face draws use runRandomRef/Math.random without per-draw replay ledger on main')
-                                }
-                            }));
-                            if (order === activeIndices.length - 1) {
-                                balanceObserverCommitQueueRef.current = {
-                                    kind: 'roll',
-                                    expected: { dice: window.GutterbonesBalanceObserver.snapshotRawLane(nextDice) }
-                                };
-                            }
-                        }
-                        return nextDice;
-                    });
+                    setDice(prev => prev.map((d, i) => (i === slotIdx ? resolveDieAfterRoll(d, i, { tutRollIdx, dailyRunActive, runRandomFn, junkieBoss }) : d)));
                     setRollingSlots(prev => prev.map((v, i) => (i === slotIdx ? false : v)));
                     if (typeof AudioSystem.dieThud === 'function') AudioSystem.dieThud(order);
                     if (order === activeIndices.length - 1) {
@@ -12968,8 +12963,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const rerollBoneSlot = (idx, { consumePill = true, silent = false } = {}) => {
             const rerollReject = (value) => {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
-                    window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+                if (!balanceObserverActive()) return false;
+                window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'reroll',
                         reason: { status: 'ok', value },
                         before: {
@@ -12980,7 +12975,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         },
                         after: window.GutterbonesBalanceObserver.missingField('reroll did not execute')
                     }));
-                }
                 return false;
             };
             const overlayOpen = (typeof scoreBreakdown !== 'undefined' && (scoreBreakdown || scoreResolution))
@@ -13010,28 +13004,32 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setRollLock(true);
             setRollingSlots(prev => prev.map((_, i) => i === idx));
             const settleMs = reducedMotion ? 0 : getDiceSettleMs(typeof audioSettings !== 'undefined' ? audioSettings : {}, reducedMotion) + 120;
-            const rerollBeforeObserver = {
-                slot: idx + 1,
-                kept: [...kept],
-                discards,
-                dice: GutterbonesBalanceObserver?.snapshotRawLane(dice) || null
-            };
+            if (balanceObserverActive()) {
+                const api = window.GutterbonesBalanceObserver;
+                armBalanceObserverDiceWatch({
+                    kind: 'reroll',
+                    reason: 'executed',
+                    before: {
+                        slot: idx + 1,
+                        kept: [...kept],
+                        discards,
+                        dice: api.snapshotRawLane(dice)
+                    },
+                    beforeDiceJson: JSON.stringify(api.snapshotRawLane(dice)),
+                    staggered: false,
+                    slotsRemaining: 1
+                });
+            }
             scheduleTimeout(() => {
-                const prevLane = diceLiveRef.current || [];
-                const die = prevLane[idx];
-                if (!die) {
-                    rerollReject('rejected_no_die');
-                    setRollingSlots(prev => prev.map(() => false));
-                    setRollLock(false);
-                    return;
-                }
-                const face = die.faces[Math.floor(Math.random() * die.faces.length)];
-                const isStandard = face.type === 'standard';
-                let value = face.value;
-                if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
-                const nextDice = prevLane.map((d, i) => {
-                    if (i !== idx) return d;
-                    return {
+                setDice(prev => {
+                    const next = [...prev];
+                    const die = next[idx];
+                    if (!die) return prev;
+                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
+                    const isStandard = face.type === 'standard';
+                    let value = face.value;
+                    if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
+                    next[idx] = {
                         ...die,
                         value,
                         faceId: isStandard ? null : face.id,
@@ -13040,31 +13038,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         type: isStandard ? 'standard' : face.type,
                         id: Math.random()
                     };
+                    return next;
                 });
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
-                    const lane = window.GutterbonesBalanceObserver.scoringLaneForObserver(
-                        GutterbonesRules,
-                        nextDice,
-                        inventory,
-                        hardwareDisabled
-                    );
-                    window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
-                        kind: 'reroll',
-                        reason: { status: 'ok', value: 'executed' },
-                        before: rerollBeforeObserver,
-                        after: {
-                            slot: idx + 1,
-                            dice: { status: 'ok', value: window.GutterbonesBalanceObserver.snapshotRawLane(nextDice) },
-                            resolvedDice: lane.missing || { status: 'ok', value: window.GutterbonesBalanceObserver.snapshotResolvedLane(lane.resolved, lane.destroyed) },
-                            rerollRng: window.GutterbonesBalanceObserver.missingField('pill reroll uses Math.random without per-draw replay ledger on main')
-                        }
-                    }));
-                }
-                queueBalanceObserverStateCommit({
-                    kind: 'reroll',
-                    expected: { dice: window.GutterbonesBalanceObserver.snapshotRawLane(nextDice) }
-                });
-                setDice(nextDice);
                 setRollingSlots(prev => prev.map(() => false));
                 setRollLock(false);
                 if (!reducedMotion) {
@@ -13252,7 +13227,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
             const result = calculateScore(catId, diceForScore);
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => {
                     const lane = window.GutterbonesBalanceObserver.scoringLaneForObserver(
                         GutterbonesRules,
@@ -13385,7 +13360,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const finalizeRoundAfterHand = (settlementCashLocal, projectedCashLocal) => {
                 const quotaCleared = scoreAfter >= quotaTargetAtPlay;
                 if (!quotaCleared && handsAfterPlay <= 0) {
-                    if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                    if (balanceObserverActive()) {
                         window.GutterbonesBalanceObserver.notify((obs) => obs.setTerminalOnce({
                             reason: 'quota_loss',
                             phase: 'RAP_SHEET',
@@ -13455,7 +13430,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     }
                 };
                 if (round >= 10) {
-                    if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                    if (balanceObserverActive()) {
                         window.GutterbonesBalanceObserver.notify((obs) => obs.setTerminalOnce({
                             reason: 'victory',
                             phase: 'VICTORY',
@@ -13697,7 +13672,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const resolveGambleBlueprint = () => {
             if (phase !== 'GAMBLE') {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'gamble',
                         reason: { status: 'ok', value: 'rejected_wrong_phase' },
@@ -13714,7 +13689,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 random: Math.random(),
                 pickBlueprintId: () => pickRandomBlueprintId()
             });
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'gamble',
                     reason: { status: 'ok', value: outcome.won ? 'executed_win' : 'executed_loss' },
@@ -13744,7 +13719,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const resolveGamble = (doubleDown, tierId = 'FAIR') => {
             if (phase !== 'GAMBLE') {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'gamble',
                         reason: { status: 'ok', value: 'rejected_wrong_phase' },
@@ -13762,7 +13737,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     gold,
                     random: Math.random()
                 });
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'gamble',
                         reason: { status: 'ok', value: outcome.won ? 'executed_win' : 'executed_loss' },
@@ -13787,7 +13762,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     AudioSystem.playTone(120, 'sawtooth', 0.18);
                 }
             } else {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'gamble',
                         reason: { status: 'ok', value: 'executed_skip' },
@@ -13811,7 +13786,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 wagerThreshold
             };
             if (!canPlaceWager) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'side_wager',
                         reason: { status: 'ok', value: 'rejected_not_placeable' },
@@ -13822,7 +13797,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             if (stake <= 0 || gold < stake) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'side_wager',
                         reason: { status: 'ok', value: stake <= 0 ? 'rejected_zero_stake' : 'rejected_insufficient_gold' },
@@ -13832,7 +13807,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 return;
             }
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'side_wager',
                     reason: { status: 'ok', value: 'executed' },
@@ -13859,7 +13834,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             showMechanicPopup(`PROGRAM_${p.id}`);
             const programBefore = { stash, target, debt, phase, round, programId: p.id };
             if (!hasRolled || rolling) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'program',
                         reason: { status: 'ok', value: 'rejected_not_ready' },
@@ -13870,7 +13845,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             if (stash < p.cost || activeBoss?.id === 'INFORMANT') {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'program',
                         reason: { status: 'ok', value: activeBoss?.id === 'INFORMANT' ? 'rejected_informant' : 'rejected_insufficient_stash' },
@@ -13883,7 +13858,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (p.id === 'SNIFF') {
                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
                 if (!free.length || rolling) {
-                    if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                    if (balanceObserverActive()) {
                         window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                             kind: 'program',
                             reason: { status: 'ok', value: 'rejected_sniff_no_free_slots' },
@@ -13899,7 +13874,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 target: p.id === 'BRIBE' ? Math.max(25, Math.floor(target * 0.85)) : target,
                 debt: p.id === 'LAUNDER' ? 0 : debt
             };
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'program',
                     reason: { status: 'ok', value: 'executed' },
@@ -13933,7 +13908,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 hands
             };
             if (phase !== 'PLAY' || rolling) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'consumable_use',
                         reason: { status: 'ok', value: rolling ? 'rejected_rolling' : 'rejected_wrong_phase' },
@@ -13945,7 +13920,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             const item = consumables[idx];
             if (!item) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'consumable_use',
                         reason: { status: 'ok', value: 'rejected_no_item' },
@@ -13960,7 +13935,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 gold: item.id === 'DIRTY_WAD' ? gold + 12 : gold,
                 hands: item.id === 'SECOND_WIND' ? hands + 1 : hands
             };
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'consumable_use',
                     reason: { status: 'ok', value: 'executed' },
@@ -14143,7 +14118,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             ensureEarlySmellingSalts();
 
             const shopOfferSlice = picks.slice(0, 4);
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => {
                     shopOfferSlice.forEach((item) => {
                         const finalPrice = shopListPrice(item);
@@ -14208,7 +14183,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const refreshShop = () => {
             if (phase !== 'SHOP') {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'shop_refresh',
                         reason: { status: 'ok', value: 'rejected_wrong_phase' },
@@ -14220,7 +14195,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             const cost = getShopRefreshCost(round, shopRefreshes);
             if (gold < cost) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'shop_refresh',
                         reason: { status: 'ok', value: 'rejected_insufficient_gold' },
@@ -14232,7 +14207,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             const beforeRefresh = { gold, shopRefreshes };
             const afterRefresh = { gold: Math.max(0, gold - cost), shopRefreshes: shopRefreshes + 1 };
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'shop_refresh',
                     reason: { status: 'ok', value: 'executed' },
@@ -14256,7 +14231,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 itemId: item?.id || null
             };
             if (phase !== 'SHOP') {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'inventory_sell',
                         reason: { status: 'ok', value: 'rejected_wrong_phase' },
@@ -14267,7 +14242,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             const saleValue = getHardwareSellValue(item);
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'inventory_sell',
                     reason: { status: 'ok', value: 'executed' },
@@ -14287,7 +14262,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const payDebtFromCash = (amount) => {
             const debtPayBefore = { phase, debt, gold, amount };
             if (phase !== 'SHOP' || debt <= 0 || gold <= 0) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'debt_paydown',
                         reason: { status: 'ok', value: 'rejected_preconditions' },
@@ -14300,7 +14275,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const maxPaymentForDebt = Math.ceil(debt / DEBT_PAYDOWN_TUNING.reliefMultiplier);
             const payment = Math.min(amount, gold, maxPaymentForDebt);
             if (payment <= 0) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'debt_paydown',
                         reason: { status: 'ok', value: 'rejected_zero_payment' },
@@ -14311,7 +14286,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             const debtRelief = Math.min(debt, Math.max(1, Math.floor(payment * DEBT_PAYDOWN_TUNING.reliefMultiplier)));
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'debt_paydown',
                     reason: { status: 'ok', value: 'executed' },
@@ -14339,7 +14314,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         const forfeitRun = ({ totalHeat: totalHeatOverride } = {}) => {
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.setTerminalOnce({
                     reason: 'voluntary_forfeit',
                     phase: 'RAP_SHEET',
@@ -14387,7 +14362,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 itemId: item.id
             };
             if (soldItems.includes(item.id)) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'purchase',
                         reason: { status: 'ok', value: 'rejected_already_sold' },
@@ -14398,7 +14373,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             if (RUN_EXCLUSIVE_SHOP_IDS.has(item.id) && runExclusiveShopIds.includes(item.id)) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'purchase',
                         reason: { status: 'ok', value: 'rejected_run_exclusive' },
@@ -14416,7 +14391,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 : 0;
             const finalRaidShop = phase === 'SHOP' && round >= 9 && paths?.length === 1 && paths[0]?.id === 'RAID';
             if (finalRaidShop && item.type && gold < price) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'purchase',
                         reason: { status: 'ok', value: 'rejected_final_raid_no_face_loan' },
@@ -14438,7 +14413,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             } else {
                 nextInventoryIds.push(item.id);
             }
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => {
                     obs.recordAction({
                         kind: 'purchase',
@@ -14501,7 +14476,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const executeCarve = (dieIdx, faceIdx) => {
             if (!selectedItem) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'carve',
                         reason: { status: 'ok', value: 'rejected_no_selected_face' },
@@ -14527,7 +14502,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const carveAfter = {
                 dice: GutterbonesBalanceObserver?.snapshotRawLane(carvedDice)
             };
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'carve',
                     reason: { status: 'ok', value: 'executed' },
@@ -14616,7 +14591,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const beginShopAdvance = (path) => {
             if (phase !== 'SHOP' || !path) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'route_advance',
                         reason: { status: 'ok', value: 'rejected_invalid_shop_advance' },
@@ -14626,7 +14601,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 return false;
             }
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'route_advance',
                     reason: { status: 'ok', value: 'executed' },
@@ -14644,7 +14619,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const selectShopPath = (path) => {
             if (phase !== 'SHOP' || !path) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'route_select',
                         reason: { status: 'ok', value: 'rejected_invalid_route_select' },
@@ -14655,7 +14630,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             const priorPathId = selectedShopPathId;
-            if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                     kind: 'route_select',
                     reason: { status: 'ok', value: 'executed' },
@@ -14672,7 +14647,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (phase !== 'SHOP') return;
             const path = resolveShopAdvancePath();
             if (!path) {
-                if (typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+                if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'route_commit',
                         reason: { status: 'ok', value: 'rejected_no_path_selected' },
@@ -14907,7 +14882,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         useEffect(() => {
             if (typeof window === 'undefined') return;
             const params = new URLSearchParams(window.location.search);
-            if (params.get('balanceObserver') === '1' && typeof window !== 'undefined' && window.GutterbonesBalanceObserver) {
+            if (params.get('balanceObserver') === '1' && typeof window.GutterbonesBalanceObserver !== 'undefined') {
                 if (!window.__GB_BALANCE_OBSERVER__) {
                     const obs = window.GutterbonesBalanceObserver.create({
                         enabled: true,

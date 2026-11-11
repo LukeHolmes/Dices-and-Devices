@@ -79,32 +79,134 @@ test("browser smoke — balanceObserver ledger records roll and snapshot", async
     });
 
     const before = await page.evaluate(() => window.__GB_BALANCE_OBSERVER__.exportLedger());
-    const beforeKinds = new Set(
-      before.events.filter((e) => e.type === "action").map((e) => e.action.kind),
-    );
+    const beforeEventSeq = before.events.length;
 
-    await page.evaluate(() => {
-      for (let attempt = 0; attempt < 4; attempt += 1) {
-        if (typeof window.__GB_E2E__.rollOnce === "function") window.__GB_E2E__.rollOnce();
-        else document.querySelector('[data-tutorial="roll-btn"]')?.click();
-      }
-    });
+    await page.evaluate(() => window.__GB_E2E__.rollOnce?.());
     await page.waitForTimeout(2000);
 
     const after = await page.evaluate(() => window.__GB_BALANCE_OBSERVER__.exportLedger());
-    const newActions = after.events.filter((e) => e.type === "action").slice(before.events.length);
+    const newEvents = after.events.slice(beforeEventSeq);
+    assert.ok(newEvents.length > 0, "expected new ledger events after roll");
+    const newActions = newEvents.filter((e) => e.type === "action");
     const kinds = new Set(newActions.map((e) => e.action.kind));
     assert.ok(
       kinds.has("roll") || kinds.has("roll_slot") || kinds.has("reroll"),
       `expected roll/reroll ledger actions, saw: ${[...kinds].join(",") || "none"}`,
     );
-    const commits = after.events.filter(
+    const newCommits = newEvents.filter(
       (e) => e.type === "state_commit" && (e.commit?.kind === "roll" || e.commit?.kind === "reroll"),
     );
-    assert.ok(commits.length >= 1, "expected react state_commit for dice mutation");
-    assert.equal(commits.at(-1).commit.match.value, true, "dice lane commit matches React state");
+    assert.ok(newCommits.length >= 1, "expected react state_commit for dice mutation");
+    assert.equal(newCommits.at(-1).commit.match.value, true, "dice lane commit matches React state");
     const snap = await page.evaluate(() => window.__GB_BALANCE_OBSERVER__.getReadOnlySnapshot?.());
     assert.ok(snap?.diceLane?.length === 5, "read-only snapshot exposes dice lane");
+  } finally {
+    await browser.close();
+  }
+});
+
+async function reachPlayWithoutE2eFastDice(page) {
+  await page.goto(`${baseUrl}/index.html?balanceObserver=1&tutorial=0`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#root-gutterbones", { timeout: 60_000 });
+  await page.waitForFunction(
+    () => {
+      const root = document.getElementById("root-gutterbones");
+      return root && root.innerText && !root.innerText.includes("LOADING");
+    },
+    { timeout: 60_000 },
+  );
+  await page.waitForFunction(() => window.__GB_BALANCE_OBSERVER__?.enabled, { timeout: 45_000 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    try {
+      localStorage.setItem(
+        "gutterbones1977:meta:v1",
+        JSON.stringify({
+          totalRuns: 3,
+          unlockedPersonaIds: ["STREET_RAT", "HUSTLER"],
+          launderedCash: 0,
+          recordsViews: 0,
+        }),
+      );
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({ tutorialCompleted: true, skippedAlleyIntro: true, reducedMotionPref: false }),
+      );
+    } catch (_) { /* ignore */ }
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(
+    () => {
+      const root = document.getElementById("root-gutterbones");
+      return root && root.innerText && !root.innerText.includes("LOADING");
+    },
+    { timeout: 60_000 },
+  );
+  await page.waitForFunction(() => window.__GB_BALANCE_OBSERVER__?.enabled, { timeout: 45_000 });
+  await page.evaluate(() => {
+    const play = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "PLAY");
+    play?.click();
+  });
+  await page.waitForSelector('[data-layout-key="lineup-title"]', { timeout: 30_000 });
+  await page.evaluate(() => {
+    const run = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "NEW RUN");
+    run?.click();
+  });
+  await page.waitForFunction(
+    () => document.querySelector('[data-tutorial="roll-btn"]:not([disabled])'),
+    { timeout: 60_000 },
+  );
+  await page.waitForFunction(
+    () => !document.body.innerText.includes("FREE OPENING SNIFF"),
+    { timeout: 12_000 },
+  );
+  await page.waitForTimeout(2500);
+  const e2eFast = await page.evaluate(
+    () => typeof window.__GB_E2E_QUERY__ === "function" && window.__GB_E2E_QUERY__(),
+  );
+  assert.equal(e2eFast, false, "staggered path requires e2e=0 (no sync dice fast path)");
+}
+
+test("browser staggered roll (no e2e fast path) records dice commits", async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  try {
+    await reachPlayWithoutE2eFastDice(page);
+    await page.waitForFunction(
+      () => {
+        const btn = document.querySelector('[data-tutorial="roll-btn"]:not([disabled])');
+        const sniffOpen = document.body.innerText.includes("FREE OPENING SNIFF");
+        return !!btn && !sniffOpen;
+      },
+      { timeout: 20_000 },
+    );
+    await page.waitForTimeout(1500);
+    const beforeSeq = await page.evaluate(() => window.__GB_BALANCE_OBSERVER__.exportLedger().events.length);
+    await page.click('[data-tutorial="roll-btn"]');
+    await page.waitForFunction(
+      (seq) => {
+        const events = window.__GB_BALANCE_OBSERVER__.exportLedger().events.slice(seq);
+        const kinds = events.filter((e) => e.type === "action").map((e) => e.action.kind);
+        const commits = events.filter((e) => e.type === "state_commit").length;
+        return kinds.includes("roll") && commits >= 1;
+      },
+      beforeSeq,
+      { timeout: 30_000 },
+    );
+    const delta = await page.evaluate((seq) => {
+      const events = window.__GB_BALANCE_OBSERVER__.exportLedger().events.slice(seq);
+      const actions = events.filter((e) => e.type === "action").map((e) => e.action.kind);
+      return { actions, commits: events.filter((e) => e.type === "state_commit").length };
+    }, beforeSeq);
+    assert.ok(
+      delta.actions.includes("roll") || delta.actions.includes("roll_slot"),
+      `staggered roll expected roll/roll_slot actions, got ${delta.actions.join(",")}`,
+    );
+    assert.ok(delta.commits >= 1, "expected post-commit state_commit on staggered roll");
+    const rollSlots = delta.actions.filter((k) => k === "roll_slot").length;
+    if (rollSlots > 0) {
+      assert.ok(rollSlots >= 2, `expected staggered multi-step roll_slot events, saw ${rollSlots}`);
+    }
   } finally {
     await browser.close();
   }
