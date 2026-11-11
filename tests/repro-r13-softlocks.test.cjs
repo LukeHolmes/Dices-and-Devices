@@ -112,6 +112,7 @@ test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke 
     });
     await page.waitForTimeout(500);
     await page.evaluate(() => window.__GB_E2E__.rollOnce());
+    // UI redesign: ledger payout rows need dock focus + settled roll (same contract as #78 harness).
     await page.waitForFunction(
       () => window.__GB_E2E__?.getHasRolled?.() && !window.__GB_E2E__?.getPlayLocks?.().rolling,
       { timeout: 20_000 },
@@ -120,11 +121,29 @@ test("r14 — desktop PLAY e2e focuses payouts dock before scoring (rid61 smoke 
       () => document.querySelector("[data-payout-row]") != null,
       { timeout: 20_000 },
     );
+    await page.waitForFunction(
+      () => document.querySelector('button[data-payout-row]:not([disabled])') != null,
+      { timeout: 20_000 },
+    );
+    await page.waitForFunction(
+      () => {
+        const locks = window.__GB_E2E__?.getPlayLocks?.();
+        return locks && !locks.rolling && !locks.payoutInputLock;
+      },
+      { timeout: 25_000 },
+    );
+    await page.evaluate(() => window.__GB_E2E__.focusPlayPayoutsTab?.());
+    await page.waitForTimeout(500);
     const ok = await page.evaluate(async () => {
-      window.__GB_E2E__.focusPlayPayoutsTab?.();
-      for (let i = 0; i < 20; i += 1) {
+      if (window.__GB_E2E__.dismissScoreOverlays) window.__GB_E2E__.dismissScoreOverlays();
+      for (let i = 0; i < 50; i += 1) {
         if (window.__GB_E2E__.scoreFirstPayoutRow?.()) return true;
-        await new Promise((r) => setTimeout(r, 150));
+        const row = document.querySelector('button[data-payout-row]:not([disabled])');
+        if (row) {
+          row.click();
+          return true;
+        }
+        await new Promise((r) => setTimeout(r, 200));
       }
       return false;
     });

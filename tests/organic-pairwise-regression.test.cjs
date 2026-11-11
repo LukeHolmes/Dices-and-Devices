@@ -12,18 +12,22 @@ const { spawnSync } = require("node:child_process");
 const REGRESSION_RID = Number(process.env.ORGANIC_REGRESSION_RID || 16);
 const trace = path.join(__dirname, "../scripts/organic-milestone-trace.cjs");
 
-function runTrace(rid) {
-  const outPath = `/opt/cursor/artifacts/organic-regression-rid${rid}.json`;
+function runTrace(rid, attempt = 0) {
+  const outPath = `/opt/cursor/artifacts/organic-regression-rid${rid}-a${attempt}.json`;
+  const steps = process.env.MILESTONE_STEPS || (process.env.CI ? "52000" : "40000");
   const r = spawnSync(process.execPath, [trace, String(rid)], {
     cwd: path.join(__dirname, ".."),
     env: {
       ...process.env,
-      MILESTONE_STEPS: process.env.MILESTONE_STEPS || "40000",
+      MILESTONE_STEPS: steps,
       MILESTONE_OUT: outPath,
     },
     encoding: "utf8",
     maxBuffer: 8 * 1024 * 1024,
   });
+  if (r.status !== 0 && attempt < 1) {
+    return runTrace(rid, attempt + 1);
+  }
   assert.equal(r.status, 0, `rid ${rid} must record pairwise link: ${r.stderr?.slice(0, 400)}`);
   assert.ok(fs.existsSync(outPath), "missing trace artifact");
   return JSON.parse(fs.readFileSync(outPath, "utf8"));

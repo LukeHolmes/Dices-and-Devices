@@ -2675,6 +2675,689 @@
         #root-gutterbones .felt-smoke-wisp { filter: none; opacity: .05; }
         #root-gutterbones .cash-bill.far { filter: none; }
     }
+
+    /* —— 1977 tabletop UI redesign (presentation-only; mechanics unchanged) —— */
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-hud {
+        background: rgba(24, 24, 27, 0.88);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(63, 63, 70, 0.65);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-hud .boss-banner-scan { display: none !important; }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.4rem 0.65rem;
+        min-height: 2.75rem;
+        flex-wrap: wrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-family: "Courier New", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: max(11px, var(--gb-min-font));
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        border: 1px solid rgba(82, 82, 91, 0.7);
+        background: rgba(9, 9, 11, 0.55);
+        color: #fbbf24;
+        white-space: nowrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--plays { color: #fafafa; }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--pill { color: #22d3ee; border-color: rgba(34, 211, 238, 0.45); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--cash { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--debt { color: #f87171; border-color: rgba(248, 113, 113, 0.45); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota {
+        padding: 0 0.65rem 0.5rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-track {
+        height: 0.55rem;
+        border-radius: 999px;
+        background: rgba(9, 9, 11, 0.9);
+        border: 1px solid rgba(63, 63, 70, 0.8);
+        overflow: hidden;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill {
+        height: 100%;
+        border-radius: inherit;
+        transition: width var(--t-med) var(--ease-out-expo), background-color var(--t-fast) ease;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--low { background: linear-gradient(90deg, #b45309, #f59e0b); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--pace { background: linear-gradient(90deg, #ea580c, #fb923c); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--danger { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-fill--clear { background: linear-gradient(90deg, #059669, #fbbf24); }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.25rem;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #a1a1aa;
+        letter-spacing: 0.06em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp {
+        flex: 1 1 12rem;
+        max-width: 22rem;
+        margin: 0 auto;
+        text-align: center;
+        border: 1px dashed rgba(248, 113, 113, 0.55);
+        background: rgba(69, 10, 10, 0.55);
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.35rem;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #fecaca;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-rule { color: #fca5a5; font-weight: 700; }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-history-log"] {
+        min-width: 2.75rem;
+        min-height: var(--gb-min-tap);
+        border: 1px solid rgba(113, 113, 122, 0.8);
+        border-radius: 0.35rem;
+        background: rgba(9, 9, 11, 0.7);
+        color: #e4e4e7;
+        font-family: "Courier New", monospace;
+        letter-spacing: 0.18em;
+        font-size: max(10px, var(--gb-min-font));
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-history-log"]:focus-visible {
+        outline: 2px solid #fbbf24;
+        outline-offset: 2px;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-history-drawer {
+        position: fixed;
+        inset: 0;
+        z-index: 480;
+        background: rgba(0, 0, 0, 0.62);
+        display: flex;
+        justify-content: flex-end;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-history-drawer-panel {
+        width: min(22rem, 92vw);
+        max-height: 100dvh;
+        background: rgba(9, 9, 11, 0.96);
+        border-left: 2px solid rgba(251, 191, 36, 0.35);
+        padding: 1rem;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger {
+        background: rgba(232, 230, 225, 0.94) !important;
+        border: 1px solid rgba(24, 24, 27, 0.85) !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        border-radius: 0.5rem;
+        transform: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger .payout-sheet-rows {
+        divide-color: rgba(39, 39, 42, 0.65);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-done {
+        opacity: 0.35 !important;
+        min-height: 1.75rem !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-done .score-row-name { text-decoration: line-through; }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-idle {
+        opacity: 0.5 !important;
+        min-height: 2rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-live {
+        opacity: 1 !important;
+        min-height: 2.75rem !important;
+        background: rgba(251, 191, 36, 0.12) !important;
+        border-left: 2px solid rgba(245, 158, 11, 0.65) !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-tier-live.payout-tier-best {
+        box-shadow: inset 0 0 0 1px rgba(234, 179, 8, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-heat-pill {
+        font-family: "Courier New", monospace;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        color: #b45309;
+        min-width: 3rem;
+        text-align: right;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-receipt-popover {
+        position: absolute;
+        right: 0.25rem;
+        top: 100%;
+        z-index: 60;
+        width: min(14rem, 72vw);
+        margin-top: 0.15rem;
+        padding: 0.55rem 0.65rem;
+        background: rgba(9, 9, 11, 0.96);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 0.4rem;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #e4e4e7;
+        text-align: left;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-meta-rest { display: none; }
+    #root-gutterbones[data-ui-redesign="1"] .score-row:hover .payout-meta-rest,
+    #root-gutterbones[data-ui-redesign="1"] .score-row:focus-visible .payout-meta-rest,
+    #root-gutterbones[data-ui-redesign="1"] .score-row.payout-receipt-open .payout-meta-rest { display: inline; }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail {
+        position: relative;
+        z-index: 25;
+        width: 100%;
+        padding: 0.35rem 0.75rem 0.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+        border-bottom: 1px solid rgba(63, 63, 70, 0.55);
+        background: rgba(9, 9, 11, 0.55);
+        backdrop-filter: blur(4px);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-wires {
+        position: absolute;
+        left: 0.75rem;
+        right: 0.75rem;
+        top: 50%;
+        height: 2px;
+        pointer-events: none;
+        z-index: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-wire {
+        stroke: rgba(251, 146, 60, 0.75);
+        stroke-width: 2;
+        fill: none;
+        filter: drop-shadow(0 0 4px rgba(251, 146, 60, 0.35));
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket {
+        position: relative;
+        z-index: 2;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.35rem;
+        border: 1px solid rgba(82, 82, 91, 0.85);
+        background: rgba(24, 24, 27, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Courier New", monospace;
+        font-size: max(9px, var(--gb-min-font));
+        color: #e4e4e7;
+        padding: 0.15rem;
+        text-align: center;
+        line-height: 1.05;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--empty { opacity: 0.35; }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--disabled {
+        opacity: 0.35;
+        filter: grayscale(1);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--disabled::after {
+        content: "CONFISCATED";
+        position: absolute;
+        inset: 0;
+        font-size: 7px;
+        letter-spacing: 0.08em;
+        color: #fca5a5;
+        background: repeating-linear-gradient(-12deg, transparent, transparent 4px, rgba(248, 113, 113, 0.25) 4px, rgba(248, 113, 113, 0.25) 6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0.15rem;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket:focus-visible {
+        outline: 2px solid #fbbf24;
+        outline-offset: 2px;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-tip {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: calc(100% + 0.25rem);
+        width: min(14rem, 70vw);
+        z-index: 80;
+        padding: 0.5rem 0.6rem;
+        background: rgba(9, 9, 11, 0.96);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        border-radius: 0.35rem;
+        font-size: max(10px, var(--gb-min-font));
+        color: #e4e4e7;
+        text-align: left;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-stash-column .stash-hardware-panel { display: none !important; }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact {
+        border-top: 1px solid rgba(39, 39, 42, 0.85);
+        padding-top: 0.5rem;
+        margin-top: 0.35rem;
+        flex-shrink: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        justify-content: stretch;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button {
+        flex: 1 1 30%;
+        min-height: 2.35rem;
+        padding: 0.35rem 0.25rem;
+        border-radius: 0.35rem;
+        transform: translateY(0);
+        transition: transform var(--t-fast) ease, box-shadow var(--t-fast) ease;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:not(:disabled) {
+        border-color: rgba(245, 158, 11, 0.45);
+        box-shadow: 0 -2px 0 rgba(245, 158, 11, 0.15);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:not(:disabled):hover,
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:not(:disabled):focus-visible {
+        transform: translateY(-2px);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .felt-surface.gb-alley-stage {
+        border-width: 1px !important;
+        border-color: rgba(63, 63, 70, 0.75) !important;
+        background-image:
+            linear-gradient(180deg, rgba(9, 9, 11, 0.55) 0%, rgba(9, 9, 11, 0.72) 100%),
+            url('assets/scenes/alley-playfield.png');
+        background-size: cover, cover;
+        background-position: center, center 52%;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-die-btn.bone-die-kept {
+        transform: translateY(12px);
+        box-shadow: inset 0 -3px 0 rgba(214, 184, 92, 0.45), 0 6px 14px rgba(0, 0, 0, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-held-label { display: none; }
+    #root-gutterbones[data-ui-redesign="1"] .bone-kept-tray-rim {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 18%;
+        height: 0.35rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, rgba(214, 184, 92, 0.55), transparent);
+        pointer-events: none;
+        z-index: 5;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-loupe-btn {
+        position: absolute;
+        left: 0.15rem;
+        bottom: -0.15rem;
+        z-index: 40;
+        min-width: 2rem;
+        min-height: 2rem;
+        border-radius: 999px;
+        border: 1px solid rgba(113, 113, 122, 0.8);
+        background: rgba(9, 9, 11, 0.85);
+        color: #d4d4d8;
+        font-size: max(9px, var(--gb-min-font));
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-face-loupe {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 0.35rem);
+        transform: translateX(-50%);
+        z-index: 90;
+        width: min(11rem, 70vw);
+        padding: 0.45rem;
+        background: rgba(9, 9, 11, 0.96);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 0.35rem;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-face-loupe-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.2rem;
+        font-family: "Courier New", monospace;
+        font-size: max(9px, var(--gb-min-font));
+        color: #e4e4e7;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .round-clear-receipt {
+        background: #f4f1e8 !important;
+        color: #18181b !important;
+        border: 1px dashed rgba(24, 24, 27, 0.65) !important;
+        font-family: "Courier New", monospace !important;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .round-clear-receipt .round-clear-receipt-title {
+        font-family: Impact, "Arial Black", sans-serif;
+        color: #b91c1c;
+        letter-spacing: 0.04em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-workbench-top {
+        border-bottom: 1px solid rgba(63, 63, 70, 0.65);
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-workbench {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-shelf {
+        flex: 1 1 45%;
+        min-height: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-bone-strip {
+        flex: 0 0 auto;
+        border-top: 1px solid rgba(0, 0, 0, 0.35);
+        padding-top: 0.75rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .route-door-card {
+        border-width: 1px !important;
+        border-radius: 0.35rem !important;
+        background: rgba(9, 9, 11, 0.82) !important;
+        padding: 0.85rem !important;
+        min-height: 5.5rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .route-door-card .route-door-reward {
+        font-size: max(11px, var(--gb-min-font));
+        color: #fbbf24;
+        letter-spacing: 0.12em;
+    }
+    #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .stash-dock-compact .stash-program-grid button:not(:disabled):hover {
+        transform: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button {
+        color: #18181b;
+        background: rgba(250, 250, 249, 0.96);
+        border-color: rgba(41, 37, 36, 0.55);
+        font-weight: 600;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button:disabled {
+        color: #78716c;
+        background: rgba(231, 229, 228, 0.65);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-dock-compact .stash-program-grid button span:last-child {
+        color: #b45309;
+        font-weight: 700;
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="system-menu-global"] {
+        display: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="system-menu-street"] {
+        min-height: var(--gb-min-tap);
+        min-width: var(--gb-min-tap);
+        border: 1px solid rgba(113, 113, 122, 0.85);
+        border-radius: 0.35rem;
+        background: rgba(9, 9, 11, 0.75);
+        color: #e4e4e7;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        letter-spacing: 0.14em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-top {
+        padding-right: 0.35rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        margin: -1px;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-dice-lane {
+        margin-top: 0.35rem;
+        padding-top: 0.15rem;
+    }
+    @keyframes handThrowSweep {
+        0% { transform: translate(-28%, -12%) rotate(-15deg) scale(0.98); opacity: 1; }
+        18% { transform: translate(-6%, -16%) rotate(-9deg); opacity: 1; }
+        35% { transform: translate(14%, -18%) rotate(5deg) scale(1.03); opacity: 1; }
+        58% { transform: translate(8%, -14%) rotate(2deg) scale(1); opacity: 1; }
+        100% { transform: translate(-32%, -10%) rotate(-11deg) scale(0.97); opacity: 0; }
+    }
+    @keyframes handGripClosedVisible {
+        0%, 34.9% { opacity: 1; }
+        35%, 100% { opacity: 0; }
+    }
+    @keyframes handGripOpenVisible {
+        0%, 34.9% { opacity: 0; }
+        35%, 100% { opacity: 1; }
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 38;
+        pointer-events: none;
+        overflow: visible;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+        --hand-anchor-x: 29.427%;
+        --hand-anchor-y: 56.25%;
+        --hand-wrist-inset-x: 2.5%;
+        --hand-wrist-lift-y: 46%;
+        position: absolute;
+        left: var(--hand-wrist-inset-x);
+        bottom: var(--hand-wrist-lift-y);
+        width: var(--hand-sprite-size, clamp(7.5rem, min(42vw, 34vh), 15.5rem));
+        height: var(--hand-sprite-size, clamp(7.5rem, min(42vw, 34vh), 15.5rem));
+        transform-origin: var(--hand-anchor-x) var(--hand-anchor-y);
+        will-change: transform, opacity;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .animate-gutter-hand {
+        animation: handThrowSweep 460ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-closed,
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-open {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: var(--hand-anchor-x) var(--hand-anchor-y);
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-closed {
+        animation: handGripClosedVisible 460ms linear forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-open {
+        animation: handGripOpenVisible 460ms linear forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .gutter-roll-hand-overlay {
+        display: none !important;
+    }
+    @media (max-width: 1024px) and (min-height: 900px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-wrist-inset-x: 1.5%;
+            --hand-wrist-lift-y: 48%;
+            --hand-sprite-size: clamp(8rem, min(52vw, 36vh), 16rem);
+        }
+    }
+    @media (max-height: 820px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-wrist-inset-x: 2%;
+            --hand-wrist-lift-y: 44%;
+            --hand-sprite-size: clamp(7rem, min(36vw, 42vh), 14rem);
+        }
+    }
+    @media (min-width: 1280px) and (max-height: 900px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-wrist-inset-x: 3%;
+            --hand-wrist-lift-y: 45%;
+            --hand-sprite-size: clamp(7.25rem, min(24vw, 48vh), 14.5rem);
+        }
+    }
+    @media (min-width: 1800px) and (min-height: 900px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-wrist-inset-x: 4%;
+            --hand-wrist-lift-y: 46%;
+            --hand-sprite-size: clamp(8rem, min(18vw, 38vh), 15rem);
+        }
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-inner > .bone-pill-control {
+        top: auto;
+        bottom: -0.5rem;
+        right: -0.35rem;
+        left: auto;
+        min-height: 2rem;
+        min-width: 2rem;
+        padding: 0.15rem 0.35rem;
+        font-size: max(9px, 0.62rem);
+        z-index: 45;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+    }
+    #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .animate-gutter-hand,
+    #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .gutter-roll-hand-closed,
+    #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .gutter-roll-hand-open {
+        animation-duration: 1840ms !important;
+    }
+    #root-gutterbones[data-phase="CARVING"] .toast-stack-root {
+        top: auto;
+        bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: min(94vw, 24rem);
+    }
+    @media (max-width: 1024px) {
+        #root-gutterbones[data-phase="CARVING"] .carving-shelf h2 {
+            padding-right: 0.5rem;
+        }
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger .payout-sheet-rows {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows .score-row-fixed,
+    #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows .locked-payout-row {
+        max-height: none !important;
+        min-height: var(--gb-min-tap, 2.75rem) !important;
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+        align-items: center;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-name-block {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: calc(100% - 3.25rem);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-name {
+        display: block;
+        line-height: 1.2;
+        text-align: left;
+        font-size: max(10px, 0.72rem);
+        letter-spacing: 0.01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="Y"] .score-row-name,
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="FH"] .score-row-name,
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="SS"] .score-row-name,
+    #root-gutterbones[data-ui-redesign="1"] .score-row-fixed.gb-payout-row-btn[data-payout-row="LS"] .score-row-name {
+        font-size: max(10px, 0.68rem);
+        letter-spacing: 0.02em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-heat-pill {
+        flex-shrink: 0;
+        margin-left: 0.35rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .locked-payout-row-compact {
+        min-height: 1.65rem !important;
+        padding-top: 0.15rem !important;
+        padding-bottom: 0.15rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .locked-payout-row-compact .locked-payout-sub {
+        display: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .payout-unlock-inspector-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-workbench {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-mercenary-shelf {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-workbench:has([data-layout-key="shop-bone-inspection-strip"]) .shop-mercenary-shelf {
+        flex: 1 1 55%;
+        border-bottom: 1px solid rgba(63, 63, 70, 0.75);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-bone-inspection-strip {
+        flex: 0 0 auto;
+        padding-top: 0.65rem;
+        background: rgba(9, 9, 11, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .shop-bone-inspection-strip .shop-bone-row {
+        display: flex;
+        gap: 0.35rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-workbench {
+        flex-direction: column !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-shelf {
+        flex: 0 0 auto;
+        max-height: 42%;
+        overflow-y: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .carving-bone-strip {
+        flex: 1 1 auto;
+        min-height: 12rem;
+    }
+    @media (min-width: 768px) and (max-height: 1080px) {
+        #root-gutterbones[data-ui-redesign="1"] .gb-route-list {
+            max-height: min(36vh, 17.5rem);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .shop-bone-inspection-strip {
+            max-height: 9.5rem;
+            overflow-y: auto;
+        }
+    }
+    @media (max-width: 1024px) {
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--empty {
+            display: none;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 0.25rem;
+            max-height: 3.5rem;
+            overflow: hidden;
+        }
+    }
+    @media (min-width: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-phase-grid"] {
+            grid-template-columns: 7fr 5fr;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] { grid-column: 1; }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] { grid-column: 2; }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-stash"] {
+            display: none !important;
+        }
+    }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
@@ -6113,6 +6796,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+        const [loupeOpen, setLoupeOpen] = useState(false);
+        const loupeRef = useRef(null);
         const rollStyleRef = useRef({
             '--roll-delay': `${slot * 90}ms`,
             '--roll-dur': '680ms',
@@ -6164,16 +6849,44 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (particleId) clearTimeout(particleId);
             };
         }, [rolling, data.faceId, data.type, data.id, reducedMotion]);
+        useEffect(() => {
+            if (!loupeOpen) return undefined;
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setLoupeOpen(false);
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [loupeOpen]);
+        const faceStrip = (data.faces || []).map((f, idx) => {
+            const label = f.faceLabel || f.label || (typeof f.value === 'number' ? f.value : '?');
+            return `${idx + 1}:${label}`;
+        });
         return (
             <div className={`relative bone-slot-inner ${previewTint ? 'bone-preview-tint' : ''}`} style={previewTint ? { '--preview-tint': previewTint } : undefined}>
-                <div className="text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
+                {kept && !rolling && <div className="bone-kept-tray-rim" aria-hidden />}
+                <div className="bone-slot-label text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
                 <div className="bone-die-perspective flex items-center justify-center">
                     <button
                         type="button"
                         onClick={onClick}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            setLoupeOpen((v) => !v);
+                        }}
+                        onMouseEnter={() => setLoupeOpen(true)}
+                        onMouseLeave={() => setLoupeOpen(false)}
+                        onFocus={() => setLoupeOpen(true)}
+                        onBlur={(e) => {
+                            if (loupeRef.current?.contains(e.relatedTarget)) return;
+                            setLoupeOpen(false);
+                        }}
                         className={`bone-die-btn relative flex items-center justify-center ${showTumble ? 'bone-die-tumble' : ''} ${kept ? 'bone-die-kept' : ''} ${kept && colorblindHeld ? 'bone-die-kept-cb' : ''} ${selected ? 'ring-4 ring-[#0df] z-50 rounded-lg' : ''}`}
                         style={rollStyleRef.current}
                         aria-label={`Bone slot ${slot + 1}`}
+                        aria-expanded={loupeOpen}
                         title={`Scoring pip ${pipValue}${data.faceLabel ? ` · ${data.faceLabel}` : ''}${showEchoedPip ? ' (resolved)' : ''}`}
                     >
                         {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
@@ -6194,6 +6907,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     </button>
                 </div>
                 {kept && !rolling && <div className="bone-held-label">HELD</div>}
+                {loupeOpen && !rolling && faceStrip.length > 0 && (
+                    <div ref={loupeRef} data-layout-key={`bone-loupe-${slot + 1}`} className="bone-face-loupe" role="dialog" aria-label={`Faces on bone ${slot + 1}`}>
+                        <div className="bone-face-loupe-grid">
+                            {faceStrip.map((line, i) => <div key={i}>{line}</div>)}
+                        </div>
+                    </div>
+                )}
                 {!rolling && (
                     <button
                         type="button"
@@ -6205,10 +6925,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         onBlur={onDismissPillHint}
                         title={canPill ? 'Pill reroll this bone' : 'No pills left'}
                         aria-label={canPill ? 'Reroll this bone (spend 1 pill)' : 'No pills remaining'}
-                        className={`gb-tappable-label absolute -top-3 -right-3 z-50 flex min-h-11 min-w-11 md:min-h-8 md:min-w-9 items-center justify-center rounded-full border border-[#0df]/70 bg-black px-1.5 font-mono font-bold text-[#0df] shadow-[0_0_10px_rgba(0,221,255,.25)] transition-opacity ${canPill ? 'opacity-100 hover:bg-[#0a1520]' : 'cursor-not-allowed opacity-35'} ${pillPulse && canPill ? 'animate-pulse ring-2 ring-[#ff007f]/80' : ''}`}
+                        className={`bone-pill-control gb-tappable-label absolute -top-3 -right-3 z-50 flex min-h-11 min-w-11 md:min-h-8 md:min-w-9 items-center justify-center rounded-full border border-[#0df]/70 bg-black px-1.5 font-mono font-bold text-[#0df] shadow-[0_0_10px_rgba(0,221,255,.25)] transition-opacity ${canPill ? 'opacity-100 hover:bg-[#0a1520]' : 'cursor-not-allowed opacity-35'} ${pillPulse && canPill ? 'animate-pulse ring-2 ring-[#ff007f]/80' : ''}`}
                     >
                         PILL
                         {raidPill && canPill && <span className="absolute -bottom-4 text-[8px] font-bold font-mono text-red-500">-$2</span>}
+                    </button>
+                )}
+                {!rolling && (
+                    <button
+                        type="button"
+                        data-layout-key={`bone-loupe-btn-${slot + 1}`}
+                        className="bone-loupe-btn md:hidden"
+                        onClick={(e) => { e.stopPropagation(); setLoupeOpen((v) => !v); }}
+                        aria-expanded={loupeOpen}
+                        aria-label={`Inspect faces on bone ${slot + 1}`}
+                    >
+                        6F
                     </button>
                 )}
             </div>
@@ -6291,6 +7023,140 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
+    const PayoutUnlockInspector = ({ meta, open, onClose }) => {
+        const panelRef = useRef(null);
+        const info = getCategoryUnlockInfo(meta);
+        useEffect(() => {
+            if (!open) return undefined;
+            panelRef.current?.focus?.({ preventScroll: true });
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [open, onClose]);
+        if (!open || !info.locked.length) return null;
+        return (
+            <div className="payout-unlock-inspector-panel" onClick={onClose} role="presentation">
+                <div
+                    ref={panelRef}
+                    tabIndex={-1}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="payout-unlock-title"
+                    data-layout-key="payout-unlock-inspector"
+                    className="matchbook-ledger w-full max-w-md max-h-[min(85dvh,28rem)] overflow-y-auto p-4 text-zinc-900 font-mono text-xs"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <h3 id="payout-unlock-title" className="font-bold tracking-[0.15em] text-sm border-b border-zinc-400 pb-2 mb-2">LOCKED PAYOUTS</h3>
+                    <p className="text-zinc-600 leading-snug mb-3">
+                        The fixer holds rows back until you survive more contracts. Completed runs: <b>{info.totalRuns}</b>.
+                    </p>
+                    <ul className="space-y-2">
+                        {info.lockedDetails.map((row) => (
+                            <li key={row.id} className="border-b border-zinc-300/80 pb-1.5">
+                                <span className="font-bold">{CATEGORIES[row.id]?.name || row.id}</span>
+                                {row.unlockAtRun > 0 && (
+                                    <span className="text-zinc-600">
+                                        {row.runsUntil > 0
+                                            ? ` — unlocks at ${row.unlockAtRun} runs (${row.runsUntil} to go)`
+                                            : ` — unlocks at ${row.unlockAtRun} runs`}
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                    <button type="button" data-layout-key="payout-unlock-close" onClick={onClose} className="gb-tappable-label mt-3 w-full min-h-[var(--gb-min-tap)] border border-zinc-600 bg-zinc-900/5 text-zinc-800 font-bold">CLOSE</button>
+                </div>
+            </div>
+        );
+    };
+
+    const ROLL_HAND_SPRITE_CLOSED = ['assets', 'scenes', 'hand-closed.png'].join('/');
+    const ROLL_HAND_SPRITE_OPEN = ['assets', 'scenes', 'hand-open.png'].join('/');
+    const ROLL_HAND_FX_MS = 460;
+
+    const probeRollHandSprites = (() => {
+        let cached = null;
+        return () => {
+            if (cached) return cached;
+            cached = new Promise((resolve) => {
+                if (typeof Image === 'undefined') {
+                    resolve(false);
+                    return;
+                }
+                let closedDone = false;
+                let openDone = false;
+                let closedOk = false;
+                let openOk = false;
+                const finish = () => {
+                    if (closedDone && openDone) resolve(closedOk && openOk);
+                };
+                const closed = new Image();
+                const open = new Image();
+                closed.onload = () => { closedOk = true; closedDone = true; finish(); };
+                closed.onerror = () => { closedDone = true; finish(); };
+                open.onload = () => { openOk = true; openDone = true; finish(); };
+                open.onerror = () => { openDone = true; finish(); };
+                closed.src = ROLL_HAND_SPRITE_CLOSED;
+                open.src = ROLL_HAND_SPRITE_OPEN;
+            });
+            return cached;
+        };
+    })();
+
+    const RollHandThrowOverlay = ({ generation, spritesReady }) => {
+        if (!generation || !spritesReady) return null;
+        return (
+            <div data-layout-key="roll-hand-throw-overlay" className="gutter-roll-hand-overlay" aria-hidden="true">
+                <div key={generation} className="gutter-roll-hand-sprite animate-gutter-hand">
+                    <img src={ROLL_HAND_SPRITE_CLOSED} alt="" className="gutter-roll-hand-closed" draggable={false} decoding="async" />
+                    <img src={ROLL_HAND_SPRITE_OPEN} alt="" className="gutter-roll-hand-open" draggable={false} decoding="async" />
+                </div>
+            </div>
+        );
+    };
+
+    const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem }) => {
+        if (!previewItem) return null;
+        return (
+        <div data-layout-key="shop-bone-inspection-strip" className="shop-bone-inspection-strip shrink-0">
+            <div className="font-mono text-[10px] tracking-[0.2em] text-amber-200/90 mb-2 px-1">
+                {previewItem?.label || previewItem?.name
+                    ? `INSPECT · ${previewItem.label || previewItem.name} — pick a bone`
+                    : 'BONE STRIP · tap a bone to inspect faces before you carve'}
+            </div>
+            <div className="shop-bone-row">
+                {dice.map((d, i) => (
+                    <button
+                        key={d.id}
+                        type="button"
+                        data-layout-key={`shop-inspect-bone-${i + 1}`}
+                        onClick={() => onPickBone(inspectBone === i ? null : i)}
+                        className={`gb-tappable-label min-h-[var(--gb-min-tap)] px-2 py-1 rounded border font-mono text-[10px] ${inspectBone === i ? 'border-amber-400 bg-amber-950/40 text-amber-100' : 'border-zinc-600 text-zinc-300 bg-black/50'}`}
+                        aria-pressed={inspectBone === i}
+                        aria-label={`Inspect bone ${i + 1}`}
+                    >
+                        B{i + 1}
+                    </button>
+                ))}
+            </div>
+            {inspectBone != null && dice[inspectBone] && (
+                <div data-layout-key="shop-face-preview-grid" className="bone-face-loupe-grid mt-2 mx-auto max-w-md" role="region" aria-label={`Faces on bone ${inspectBone + 1}`}>
+                    {(dice[inspectBone].faces || []).map((f, faceIdx) => (
+                        <div key={faceIdx} className="text-[10px] text-zinc-200 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                            {f.faceLabel || f.label || f.value}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+        );
+    };
+
     const PayoutSheetRows = ({ children }) => {
         const containerRef = useRef(null);
         const [moreCount, setMoreCount] = useState(0);
@@ -6365,35 +7231,59 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun }) => (
-        <div
-            data-payout-row={cat.id}
-            data-layout-key={`payout-row-${cat.id}`}
-            className="locked-payout-row w-full flex justify-between items-center py-2 px-2 border-b border-dashed border-gray-400 text-xs md:text-base opacity-55 cursor-not-allowed min-h-[2rem]"
-            aria-disabled="true"
-            title={runsUntil > 0 ? `Unlocks after ${unlockAtRun} completed runs (${runsUntil} to go)` : `Unlocks after ${unlockAtRun} completed runs`}
-        >
-            <span className="flex flex-col items-start text-gray-600 min-w-0">
-                <span className="font-bold line-through decoration-gray-500/80 truncate max-w-full">{cat.name}</span>
-                <span className="locked-payout-sub text-[11px] font-mono text-gray-500 mt-0.5">
-                    {runsUntil > 0 ? `Unlocks after ${unlockAtRun} runs · ${runsUntil} to go` : `Unlocks after ${unlockAtRun} runs`}
+    const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun, compact = true }) => {
+        const [tipOpen, setTipOpen] = useState(false);
+        const detail = runsUntil > 0
+            ? `Unlocks after ${unlockAtRun} completed runs (${runsUntil} to go)`
+            : `Unlocks after ${unlockAtRun} completed runs`;
+        return (
+            <div
+                data-payout-row={cat.id}
+                data-layout-key={`payout-row-${cat.id}`}
+                className={`locked-payout-row locked-payout-row-compact relative w-full flex justify-between items-center gap-1 py-2 px-2 border-b border-dashed border-gray-400 text-xs md:text-sm opacity-50 min-h-[2rem] ${compact ? 'payout-tier-idle' : ''}`}
+            >
+                <span className="score-row-name-block flex items-center gap-1 min-w-0 text-gray-600">
+                    <span className="score-row-name font-bold line-through decoration-gray-500/80">{cat.name}</span>
+                    {!compact && (
+                        <span className="locked-payout-sub text-[11px] font-mono text-gray-500 mt-0.5">
+                            {runsUntil > 0 ? `Unlocks after ${unlockAtRun} runs · ${runsUntil} to go` : `Unlocks after ${unlockAtRun} runs`}
+                        </span>
+                    )}
                 </span>
-            </span>
-            <span className="text-[10px] font-mono font-bold text-gray-500 tracking-wide">LOCKED</span>
-        </div>
-    );
+                <button
+                    type="button"
+                    data-layout-key={`payout-locked-info-${cat.id}`}
+                    className="gb-tappable-label min-h-8 min-w-8 border border-gray-500/50 rounded text-[10px] text-gray-600 shrink-0"
+                    aria-expanded={tipOpen}
+                    aria-label={`${cat.name} locked. ${detail}`}
+                    onClick={() => setTipOpen((v) => !v)}
+                    onBlur={() => setTipOpen(false)}
+                >
+                    ?
+                </button>
+                <span className="text-[10px] font-mono font-bold text-gray-500 tracking-wide shrink-0">LOCK</span>
+                {tipOpen && (
+                    <div role="tooltip" className="absolute left-2 right-2 z-50 mt-1 p-2 bg-zinc-950 border border-amber-500/35 text-zinc-100 text-[10px] rounded shadow-lg pointer-events-none" style={{ top: '100%' }}>
+                        {detail}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
-    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0 }) => {
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0, isBestPreview = false }) => {
         const [hover, setHover] = useState(false);
+        const [receiptOpen, setReceiptOpen] = useState(false);
         const longPressRef = useRef(null);
         const [bustTipOpen, setBustTipOpen] = useState(false);
         const triggers = (result.triggers || []).slice(0, 2);
         const masteryBonus = getHandMasteryBonus(handLevel);
-        const showTriggers = canScore && result.valid && triggers.length > 0;
         const chainHot = canScore && result.valid && (result.chainDepth || 0) >= 2;
         const bustHint = canScore && !result.valid && result.reason ? result.reason : '';
         const titleParts = [ruleTooltip, bustHint].filter(Boolean);
         const rowCanScore = canScore && !scoringLocked;
+        const tierClass = used ? 'payout-tier-done' : (rowCanScore && result.valid ? `payout-tier-live${isBestPreview ? ' payout-tier-best' : ''}` : (rowCanScore ? 'payout-tier-bust' : 'payout-tier-idle'));
+        const receiptVisible = (hover || receiptOpen || keyboardFocus) && rowCanScore && result.valid;
         const setPreview = (active) => {
             if (onPreviewChange) onPreviewChange(active ? id : null);
         };
@@ -6409,38 +7299,55 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 data-layout-key={`payout-row-${id}`}
                 onClick={() => onScore(id)}
                 onMouseEnter={() => { setHover(true); setPreview(true); }}
-                onMouseLeave={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); }}
+                onMouseLeave={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); setReceiptOpen(false); }}
                 onFocus={() => { setHover(true); setPreview(true); }}
-                onBlur={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); }}
+                onBlur={() => { setHover(false); setPreview(false); clearLongPress(); setBustTipOpen(false); setReceiptOpen(false); }}
                 onTouchStart={() => {
-                    if (!bustHint) return;
                     clearLongPress();
-                    longPressRef.current = setTimeout(() => setBustTipOpen(true), 480);
+                    if (bustHint) {
+                        longPressRef.current = setTimeout(() => setBustTipOpen(true), 480);
+                    } else if (rowCanScore && result.valid) {
+                        longPressRef.current = setTimeout(() => setReceiptOpen(true), 520);
+                    }
                 }}
                 onTouchEnd={clearLongPress}
                 onTouchCancel={clearLongPress}
                 disabled={!rowCanScore}
                 title={titleParts.join(' — ')}
                 aria-label={titleParts.length ? `${cat.name}. ${titleParts.join(' ')}` : cat.name}
+                aria-describedby={receiptVisible ? `payout-receipt-${id}` : undefined}
                 style={postRollReveal ? { animationDelay: `${postRollDelayMs}ms` } : undefined}
-                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}`}
+                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${tierClass} ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}${receiptOpen ? ' payout-receipt-open' : ''}`}
             >
                 {bustTipOpen && bustHint && (
                     <span className="absolute left-2 right-2 -top-1 z-20 translate-y-[-100%] bg-red-950 border border-red-500/70 text-red-100 text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none">{bustHint}</span>
                 )}
-                {hover && rowCanScore && result.valid && <ScorePreview result={result} />}
-                <span className="flex items-center gap-1 min-w-0 truncate max-w-[72%]">
-                    <span className="truncate">{cat.name}</span>
-                    <span className="payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
+                {receiptVisible && (
+                    <PayoutReceiptPopover
+                        id={`payout-receipt-${id}`}
+                        result={result}
+                        catName={cat.name}
+                        ruleTooltip={ruleTooltip}
+                        bustHint={bustHint}
+                        handLevel={handLevel}
+                        masteryBonus={masteryBonus}
+                        open
+                        onClose={() => { setReceiptOpen(false); setHover(false); }}
+                    />
+                )}
+                {!receiptVisible && hover && rowCanScore && result.valid && <ScorePreview result={result} />}
+                <span className="score-row-name-block flex items-start gap-1 min-w-0">
+                    <span className="score-row-name">{cat.name}</span>
+                    <span className="payout-meta-rest payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
                     {masteryBonus > 0 && (
-                        <span className="text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
+                        <span className="payout-meta-rest text-[8px] text-green-800 font-mono shrink-0 bg-green-100/80 border border-green-700/40 rounded px-0.5 leading-none" title={`+${masteryBonus} mastery`}>+{masteryBonus}</span>
                     )}
-                    {showTriggers && (
+                    {triggers.length > 0 && (
                         <span className="sr-only">{triggers.map((t) => `${t.name} ${t.value}`).join(', ')}</span>
                     )}
                 </span>
                 <span className="shrink-0 ml-1 flex items-center justify-end min-w-[2.75rem]">
-                    {used ? <span className="paid-stamp text-[0.65rem] leading-none">PAID</span> : (rowCanScore && result.valid ? result.total : (rowCanScore ? 'BUST' : '-'))}
+                    {used ? <span className="paid-stamp text-[0.65rem] leading-none">PAID</span> : (rowCanScore && result.valid ? <span className="payout-heat-pill">+{result.total}</span> : (rowCanScore ? 'BUST' : '-'))}
                 </span>
             </button>
         );
@@ -6938,11 +7845,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 aria-modal="true"
                 aria-labelledby="round-clear-title"
                 onClick={tryAdvance}
-                className={`round-clear-card font-marker text-4xl md:text-5xl text-[#0df] italic tracking-tight px-5 py-4 md:px-6 md:py-5 border-4 border-[#ff007f] bg-[#121113]/95 shadow-2xl max-w-md w-full ${reducedMotion ? '' : ''}`}
+                className={`round-clear-card round-clear-receipt font-marker text-2xl md:text-3xl italic tracking-tight px-5 py-4 md:px-6 md:py-5 border-4 border-zinc-700 bg-[#f4f1e8] text-zinc-900 shadow-2xl max-w-md w-full`}
             >
-                <div id="round-clear-title">ROUND {jobRound || '?'} CLEARED</div>
+                <div id="round-clear-title" className="round-clear-receipt-title text-center border-b border-dashed border-zinc-400 pb-2 mb-3">ROUND {jobRound || '?'} · JOB CLEARED</div>
                 {payout && payout.total > 0 && (
-                    <div className="font-mono text-[11px] not-italic text-left mt-4 space-y-1 text-gray-200 tracking-normal">
+                    <div className="font-mono text-[11px] not-italic text-left space-y-1 text-zinc-800 tracking-normal">
+                        <div className="text-[9px] uppercase tracking-[0.28em] text-zinc-500 mb-2">COUNTING CASH — TERMINAL</div>
                         <div className="flex justify-between gap-3"><span>Round bonus</span><span>${payout.base}</span></div>
                         {(payout.unusedPlays || 0) > 0 && (
                             <div className="flex justify-between gap-3">
@@ -6951,7 +7859,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         )}
                         <div className="flex justify-between gap-3"><span>Cash interest</span><span>${payout.interest}</span></div>
-                        <div className="flex justify-between gap-3 border-t border-gray-600 pt-1 text-[#0df] font-bold"><span>Total</span><span>${payout.total}</span></div>
+                        <div className="flex justify-between gap-3 border-t border-zinc-400 pt-1 text-amber-700 font-bold"><span>NET DIRTY CASH</span><span>${payout.total}</span></div>
                     </div>
                 )}
                 <button
@@ -7919,9 +8827,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 onClick={() => onPick(path)}
                 aria-label={aria}
                 aria-pressed={selected}
-                className={`w-full max-w-full box-border h-auto min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all shrink-0 ${compact ? 'shop-route-card--compact' : ''} ${path.color} ${selected ? 'ring-2 ring-[#0df] bg-cyan-950/35 border-[#0df]/70' : ''}`}
+                className={`route-door-card w-full max-w-full box-border h-auto min-h-[44px] p-4 border-2 rounded text-left hover:bg-white/5 transition-all shrink-0 ${compact ? 'shop-route-card--compact' : ''} ${path.color} ${selected ? 'ring-2 ring-[#0df] bg-cyan-950/35 border-[#0df]/70' : ''}`}
             >
                 <div className={`font-bold uppercase tracking-wider break-words ${compact ? 'text-base' : 'text-xl'}`}>{path.name}</div>
+                <div className="route-door-reward mt-1">☷ {path.boss ? 'BOSS' : 'ALLEY'} · {path.id || path.name}</div>
                 <div className="text-xs opacity-70 mt-1 font-mono line-clamp-2 break-words">{path.desc}</div>
                 {projection && (
                     <div className="mt-2 font-mono text-sm text-yellow-200">
@@ -8029,6 +8938,161 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         </button>
                     </div>
                 )}
+            </div>
+        );
+    };
+
+    const BossWarrantStamp = ({ boss }) => {
+        if (!boss) return null;
+        const shortName = (boss.name || '').replace(/^THE\s+/i, '');
+        return (
+            <div
+                data-layout-key="boss-warrant-stamp"
+                className="boss-warrant-stamp"
+                title={boss.desc}
+                aria-label={`Active boss warrant: ${boss.name}. ${boss.desc}`}
+            >
+                <span className="boss-warrant-name">{shortName}: </span>
+                <span className="boss-warrant-rule">{boss.desc}</span>
+            </div>
+        );
+    };
+
+    const PayoutReceiptPopover = ({ result, catName, ruleTooltip, bustHint, handLevel, masteryBonus, open, onClose, id }) => {
+        const ref = useRef(null);
+        useEffect(() => {
+            if (!open) return undefined;
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [open, onClose]);
+        if (!open || !result?.valid) return null;
+        const triggers = (result.triggers || []).slice(0, 6);
+        return (
+            <div
+                ref={ref}
+                id={id}
+                role="tooltip"
+                data-layout-key="payout-receipt-popover"
+                className="payout-receipt-popover"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="font-bold text-amber-300 mb-1">{catName}</div>
+                {ruleTooltip && <div className="text-zinc-400 mb-1 leading-snug">{ruleTooltip}</div>}
+                <div className="flex justify-between gap-2"><span>Base chips</span><span>{result.chips}</span></div>
+                <div className="flex justify-between gap-2"><span>Mult</span><span>×{Number(result.mult || 1).toFixed(2)}</span></div>
+                {masteryBonus > 0 && <div className="flex justify-between gap-2 text-emerald-300"><span>Mastery Lv{handLevel}</span><span>+{masteryBonus}</span></div>}
+                {result.gDelta !== 0 && <div className="flex justify-between gap-2 text-emerald-300"><span>Cash</span><span>{result.gDelta > 0 ? '+' : ''}{result.gDelta}</span></div>}
+                {result.chainDepth > 0 && <div className="text-fuchsia-300">Chain depth {result.chainDepth}</div>}
+                {triggers.length > 0 && (
+                    <div className="mt-1 pt-1 border-t border-zinc-700 space-y-0.5">
+                        {triggers.map((t, i) => (
+                            <div key={i} className="text-cyan-200/90">{t.name}{t.value != null ? ` ${t.value}` : ''}</div>
+                        ))}
+                    </div>
+                )}
+                <div className="flex justify-between gap-2 mt-1 pt-1 border-t border-amber-600/40 font-bold text-amber-300">
+                    <span>Street heat</span><span>{result.total}</span>
+                </div>
+            </div>
+        );
+    };
+
+    const HardwareRail = ({ inventory = [], hardwareDisabled = false }) => {
+        const filled = inventory.length;
+        const slots = Math.min(6, Math.max(filled + (filled < 6 ? 1 : 0), filled || 3));
+        const [focusIdx, setFocusIdx] = useState(null);
+        const railRef = useRef(null);
+        const pairs = [];
+        for (let i = 0; i < slots - 1; i += 1) {
+            if (inventory[i] && inventory[i + 1]) pairs.push(i);
+        }
+        return (
+            <div data-layout-key="hardware-rail" className="hardware-rail shrink-0" ref={railRef} aria-label="Hardware rail">
+                {pairs.length > 0 && (
+                    <svg className="hardware-rail-wires" viewBox={`0 0 ${slots * 52} 4`} preserveAspectRatio="none" aria-hidden>
+                        {pairs.map((idx) => (
+                            <line
+                                key={idx}
+                                className="hardware-rail-wire"
+                                x1={24 + idx * 52}
+                                y1="2"
+                                x2={24 + (idx + 1) * 52}
+                                y2="2"
+                            />
+                        ))}
+                    </svg>
+                )}
+                {Array.from({ length: slots }, (_, idx) => {
+                    const item = inventory[idx];
+                    const tipOpen = focusIdx === idx && item;
+                    return (
+                        <button
+                            key={idx}
+                            type="button"
+                            data-layout-key={`hardware-rail-socket-${idx + 1}`}
+                            className={`hardware-rail-socket ${item ? '' : 'hardware-rail-socket--empty'} ${hardwareDisabled && item ? 'hardware-rail-socket--disabled' : ''}`}
+                            onMouseEnter={() => item && setFocusIdx(idx)}
+                            onMouseLeave={() => setFocusIdx((v) => (v === idx ? null : v))}
+                            onFocus={() => item && setFocusIdx(idx)}
+                            onBlur={() => setFocusIdx((v) => (v === idx ? null : v))}
+                            aria-label={item ? `Hardware slot ${idx + 1}: ${item.name}. ${item.desc}` : `Hardware slot ${idx + 1}: empty`}
+                            title={item ? item.name : 'Empty slot'}
+                        >
+                            {item ? <span className="leading-tight line-clamp-3">{item.name.split(' ').slice(0, 2).join(' ')}</span> : <span className="opacity-40" aria-hidden>—</span>}
+                            {tipOpen && (
+                                <span className="hardware-rail-tip" role="tooltip">
+                                    <span className="font-bold text-amber-200">{item.name}</span>
+                                    <span className="block text-zinc-200 mt-0.5 leading-snug">{item.desc}</span>
+                                    <RiskBadges item={item} />
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const PlayHandHistoryDrawer = ({ history, open, onClose, round }) => {
+        const panelRef = useRef(null);
+        useEffect(() => {
+            if (!open) return undefined;
+            panelRef.current?.focus?.({ preventScroll: true });
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+        }, [open, onClose]);
+        if (!open) return null;
+        return (
+            <div className="play-history-drawer" onClick={onClose} role="presentation">
+                <div
+                    ref={panelRef}
+                    tabIndex={-1}
+                    data-layout-key="play-history-drawer"
+                    className="play-history-drawer-panel"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Police rap sheet hand log"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex justify-between items-center mb-3 border-b border-zinc-700 pb-2">
+                        <div className="tracking-[0.2em] text-amber-300 text-xs font-bold">RAP SHEET · LOG</div>
+                        <button type="button" data-layout-key="play-history-close" onClick={onClose} className="gb-tappable-label px-3 py-1 border border-zinc-600 text-zinc-200 text-xs">CLOSE</button>
+                    </div>
+                    <HistoryPanel history={history} hideMoreLine={false} />
+                    {!history?.length && <div className="text-zinc-400 text-xs">No scored hands yet this run.</div>}
+                </div>
             </div>
         );
     };
@@ -8589,6 +9653,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [runStats, setRunStats] = useState({ totalHeat: 0, biggestHustle: 0, finalBoss: '', build: { ...DEFAULT_RUN_BUILD } });
         const [flyingScores, setFlyingScores] = useState([]);
         const [showMobileStash, setShowMobileStash] = useState(false);
+        const [playHistoryDrawerOpen, setPlayHistoryDrawerOpen] = useState(false);
+        const [payoutUnlockOpen, setPayoutUnlockOpen] = useState(false);
+        const [shopInspectBone, setShopInspectBone] = useState(null);
+        const [shopPreviewItem, setShopPreviewItem] = useState(null);
         const [playDock, setPlayDock] = useState('lane');
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
@@ -8638,6 +9706,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [payoutKeyboardIndex, setPayoutKeyboardIndex] = useState(0);
         const [payoutPostRollGen, setPayoutPostRollGen] = useState(0);
         const [rollBtnSquash, setRollBtnSquash] = useState(false);
+        const [rollHandFxGen, setRollHandFxGen] = useState(0);
+        const [rollHandSpritesReady, setRollHandSpritesReady] = useState(false);
+        const rollHandSpritesReadyRef = useRef(false);
+        const rollHandFxTimerRef = useRef(null);
         const [screenTransition, setScreenTransition] = useState(null);
         const [lossExplanation, setLossExplanation] = useState(null);
         const [showSystemMenu, setShowSystemMenu] = useState(false);
@@ -9391,6 +10463,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, [phase, shopItems?.length, round]);
 
         useEffect(() => {
+            if (phase !== 'SHOP') {
+                setShopInspectBone(null);
+                setShopPreviewItem(null);
+            }
+        }, [phase]);
+
+        useEffect(() => {
             if (phase !== 'SHOP') return;
             shopAdvanceLockRef.current = false;
             setShopAdvancing(false);
@@ -9436,6 +10515,40 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!rootEl) return;
             rootEl.classList.toggle('gb-motion-reduce', !!reducedMotion);
         }, [reducedMotion]);
+
+        useEffect(() => {
+            const rootEl = document.getElementById('root-gutterbones');
+            if (!rootEl) return;
+            rootEl.dataset.uiRedesign = '1';
+        }, []);
+
+        useEffect(() => {
+            let alive = true;
+            probeRollHandSprites().then((ok) => {
+                if (!alive) return;
+                rollHandSpritesReadyRef.current = ok;
+                setRollHandSpritesReady(ok);
+                if (typeof window !== 'undefined') window.__GB_ROLL_HAND_SPRITES_READY = !!ok;
+            });
+            return () => {
+                alive = false;
+                if (rollHandFxTimerRef.current) {
+                    clearTimeout(rollHandFxTimerRef.current);
+                    rollHandFxTimerRef.current = null;
+                }
+                setRollHandFxGen(0);
+            };
+        }, []);
+
+        const pulseRollHandFx = () => {
+            if (reducedMotion || !rollHandSpritesReadyRef.current) return;
+            if (rollHandFxTimerRef.current) clearTimeout(rollHandFxTimerRef.current);
+            setRollHandFxGen((g) => g + 1);
+            rollHandFxTimerRef.current = scheduleTimeout(() => {
+                setRollHandFxGen(0);
+                rollHandFxTimerRef.current = null;
+            }, ROLL_HAND_FX_MS + 48);
+        };
 
         const scoringDiceResolved = useMemo(() => {
             if (!dice.length || typeof GutterbonesRules?.resolveDice !== 'function') return dice;
@@ -10890,6 +12003,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 });
             }
             setRollingSlots(activeMask);
+            if (activeIndices.length && typeof pulseRollHandFx === 'function') pulseRollHandFx();
             setFeltPulse(true);
             triggerCameraKick('soft');
             scheduleTimeout(() => setFeltPulse(false), 650);
@@ -12084,6 +13198,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return result.valid && result.total > max ? result.total : max;
             }, 0)
             : null;
+        const bestPreviewCatId = (phase === 'PLAY' && hasRolled && !rolling)
+            ? getAvailableCategories(meta).reduce((best, catId) => {
+                const result = calculateScore(catId, dice);
+                if (!result.valid || result.total <= 0) return best;
+                if (!best.id || result.total > best.total) return { id: catId, total: result.total };
+                return best;
+            }, { id: null, total: 0 }).id
+            : null;
+        const quotaProgressPct = Math.min(100, Math.round((displayScore / Math.max(1, currentTarget)) * 1000) / 10);
+        const quotaFillTone = displayScore >= currentTarget
+            ? 'street-ledger-quota-fill--clear'
+            : (hands <= 1 && !rolling ? 'street-ledger-quota-fill--danger' : (quotaProgressPct < 50 ? 'street-ledger-quota-fill--low' : 'street-ledger-quota-fill--pace'));
         const shopRoutePreviews = phase === 'SHOP'
             ? paths.map((p) => ({ ...p, _projection: projectPath(p) }))
             : [];
@@ -13451,6 +14577,167 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (params.get('layoutAudit') !== '1') return;
             window.__GB_LAYOUT_AUDIT__ = {
                 resumeSavedRun: () => { const saved = loadSavedRun(); if (saved) resumeRun(); },
+                triggerRollHandOverlayFx: () => {
+                    if (typeof pulseRollHandFx === 'function') {
+                        pulseRollHandFx();
+                        return true;
+                    }
+                    return false;
+                },
+                freezeRollHandThrowAt: (ms) => {
+                    if (rollHandFxTimerRef.current) {
+                        clearTimeout(rollHandFxTimerRef.current);
+                        rollHandFxTimerRef.current = null;
+                    }
+                    const root = document.querySelector('.gutter-roll-hand-sprite');
+                    if (!root) return { ok: false, reason: 'no sprite node' };
+                    const anims = root.getAnimations({ subtree: true });
+                    if (!anims.length) return { ok: false, reason: 'no active animations' };
+                    const target = Math.max(0, Number(ms) || 0);
+                    anims.forEach((a) => {
+                        try {
+                            const timing = a.effect?.getComputedTiming?.();
+                            const dur = timing?.duration;
+                            const clamped = typeof dur === 'number' && Number.isFinite(dur)
+                                ? Math.min(target, dur)
+                                : target;
+                            a.pause();
+                            a.currentTime = clamped;
+                        } catch (_) { /* noop */ }
+                    });
+                    return { ok: true, ms: target, paused: anims.length };
+                },
+                sampleRollHandVisibility: () => {
+                    const closed = document.querySelector('.gutter-roll-hand-closed');
+                    const open = document.querySelector('.gutter-roll-hand-open');
+                    let pick = null;
+                    let pickOpacity = 0;
+                    if (closed) {
+                        const op = parseFloat(getComputedStyle(closed).opacity);
+                        if (op > pickOpacity) { pick = closed; pickOpacity = op; }
+                    }
+                    if (open) {
+                        const op = parseFloat(getComputedStyle(open).opacity);
+                        if (op > pickOpacity) { pick = open; pickOpacity = op; }
+                    }
+                    if (!pick) return { ok: false, reason: 'no hand frame' };
+                    const r = pick.getBoundingClientRect();
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const ix = Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0));
+                    const iy = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+                    const area = ix * iy;
+                    const overlay = document.querySelector('.gutter-roll-hand-overlay');
+                    const oz = overlay ? parseInt(getComputedStyle(overlay).zIndex, 10) : 0;
+                    const alley = document.querySelector('[data-layout-key="play-alley"]');
+                    const alleyClip = alley ? alley.getBoundingClientRect() : null;
+                    const clipIx = alleyClip
+                        ? Math.max(0, Math.min(r.right, alleyClip.right) - Math.max(r.left, alleyClip.left))
+                        : ix;
+                    const clipIy = alleyClip
+                        ? Math.max(0, Math.min(r.bottom, alleyClip.bottom) - Math.max(r.top, alleyClip.top))
+                        : iy;
+                    const clipArea = clipIx * clipIy;
+                    return {
+                        ok: clipArea > 2200 && pickOpacity > 0.4 && oz >= 30,
+                        area,
+                        clipArea,
+                        opacity: pickOpacity,
+                        z: oz,
+                        rect: { left: r.left, top: r.top, width: r.width, height: r.height },
+                    };
+                },
+                sampleRollHandOpaquePixels: (preferFrame = 'auto') => {
+                    const closed = document.querySelector('.gutter-roll-hand-closed');
+                    const open = document.querySelector('.gutter-roll-hand-open');
+                    const closedOp = closed ? parseFloat(getComputedStyle(closed).opacity) : 0;
+                    const openOp = open ? parseFloat(getComputedStyle(open).opacity) : 0;
+                    let pick = null;
+                    if (preferFrame === 'closed') pick = closedOp > 0.12 ? closed : null;
+                    else if (preferFrame === 'open') pick = openOp > 0.12 ? open : null;
+                    else pick = closedOp >= openOp
+                        ? (closedOp > 0.12 ? closed : (openOp > 0.12 ? open : null))
+                        : (openOp > 0.12 ? open : (closedOp > 0.12 ? closed : null));
+                    if (!pick || !pick.complete || pick.naturalWidth < 1) {
+                        return { ok: false, reason: 'no drawable hand frame' };
+                    }
+                    const maxSide = 96;
+                    const scale = Math.min(1, maxSide / Math.max(pick.naturalWidth, pick.naturalHeight));
+                    const w = Math.max(8, Math.round(pick.naturalWidth * scale));
+                    const h = Math.max(8, Math.round(pick.naturalHeight * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return { ok: false, reason: 'no canvas' };
+                    ctx.drawImage(pick, 0, 0, w, h);
+                    const data = ctx.getImageData(0, 0, w, h).data;
+                    let opaque = 0;
+                    for (let i = 3; i < data.length; i += 4) {
+                        if (data[i] > 28) opaque += 1;
+                    }
+                    let palmOpaque = 0;
+                    const palmX0 = Math.floor(w * 0.32);
+                    for (let y = 0; y < h; y += 1) {
+                        for (let x = palmX0; x < w; x += 1) {
+                            const i = (y * w + x) * 4 + 3;
+                            if (data[i] > 28) palmOpaque += 1;
+                        }
+                    }
+                    const palmMin = preferFrame === 'closed' ? 95 : 70;
+                    return {
+                        ok: opaque >= 180 && palmOpaque >= palmMin,
+                        opaque,
+                        palmOpaque,
+                        samples: w * h,
+                        frame: pick.classList.contains('gutter-roll-hand-open') ? 'open' : 'closed',
+                    };
+                },
+                measureHandShuffleOverlap: () => {
+                    const hand = document.querySelector('.gutter-roll-hand-closed, .gutter-roll-hand-open');
+                    const shuffle = document.querySelector('[data-layout-key="play-shuffle-btn"]');
+                    if (!hand || !shuffle) return { ok: true, skipped: true };
+                    const hr = hand.getBoundingClientRect();
+                    const sr = shuffle.getBoundingClientRect();
+                    const ix = Math.max(0, Math.min(hr.right, sr.right) - Math.max(hr.left, sr.left));
+                    const iy = Math.max(0, Math.min(hr.bottom, sr.bottom) - Math.max(hr.top, sr.top));
+                    const overlapArea = ix * iy;
+                    const shuffleArea = Math.max(1, sr.width * sr.height);
+                    const ratio = overlapArea / shuffleArea;
+                    return { ok: ratio < 0.22, ratio, overlapArea, shuffleArea };
+                },
+                showCarvingHelpToast: () => {
+                    const hint = MECHANIC_HINTS.TIP_FIRST_CARVE;
+                    if (!hint) return false;
+                    pushToast({
+                        kind: 'mechanic',
+                        title: hint.title,
+                        body: hint.body,
+                        layoutKey: 'mechanic-toast',
+                    });
+                    return true;
+                },
+                prepareHandThrowStripCapture: () => {
+                    setKept([false, false, false, false, false]);
+                    return { ok: true };
+                },
+                stabilizePlayChromeForCapture: () => {
+                    const screen = document.querySelector('.gb-screen');
+                    if (screen) {
+                        screen.classList.remove('camera-kick-soft', 'camera-kick-hard');
+                        screen.style.transform = 'none';
+                    }
+                    window.scrollTo(0, 0);
+                    const hud = document.querySelector('[data-layout-key="play-hud"]');
+                    const hudTop = hud ? hud.getBoundingClientRect().top : 0;
+                    return { ok: true, hudTop };
+                },
+                setHandReviewSlowMo: (on) => {
+                    const root = document.getElementById('root-gutterbones');
+                    if (!root) return false;
+                    root.classList.toggle('gb-hand-review-slowmo', !!on);
+                    return root.classList.contains('gb-hand-review-slowmo');
+                },
                 openHelp: () => setShowHelpOverlay(true),
                 openSystemMenu: () => setShowSystemMenu(true),
                 openLore: () => setShowLorePanel(true),
@@ -14349,7 +15636,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 <div className="ambient-vignette"></div>
                 <div className="ambient-leak"></div>
                 {inRunPhase && (
-                    <button onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-2 min-h-[44px] min-w-[44px] border border-gray-600 bg-black/70 text-xs font-mono tracking-widest hover:border-[#ff007f]">
+                    <button type="button" data-layout-key="system-menu-global" onClick={() => setShowSystemMenu(true)} className="absolute top-3 right-24 z-[700] px-3 py-2 min-h-[44px] min-w-[44px] border border-gray-600 bg-black/70 text-xs font-mono tracking-widest hover:border-[#ff007f]">
                         SYSTEM
                     </button>
                 )}
@@ -14779,54 +16066,47 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
                 {phase === 'PLAY' && (
                     <>
-                    <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-7xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
+                    <div className={`gb-screen z-40 relative p-[var(--gb-pad)] max-w-6xl mx-auto w-full ${cameraKick === 'hard' ? 'camera-kick-hard' : cameraKick === 'soft' ? 'camera-kick-soft' : ''}`}>
                         {pressureLevel && <div className={`pressure-overlay ${pressureLevel}`}></div>}
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
-                        <div ref={playHudRef} data-layout-key="play-hud" className="shrink-0 flex flex-col bg-black/90 border-4 border-gray-900 rounded-xl mb-1 md:mb-3 shadow-lg">
+                        <div ref={playHudRef} data-layout-key="play-hud" className="street-ledger-hud shrink-0 flex flex-col mb-1 md:mb-2">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
-                            <div className="flex justify-between items-center p-2 md:p-4 gb-hud-compact-tight">
-                                <div className="hidden sm:block gb-hud-compact-hide">
-                                    <div className="text-xs uppercase opacity-50">The Fixer</div>
-                                    <div className="text-xl md:text-2xl font-bold text-[#ff007f] font-marker">LOU "THE SNAKE"</div>
-                                    {insaneContract && <div className="mt-1 text-[10px] font-mono text-[#ff9fcf] tracking-[.2em]">INSANE CONTRACT</div>}
-                                    <div className="mt-1 max-w-[15rem] text-xs font-mono text-gray-300 leading-tight play-hud-fixer-line">{fixerLine}</div>
+                            <div className="street-ledger-top">
+                                <div className="street-ledger-cluster">
+                                    <span className="street-ledger-icon street-ledger-icon--plays" title="Plays remaining">▶ {hands}</span>
+                                    <span className={`street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills remaining">💊 {discards}</span>
+                                    <span className="sr-only play-hud-round-line">Round {displayJobRound('PLAY', round)}</span>
                                 </div>
-                                <div className="text-center" data-tutorial="heat-quota">
-                                    <div className="text-xs opacity-50">STREET HEAT</div>
-                                    <div className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-600'} ${scorePulse ? 'score-pulse score-tick-pop' : ''} ${activeBoss?.id === 'JUNKIE' ? 'junkie-glitch' : ''}`}>{displayScore.toString().padStart(4, '0')} <span className={`text-xl md:text-3xl opacity-50 ${activeBoss?.id === 'BOUNCER' ? 'bouncer-quota-thump' : ''}`}>/ {currentTarget}</span></div>
-                                    <div className={`font-mono text-[10px] mt-1 tracking-[.25em] ${flowStreak > 0 ? 'text-[#0df]' : 'text-gray-500'}`}>
-                                        FLOW x{flowMultiplier.toFixed(2)}{flowStreakCap < FLOW_TUNING.maxStreak ? ` · cap ${flowStreakCap}` : ''}
-                                    </div>
-                                    <div className="font-mono text-xs text-gray-400 mt-1 tracking-wide play-hud-round-line">Round {displayJobRound('PLAY', round)} · Plays {hands} · Quota {currentTarget}{meta.totalRuns === 0 && round === 1 && !tutorialActive ? ' · First contract quota' : ''} · Pills {discards}</div>
-                                </div>
-                            <div className="flex gap-3 md:gap-6 text-right items-start">
+                                <BossWarrantStamp boss={activeBoss} />
+                                <div className="street-ledger-cluster">
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
-                                    <div><div className="text-[10px] opacity-50">CASH</div><div className={`text-xl md:text-2xl font-mono ${debt > 0 ? 'text-red-500' : ''} ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 && <span className={`text-xs ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`}> · IOU ${debt}</span>}</div></div>
-                                    <div className="relative" ref={mechanicPillsAnchorRef} onMouseLeave={dismissMechanicPopup}>
-                                        <div className="text-[10px] opacity-50 flex items-center justify-end gap-1">
-                                            <span>PILLS</span>
-                                            <button
-                                                onClick={() => toggleMechanicPopup('pills')}
-                                                onBlur={dismissMechanicPopup}
-                                                className="min-w-[var(--gb-min-tap)] min-h-[var(--gb-min-tap)] w-10 h-10 rounded-full border border-cyan-500/60 text-cyan-300 text-sm leading-none hover:border-cyan-300 hover:text-cyan-100 flex items-center justify-center"
-                                                aria-label="Show pills mechanic details"
-                                            >
-                                                ?
-                                            </button>
-                                        </div>
-                                        <div key={pillCountTick} className={`hud-pill-count text-xl md:text-2xl text-[#0df] font-mono ${discards <= 1 ? 'danger-count-pulse' : ''} ${pillCountTick ? 'pill-count-tick' : ''}`}>{discards}</div>
-                                        {activeMechanicPopup === 'pills' && (
-                                            <div ref={mechanicPopoverRef} data-layout-key="mechanic-popover-hud" className="mechanic-popover text-left overflow-auto" style={mechanicPopoverHudStyle || { position: 'fixed', left: 8, top: 8, width: 288, zIndex: 140 }}>
-                                                <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
-                                                <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
-                                                {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
-                                                    <div className="font-mono text-xs text-emerald-200 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
-                                                )}
-                                            </div>
+                                    <span className={`street-ledger-icon street-ledger-icon--cash ${cashDropFlash ? 'hud-cash-drop' : ''}`} title="Dirty cash">${Math.max(0, displayGold)}</span>
+                                    {debt > 0 && <span className={`street-ledger-icon street-ledger-icon--debt ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`} title="Debt">IOU ${debt}</span>}
+                                    <button type="button" data-layout-key="system-menu-street" onClick={() => setShowSystemMenu(true)} aria-label="Open system menu" title="System settings">SYS</button>
+                                    <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
+                                    <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
+                                </div>
+                            </div>
+                            <div className="street-ledger-quota" data-tutorial="heat-quota">
+                                <div className="street-ledger-quota-track" role="progressbar" aria-valuenow={quotaProgressPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Street heat ${displayScore} of quota ${currentTarget}`}>
+                                    <div className={`street-ledger-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
+                                </div>
+                                <div className="street-ledger-quota-labels">
+                                    <span className={`${displayScore >= currentTarget * 0.8 ? 'text-[#ff007f]' : 'text-red-400'}`}>{displayScore.toString().padStart(4, '0')} heat</span>
+                                    <span className="play-hud-fixer-line hidden md:inline truncate max-w-[45%] opacity-70">{fixerLine}</span>
+                                    <span>quota {currentTarget} · flow ×{flowMultiplier.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div className="relative" ref={mechanicPillsAnchorRef} onMouseLeave={dismissMechanicPopup}>
+                                {activeMechanicPopup === 'pills' && (
+                                    <div ref={mechanicPopoverRef} data-layout-key="mechanic-popover-hud" className="mechanic-popover text-left overflow-auto" style={mechanicPopoverHudStyle || { position: 'fixed', left: 8, top: 8, width: 288, zIndex: 140 }}>
+                                        <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
+                                        <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
+                                        {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
+                                            <div className="font-mono text-xs text-emerald-200 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
                                         )}
                                     </div>
-                                    <div><div className="text-[10px] opacity-50">PLAYS</div><div className={`text-xl md:text-2xl text-white font-mono ${hands <= 1 ? 'danger-count-pulse' : ''}`}>{hands}</div></div>
-                                </div>
+                                )}
                             </div>
                             <div data-layout-key="play-next-threat-slot" className="md:hidden px-2 pt-1 pb-0 border-t border-gray-800/80 shrink-0">
                                 <NextThreatBadge phase={phase} activeBoss={activeBoss} paths={paths} selectedShopPathId={selectedShopPathId} committedPathId={committedPathId} currentRouteEffect={currentRouteEffect} />
@@ -14887,9 +16167,27 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 )}
                             </div>
                         </div>
-                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-6 min-h-0 min-w-0 overflow-hidden">
-                            <div data-tutorial="payout-sheet" className={`order-2 md:order-1 md:col-span-3 min-h-0 min-w-0 bg-[#e8e6e1] text-gray-900 p-2 md:p-4 font-mono border-2 border-black md:-rotate-1 shadow-2xl overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
-                                <h2 className="text-center font-bold border-b-2 border-black pb-2 mb-2 shrink-0 bg-[#e8e6e1]">THE PAYOUTS</h2>
+                        <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
+                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
+                                {(() => {
+                                    const unlockInfo = getCategoryUnlockInfo(meta);
+                                    return (
+                                        <div className="flex items-center justify-between gap-2 border-b border-zinc-800/40 pb-2 mb-2 shrink-0">
+                                            <h2 className="font-bold tracking-[0.2em] text-sm flex-1 text-center">MATCHBOOK · PAYOUTS</h2>
+                                            {unlockInfo.locked.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    data-layout-key="payout-unlock-open"
+                                                    onClick={() => setPayoutUnlockOpen(true)}
+                                                    className="gb-tappable-label shrink-0 min-h-8 px-2 border border-zinc-600 text-zinc-700 font-mono text-[10px] tracking-wide"
+                                                    aria-label={`Show ${unlockInfo.locked.length} locked payout unlock requirements`}
+                                                >
+                                                    LOCKED ({unlockInfo.locked.length})
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                                 <PayoutSheetRows>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
@@ -14903,6 +16201,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             const rowRevealIdx = revealIdx;
                                             revealIdx += 1;
                                             const canScoreRow = hasRolled && !usedCats.includes(cat.id) && !rollLocked;
+                                            const rowResult = calculateScore(cat.id, dice);
                                             return (
                                                 <ScoreRow
                                                     key={cat.id}
@@ -14910,7 +16209,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     cat={cat}
                                                     handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel}
                                                     ruleTooltip={CATEGORY_RULE_TOOLTIPS[cat.id] || ''}
-                                                    result={calculateScore(cat.id, dice)}
+                                                    result={rowResult}
                                                     used={usedCats.includes(cat.id)}
                                                     canScore={canScoreRow}
                                                     onScore={executePayout}
@@ -14920,6 +16219,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     keyboardFocus={canScoreRow && cat.id === focusId}
                                                     postRollReveal={false}
                                                     postRollDelayMs={0}
+                                                    isBestPreview={canScoreRow && rowResult.valid && cat.id === bestPreviewCatId}
                                                 />
                                             );
                                         }
@@ -14933,12 +16233,23 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             />
                                         );
                                     });
-                                    if (unlockInfo.locked.length) rows.push(<CategoryUnlockFooter key="cat-unlock" meta={meta} />);
                                     return rows;
                                 })()}
                                 </PayoutSheetRows>
+                                <div className="stash-dock-compact stash-programs-pinned hidden md:flex flex-col shrink-0">
+                                    <div className="flex items-center justify-between gap-2 border-b border-zinc-700/60 pb-1 mb-2">
+                                        <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-600">STASH {stash}/100</span>
+                                        {activeBoss?.id === 'INFORMANT' && <span className="text-[10px] text-yellow-600">FROZEN</span>}
+                                    </div>
+                                    <div className="stash-program-grid">{PROGRAMS.map((p) => (
+                                        <button key={p.id} type="button" data-layout-key={`stash-program-${p.id}`} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT' || !hasRolled || rolling} onClick={() => handleProgram(p)} title={p.desc} className="gb-tappable-label flex flex-col items-center justify-center py-1 px-1 rounded border border-gray-700 bg-gray-900/40 hover:border-amber-500 disabled:opacity-45 disabled:grayscale min-h-[var(--gb-min-tap)] font-mono text-[10px]">
+                                            <span>{p.name}</span><span className="text-amber-300">{p.cost}%</span>
+                                        </button>
+                                    ))}</div>
+                                </div>
                             </div>
-                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-2 flex-1 md:col-span-6 min-h-0 min-w-0 felt-surface border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-7 min-h-0 min-w-0 felt-surface gb-alley-stage border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                                <HardwareRail inventory={inventory} hardwareDisabled={hardwareDisabled} />
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
@@ -14959,7 +16270,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         Hit ROLL 'EM to throw your bones.
                                     </div>
                                 )}
-                                <div className={`relative flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
+                                <div data-layout-key="play-dice-lane" className={`play-dice-lane relative flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
                                     {synergyLinks.length > 0 && !reducedMotion && (
                                         <div className="synergy-link-layer" aria-hidden="true">
                                             {synergyLinks.map((link) => {
@@ -15036,8 +16347,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         </div>
                                     ))}
                                 </div>
+                                <RollHandThrowOverlay generation={rollHandFxGen} spritesReady={rollHandSpritesReady} />
                                 <div className="flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
-                                    <button onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
+                                    <button type="button" data-layout-key="play-shuffle-btn" onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
                                     <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 relative bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight disabled:grayscale disabled:opacity-50 py-3 overflow-visible ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>
                                         <span className={`pointer-events-none absolute inset-0 rounded-[inherit] ${rollReady ? 'roll-ready-pulse-inner' : ''}`} aria-hidden />
                                         <span className="relative z-10 inline-flex items-center justify-center gap-2 w-full active:translate-y-px">ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 font-mono">TOLL</span>}</span>
@@ -15066,7 +16378,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         inventory={inventory}
                                     />
                                 </div>
-                                <div className="stash-programs-pinned bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl shrink-0 min-h-0 flex flex-col">
+                                <div className="stash-programs-pinned stash-dock-compact bg-black/90 border-4 border-gray-900 rounded-xl p-4 shadow-xl shrink-0 min-h-0 flex flex-col md:hidden">
                                     <div className={`flex items-center justify-center gap-2 border-b pb-2 ${activeBoss?.id === 'INFORMANT' ? 'border-yellow-500' : 'border-[#0df]'}`}>
                                         <h3 className={`text-center font-mono ${activeBoss?.id === 'INFORMANT' ? 'text-yellow-500' : 'text-[#0df]'}`}>THE STASH {activeBoss?.id === 'INFORMANT' && '(FROZEN)'}</h3>
                                         <button
@@ -15140,6 +16452,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         </div>
                     </div>
+                    <PlayHandHistoryDrawer history={history} open={playHistoryDrawerOpen} onClose={() => setPlayHistoryDrawerOpen(false)} round={round} />
+                    <PayoutUnlockInspector meta={meta} open={payoutUnlockOpen} onClose={() => setPayoutUnlockOpen(false)} />
                     </>
                 )}
 
@@ -15221,7 +16535,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         {routeModifiers.shopDiscount ? ` · prices -${Math.round(routeModifiers.shopDiscount * 100)}%` : ''}
                                     </div>
                                 )}
-                                <div ref={shopItemsShellRef} className="shop-items-shell flex-1 min-h-0 overflow-hidden">
+                                <div className="shop-workbench flex-1 min-h-0 flex flex-col overflow-hidden">
+                                <div ref={shopItemsShellRef} className="shop-mercenary-shelf shop-items-shell flex-1 min-h-0 overflow-hidden flex flex-col">
                                 {(() => {
                                     const perPage = Math.max(1, shopItemsPerPage || 1);
                                     const pageCount = Math.max(1, Math.ceil((shopItems?.length || 0) / perPage));
@@ -15251,16 +16566,37 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     return <div key={item.id} className={`shop-item-card bg-black/80 p-2 md:p-3 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative min-h-[7.5rem] md:min-h-[9.5rem] ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
                                         <div className="flex justify-between items-start gap-2 mb-2">
                                             <div className="font-mono text-[11px] text-[#d6b85c] font-bold">{discounted ? <><span className="line-through opacity-50 mr-1">${item.cost}</span>${listPrice}</> : `$${listPrice}`}</div>
-                                            {fits && !sold && <span className="text-[8px] font-mono tracking-[0.15em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60 shrink-0">FIT</span>}
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                {isFace && !sold && (
+                                                    <button
+                                                        type="button"
+                                                        data-layout-key="shop-inspect-offer"
+                                                        onClick={() => { setShopPreviewItem(item); setShopInspectBone(null); }}
+                                                        className={`gb-tappable-label min-h-8 min-w-8 border font-mono text-[9px] ${shopPreviewItem?.id === item.id ? 'border-cyan-400 text-cyan-100 bg-cyan-950/35' : 'border-gray-600 text-gray-300 bg-black/40'}`}
+                                                        aria-pressed={shopPreviewItem?.id === item.id}
+                                                        aria-label={`Inspect ${item.label} on your bones`}
+                                                    >
+                                                        IN
+                                                    </button>
+                                                )}
+                                                {fits && !sold && <span className="text-[8px] font-mono tracking-[0.15em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60 shrink-0">FIT</span>}
+                                            </div>
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
                                         <div className="flex items-start gap-3 mb-2">{isFace ? <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-xs font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
-                                        <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50">{buyLabel}</button>
+                                        <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50 mt-auto">{buyLabel}</button>
                                     </div>;
                                 })}</div>
                                         </>
                                     );
                                 })()}
+                                </div>
+                                <ShopBoneInspectionStrip
+                                    dice={dice}
+                                    inspectBone={shopInspectBone}
+                                    onPickBone={setShopInspectBone}
+                                    previewItem={shopPreviewItem}
+                                />
                                 </div>
                             </div>
                             <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
@@ -15404,8 +16740,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 {phase === 'CARVING' && (
                     <div className="gb-screen items-center justify-center z-[400] relative p-[var(--gb-pad)]">
                         <div className="carving-mod-backdrop scene-backdrop-fade" aria-hidden></div>
-                        <div data-layout-key="carving-layout" className="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
-                            <div className="w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
+                        <div data-layout-key="carving-layout" className="carving-workbench flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
+                            <div className="carving-shelf w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
                                 <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
@@ -15433,7 +16769,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     );
                                 })()}
                             </div>
-                            <div className="flex-1 min-h-0 bg-[#2b1414] border-[8px] md:border-[12px] border-[#111] rounded-2xl p-4 md:p-8 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black] overflow-hidden">
+                            <div className="carving-bone-strip flex-1 min-h-0 bg-[#2b1414] border-[8px] md:border-[12px] border-[#111] rounded-2xl p-4 md:p-8 flex flex-col items-center justify-center relative shadow-[inset_0_0_50px_black] overflow-hidden">
                                 <div className="grid grid-cols-3 gap-4 md:gap-8 bg-black/30 p-4 md:p-8 rounded-xl border border-black/50">
                                     {carvingDie === null ? dice.map((d, i) => (
                                         <CarvingDieTile key={d.id} die={d} onClick={() => setCarvingDie(i)} slotLabel={`BONE ${i + 1}`} />

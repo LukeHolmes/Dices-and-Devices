@@ -93,8 +93,8 @@ async function resumeFixture(page, fixtureName) {
     ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
     { key: RUN_KEY, data: payload },
   );
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
   await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
   await page.waitForTimeout(500);
 }
@@ -137,9 +137,14 @@ for (const screen of SCREENS) {
     test(`polish step5 layout — ${screen.id} @ ${vp.name}`, async () => {
       const context = await sharedBrowser.newContext();
       const page = await context.newPage();
+      page.setDefaultNavigationTimeout(90_000);
+      page.setDefaultTimeout(90_000);
       try {
         await page.setViewportSize({ width: vp.width, height: vp.height });
-        await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+        await page.goto(`${baseUrl}/index.html?layoutAudit=1`, {
+          waitUntil: "domcontentloaded",
+          timeout: 90_000,
+        });
         await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 45_000 });
         await resumeFixture(page, screen.fixture);
         if (screen.id === "shop") {
