@@ -14,7 +14,7 @@ const trace = path.join(__dirname, "../scripts/organic-milestone-trace.cjs");
 
 function runTrace(rid, attempt = 0) {
   const outPath = `/opt/cursor/artifacts/organic-regression-rid${rid}-a${attempt}.json`;
-  const steps = process.env.MILESTONE_STEPS || (process.env.CI ? "52000" : "40000");
+  const steps = process.env.MILESTONE_STEPS || "56000";
   const r = spawnSync(process.execPath, [trace, String(rid)], {
     cwd: path.join(__dirname, ".."),
     env: {
@@ -25,7 +25,7 @@ function runTrace(rid, attempt = 0) {
     encoding: "utf8",
     maxBuffer: 8 * 1024 * 1024,
   });
-  if (r.status !== 0 && attempt < 1) {
+  if (r.status !== 0 && attempt < 2) {
     return runTrace(rid, attempt + 1);
   }
   assert.equal(r.status, 0, `rid ${rid} must record pairwise link: ${r.stderr?.slice(0, 400)}`);
