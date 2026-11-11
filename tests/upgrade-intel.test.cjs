@@ -41,3 +41,17 @@ test("GutterbonesIntel — ambiguous upgrades have trigger and payoff sections",
     assert.ok((intel.benefits || intel.summary).length > 8, id);
   }
 });
+
+test("GutterbonesIntel — every shop face, hardware, and consumable has detailed intel", () => {
+  const catalog = GI.SHOP_INTEL_IDS;
+  assert.ok(Array.isArray(catalog) && catalog.length === 29, `catalog size ${catalog?.length}`);
+  const missing = GI.missingShopIntelIds();
+  assert.equal(missing.length, 0, `missing intel for: ${missing.join(", ")}`);
+  for (const id of catalog) {
+    const intel = GI.getUpgradeIntel(id);
+    assert.ok(intel, `no intel row for ${id}`);
+    assert.ok(intel.summary && intel.summary.length >= 16, `${id} summary`);
+    assert.ok(intel.trigger && intel.trigger.length >= 12, `${id} trigger`);
+    assert.ok(intel.benefits || intel.costs, `${id} payoff`);
+  }
+});
