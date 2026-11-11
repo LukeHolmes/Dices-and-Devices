@@ -182,6 +182,7 @@ this.buy = (item) => handlePurchase(item);
     AudioSystem: { playTone: () => {} },
     spawnPaperStamp: () => {},
     GutterbonesBalanceObserver: null,
+    queueBalanceObserverStateCommit: () => {},
     window: { __GB_BALANCE_OBSERVER__: observer },
     globalThis: null,
     __GB_BALANCE_OBSERVER__: observer,
@@ -463,4 +464,124 @@ test("aa7d44b rules lack cap metadata; current rules preserve outcome digests", 
   assert.equal(legacyDebt.debtCollectorCapped, undefined);
   assert.deepEqual(pick(legacyDebt), baseline.fixtures.debtCollectorCap);
   assert.ok(ruleShaFromRepo(ROOT));
+});
+
+test("placeSideWager records rejection and executed wager", () => {
+  const observer = createBalanceObserver({ enabled: true, repoRoot: ROOT });
+  const source = `${sliceAction("placeSideWager", "handleProgram")}\nthis.bet=(n)=>placeSideWager(n);`;
+  const sandbox = {
+    Math,
+    phase: "PLAY",
+    gold: 8,
+    hasRolled: false,
+    rolling: false,
+    hands: 3,
+    activeWager: null,
+    canPlaceWager: true,
+    wagerThreshold: 40,
+    setGold: (fn) => { sandbox.gold = typeof fn === "function" ? fn(sandbox.gold) : fn; },
+    setActiveWager: (v) => { sandbox.activeWager = v; },
+    maybeShowContextTip: () => {},
+    setFixerLine: () => {},
+    spawnPaperStamp: () => {},
+    AudioSystem: { playTone: () => {} },
+    queueBalanceObserverStateCommit: () => {},
+    window: { __GB_BALANCE_OBSERVER__: observer },
+    __GB_BALANCE_OBSERVER__: observer,
+    globalThis: null,
+  };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(observerSource, sandbox);
+  vm.runInContext(source, sandbox);
+  sandbox.bet(50);
+  const reject = observer.ledger.events.find((e) => e.type === "action" && e.action.kind === "side_wager");
+  assert.equal(reject.action.reason.value, "rejected_insufficient_gold");
+  sandbox.bet(5);
+  const ok = observer.ledger.events.filter((e) => e.type === "action" && e.action.kind === "side_wager").at(-1);
+  assert.equal(ok.action.reason.value, "executed");
+  assert.equal(ok.action.after.gold, 3);
+});
+
+test("resolveDieAfterRoll RNG draw count unchanged when observer records roll", () => {
+  const resolveStart = appSource.indexOf("const resolveDieAfterRoll");
+  const resolveEnd = appSource.indexOf("const makeBone", resolveStart);
+  assert.ok(resolveStart >= 0 && resolveEnd > resolveStart, "resolveDieAfterRoll in index.html");
+  const resolveSnippet = appSource.slice(resolveStart, resolveEnd);
+  const lane = dice([1, 2, 3, 4, 5]);
+  const mask = [true, true, true, true, true];
+  const runHarness = (withObserver) => {
+    const observer = withObserver ? createBalanceObserver({ enabled: true, repoRoot: ROOT }) : null;
+    let draws = 0;
+    const seq = [0.12, 0.34, 0.56, 0.78, 0.9];
+    const runRandomFn = () => { draws += 1; return seq[(draws - 1) % seq.length]; };
+    const ctx = {
+      observer,
+      resolveDieAfterRoll: null,
+      lane,
+      mask,
+      runRandomFn,
+      draws: () => draws,
+      GutterbonesBalanceObserver: withObserver ? GutterbonesBalanceObserver : undefined,
+      __GB_BALANCE_OBSERVER__: observer,
+      globalThis: null,
+    };
+    ctx.globalThis = ctx;
+    vm.createContext(ctx);
+    vm.runInContext(observerSource, ctx);
+    vm.runInContext(`${resolveSnippet}\nthis.resolveDieAfterRoll = resolveDieAfterRoll;`, ctx);
+    vm.runInContext(
+      `const rollOpts = { tutRollIdx: null, dailyRunActive: true, runRandomFn, junkieBoss: false };
+       const next = lane.map((d, i) => (mask[i] ? resolveDieAfterRoll(d, i, rollOpts) : d));
+       if (typeof GutterbonesBalanceObserver !== 'undefined' && observer) {
+         GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+           kind: 'roll',
+           reason: { status: 'ok', value: 'executed_opening_roll' },
+           before: { dice: GutterbonesBalanceObserver.snapshotRawLane(lane) },
+           after: { dice: { status: 'ok', value: GutterbonesBalanceObserver.snapshotRawLane(next) } }
+         }));
+       }
+       this.next = next;`,
+      ctx,
+    );
+    return { draws: ctx.draws(), next: ctx.next, events: observer?.ledger?.events?.length || 0 };
+  };
+  const off = runHarness(false);
+  const on = runHarness(true);
+  assert.equal(off.draws, on.draws);
+  assert.deepEqual(
+    GutterbonesBalanceObserver.snapshotRawLane(off.next),
+    GutterbonesBalanceObserver.snapshotRawLane(on.next),
+  );
+  assert.ok(on.events >= 1);
+});
+
+test("scoringLaneForObserver is deterministic and does not mutate dice lane", () => {
+  const g = createGame(snapshot());
+  const lane = dice([1, 2, 3, 4, 5]);
+  const before = JSON.stringify(lane);
+  const rules = g.api.GutterbonesRules;
+  const inv = [{ id: "MIRROR_RIG" }];
+  const a = GutterbonesBalanceObserver.scoringLaneForObserver(rules, lane, inv, false);
+  const b = GutterbonesBalanceObserver.scoringLaneForObserver(rules, lane, inv, false);
+  assert.equal(JSON.stringify(lane), before);
+  assert.deepEqual(
+    GutterbonesBalanceObserver.snapshotResolvedLane(a.resolved, a.destroyed),
+    GutterbonesBalanceObserver.snapshotResolvedLane(b.resolved, b.destroyed),
+  );
+});
+
+test("recordStateCommit API records react verification payload", () => {
+  const o = createBalanceObserver({ enabled: true, repoRoot: ROOT });
+  o.recordStateCommit({
+    kind: "purchase",
+    match: { status: "ok", value: true },
+    expected: { inventoryIds: ["BOOKENDS"] },
+    actual: { inventoryIds: ["BOOKENDS"], phase: "SHOP" },
+    reason: { status: "ok", value: "react_state_committed" },
+  });
+  const ev = o.ledger.events.find((e) => e.type === "state_commit");
+  assert.ok(ev);
+  assert.equal(ev.commit.kind, "purchase");
+  assert.equal(ev.commit.match.value, true);
 });
