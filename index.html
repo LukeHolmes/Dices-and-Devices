@@ -3538,6 +3538,7 @@ const GutterbonesRules = (() => {
         }
         const used = Math.max(0, Number(state.chainMultBonusUsed) || 0);
         const allowed = Math.min(add, Math.max(0, cap - used));
+        if (add > allowed) state.chainMultCapHit = true;
         state.chainMultBonusUsed = used + allowed;
         state.mult += allowed;
         return allowed;
@@ -3953,6 +3954,7 @@ const GutterbonesRules = (() => {
                 const debtMult = debtCap != null && !Number.isNaN(Number(debtCap))
                     ? Math.min(rawDebtMult, Math.max(0, Number(debtCap)))
                     : rawDebtMult;
+                if (debtCap != null && rawDebtMult > debtMult) state.debtCollectorCapped = true;
                 if (debtMult > 0) {
                     state.mult += debtMult;
                     triggers.push({ name: 'DEBT COIL', value: `+${debtMult}x` });
@@ -4133,7 +4135,9 @@ const GutterbonesRules = (() => {
             chainLinks: [], chainLinkMarkers: [], synergyTuningRef: synergyTuningHand,
             chainChargedSlots: new Set(), chainSparkedSlots: new Set(),
             chainGhostEchoFired: false, chainWireFeedDirty: false,
-            chainMultBonusUsed: 0
+            chainMultBonusUsed: 0,
+            chainMultCapHit: false,
+            debtCollectorCapped: false
         };
         const faceApi = { pushStep, triggers };
         applyAllFaceModifiers(resolved, destroyed, scoreState, faceApi);
@@ -4210,7 +4214,10 @@ const GutterbonesRules = (() => {
             chainLinkMarkers: synergyResult.chainLinkMarkers || [],
             categoryMarkEarned,
             heatSpikeApplied,
-            blueprintMultEngineTriggered
+            blueprintMultEngineTriggered,
+            chainMultBonusUsed: Math.max(0, Number(scoreState.chainMultBonusUsed) || 0),
+            chainMultCapHit: !!scoreState.chainMultCapHit,
+            debtCollectorCapped: !!scoreState.debtCollectorCapped
         };
     };
 
@@ -13983,6 +13990,31 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         useEffect(() => {
             if (typeof window === 'undefined') return;
             const params = new URLSearchParams(window.location.search);
+            if (params.get('balanceObserver') === '1') {
+                window.__GB_BALANCE_OBSERVER__ = {
+                    schemaVersion: 'balance-observer-v1',
+                    getReadOnlySnapshot: () => ({
+                        phase,
+                        round,
+                        target,
+                        score,
+                        gold,
+                        debt,
+                        hands,
+                        discards,
+                        usedCats: [...usedCats],
+                        activeBossId: activeBoss?.id || null,
+                        inventoryIds: inventory.map((item) => item.id),
+                        diceLane: dice.map((d, i) => ({
+                            slot: i + 1,
+                            value: d.value,
+                            faceId: d.faceId || null,
+                            type: d.type || 'standard'
+                        })),
+                        rng: { status: 'unavailable', reason: 'main has no per-call RNG ledger' }
+                    })
+                };
+            }
             if (params.get('e2e') === '1') {
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
