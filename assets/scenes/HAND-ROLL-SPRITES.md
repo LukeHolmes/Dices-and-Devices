@@ -5,7 +5,7 @@
 | File | Frame |
 |------|--------|
 | `hand-closed.png` | Fist rattling bones (pre-release) |
-| `hand-open.png` | Fingers open at release (~35% of `handThrowSweep`) |
+| `hand-open.png` | Fingers open at release (crossfade peaks ~42–68% of `handThrowSweep`, ~1.36s normal) |
 
 **Do not** drop the noir reference JPG (`hand-roll-reference.jpg` from Luke) into the repo as these sprites — it is a full-scene illustration, not a transparent cut-out. Export two **transparent PNGs** cropped to the hand (noir ink, amber rim light) using the reference for composition only.
 

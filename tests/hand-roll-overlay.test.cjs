@@ -105,28 +105,37 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
     assert.ok(pixels?.ok, `hand sprite has opaque pixels (got ${JSON.stringify(pixels)})`);
     const shuffle = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureHandShuffleOverlap());
     if (!shuffle?.skipped) assert.ok(shuffle?.ok, `hand should not cover SHUFFLE (overlap ${shuffle?.ratio})`);
-    let openDominant = false;
-    for (const delay of [140, 170, 200, 230]) {
-      await page.waitForTimeout(delay);
-      const mid = await page.evaluate(() => {
-        const closed = document.querySelector(".gutter-roll-hand-closed");
-        const open = document.querySelector(".gutter-roll-hand-open");
-        return {
-          closedOpacity: closed ? parseFloat(getComputedStyle(closed).opacity) : -1,
-          openOpacity: open ? parseFloat(getComputedStyle(open).opacity) : -1,
-        };
-      });
-      if (mid.openOpacity > 0.55 && mid.openOpacity > mid.closedOpacity) {
-        openDominant = true;
-        break;
-      }
-    }
-    assert.ok(openDominant, "open frame dominates after ~35% of handThrowSweep");
     const handMs = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
-    assert.ok(handMs >= 1000, `hand sweep should stay readable (${handMs}ms)`);
+    assert.ok(handMs >= 1100 && handMs <= 1550, `hand sweep duration in polish band (${handMs}ms)`);
+    await page.waitForTimeout(handMs + 100);
+    assert.equal(
+      await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(),
+      0,
+      "overlay cleans up after animation",
+    );
+    await page.click('[data-tutorial="roll-btn"]');
+    await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand', {
+      timeout: 3000,
+    });
+    await page.waitForTimeout(Math.round(handMs * 0.54));
+    const mid = await page.evaluate(() => {
+      const closed = document.querySelector(".gutter-roll-hand-closed");
+      const open = document.querySelector(".gutter-roll-hand-open");
+      return {
+        closedOpacity: closed ? parseFloat(getComputedStyle(closed).opacity) : -1,
+        openOpacity: open ? parseFloat(getComputedStyle(open).opacity) : -1,
+      };
+    });
+    assert.ok(
+      mid.openOpacity > 0.55 && mid.openOpacity > mid.closedOpacity,
+      "open frame dominates during release window of handThrowSweep",
+    );
     await page.waitForTimeout(handMs + 80);
-    const gone = await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count();
-    assert.equal(gone, 0, "overlay cleans up after animation");
+    assert.equal(
+      await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(),
+      0,
+      "overlay cleans up after release sample",
+    );
   } finally {
     await browser.close();
   }
