@@ -6054,7 +6054,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         BOUNCER: { id: 'BOUNCER', name: 'THE BOUNCER', desc: 'Quota +50%', color: 'text-gray-300', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/bouncer.png', portraitAlt: 'The Bouncer' },
         LOAN_SHARK: { id: 'LOAN_SHARK', name: 'THE LOAN SHARK', desc: '-$2 per roll', color: 'text-red-500', portraitSrc: 'assets/bosses/loan-shark.png', portraitAlt: 'The Loan Shark' },
         JUNKIE: { id: 'JUNKIE', name: 'THE JUNKIE', desc: 'All 6s roll as 1s', color: 'text-[#ff007f]', portraitSrc: 'assets/bosses/junkie.png', portraitAlt: 'The Junkie' },
-        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware dampened (55%)', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
+        CROOKED_COP: { id: 'CROOKED_COP', name: 'CROOKED COP', desc: 'Hardware bonuses dampened to 68%', color: 'text-blue-400', portraitSrc: 'assets/bosses/crooked-cop.png', portraitAlt: 'Crooked Cop' },
         INFORMANT: { id: 'INFORMANT', name: 'THE INFORMANT', desc: 'Stash frozen', color: 'text-yellow-400', portraitSrc: 'assets/bosses/informant.png', portraitAlt: 'The Informant' },
         THE_RAID: { id: 'THE_RAID', name: 'THE RAID', desc: 'Final job. Quota ×1.38 (~+38%). Pills cost $2. Clear R10 to escape — beating this boss does not end the run.', color: 'text-red-600 animate-pulse', applyTarget: t => Math.floor(t * 1.5), portraitSrc: 'assets/bosses/the-raid.png', portraitAlt: 'The Raid' }
     };
@@ -9666,6 +9666,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const runRandomRef = useRef(() => Math.random());
         const e2eRunSeededRef = useRef(false);
+        const e2eRngCallCountRef = useRef(0);
+        const e2eRunSeedValueRef = useRef(null);
         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
@@ -11746,7 +11748,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
-            const arcPickRng = daily ? runRandomRef.current() : Math.random();
+            const arcPickRng = (dailyRunActive || e2eRunSeededRef.current)
+                ? runRandomRef.current()
+                : Math.random();
             const runArcId = tutorial
                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
                 : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
@@ -12089,11 +12093,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setRollingSlots(prev => prev.map((_, i) => i === idx));
             const settleMs = reducedMotion ? 0 : getDiceSettleMs(typeof audioSettings !== 'undefined' ? audioSettings : {}, reducedMotion) + 120;
             scheduleTimeout(() => {
+                const pillRng = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
                 setDice(prev => {
                     const next = [...prev];
                     const die = next[idx];
                     if (!die) return prev;
-                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
+                    const face = die.faces[Math.floor(pillRng() * die.faces.length)];
                     const isStandard = face.type === 'standard';
                     const carvedId = face.id || face.faceId || null;
                     let value = face.value;
@@ -12148,9 +12153,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const grant = tutGrant || EARLY_GAME_TUNING.openingStashGrant || 0;
             if (grant <= 0) return;
             setStash(grant);
+            const sniffRng = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
             const slot = tutorialActiveRef.current && GutterbonesTutorial
                 ? GutterbonesTutorial.TUNING.openingSniffSlot
-                : Math.floor(Math.random() * 5);
+                : Math.floor(sniffRng() * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
@@ -12327,9 +12333,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 });
             }
             if (typeof window !== "undefined" && window.__GB_SIM_TELEM__?.record) {
+                const targetAtPlay = (typeof runTargetRef !== 'undefined' && runTargetRef)
+                    ? runTargetRef.current
+                    : currentTarget;
                 window.__GB_SIM_TELEM__.record({
                     total: result.total || 0,
                     valid: !!result.valid,
+                    scoreBefore: scoreAtPlay,
+                    targetBefore: targetAtPlay,
+                    handsBefore: handsBeforePlay,
+                    round,
                     chainDepth: result.chainDepth || 0,
                     chainLinks: result.chainLinks || [],
                     synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId || e.id).filter(Boolean),
@@ -13484,6 +13497,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (typeof window === 'undefined') return;
             const params = new URLSearchParams(window.location.search);
             if (params.get('e2e') === '1') {
+                window.__GB_SIM_POLICY__ = Object.freeze({
+                    revision: '2026-11-11-phase-b-v1',
+                    simBuilderClearQuotaBank: true,
+                });
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
@@ -14003,10 +14020,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     seedRunRng: (seedNum) => {
                         if (typeof GutterbonesReplay?.mulberry32 !== 'function') return false;
+                        const seedVal = Number(seedNum) || 1;
                         e2eRunSeededRef.current = true;
-                        runRandomRef.current = GutterbonesReplay.mulberry32(Number(seedNum) || 1);
+                        e2eRunSeedValueRef.current = seedVal;
+                        e2eRngCallCountRef.current = 0;
+                        const base = GutterbonesReplay.mulberry32(seedVal);
+                        runRandomRef.current = () => {
+                            e2eRngCallCountRef.current += 1;
+                            return base();
+                        };
                         return true;
                     },
+                    getBootstrapFingerprint: () => ({
+                        policyRevision: window.__GB_SIM_POLICY__?.revision || null,
+                        policyMode: window.__GB_SIM_ORGANIC_TRACE__ ? 'organic_trace' : (window.__GB_SIM_BOT_SESSION__ ? 'sim_bot' : 'human'),
+                        seed: e2eRunSeedValueRef.current,
+                        rngSeeded: !!e2eRunSeededRef.current,
+                        rngCalls: e2eRngCallCountRef.current,
+                        arcId,
+                        runModifierIds: [...(runModifierIds || [])],
+                    }),
                     setPlaysRemaining: (n) => setHands(Math.max(0, Math.floor(Number(n) || 0))),
                     setScore: (n) => setScore(Math.max(0, Math.floor(Number(n) || 0))),
                     forceRoundWin: () => {
@@ -14365,10 +14398,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         );
                         const organicHuntActive = e2eGreedy && bookendsKit && organicReadyHand && hasRolled;
                         const quotaPace = gap / Math.max(1, hands);
+                        const clearsQuotaThisHand = (score + (best?.total || 0)) >= currentTarget;
                         const mustScore = simBuilder
                             ? (
                                 hands <= 1
                                 || discards <= 0
+                                || clearsQuotaThisHand
                                 || (best?.total || 0) >= Math.max(10, quotaPace * 0.42)
                                 || (round >= 4 && (best?.total || 0) >= Math.max(8, gap * 0.22))
                             )
