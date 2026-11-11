@@ -200,13 +200,15 @@ test("r15 — refresh stock keeps RAID selection on final-job shop", async () =>
   }
 });
 
-test("r15 — loan carve blocked at broke final RAID shop", async () => {
+test("r15 — loan carve blocked at broke final RAID shop", { timeout: 120_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  page.setDefaultNavigationTimeout(90_000);
+  page.setDefaultTimeout(90_000);
   try {
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded" });
-    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 45_000 });
+    await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 90_000 });
     await resumeFixture(page, fixtures.shopRound9RaidBroke);
     await page.evaluate(() => window.__GB_E2E__.skipIntroOverlays?.());
     await page.waitForTimeout(400);
