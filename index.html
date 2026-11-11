@@ -592,6 +592,37 @@
     #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="play-alley"] {
         overflow: hidden !important;
     }
+    #root-gutterbones[data-upgrade-intel-open="1"] .gb-app-shell {
+        pointer-events: none !important;
+        user-select: none;
+    }
+    #root-gutterbones[data-upgrade-intel-open="1"] [data-layout-key="upgrade-intel-backdrop"] {
+        pointer-events: auto !important;
+        z-index: 9850 !important;
+        isolation: isolate;
+    }
+    #root-gutterbones[data-upgrade-intel-open="1"] [data-layout-key="upgrade-intel-panel"] {
+        position: relative;
+        z-index: 1;
+        isolation: isolate;
+        background: #0a0a0a;
+    }
+    #root-gutterbones [data-layout-key="toast-dismiss"] {
+        box-sizing: border-box;
+        min-width: 2.125rem;
+        min-height: 2.125rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 0.35rem;
+    }
+    #root-gutterbones[data-upgrade-intel-open="1"] .bone-pill-control,
+    #root-gutterbones[data-upgrade-intel-open="1"] .bone-face-loupe,
+    #root-gutterbones[data-upgrade-intel-open="1"] .gutter-roll-hand-overlay {
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
     #root-gutterbones .hud-pill-count.pill-count-tick {
         animation: pillCountTick 0.42s ease-out;
     }
@@ -870,10 +901,19 @@
     }
     @media (min-width: 821px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
-            max-height: min(58dvh, calc(100dvh - 11rem)) !important;
+            max-height: min(62dvh, calc(100dvh - 8.5rem)) !important;
+            min-height: 9rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
-            max-height: min(42dvh, 16rem) !important;
+            max-height: none !important;
+            flex: 1 1 auto !important;
+            min-height: 6.5rem !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
@@ -1806,6 +1846,28 @@
         }
         #root-gutterbones[data-phase="SHOP"] .shop-route-pagination button {
             z-index: 22;
+        }
+        @media (min-height: 880px) {
+            #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+                max-height: min(58dvh, calc(100dvh - 12.5rem)) !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+                max-height: none !important;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-gutter: stable;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+                min-height: 5.5rem !important;
+            }
         }
     }
     /* Polish step 4: short landscape — shop/gamble fit */
@@ -2986,6 +3048,10 @@
         pointer-events: none;
         z-index: 5;
     }
+    #root-gutterbones .bone-face-intel-btn {
+        pointer-events: auto;
+        border-radius: 0.2rem;
+    }
     #root-gutterbones[data-ui-redesign="1"] .bone-loupe-btn {
         position: absolute;
         left: 0.15rem;
@@ -3145,7 +3211,7 @@
         will-change: transform, opacity;
     }
     #root-gutterbones[data-ui-redesign="1"] .animate-gutter-hand {
-        animation: handThrowSweep 460ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: handThrowSweep var(--gb-roll-hand-ms, 1180ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-closed,
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-open {
@@ -3159,10 +3225,10 @@
         -webkit-user-drag: none;
     }
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-closed {
-        animation: handGripClosedVisible 460ms linear forwards;
+        animation: handGripClosedVisible var(--gb-roll-hand-ms, 1180ms) linear forwards;
     }
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-open {
-        animation: handGripOpenVisible 460ms linear forwards;
+        animation: handGripOpenVisible var(--gb-roll-hand-ms, 1180ms) linear forwards;
     }
     #root-gutterbones[data-ui-redesign="1"].gb-motion-reduce .gutter-roll-hand-overlay {
         display: none !important;
@@ -5251,14 +5317,15 @@ const GutterbonesPresentation = (() => {
     const GATE_MIN_MS = Object.freeze({
         roundClear: 2800,
         bossIntro: 3200,
-        scoreOverlay: 720,
-        unlockToast: 3200,
-        mechanicToast: 3200,
+        scoreOverlay: 2400,
+        unlockToast: 5200,
+        mechanicToast: 5200,
         storyPanel: 2400,
         rapReveal: 2800,
         paperStamp: 1400
     });
-    const TOAST_MIN_MS = Object.freeze({ fast: 2600, normal: 3200, relaxed: 4000 });
+    const TOAST_MIN_MS = Object.freeze({ fast: 3600, normal: 5200, relaxed: 6400 });
+    const ROLL_HAND_PRESENTATION_BASE_MS = 1180;
     const AUTO_DISMISS_CAP_MS = 12000;
 
     const normalizePacing = (pacing) => (
@@ -5324,22 +5391,379 @@ const GutterbonesPresentation = (() => {
         return scaledMs(anim + hold, pacing, reducedMotion);
     };
 
+    const rollHandFxMs = (pacing, reducedMotion) => {
+        if (reducedMotion) return 0;
+        return scaledMs(ROLL_HAND_PRESENTATION_BASE_MS, pacing, false);
+    };
+
+    const toastPersistMs = (kind, pacing, reducedMotion) => {
+        const gateKind = kind === 'unlock' ? 'unlockToast' : (kind === 'mechanic' ? 'mechanicToast' : null);
+        if (!gateKind) return toastDurationMs(pacing, reducedMotion);
+        const min = gateMinMs(gateKind, pacing, reducedMotion);
+        return Math.min(AUTO_DISMISS_CAP_MS, min + 9000);
+    };
+
     return Object.freeze({
         PACING_SCALE,
         GATE_MIN_MS,
         TOAST_MIN_MS,
+        ROLL_HAND_PRESENTATION_BASE_MS,
         AUTO_DISMISS_CAP_MS,
         normalizePacing,
         pacingScale,
         scaledMs,
         gateMinMs,
         toastDurationMs,
+        toastPersistMs,
         readableMs,
         scoreOverlayLifetimeMs,
-        synergySequenceTailMs
+        synergySequenceTailMs,
+        rollHandFxMs
     });
 })();
 if (typeof window !== 'undefined') window.GutterbonesPresentation = GutterbonesPresentation;
+</script>
+
+<script id="gutterbones-intel">
+const GutterbonesIntel = (() => {
+    const UPGRADE_INTEL = Object.freeze({
+        BLOOD_6: {
+            id: 'BLOOD_6',
+            title: 'Blood 6',
+            kind: 'contraband face',
+            summary: 'A carved 6-face that pays burst chips but taxes $1 cash every time it scores.',
+            trigger: 'Runs when this bone is part of the scored hand (face modifiers on scoring dice).',
+            benefits: '+20 chips on each score.',
+            costs: '-$1 cash on each score.',
+            position: 'Blood ripple: for each Blood 6 showing, each adjacent Blood-type or Destructive neighbor (Blood 6, Shiv) adds +1 mult via the blood ripple chain (capped by blueprint).',
+            example: 'Blood 6 in slot 2 with Shiv in slot 3 can fire blood ripple for extra mult when both score.',
+            synergies: 'Pairs with Shiv, Crowbar, and Blood Risk builds; blueprint Blood Debt Start raises ripple cap.'
+        },
+        SHIV_FACE: {
+            id: 'SHIV_FACE',
+            title: 'The Shiv',
+            kind: 'contraband face',
+            summary: 'Destructive face: big chip spike, destroys the right neighbor on roll.',
+            trigger: 'Chip bonus when scored; destruction fires on roll before scoring.',
+            benefits: '+40 chips when scored.',
+            costs: 'Destroys the bone to the right on roll (slot lost for that hand).',
+            position: 'Counts as Destructive — triggers blood ripple when adjacent to Blood 6.',
+            example: 'Shiv in slot 3 destroys slot 4; keep slot 5 empty or accept lane damage.',
+            synergies: 'Blood ripple with Blood 6; Crowbar counts blood/destructive faces showing.'
+        },
+        BLOOD_PACT: {
+            id: 'BLOOD_PACT',
+            title: 'Blood Pact',
+            kind: 'hardware',
+            summary: 'Hard mult spike with a per-roll cash toll.',
+            trigger: 'Passive while equipped (unless hardware disabled).',
+            benefits: '×3 mult on scored hands.',
+            costs: '-$1 cash every roll while equipped.',
+            example: 'Strong with high mult chains; painful when cash is thin.',
+            synergies: 'Blood Risk / Debt Collector when you already carry debt.'
+        },
+        WIREBAG_FACE: {
+            id: 'WIREBAG_FACE',
+            title: 'Wirebag',
+            kind: 'contraband face',
+            summary: 'Parasite face — trades mult for cash.',
+            trigger: 'When this face is part of the scored hand.',
+            benefits: '+$4 cash.',
+            costs: '-1 mult on the score.',
+            position: 'Wire feed: neighbors with Gold add synergy chain bonuses.',
+            synergies: 'Gold face neighbors; Cash Control builds.'
+        },
+        GHOST_FACE: {
+            id: 'GHOST_FACE',
+            title: 'Ghost',
+            kind: 'contraband face',
+            summary: 'Ethereal face — high mult but lowers count of scoring bones.',
+            trigger: 'When scored.',
+            benefits: '+2 mult.',
+            costs: 'Ghost faces reduce how many bones can score (ethereal rule).',
+            position: 'Ghost echo: +mult chain when adjacent Echo (or echoed copy) is showing.',
+            synergies: 'Echo face lane pairs.'
+        },
+        ECHO_FACE: {
+            id: 'ECHO_FACE',
+            title: 'Echo',
+            kind: 'contraband face',
+            summary: 'Adjacency face that enables ghost echo chains.',
+            trigger: 'When scored; echoes copy left face for scoring order.',
+            benefits: 'Copies left face value for scoring (after magnet rules).',
+            position: 'Ghost echo mult when next to Ghost.',
+            synergies: 'Ghost face; Mult Engine chains.'
+        },
+        CROWBAR: {
+            id: 'CROWBAR',
+            title: 'The Crowbar',
+            kind: 'hardware',
+            summary: 'Scales mult with violent faces on the table.',
+            trigger: 'When scored; counts showing faces.',
+            benefits: '+1 mult per Blood or Destructive face showing (max +5).',
+            synergies: 'Blood 6, Shiv, Blood Risk boards.'
+        },
+        FUSE_BOX: {
+            id: 'FUSE_BOX',
+            title: 'Fuse Box',
+            kind: 'hardware',
+            summary: 'Extra synergy pass when the lane is mixed.',
+            trigger: 'When ≥2 distinct face types are showing on scored dice.',
+            benefits: '+1 synergy chain pass.',
+            synergies: 'Chaos / mixed-face boards; Fuse face spark chains.'
+        },
+        DEBT_COLLECTOR: {
+            id: 'DEBT_COLLECTOR',
+            title: 'Debt Collector',
+            kind: 'hardware',
+            summary: 'Debt becomes leverage instead of only pain.',
+            trigger: 'Each scored hand while you owe debt.',
+            benefits: '+0.5 mult per $1 debt (on that hand).',
+            costs: 'Still owe the debt — this only scales mult.',
+            synergies: 'Blood Pact and loan shop buys.'
+        },
+        HOT_STREAK_COIL: {
+            id: 'HOT_STREAK_COIL',
+            title: 'Hot Streak Coil',
+            kind: 'hardware',
+            summary: 'Retriggers your best mult face when flow is warm.',
+            trigger: 'When flow streak ≥ 1 on a scored hand.',
+            benefits: 'Retrigger the strongest mult face once.',
+            synergies: 'Mult Engine, MULT_FACE, flow builds.'
+        },
+        MIRROR_RIG: {
+            id: 'MIRROR_RIG',
+            title: 'Mirror Rig',
+            kind: 'hardware',
+            summary: 'Swaps center lane before score.',
+            trigger: 'Before each score resolution.',
+            benefits: 'Swaps slots 2 and 4; +1 mult if they match after swap.',
+            position: 'Slot 2 ↔ slot 4.',
+            synergies: 'Set Consistency, matching values.'
+        },
+        LOADED_DIE: {
+            id: 'LOADED_DIE',
+            title: 'Weighted Core',
+            kind: 'hardware',
+            summary: 'Stable chip bump on Triad hands.',
+            trigger: 'When the scored category is Triad.',
+            benefits: '+10 chips on Triad; +20 when synergy chains are enabled (SYNERGY_TUNING).',
+            synergies: 'Set Consistency / Triad focus.'
+        },
+        BOOKENDS: {
+            id: 'BOOKENDS',
+            title: 'The Bookends',
+            kind: 'hardware',
+            summary: 'Matching ends retrigger modifiers.',
+            trigger: 'When slot 1 and slot 5 match exactly on a score.',
+            benefits: '+30 chips when slot 1 and 5 values match (faces match, or ghost-echo link). Bookends synergy can retrigger face modifiers on slots 1 and 5.',
+            synergies: 'Set Consistency carve lanes.'
+        },
+        ENGINE: {
+            id: 'ENGINE',
+            title: 'The Engine',
+            kind: 'hardware',
+            summary: 'Slot 1 mult scales with higher bones to the right.',
+            trigger: 'When scored.',
+            benefits: 'Slot 1 gains mult per higher-value bone to its right (max +4).',
+            synergies: 'MULT_FACE, Mult Engine builds.'
+        },
+        CENTERPIECE: {
+            id: 'CENTERPIECE',
+            title: 'The Centerpiece',
+            kind: 'hardware',
+            summary: 'Doubles slot 3 value and face bonuses.',
+            trigger: 'When slot 3 is part of the scored hand.',
+            benefits: 'Slot 3 base value and face bonuses trigger twice.',
+            synergies: 'Center-slot mult / fuse carve.'
+        },
+        MULT_FACE: {
+            id: 'MULT_FACE',
+            title: '+1 MULT',
+            kind: 'contraband face',
+            summary: 'Adds flat mult when scored.',
+            trigger: 'When scored (max two +MULT faces count per hand).',
+            benefits: '+1 mult each (cap 2 per score).',
+            synergies: 'Engine hardware link.'
+        },
+        GOLD_FACE: {
+            id: 'GOLD_FACE',
+            title: '+$2 CASH',
+            kind: 'contraband face',
+            summary: 'Steady cash drip face.',
+            trigger: 'When scored.',
+            benefits: '+$2 cash.',
+            position: 'Wire feed synergy with Wirebag neighbors.',
+            synergies: 'Cash Control.'
+        },
+        FUSE_FACE: {
+            id: 'FUSE_FACE',
+            title: 'Fuse',
+            kind: 'contraband face',
+            summary: 'Modifier face that sparks chip chains.',
+            trigger: 'When scored with adjacent modifier faces.',
+            benefits: 'Fuse spark chain: +10 chips (synergy rules).',
+            position: 'Adjacent modifier neighbors.',
+            synergies: 'Fuse Box hardware.'
+        },
+        WILD_FACE: {
+            id: 'WILD_FACE',
+            title: 'Wild',
+            kind: 'contraband face',
+            summary: 'Wild pip — counts as 6 toward sums and category checks.',
+            trigger: 'During scoring resolution (categories, straights, kind hands).',
+            benefits: 'Each Wild adds 6 to pip sum and can fill missing straight/kind slots.',
+            example: 'Wild + 1-2-3-4 can complete a Short Run when rules allow.',
+            synergies: 'Set Consistency and Chaos lines.'
+        },
+        MAGNET_FACE: {
+            id: 'MAGNET_FACE',
+            title: 'Magnet',
+            kind: 'contraband face',
+            summary: 'Copies the left neighbor for scoring after Echo resolution.',
+            trigger: 'Before score: overwrites this slot with the left bone (unless destroyed or slot 1).',
+            benefits: 'Inherits copied value and carved face for categories and modifiers.',
+            position: 'Slot needs a live left neighbor; runs after Echo copy order.',
+            synergies: 'Set lanes; pair with stable left bone values.'
+        },
+        MARK_FACE: {
+            id: 'MARK_FACE',
+            title: 'Mark',
+            kind: 'contraband face',
+            summary: 'Tags categories on your first score of each payout per round.',
+            trigger: 'When this face is showing on the first score of a category this round.',
+            benefits: '+1 mult on that category for the rest of the run (stacks via category marks).',
+            example: 'First Fives score with Mark showing → future Fives hands gain +1 mult.',
+            synergies: 'Set Consistency, Double Down (category mult 3+).'
+        },
+        DOUBLE_DOWN_FACE: {
+            id: 'DOUBLE_DOWN_FACE',
+            title: 'Double Down',
+            kind: 'contraband face',
+            summary: 'Multiplies a hot category mult when you are already at 3× or higher.',
+            trigger: 'When scored and the hand category multiplier is ≥ 3× (after category rules, before face chips).',
+            benefits: 'Multiply total mult by 1.25 once for that hand.',
+            synergies: 'Upper section, Triad/Quad families, Mult Engine.'
+        },
+        BRASS_KNUCKLES: {
+            id: 'BRASS_KNUCKLES',
+            title: 'Brass Knuckles',
+            kind: 'hardware',
+            summary: 'Low-pip brawler mult.',
+            trigger: 'When scored and every scoring standard pip is 1, 2, or 3.',
+            benefits: '+3 mult.',
+            synergies: 'Ones/Twos/Threes grinders, Set Consistency.'
+        },
+        BLACK_BOOK: {
+            id: 'BLACK_BOOK',
+            title: 'The Black Book',
+            kind: 'hardware',
+            summary: 'Pays you for pill discipline.',
+            trigger: 'Each time you spend a Pill to reroll a bone (unless hardware disabled).',
+            benefits: '+$1 cash per pill pop.',
+            synergies: 'Cash Control; Counter persona starts with one.'
+        },
+        BURNER_PHONE: {
+            id: 'BURNER_PHONE',
+            title: 'Burner Phone',
+            kind: 'hardware',
+            summary: 'Accelerates stash programs.',
+            trigger: 'Passive while equipped (unless hardware disabled).',
+            benefits: 'Stash fill rate ×1.5 on scored hands.',
+            synergies: 'Cash Control — reach BRIBE/FIX/LAUNDER faster.'
+        },
+        SHADY_LEDGER: {
+            id: 'SHADY_LEDGER',
+            title: 'Shady Ledger',
+            kind: 'hardware',
+            summary: 'Trades play count for debt quota relief.',
+            trigger: 'Passive while equipped; affects next-round job planning.',
+            benefits: 'Debt no longer adds quota spike penalty.',
+            costs: 'While you owe debt, lose 1 Play on the next round job.',
+            synergies: 'Debt builds with Blood Pact / shop loans.'
+        },
+        SECOND_WIND: {
+            id: 'SECOND_WIND',
+            title: 'Second Wind',
+            kind: 'consumable',
+            summary: 'Extra play this round only.',
+            trigger: 'On purchase from the shop (consumable, used immediately).',
+            benefits: '+1 Play for the current round.',
+            synergies: 'Quota races when you need one more score.'
+        },
+        SMELLING_SALTS: {
+            id: 'SMELLING_SALTS',
+            title: 'Smelling Salts',
+            kind: 'consumable',
+            summary: 'Raises your pill ceiling for the run.',
+            trigger: 'On purchase from the shop.',
+            benefits: '+2 max Pills for this run (refreshes each round to the new cap).',
+            synergies: 'Pill-heavy rounds, THE RAID pill tax.'
+        },
+        DIRTY_WAD: {
+            id: 'DIRTY_WAD',
+            title: 'Dirty Wad',
+            kind: 'consumable',
+            summary: 'Instant cash injection.',
+            trigger: 'On purchase from the shop.',
+            benefits: '+$12 cash immediately.',
+            synergies: 'Affording hardware or clearing small debts.'
+        }
+    });
+
+    const FACE_INTEL_IDS = Object.freeze([
+        'MULT_FACE', 'GOLD_FACE', 'WILD_FACE', 'BLOOD_6', 'ECHO_FACE', 'SHIV_FACE', 'WIREBAG_FACE',
+        'GHOST_FACE', 'FUSE_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE'
+    ]);
+
+    const SHOP_INTEL_IDS = Object.freeze([
+        'MULT_FACE', 'GOLD_FACE', 'WILD_FACE', 'BLOOD_6', 'ECHO_FACE', 'SHIV_FACE', 'WIREBAG_FACE',
+        'GHOST_FACE', 'FUSE_FACE', 'MAGNET_FACE', 'MARK_FACE', 'DOUBLE_DOWN_FACE',
+        'CENTERPIECE', 'BOOKENDS', 'ENGINE', 'LOADED_DIE', 'BLOOD_PACT', 'BRASS_KNUCKLES', 'BLACK_BOOK',
+        'BURNER_PHONE', 'SHADY_LEDGER', 'CROWBAR', 'FUSE_BOX', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL',
+        'SECOND_WIND', 'SMELLING_SALTS', 'DIRTY_WAD'
+    ]);
+
+    const HARDWARE_INTEL_IDS = Object.freeze([
+        'CENTERPIECE', 'BOOKENDS', 'ENGINE', 'LOADED_DIE', 'BLOOD_PACT', 'BRASS_KNUCKLES', 'BLACK_BOOK',
+        'BURNER_PHONE', 'SHADY_LEDGER', 'CROWBAR', 'FUSE_BOX', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL'
+    ]);
+
+    const getUpgradeIntel = (itemId) => {
+        if (!itemId) return null;
+        const row = UPGRADE_INTEL[itemId];
+        if (row) return { ...row };
+        return null;
+    };
+
+    const hasUpgradeIntel = (itemId) => !!UPGRADE_INTEL[itemId];
+
+    const assertShopCatalogCoverage = () => {
+        const missing = SHOP_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]);
+        if (missing.length && typeof console !== 'undefined') {
+            console.warn('[GutterbonesIntel] Missing detailed intel for shop items:', missing.join(', '));
+        }
+        return missing;
+    };
+    if (typeof window !== 'undefined' && window.__GUTTERBONES_DEV__) assertShopCatalogCoverage();
+
+    const missingFaceIntelIds = () => FACE_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]);
+    const missingHardwareIntelIds = () => HARDWARE_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]);
+
+    return Object.freeze({
+        UPGRADE_INTEL,
+        FACE_INTEL_IDS,
+        SHOP_INTEL_IDS,
+        HARDWARE_INTEL_IDS,
+        getUpgradeIntel,
+        hasUpgradeIntel,
+        listUpgradeIntelIds: () => Object.keys(UPGRADE_INTEL),
+        missingShopIntelIds: () => SHOP_INTEL_IDS.filter((id) => !UPGRADE_INTEL[id]),
+        missingFaceIntelIds,
+        missingHardwareIntelIds
+    });
+})();
+if (typeof window !== 'undefined') window.GutterbonesIntel = GutterbonesIntel;
 </script>
 
 <script id="gutterbones-hardening">
@@ -6753,9 +7177,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, onOpenUpgradeIntel, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
         const [loupeOpen, setLoupeOpen] = useState(false);
         const loupeRef = useRef(null);
+        const faceIntelBtnRef = useRef(null);
         const rollStyleRef = useRef({
             '--roll-delay': `${slot * 90}ms`,
             '--roll-dur': '680ms',
@@ -6818,15 +7243,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             window.addEventListener('keydown', onKey);
             return () => window.removeEventListener('keydown', onKey);
         }, [loupeOpen]);
-        const faceStrip = (data.faces || []).map((f, idx) => {
-            const label = f.faceLabel || f.label || (typeof f.value === 'number' ? f.value : '?');
-            return `${idx + 1}:${label}`;
-        });
+        const faceIntelFor = (f) => {
+            if (!f) return null;
+            const fid = (f.id && f.id !== 'standard' ? f.id : null) || f.faceId || null;
+            if (!fid || typeof GutterbonesIntel === 'undefined' || !GutterbonesIntel.hasUpgradeIntel(fid)) return null;
+            return fid;
+        };
+        const openFaceIntel = (faceId, returnEl = null) => {
+            setLoupeOpen(false);
+            if (faceId && onOpenUpgradeIntel) onOpenUpgradeIntel(faceId, returnEl || faceIntelBtnRef.current);
+        };
+        const showingFaceIntelId = data.faceId && data.faceId !== 'standard' && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(data.faceId) ? data.faceId : null;
         return (
             <div className={`relative bone-slot-inner ${previewTint ? 'bone-preview-tint' : ''}`} style={previewTint ? { '--preview-tint': previewTint } : undefined}>
                 {kept && !rolling && <div className="bone-kept-tray-rim" aria-hidden />}
                 <div className="bone-slot-label text-[10px] text-center mb-2 font-mono text-[#d6b85c] opacity-60">SLOT 0{slot + 1}</div>
-                <div className="bone-die-perspective flex items-center justify-center">
+                <div className="bone-die-perspective relative flex items-center justify-center">
                     <button
                         type="button"
                         onClick={onClick}
@@ -6863,12 +7295,49 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             )
                         )}
                     </button>
+                    {!rolling && showingFaceIntelId && (
+                        <button
+                            ref={faceIntelBtnRef}
+                            type="button"
+                            data-layout-key={`bone-face-intel-${slot + 1}`}
+                            className="bone-face-intel-btn gb-tappable-label absolute left-0 bottom-0 z-[55] min-h-8 min-w-8 border border-amber-500/80 bg-black/85 font-mono text-[10px] text-amber-100 shadow-md"
+                            aria-label={`Details for ${data.faceLabel || showingFaceIntelId} on slot ${slot + 1}`}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setLoupeOpen(false);
+                                if (onOpenUpgradeIntel) onOpenUpgradeIntel(showingFaceIntelId, faceIntelBtnRef.current);
+                            }}
+                        >
+                            ?
+                        </button>
+                    )}
                 </div>
                 {kept && !rolling && <div className="bone-held-label">HELD</div>}
-                {loupeOpen && !rolling && faceStrip.length > 0 && (
+                {loupeOpen && !rolling && (data.faces || []).length > 0 && (
                     <div ref={loupeRef} data-layout-key={`bone-loupe-${slot + 1}`} className="bone-face-loupe" role="dialog" aria-label={`Faces on bone ${slot + 1}`}>
                         <div className="bone-face-loupe-grid">
-                            {faceStrip.map((line, i) => <div key={i}>{line}</div>)}
+                            {(data.faces || []).map((f, i) => {
+                                const label = f.faceLabel || f.label || (typeof f.value === 'number' ? f.value : '?');
+                                const intelId = faceIntelFor(f);
+                                return (
+                                    <div key={i} className="flex flex-col items-center gap-0.5 border border-zinc-700/60 rounded px-0.5 py-0.5">
+                                        <span className="text-center leading-tight">{i + 1}:{label}</span>
+                                        {intelId && (
+                                            <button
+                                                type="button"
+                                                data-layout-key={`bone-loupe-intel-${slot + 1}-${i + 1}`}
+                                                className="gb-tappable-label min-h-7 min-w-7 border border-amber-600/70 text-amber-100 bg-black/60 font-mono text-[9px]"
+                                                aria-label={`Details for ${label}`}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => openFaceIntel(intelId, e)}
+                                            >
+                                                ?
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -7035,7 +7504,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const ROLL_HAND_SPRITE_CLOSED = ['assets', 'scenes', 'hand-closed.png'].join('/');
     const ROLL_HAND_SPRITE_OPEN = ['assets', 'scenes', 'hand-open.png'].join('/');
-    const ROLL_HAND_FX_MS = 460;
 
     const probeRollHandSprites = (() => {
         let cached = null;
@@ -7078,7 +7546,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem }) => {
+    const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem, onOpenFaceIntel }) => {
         if (!previewItem) return null;
         return (
         <div data-layout-key="shop-bone-inspection-strip" className="shop-bone-inspection-strip shrink-0">
@@ -7104,11 +7572,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             </div>
             {inspectBone != null && dice[inspectBone] && (
                 <div data-layout-key="shop-face-preview-grid" className="bone-face-loupe-grid mt-2 mx-auto max-w-md" role="region" aria-label={`Faces on bone ${inspectBone + 1}`}>
-                    {(dice[inspectBone].faces || []).map((f, faceIdx) => (
-                        <div key={faceIdx} className="text-[10px] text-zinc-200 border border-zinc-700 rounded px-1 py-0.5 text-center">
-                            {f.faceLabel || f.label || f.value}
-                        </div>
-                    ))}
+                    {(dice[inspectBone].faces || []).map((f, faceIdx) => {
+                        const intelId = f?.id && f.id !== 'standard' && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(f.id) ? f.id : null;
+                        return (
+                            <div key={faceIdx} className="text-[10px] text-zinc-200 border border-zinc-700 rounded px-1 py-0.5 text-center flex flex-col items-center gap-0.5">
+                                <span>{f.faceLabel || f.label || f.value}</span>
+                                {intelId && onOpenFaceIntel && (
+                                    <button
+                                        type="button"
+                                        data-layout-key="shop-owned-face-intel"
+                                        className="gb-tappable-label min-h-7 min-w-7 border border-amber-600/70 text-amber-100 bg-black/60 font-mono text-[9px]"
+                                        aria-label={`Details for ${f.label || intelId}`}
+                                        onClick={(e) => { e.stopPropagation(); onOpenFaceIntel(intelId); }}
+                                    >
+                                        ?
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -7936,25 +8418,97 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const ToastStack = ({ items = [] }) => (
-        <div className="toast-stack-root absolute top-14 left-1/2 -translate-x-1/2 z-[550] pointer-events-none w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
+    const ToastStack = ({ items = [], onDismissToast }) => (
+        <div className="toast-stack-root absolute top-14 left-1/2 -translate-x-1/2 z-[550] w-[min(94vw,28rem)] flex flex-col gap-2 items-stretch">
             {items.map((item, idx) => (
                 <div
                     key={item.id}
                     data-layout-key={item.layoutKey || 'toast-stack-item'}
-                    className="bg-black/90 border-2 border-[#0df] rounded-lg px-5 py-3 shadow-2xl flex items-center gap-3"
+                    role={item.dismissible ? 'status' : undefined}
+                    className={`bg-black/90 border-2 border-[#0df] rounded-lg px-5 py-3 shadow-2xl flex items-start gap-3 ${item.dismissible ? 'pointer-events-auto' : 'pointer-events-none'}`}
                     style={{ animation: 'badgePop .3s ease-out forwards', marginTop: idx * 2 }}
                 >
                     {item.kind === 'unlock' && <span className="text-[#0df] text-sm font-mono font-bold shrink-0">NEW</span>}
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         {item.kind === 'unlock' && <div className="font-mono text-[10px] text-[#0df] tracking-[.3em]">UNLOCKED</div>}
                         {item.title && <div className="font-mono text-xs text-[#ffd37a] tracking-[.25em] mb-1">{item.title}</div>}
                         <div className="font-mono text-sm text-white leading-snug">{item.body || item.message}</div>
                     </div>
+                    {item.dismissible && (
+                        <button
+                            type="button"
+                            data-layout-key="toast-dismiss"
+                            className="gb-tappable-label shrink-0 min-h-[var(--gb-min-tap)] min-w-[var(--gb-min-tap)] border border-gray-600 text-gray-200 font-mono text-xs"
+                            aria-label="Dismiss notification"
+                            onClick={() => onDismissToast?.(item.id)}
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
             ))}
         </div>
     );
+
+    const UpgradeIntelPanel = ({ intel, onClose }) => {
+        const panelRef = useRef(null);
+        useEffect(() => {
+            if (!intel) return undefined;
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose?.();
+                }
+            };
+            window.addEventListener('keydown', onKey, true);
+            const t = window.setTimeout(() => panelRef.current?.focus?.(), 0);
+            return () => {
+                window.removeEventListener('keydown', onKey, true);
+                window.clearTimeout(t);
+            };
+        }, [intel, onClose]);
+        if (!intel) return null;
+        const rows = [
+            intel.summary && { label: 'WHAT IT DOES', body: intel.summary },
+            intel.trigger && { label: 'WHEN IT FIRES', body: intel.trigger },
+            intel.benefits && { label: 'PAYOFF', body: intel.benefits },
+            intel.costs && { label: 'COST / RISK', body: intel.costs },
+            intel.position && { label: 'POSITION', body: intel.position },
+            intel.example && { label: 'EXAMPLE', body: intel.example },
+            intel.synergies && { label: 'SYNERGIES', body: intel.synergies }
+        ].filter(Boolean);
+        return (
+            <div className="fixed inset-0 z-[9850] flex items-end sm:items-center justify-center p-[var(--gb-pad)] bg-black/80" data-layout-key="upgrade-intel-backdrop" onClick={onClose}>
+                <div
+                    ref={panelRef}
+                    tabIndex={-1}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="upgrade-intel-title"
+                    data-layout-key="upgrade-intel-panel"
+                    className="w-full max-w-lg max-h-[min(88vh,40rem)] overflow-y-auto gb-panel-scroll border-4 border-[#0df] bg-[#0a0a0a] rounded-xl p-4 md:p-5 shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                            <div className="font-mono text-[10px] tracking-[.35em] text-[#0df]">{intel.kind || 'UPGRADE'}</div>
+                            <h2 id="upgrade-intel-title" className="font-marker text-2xl text-white mt-1">{intel.title}</h2>
+                        </div>
+                        <button type="button" data-layout-key="upgrade-intel-close" className="gb-tappable-label min-h-[var(--gb-min-tap)] min-w-[var(--gb-min-tap)] border border-gray-600 font-mono text-sm text-gray-200" onClick={onClose} aria-label="Close upgrade details">✕</button>
+                    </div>
+                    <dl className="space-y-3 font-mono text-xs leading-relaxed">
+                        {rows.map((row) => (
+                            <div key={row.label}>
+                                <dt className="text-[#ffd37a] tracking-[.2em] text-[10px] mb-0.5">{row.label}</dt>
+                                <dd className="text-gray-100">{row.body}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                    <button type="button" className="gb-tappable-label mt-4 w-full min-h-[var(--gb-min-tap)] border-2 border-gray-600 font-mono text-xs tracking-[.2em] text-gray-200" onClick={onClose}>CLOSE (ESC)</button>
+                </div>
+            </div>
+        );
+    };
 
     const ScoreResolutionOverlay = ({ data, reducedMotion, canDismiss, onDismiss, onDismissRequest }) => {
         const [displayChips, setDisplayChips] = useState(0);
@@ -9652,6 +10206,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [storyBeat, setStoryBeat] = useState(null);
         const storyFinishRef = useRef(null);
         const [toastStack, setToastStack] = useState([]);
+        const [upgradeIntelId, setUpgradeIntelId] = useState(null);
+        const upgradeIntelReturnRef = useRef(null);
+        const openUpgradeIntel = (id, returnFocusEl = null) => {
+            if (typeof GutterbonesIntel === 'undefined' || !GutterbonesIntel.hasUpgradeIntel(id)) return;
+            setActiveMechanicPopup(null);
+            upgradeIntelReturnRef.current = returnFocusEl || document.activeElement;
+            setUpgradeIntelId(id);
+        };
+        const closeUpgradeIntel = () => {
+            setUpgradeIntelId(null);
+            const el = upgradeIntelReturnRef.current;
+            upgradeIntelReturnRef.current = null;
+            if (el && typeof el.focus === 'function') {
+                window.requestAnimationFrame(() => {
+                    try { el.focus({ preventScroll: true }); } catch (_) { /* noop */ }
+                });
+            }
+        };
         const toastRemoveIdsRef = useRef(new Set());
         const [scoreResolution, setScoreResolution] = useState(null);
         const [scoreBreakdown, setScoreBreakdown] = useState(null);
@@ -9734,18 +10306,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const presentationPacing = () => GutterbonesPresentation.normalizePacing(audioSettings.pacing);
 
+        const dismissToast = (id) => {
+            setToastStack((prev) => prev.filter((t) => t.id !== id));
+            toastRemoveIdsRef.current.delete(id);
+        };
+
         const pushToast = (payload) => {
             const id = payload.id ?? Math.random();
-            const durationMs = payload.durationMs ?? GutterbonesPresentation.toastDurationMs(
-                presentationPacing(),
-                reducedMotion
+            const pacing = presentationPacing();
+            const kind = payload.kind || 'info';
+            const dismissible = kind === 'unlock' || kind === 'mechanic';
+            const durationMs = payload.durationMs ?? (
+                dismissible
+                    ? GutterbonesPresentation.toastPersistMs(kind, pacing, reducedMotion)
+                    : GutterbonesPresentation.toastDurationMs(pacing, reducedMotion)
             );
             const item = {
                 id,
-                kind: payload.kind || 'info',
+                kind,
                 body: payload.body || payload.message || '',
                 title: payload.title,
-                layoutKey: payload.layoutKey || 'toast-stack-item'
+                layoutKey: payload.layoutKey || 'toast-stack-item',
+                dismissible
             };
             setToastStack((prev) => [...prev, item].slice(-5));
             const tid = scheduleTimeout(() => {
@@ -10499,12 +11081,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const pulseRollHandFx = () => {
             if (reducedMotion || !rollHandSpritesReadyRef.current) return;
+            const handMs = GutterbonesPresentation.rollHandFxMs(presentationPacing(), reducedMotion);
+            if (!handMs) return;
+            if (typeof document !== 'undefined') {
+                document.documentElement.style.setProperty('--gb-roll-hand-ms', `${handMs}ms`);
+            }
             if (rollHandFxTimerRef.current) clearTimeout(rollHandFxTimerRef.current);
             setRollHandFxGen((g) => g + 1);
             rollHandFxTimerRef.current = scheduleTimeout(() => {
                 setRollHandFxGen(0);
                 rollHandFxTimerRef.current = null;
-            }, ROLL_HAND_FX_MS + 48);
+            }, handMs + 48);
         };
 
         const scoringDiceResolved = useMemo(() => {
@@ -10924,6 +11511,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!root) return;
             root.dataset.scoreOverlayOpen = (scoreBreakdown || scoreResolution) ? '1' : '0';
         }, [scoreBreakdown, scoreResolution]);
+
+        useEffect(() => {
+            const root = document.getElementById('root-gutterbones');
+            const shell = root?.querySelector('.gb-app-shell');
+            if (!root) return undefined;
+            const open = !!upgradeIntelId;
+            root.dataset.upgradeIntelOpen = open ? '1' : '0';
+            if (shell) {
+                if (open && typeof shell.inert !== 'undefined') shell.inert = true;
+                else if (typeof shell.inert !== 'undefined') shell.inert = false;
+            }
+            return () => {
+                if (root) delete root.dataset.upgradeIntelOpen;
+                if (shell && typeof shell.inert !== 'undefined') shell.inert = false;
+            };
+        }, [upgradeIntelId]);
 
         useEffect(() => {
             const guard = typeof GutterbonesHardening !== 'undefined' ? GutterbonesHardening : null;
@@ -14008,6 +14611,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         layoutKey: 'mechanic-toast'
                     });
                 },
+                openUpgradeIntel: (id) => {
+                    if (typeof GutterbonesIntel === 'undefined' || !GutterbonesIntel.hasUpgradeIntel(id)) return false;
+                    openUpgradeIntel(id);
+                    return true;
+                },
+                seedPlayBlood6: () => {
+                    setPhase('PLAY', { skipGuard: true });
+                    const bones = Array.from({ length: 5 }, () => makeBone());
+                    bones[0] = carvedDieFromFace(bones[0], 'BLOOD_6');
+                    setDice(bones);
+                    setHasRolled(true);
+                    setRollingSlots([false, false, false, false, false]);
+                    return !!bones[0]?.faceId;
+                },
+                getRollHandFxMs: () => GutterbonesPresentation.rollHandFxMs(presentationPacing(), reducedMotion),
                 openMechanicPillsPopover: () => {
                     setPhase('PLAY');
                     setShowSettingsPanel(false);
@@ -14919,7 +15537,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         canContinue={bossIntroCanContinue}
                     />
                 )}
-                {toastStack.length > 0 && <ToastStack items={toastStack} />}
+                {toastStack.length > 0 && <ToastStack items={toastStack} onDismissToast={dismissToast} />}
                 {storyBeat && (
                     <StoryPanelOverlay
                         beat={storyBeat}
@@ -15555,6 +16173,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                 onExplainPill={() => showMechanicPopup('PILL')}
                                                 onDismissPillHint={dismissMechanicToasts}
                                                 onPill={() => popPill(i)}
+                                                onOpenUpgradeIntel={openUpgradeIntel}
                                                 onClick={() => {
                                                     if (swapMode) {
                                                         if (swapIdx === null) setSwapIdx(i);
@@ -15677,12 +16296,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <h3 className={`text-center border-b pb-2 font-mono text-sm shrink-0 ${hardwareDisabled ? 'text-blue-500 border-blue-500' : 'text-gray-500 border-gray-700'}`}>HARDWARE {hardwareDisabled && '(DISABLED)'}</h3>
                                     <div className="flex-1 min-h-[5rem] overflow-y-auto mt-2 flex flex-col gap-2">{inventory.length === 0 ? <div className="stash-hardware-empty text-center text-xs opacity-30 font-mono">NO HARDWARE</div> : inventory.map((item, hwIdx) => {
                                         const syn = synergyLabelForItem(item.id, buildAnalysis.primaryBuild);
+                                        const hwIntel = typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(item.id);
                                         return (
                                             <div key={item.instanceId || `${item.id}-${hwIdx}`} className={`group p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}>
-                                                <div className="text-sm font-bold text-white leading-none">{item.name}</div>
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="text-sm font-bold text-white leading-none">{item.name}</div>
+                                                    {hwIntel && (
+                                                        <button
+                                                            type="button"
+                                                            data-layout-key="stash-intel-button"
+                                                            className="gb-tappable-label min-h-8 min-w-8 border border-amber-600/70 font-mono text-[10px] text-amber-100 shrink-0"
+                                                            aria-label={`Details for ${item.name}`}
+                                                            onClick={() => openUpgradeIntel(item.id)}
+                                                        >
+                                                            ?
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <div className="text-[10px] opacity-70 leading-tight font-mono">{item.desc}</div>
                                                 <RiskBadges item={item} />
-                                                {syn && <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-20 group-hover:opacity-100 group-hover:mt-1 transition-all text-[9px] font-mono text-cyan-300/90 leading-snug">{syn}</div>}
+                                                {syn && <div className="mt-1 text-[9px] font-mono text-cyan-300/90 leading-snug">{syn}</div>}
                                             </div>
                                         );
                                     })}</div>
@@ -15789,7 +16422,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     <button type="button" aria-label="Next stock page" disabled={safePage >= pageCount - 1} onClick={() => setShopItemPage((p) => Math.min(pageCount - 1, p + 1))} className="border border-gray-600 text-gray-200 px-3 py-2 min-h-[44px] disabled:opacity-40">→</button>
                                                 </div>
                                             )}
-                                <div ref={shopItemsBodyRef} className="shop-items-panel gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 content-start min-h-0">{visibleShopItems.map(item => {
+                                <div ref={shopItemsBodyRef} data-layout-key="shop-items-panel" className="shop-items-panel gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 content-start min-h-0">{visibleShopItems.map(item => {
                                     const isConsumable = item.type === 'consumable';
                                     const isFace = !!item.type && !isConsumable;
                                     const sold = soldItems.includes(item.id);
@@ -15797,6 +16430,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     const fits = itemFitsCurrentBuild(item.id, primaryBuild);
                                     const syn = synergyLabelForItem(item.id, primaryBuild);
                                     const hint = synergyHintForItem(item.id);
+                                    const intelAvailable = typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(item.id);
                                     const listPrice = shopListPrice(item);
                                     const discounted = listPrice < item.cost;
                                     const buyLabel = gold >= listPrice ? `BUY $${listPrice}` : `LOAN $${listPrice} (debt)`;
@@ -15805,6 +16439,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         <div className="flex justify-between items-start gap-2 mb-2">
                                             <div className="font-mono text-[11px] text-[#d6b85c] font-bold">{discounted ? <><span className="line-through opacity-50 mr-1">${item.cost}</span>${listPrice}</> : `$${listPrice}`}</div>
                                             <div className="flex items-center gap-1 shrink-0">
+                                                {!sold && intelAvailable && (
+                                                    <button
+                                                        type="button"
+                                                        data-layout-key="shop-intel-button"
+                                                        onClick={() => openUpgradeIntel(item.id)}
+                                                        className="gb-tappable-label min-h-8 min-w-8 border border-amber-600/80 text-amber-100 bg-black/50 font-mono text-[9px]"
+                                                        aria-label={`Details for ${item.label || item.name}`}
+                                                    >
+                                                        ?
+                                                    </button>
+                                                )}
                                                 {isFace && !sold && (
                                                     <button
                                                         type="button"
@@ -15834,6 +16479,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     inspectBone={shopInspectBone}
                                     onPickBone={setShopInspectBone}
                                     previewItem={shopPreviewItem}
+                                    onOpenFaceIntel={(id) => openUpgradeIntel(id)}
                                 />
                                 </div>
                             </div>
@@ -15981,7 +16627,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         <div data-layout-key="carving-layout" className="carving-workbench flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
                             <div className="carving-shelf w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
-                                <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
+                                <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div className="flex-1 min-w-0"><div className="flex items-start justify-between gap-2"><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div>{selectedItem && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(selectedItem.id) && <button type="button" data-layout-key="carve-intel-button" className="gb-tappable-label min-h-[var(--gb-min-tap)] px-3 border-2 border-black font-mono text-xs" onClick={() => openUpgradeIntel(selectedItem.id)}>DETAILS</button>}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
                                 {selectedItem?.id === 'SHIV_FACE' && carvingDie === 4 && (
                                     <div className="text-red-700 font-mono text-xs mt-4 border-2 border-red-600 bg-red-100 p-2">WARNING: Slot 5 is the lane edge — Shiv destroys the right neighbor on roll. Neighbors are scarce here.</div>
@@ -16165,6 +16811,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     </div>
                 )}
                 </div>
+                <UpgradeIntelPanel
+                    intel={upgradeIntelId && typeof GutterbonesIntel !== 'undefined' ? GutterbonesIntel.getUpgradeIntel(upgradeIntelId) : null}
+                    onClose={closeUpgradeIntel}
+                />
             </div>
         );
     }

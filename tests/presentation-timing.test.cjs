@@ -31,7 +31,9 @@ const GP = presentation.GP;
 test("GutterbonesPresentation gate mins meet readable floors", () => {
   assert.ok(GP.gateMinMs("roundClear", "normal", false) >= 2500);
   assert.ok(GP.gateMinMs("bossIntro", "normal", false) >= 3000);
-  assert.ok(GP.toastDurationMs("normal", false) >= 3000);
+  assert.ok(GP.toastDurationMs("normal", false) >= 5000);
+  assert.ok(GP.gateMinMs("scoreOverlay", "normal", false) >= 2200);
+  assert.ok(GP.rollHandFxMs("normal", false) >= 1000);
   assert.ok(GP.gateMinMs("scoreOverlay", "relaxed", false) >= GP.gateMinMs("scoreOverlay", "fast", false));
 });
 

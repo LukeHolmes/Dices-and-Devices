@@ -498,6 +498,27 @@ const playStashOpen844 = () =>
     dice: dice([3, 4, 5, 2, 6]),
   });
 
+const playBlood6Carved = () => {
+  const carvedDice = [
+    bone(6, 0, {
+      faceId: "BLOOD_6",
+      type: "blood",
+      faceLabel: "BLOOD 6",
+      faceStyle: "bg-[#2b0808] text-[#ff1111] border-[#ff1111]",
+    }),
+    ...dice([2, 3, 4, 5]),
+  ];
+  return run({
+    phase: "PLAY",
+    round: 2,
+    score: 8,
+    target: 110,
+    hands: 4,
+    hasRolled: true,
+    dice: carvedDice,
+  });
+};
+
 module.exports = {
   bone,
   dice,
@@ -526,4 +547,5 @@ module.exports = {
   playStashThreatStress,
   shopAfterCarve,
   playStashOpen844,
+  playBlood6Carved,
 };

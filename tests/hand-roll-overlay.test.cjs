@@ -122,7 +122,9 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
       }
     }
     assert.ok(openDominant, "open frame dominates after ~35% of handThrowSweep");
-    await page.waitForTimeout(400);
+    const handMs = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
+    assert.ok(handMs >= 1000, `hand sweep should stay readable (${handMs}ms)`);
+    await page.waitForTimeout(handMs + 80);
     const gone = await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count();
     assert.equal(gone, 0, "overlay cleans up after animation");
   } finally {
@@ -145,7 +147,8 @@ test("hand overlay — repeat roll retriggers and roll button stays clickable", 
     assert.equal(passthrough, true, "roll button receives pointer hit-test");
     await page.click('[data-tutorial="roll-btn"]');
     await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"]', { timeout: 3000 });
-    await page.waitForTimeout(520);
+    const handMs = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
+    await page.waitForTimeout(Math.max(520, handMs + 80));
     assert.equal(
       await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(),
       0,
@@ -155,7 +158,8 @@ test("hand overlay — repeat roll retriggers and roll button stays clickable", 
     if (canRollAgain) {
       await page.click('[data-tutorial="roll-btn"]');
       await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"]', { timeout: 3000 });
-      await page.waitForTimeout(520);
+      const handMs = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
+    await page.waitForTimeout(Math.max(520, handMs + 80));
       assert.equal(await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(), 0);
     }
   } finally {
