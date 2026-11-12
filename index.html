@@ -3469,10 +3469,117 @@
     }
     @media (min-width: 768px) {
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-phase-grid"] {
-            grid-template-columns: 7fr 5fr;
+            grid-template-columns: minmax(0, 1fr) minmax(9.25rem, 15.5rem);
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] { grid-column: 1; }
-        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] { grid-column: 2; }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] {
+            grid-column: 2;
+            max-width: 16.5rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact {
+            padding: 0.35rem 0.45rem 0.5rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .matchbook-compact-head {
+            padding-bottom: 0.35rem !important;
+            margin-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .matchbook-compact-head h2 {
+            font-size: max(9px, 0.58rem);
+            letter-spacing: 0.14em;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            gap: 0;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact {
+            min-height: 1.55rem !important;
+            max-height: 1.85rem !important;
+            padding: 0.1rem 0.3rem !important;
+            font-size: max(9px, 0.58rem) !important;
+            align-items: center;
+            gap: 0.25rem;
+            flex-wrap: nowrap;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-meta-rest,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .score-preview-inline {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .score-row-name-block {
+            max-width: none;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .score-row-name {
+            font-size: max(9px, 0.58rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-heat-pill {
+            min-width: 2.15rem;
+            font-size: max(9px, 0.58rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-row-state {
+            font-size: max(8px, 0.5rem);
+            letter-spacing: 0.06em;
+            color: #52525b;
+            flex: 0 0 2rem;
+            text-align: center;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact.payout-tier-done {
+            min-height: 1rem !important;
+            max-height: 1.2rem !important;
+            padding-top: 0.05rem !important;
+            padding-bottom: 0.05rem !important;
+            opacity: 0.42 !important;
+            background: rgba(113, 113, 122, 0.12) !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact.payout-tier-done .paid-stamp {
+            font-size: max(7px, 0.48rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact.payout-tier-best.score-row-pinned {
+            position: sticky;
+            top: 0;
+            z-index: 4;
+            background: rgba(254, 243, 199, 0.92) !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-rule-tip {
+            display: none;
+            position: absolute;
+            left: 0.15rem;
+            right: 0.15rem;
+            bottom: calc(100% + 2px);
+            z-index: 30;
+            padding: 0.35rem 0.45rem;
+            border-radius: 0.35rem;
+            border: 1px solid rgba(24, 24, 27, 0.25);
+            background: rgba(9, 9, 11, 0.94);
+            color: #e4e4e7;
+            font-size: max(9px, 0.55rem);
+            line-height: 1.25;
+            text-align: left;
+            pointer-events: none;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact:hover .payout-rule-tip,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact:focus-visible .payout-rule-tip,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact.score-row-key-focus .payout-rule-tip {
+            display: block;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-receipt-popover {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .locked-payout-row-compact {
+            min-height: 1.2rem !important;
+            padding: 0.08rem 0.3rem !important;
+            font-size: max(8px, 0.52rem) !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact [data-layout-key="payout-sheet-more"] {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .stash-dock-compact {
+            margin-top: 0.35rem;
+            padding-top: 0.25rem;
+        }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-stash"] {
             display: none !important;
         }
@@ -8137,12 +8244,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 container.classList.toggle('payout-sheet-rows--mobile-strip', strip);
                 return strip;
             };
+            const compactDesktopLedger = () => window.matchMedia('(min-width: 768px)').matches;
             const fit = () => {
                 const strip = syncStripClass();
                 const rows = Array.from(container.querySelectorAll('[data-payout-row]'));
                 rows.forEach((row) => row.classList.remove('payout-row-collapsed'));
                 setMoreCount(0);
                 if (strip) return;
+                if (compactDesktopLedger()) return;
                 if (!rows.length) return;
                 const cr = container.getBoundingClientRect();
                 const limit = cr.bottom - 1;
@@ -8363,7 +8472,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0, isBestPreview = false }) => {
+    const ScoreRow = ({ id, cat, result, used, canScore, onScore, handLevel = HAND_MASTERY_TUNING.baseLevel, ruleTooltip = '', onPreviewChange = null, payoutSquash = false, scoringLocked = false, keyboardFocus = false, postRollReveal = false, postRollDelayMs = 0, isBestPreview = false, compactLedger = false, pinBest = false }) => {
         const [hover, setHover] = useState(false);
         const [receiptOpen, setReceiptOpen] = useState(false);
         const longPressRef = useRef(null);
@@ -8375,7 +8484,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const titleParts = [ruleTooltip, bustHint].filter(Boolean);
         const rowCanScore = canScore && !scoringLocked;
         const tierClass = used ? 'payout-tier-done' : (rowCanScore && result.valid ? `payout-tier-live${isBestPreview ? ' payout-tier-best' : ''}` : (rowCanScore ? 'payout-tier-bust' : 'payout-tier-idle'));
-        const receiptVisible = (hover || receiptOpen || keyboardFocus) && rowCanScore && result.valid;
+        const receiptVisible = !compactLedger && (hover || receiptOpen || keyboardFocus) && rowCanScore && result.valid;
+        const ruleTipVisible = compactLedger && ruleTooltip && (hover || receiptOpen || keyboardFocus);
         const setPreview = (active) => {
             if (onPreviewChange) onPreviewChange(active ? id : null);
         };
@@ -8409,8 +8519,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 aria-label={titleParts.length ? `${cat.name}. ${titleParts.join(' ')}` : cat.name}
                 aria-describedby={receiptVisible ? `payout-receipt-${id}` : undefined}
                 style={postRollReveal ? { animationDelay: `${postRollDelayMs}ms` } : undefined}
-                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${tierClass} ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}${receiptOpen ? ' payout-receipt-open' : ''}`}
+                className={`score-row score-row-fixed gb-payout-row-btn gb-tappable-label w-full flex justify-between py-2 px-2 border-b border-dashed transition-colors text-xs md:text-base relative ${tierClass}${compactLedger ? ' score-row--compact' : ''}${pinBest ? ' score-row-pinned' : ''} ${used ? 'opacity-55 border-gray-400' : rowCanScore && result.valid ? `bg-black/10 hover:bg-black/20 border-transparent font-bold score-row-ready score-row-valid-accent${chainHot ? ' score-row-chain-hot' : ''}${payoutSquash ? ' score-row-payout-squash' : ''}` : rowCanScore ? 'text-red-700 hover:bg-red-100 border-gray-400 score-row-danger' : 'border-gray-400 opacity-70'}${scoringLocked ? ' pointer-events-none opacity-80' : ''}${keyboardFocus ? ' score-row-key-focus' : ''}${postRollReveal ? ' score-row-post-roll' : ''}${receiptOpen ? ' payout-receipt-open' : ''}`}
             >
+                {ruleTipVisible && (
+                    <span className="payout-rule-tip" role="tooltip">{ruleTooltip}</span>
+                )}
                 {bustTipOpen && bustHint && (
                     <span className="absolute left-2 right-2 -top-1 z-20 translate-y-[-100%] bg-red-950 border border-red-500/70 text-red-100 text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none">{bustHint}</span>
                 )}
@@ -8427,7 +8540,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         onClose={() => { setReceiptOpen(false); setHover(false); }}
                     />
                 )}
-                {!receiptVisible && hover && rowCanScore && result.valid && <ScorePreview result={result} />}
+                {!receiptVisible && !compactLedger && hover && rowCanScore && result.valid && <ScorePreview result={result} />}
                 <span className="score-row-name-block flex items-start gap-1 min-w-0">
                     <span className="score-row-name">{cat.name}</span>
                     <span className="payout-meta-rest payout-lv-badge text-[9px] px-1 rounded border border-gray-500 text-gray-600 shrink-0 whitespace-nowrap">LV{handLevel}</span>
@@ -8438,11 +8551,32 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         <span className="sr-only">{triggers.map((t) => `${t.name} ${t.value}`).join(', ')}</span>
                     )}
                 </span>
+                {compactLedger && (
+                    <span className="payout-row-state" aria-hidden>
+                        {used ? 'USED' : (rowCanScore && result.valid ? 'OPEN' : (rowCanScore ? 'BUST' : '—'))}
+                    </span>
+                )}
                 <span className="shrink-0 ml-1 flex items-center justify-end min-w-[2.75rem]">
-                    {used ? <span className="paid-stamp text-[0.65rem] leading-none">PAID</span> : (rowCanScore && result.valid ? <span className="payout-heat-pill">+{result.total}</span> : (rowCanScore ? 'BUST' : '-'))}
+                    {used ? (
+                        <span className="paid-stamp text-[0.65rem] leading-none">{compactLedger ? '✓' : 'PAID'}</span>
+                    ) : (rowCanScore && result.valid ? <span className="payout-heat-pill">+{result.total}</span> : (rowCanScore ? 'BUST' : '-'))}
                 </span>
             </button>
         );
+    };
+
+    const pinBestPayoutRow = (rows, bestId, availableIds) => {
+        if (!bestId || !rows.length) return rows;
+        const idx = rows.findIndex((el) => el && String(el.key) === bestId);
+        if (idx < 0) return rows;
+        const firstAvail = rows.findIndex((el) => el && availableIds.has(String(el.key)));
+        if (firstAvail < 0) return rows;
+        const next = rows.slice();
+        if (idx !== firstAvail) {
+            const [bestRow] = next.splice(idx, 1);
+            next.splice(firstAvail, 0, bestRow);
+        }
+        return next.map((el) => (el && String(el.key) === bestId ? React.cloneElement(el, { pinBest: true }) : el));
     };
 
     const BossIntro = ({ boss, target, onDone, reducedMotion, canContinue }) => {
@@ -17483,12 +17617,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         </div>
                         <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
-                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`hidden md:flex order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex-col ${playDock === 'stash' ? '!hidden' : ''}`}>
+                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`hidden md:flex order-2 md:order-2 md:col-span-4 min-h-0 min-w-0 matchbook-ledger matchbook-ledger--compact bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex-col ${playDock === 'stash' ? '!hidden' : ''}`}>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     return (
-                                        <div className="flex items-center justify-between gap-2 border-b border-zinc-800/40 pb-2 mb-2 shrink-0">
-                                            <h2 className="font-bold tracking-[0.2em] text-sm flex-1 text-center">MATCHBOOK · PAYOUTS</h2>
+                                        <div className="matchbook-compact-head flex items-center justify-between gap-2 border-b border-zinc-800/40 pb-2 mb-2 shrink-0">
+                                            <h2 className="font-bold tracking-[0.2em] text-sm flex-1 text-center">MATCHBOOK</h2>
                                             {unlockInfo.locked.length > 0 && (
                                                 <button
                                                     type="button"
@@ -17535,6 +17669,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                     postRollReveal={false}
                                                     postRollDelayMs={0}
                                                     isBestPreview={canScoreRow && rowResult.valid && cat.id === bestPreviewCatId}
+                                                    compactLedger
                                                 />
                                             );
                                         }
@@ -17548,7 +17683,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             />
                                         );
                                     });
-                                    return rows;
+                                    return pinBestPayoutRow(rows, bestPreviewCatId, availableSet);
                                 })()}
                                 </PayoutSheetRows>
                                 <div className="stash-dock-compact stash-programs-pinned hidden md:flex flex-col shrink-0">
@@ -17563,7 +17698,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     ))}</div>
                                 </div>
                             </div>
-                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-7 min-h-0 min-w-0 felt-surface gb-alley-stage play-alley-layout border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'stash' ? 'hidden' : 'flex'} md:flex`}>
+                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-8 min-h-0 min-w-0 felt-surface gb-alley-stage play-alley-layout border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'stash' ? 'hidden' : 'flex'} md:flex`}>
                                 <HardwareRail inventory={inventory} hardwareDisabled={hardwareDisabled} />
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">

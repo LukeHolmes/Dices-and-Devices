@@ -12,6 +12,7 @@ const RUN_KEY = "gutterbones1977:run:v1";
 const VIEWPORTS = {
   phone: { id: "390x844", w: 390, h: 844 },
   laptop: { id: "1366x768", w: 1366, h: 768 },
+  desktop: { id: "1920x1080", w: 1920, h: 1080 },
 };
 
 async function main() {
@@ -130,6 +131,31 @@ async function main() {
     scale: "css",
   });
   await lap.close();
+
+  const desk = await browser.newPage();
+  await desk.setViewportSize({ width: VIEWPORTS.desktop.w, height: VIEWPORTS.desktop.h });
+  await desk.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+  const deskPayload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixturePayload()));
+  await desk.evaluate(
+    ({ key, data }) => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({ pacing: "fast", reducedMotion: true, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+      localStorage.setItem(key, JSON.stringify(data));
+    },
+    { key: RUN_KEY, data: deskPayload },
+  );
+  await desk.reload({ waitUntil: "domcontentloaded" });
+  await desk.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
+  await desk.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+  await desk.waitForSelector('[data-layout-key="play-ledger-column"]', { timeout: 45_000 });
+  await desk.waitForTimeout(350);
+  await desk.screenshot({
+    path: path.join(outDir, "option-c-desktop-layout.png"),
+    scale: "css",
+  });
+  await desk.close();
 
   await browser.close();
   await new Promise((r) => server.close(r));

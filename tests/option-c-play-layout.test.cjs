@@ -14,10 +14,12 @@ const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
 
 const TARGETS = [
-  { name: "390x844", width: 390, height: 844, minDiceRowPct: 9.5, mobile: true },
-  { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5, mobile: false },
-  { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4, mobile: false },
+  { name: "390x844", width: 390, height: 844, minDiceRowPct: 9.5, minAlleyWidthPct: 0, mobile: true },
+  { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5.2, minAlleyWidthPct: 62, mobile: false },
+  { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4.2, minAlleyWidthPct: 64, mobile: false },
 ];
+
+const DESKTOP_ALLEY_BASELINE_PCT = 58;
 
 let server;
 let baseUrl;
@@ -44,7 +46,7 @@ after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function resumePostRoll(page, { withHandFx = false } = {}) {
+async function resumePostRoll(page, { withHandFx = false, usedCats = [] } = {}) {
   const payload = plain(
     createGame(fixtures.snapshot()).api.normalizeSavedRun(
       fixtures.run({
@@ -63,6 +65,7 @@ async function resumePostRoll(page, { withHandFx = false } = {}) {
           { id: "FUSE_BOX", name: "Fuse Box", instanceId: "optc-2" },
         ],
         currentRouteEffect: { name: "BACK ALLEY", effects: ["Standard hustle"] },
+        usedCats,
       }),
     ),
   );
@@ -159,6 +162,30 @@ const measurePlayLayout = () => {
     const r = openBtn.getBoundingClientRect();
     return r.width >= 44 - 0.5 && r.height >= 44 - 0.5;
   })();
+  const alley = document.querySelector('[data-layout-key="play-alley"]');
+  const alleyWidthPct = alley
+    ? +((alley.getBoundingClientRect().width * 100) / vw).toFixed(2)
+    : 0;
+  const ledgerCompact = !!document.querySelector(".matchbook-ledger--compact");
+  const compactRowCount = document.querySelectorAll(
+    '[data-layout-key="play-ledger-column"] .score-row--compact',
+  ).length;
+  const moreRail = document.querySelector('[data-layout-key="payout-sheet-more"]');
+  const moreRailVisible =
+    moreRail &&
+    window.getComputedStyle(moreRail).display !== "none" &&
+    moreRail.getBoundingClientRect().height > 0;
+  const pinnedBest = document.querySelector(
+    '[data-layout-key="play-ledger-column"] .score-row-pinned.payout-tier-best',
+  );
+  const firstLedgerRow = document.querySelector(
+    '[data-layout-key="play-ledger-column"] [data-payout-row].score-row--compact',
+  );
+  const usedThin = document.querySelector(
+    '[data-layout-key="play-ledger-column"] .score-row--compact.payout-tier-done',
+  );
+  let usedRowHeight = 0;
+  if (usedThin) usedRowHeight = usedThin.getBoundingClientRect().height;
   return {
     lanePct,
     pillOnFace,
@@ -172,6 +199,14 @@ const measurePlayLayout = () => {
     chipCount: chips.length,
     tapBad: tapBad.length,
     openTapOk,
+    alleyWidthPct,
+    ledgerCompact,
+    compactRowCount,
+    moreRailVisible: !!moreRailVisible,
+    pinnedBest: !!pinnedBest,
+    firstRowIsBest:
+      !!firstLedgerRow && firstLedgerRow.getAttribute("data-payout-row") === "TOK",
+    usedRowHeight,
   };
 };
 
@@ -200,12 +235,44 @@ for (const vp of TARGETS) {
       } else {
         assert.equal(m.ledgerVisible, true, "desktop ledger hidden");
         assert.equal(m.scoreSheetVisible, false, "mobile sheet visible on desktop");
+        assert.equal(m.ledgerCompact, true, "compact matchbook class missing");
+        assert.ok(m.compactRowCount >= 8, `compact rows ${m.compactRowCount}`);
+        assert.equal(m.moreRailVisible, false, "collapsing +more rail visible");
+        assert.equal(m.pinnedBest, true, "best row not pinned/highlighted");
+        assert.equal(m.firstRowIsBest, true, "best row not first in ledger");
+        assert.ok(
+          m.alleyWidthPct >= vp.minAlleyWidthPct,
+          `alley ${m.alleyWidthPct}% < ${vp.minAlleyWidthPct}%`,
+        );
+        assert.ok(
+          m.alleyWidthPct > DESKTOP_ALLEY_BASELINE_PCT,
+          `alley not wider than old 7/12 baseline (${m.alleyWidthPct}% vs ${DESKTOP_ALLEY_BASELINE_PCT}%)`,
+        );
       }
     } finally {
       await browser.close();
     }
   });
 }
+
+test("desktop compact ledger — used row thins", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resumePostRoll(page, { usedCats: ["ONES"] });
+    const m = await page.evaluate(measurePlayLayout);
+    assert.ok(m.usedRowHeight > 0 && m.usedRowHeight <= 22, `used row height ${m.usedRowHeight}px`);
+    const aces = await page.$('[data-layout-key="play-ledger-column"] [data-payout-row="ONES"]');
+    assert.ok(aces, "Aces row missing");
+    const cls = await aces.evaluate((el) => el.className);
+    assert.match(cls, /payout-tier-done/, "Aces not marked used");
+    assert.match(cls, /score-row--compact/, "Aces not compact row");
+  } finally {
+    await browser.close();
+  }
+});
 
 test("mobile score sheet — open, dismiss, score from sheet", async () => {
   const browser = await chromium.launch({ headless: true });
