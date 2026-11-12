@@ -16400,15 +16400,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
+                    shopPolicySteps: [],
                     record(entry) {
                         this.hands.push({ ...entry, at: this.hands.length });
                     },
                     recordRoundEvent(entry) {
                         this.roundEvents.push({ ...entry, at: this.roundEvents.length });
                     },
+                    recordShopPolicyStep(entry) {
+                        this.shopPolicySteps = this.shopPolicySteps || [];
+                        this.shopPolicySteps.push({
+                            ...entry,
+                            at: this.shopPolicySteps.length,
+                        });
+                    },
                     reset() {
                         this.hands.length = 0;
                         this.roundEvents.length = 0;
+                        this.shopPolicySteps = [];
                     },
                 };
                 if (!window.__GB_E2E__) window.__GB_E2E__ = {};
@@ -16547,6 +16556,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 type: i.type || null,
                                 price: shopListPrice(i),
                             }));
+                        const reserve = GutterbonesSimBotPolicy.shopBudgetReserve({
+                            gold,
+                            debt,
+                            score,
+                            target: currentTarget,
+                            refreshCost: shopRefreshCost,
+                            sinkEstimate,
+                        });
+                        const kitGap = GutterbonesSimBotPolicy.assessFullLinkKit(inventory, diceFaceIds);
                         const plan = GutterbonesSimBotPolicy.planShopAction({
                             revision: policyRev,
                             gold,
@@ -16562,6 +16580,48 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             selectedShopPathId,
                             sinkEstimate,
                         });
+                        const kitStock = available
+                            .filter((i) => ['BOOKENDS', 'GHOST_FACE', 'ECHO_FACE'].includes(i.id))
+                            .map((i) => ({ id: i.id, price: i.price }));
+                        const stepSig = JSON.stringify({
+                            round,
+                            gold,
+                            kitMissing: kitGap.missing,
+                            kitStock,
+                            planReason: plan.reason,
+                            planAction: plan.action,
+                        });
+                        const telem = window.__GB_SIM_TELEM__;
+                        if (telem?.recordShopPolicyStep) {
+                            const prior = telem.shopPolicySteps?.[telem.shopPolicySteps.length - 1];
+                            const priorSig = prior
+                                ? JSON.stringify({
+                                    round: prior.round,
+                                    gold: prior.gold,
+                                    kitMissing: prior.kitMissing,
+                                    kitStock: prior.stock,
+                                    planReason: prior.planReason,
+                                    planAction: prior.planAction,
+                                })
+                                : null;
+                            if (stepSig !== priorSig) {
+                                telem.recordShopPolicyStep({
+                                    round,
+                                    gold,
+                                    debt,
+                                    reserve,
+                                    sinkEstimate,
+                                    shopRefreshes,
+                                    selectedShopPathId,
+                                    kitMissing: kitGap.missing,
+                                    stock: kitStock,
+                                    planFamily: plan.family,
+                                    planAction: plan.action,
+                                    planReason: plan.reason,
+                                    planItemId: plan.itemId || null,
+                                });
+                            }
+                        }
                         window.__GB_E2E__?.recordSimBotDecision?.(`shop_${plan.family}`, {
                             reason: plan.reason,
                             action: plan.action,
@@ -16629,15 +16689,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (plan.action === 'exit') {
                             return window.__GB_E2E__?.exitCarvingToShop?.(plan.reason, { plan });
                         }
-                        if (carvingDie === null && plan.action === 'carve') {
-                            setCarvingDie(typeof plan.dieIdx === 'number' ? plan.dieIdx : 0);
-                            return true;
-                        }
-                        if (plan.action === 'carve' && carvingDie !== null) {
-                            const faces = dice[carvingDie]?.faces || [];
+                        if (plan.action === 'carve') {
+                            const dieIdx = typeof plan.dieIdx === 'number'
+                                ? plan.dieIdx
+                                : (carvingDie ?? 0);
+                            if (carvingDie === null) {
+                                setCarvingDie(dieIdx);
+                            }
+                            const faces = dice[dieIdx]?.faces || [];
                             let faceIdx = faces.findIndex((f) => !f?.type || f.type === 'standard');
                             if (faceIdx < 0) faceIdx = 0;
-                            executeCarve(carvingDie, faceIdx);
+                            executeCarve(dieIdx, faceIdx);
                             window.__GB_E2E__?.noteSimKitAcquisition?.();
                             return true;
                         }

@@ -351,11 +351,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     const shopBot = strategy === "builder" || strategy === "greedy";
     const simPolicyRev = window.__GB_SIM_POLICY__?.revision;
-  if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "SHOP") {
-      if (window.__GB_E2E__?.autoShopPolicyStep?.()) {
-        await wait(90);
-        continue;
-      }
+    if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "SHOP") {
+      window.__GB_E2E__?.autoShopPolicyStep?.();
+      await wait(90);
+      continue;
     }
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "CARVING") {
       if (!window.__GB_E2E__?.autoCarvePolicyStep?.()) {

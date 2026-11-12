@@ -43,7 +43,7 @@ test("WP3 buy — acquires BOOKENDS within reserve", () => {
   assert.equal(plan.itemId, "BOOKENDS");
 });
 
-test("WP3 buy — skips when toll+refresh reserve exceeded", () => {
+test("WP3 buy — kit face loan buffer when toll reserve would block", () => {
   const plan = P.planShopBuy({
     ...baseCtx,
     gold: 12,
@@ -51,8 +51,34 @@ test("WP3 buy — skips when toll+refresh reserve exceeded", () => {
     sinkEstimate: 6,
     refreshCost: 5,
   });
+  assert.equal(plan.action, "buy");
+  assert.equal(plan.itemId, "GHOST_FACE");
+  assert.match(plan.reason, /loan_buffer/);
+});
+
+test("WP3 buy — does not buy support hardware while link kit incomplete", () => {
+  const plan = P.planShopBuy({
+    ...baseCtx,
+    gold: 50,
+    available: [
+      { id: "FUSE_BOX", price: 14 },
+      { id: "GHOST_FACE", price: 12 },
+    ],
+  });
+  assert.equal(plan.action, "buy");
+  assert.equal(plan.itemId, "GHOST_FACE");
+});
+
+test("WP3 buy — skips when kit face listed but truly unaffordable", () => {
+  const plan = P.planShopBuy({
+    ...baseCtx,
+    gold: 4,
+    available: [{ id: "GHOST_FACE", price: 20 }],
+    sinkEstimate: 0,
+    refreshCost: 5,
+  });
   assert.equal(plan.action, "skip");
-  assert.match(plan.reason, /budget|affordable/);
+  assert.match(plan.reason, /affordable/);
 });
 
 test("WP3 refresh — only when missing kit not in stock", () => {

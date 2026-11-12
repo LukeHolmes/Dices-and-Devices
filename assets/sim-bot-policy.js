@@ -324,9 +324,11 @@
         if (!kit.hasBookends) wants.push('BOOKENDS');
         if (!kit.hasGhostFace) wants.push('GHOST_FACE');
         if (!kit.hasEchoFace) wants.push('ECHO_FACE');
-        KIT_HARDWARE_PRIORITY.forEach((id) => {
-            if (!invIds.has(id) && id !== 'BOOKENDS') wants.push(id);
-        });
+        if (kit.missing.length === 0) {
+            KIT_HARDWARE_PRIORITY.forEach((id) => {
+                if (!invIds.has(id) && id !== 'BOOKENDS') wants.push(id);
+            });
+        }
         for (const want of wants) {
             const item = available.find((i) => i.id === want);
             if (!item) continue;
@@ -334,8 +336,14 @@
             if (afford(price)) {
                 return { family: 'buy', action: 'buy', reason: 'buy_kit_within_reserve', itemId: item.id, price };
             }
-            if (loanOk(price) && want === 'BOOKENDS') {
-                return { family: 'buy', action: 'buy', reason: 'buy_bookends_loan_buffer', itemId: item.id, price };
+            if (loanOk(price) && (want === 'BOOKENDS' || KIT_FACE_IDS.includes(want))) {
+                return {
+                    family: 'buy',
+                    action: 'buy',
+                    reason: want === 'BOOKENDS' ? 'buy_bookends_loan_buffer' : 'buy_kit_face_loan_buffer',
+                    itemId: item.id,
+                    price,
+                };
             }
         }
         if (kit.fullKit) {
@@ -351,8 +359,21 @@
         const reserve = shopBudgetReserve(ctx);
         const goldAfterToll = (ctx.gold || 0) - (ctx.sinkEstimate || 0);
         const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const listedMissing = kit.missing.filter((id) => (ctx.available || []).some((i) => i.id === id));
+        if (listedMissing.length > 0) {
+            const brokeForKit = listedMissing.every((id) => {
+                const item = (ctx.available || []).find((i) => i.id === id);
+                if (!item) return true;
+                const price = item.price != null ? item.price : (item.cost || 0);
+                const loanOk = (ctx.gold || 0) + 14 >= price;
+                return (ctx.gold || 0) < price + reserve && !loanOk;
+            });
+            if (brokeForKit) {
+                return { family: 'skip', action: 'hit_streets', reason: 'skip_kit_listed_save_via_run' };
+            }
+        }
         if (goldAfterToll < reserve && kit.missing.length > 0) {
-            return { family: 'skip', action: 'hold', reason: 'skip_toll_exceeds_kit_budget' };
+            return { family: 'skip', action: 'hit_streets', reason: 'skip_toll_reserve_defer_kit' };
         }
         return {
             family: 'skip',

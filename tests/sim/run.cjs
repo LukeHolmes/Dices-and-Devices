@@ -234,6 +234,9 @@ async function runOneGame(
     });
     await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
     await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    await page.evaluate((rev) => {
+      window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
+    }, simPolicy);
   }
   const result = await page.evaluate(
     async ({ botSource, opts }) => {
@@ -266,6 +269,7 @@ async function runOneGame(
       laneSetup: window.__GB_SIM_TELEM__?.laneSetup || null,
       laneKit: window.__GB_SIM_TELEM__?.laneKit || null,
       kitAcquired: window.__GB_SIM_TELEM__?.kitAcquired || null,
+      shopPolicySteps: window.__GB_SIM_TELEM__?.shopPolicySteps || [],
     };
   });
   return { rid, viewport: viewport.name, ...result, telem };
@@ -428,6 +432,17 @@ async function main() {
     }
   }
 
+  let shopPolicyExportPath;
+  if (process.env.SIM_EXPORT_SHOP_STEPS === "1") {
+    const shopPolicyByRid = Object.fromEntries(
+      results.map((r) => [r.rid, (r.telem && r.telem.shopPolicySteps) || []]),
+    );
+    shopPolicyExportPath =
+      process.env.SIM_SHOP_STEPS_PATH
+      || path.join(ROOT, ".tmp-shop-policy-steps.json");
+    fs.writeFileSync(shopPolicyExportPath, JSON.stringify(shopPolicyByRid));
+  }
+
   const summary = {
     games: args.games,
     maxSteps: args.maxSteps,
@@ -480,6 +495,7 @@ async function main() {
       phase: g.phase,
       steps: g.steps,
     })),
+    ...(shopPolicyExportPath ? { shopPolicyExportPath } : {}),
   };
 
   console.log(JSON.stringify(summary, null, 2));
