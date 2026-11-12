@@ -75,10 +75,10 @@ async function main() {
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
     await page.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
     await page.evaluate(() => {
-      window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(520);
-      const dock = [...document.querySelectorAll("button")].find((b) => (b.textContent || "").trim() === "PAYOUTS");
-      if (dock && window.innerWidth < 768) dock.click();
+      window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.();
     });
+    await page.waitForTimeout(100);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(500));
     await page.waitForTimeout(500);
     await page.screenshot({
       path: path.join(outDir, `option-c-${label}_${id}.png`),

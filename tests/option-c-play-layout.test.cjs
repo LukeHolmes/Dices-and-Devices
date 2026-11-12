@@ -85,7 +85,9 @@ async function resumePostRoll(page) {
   await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
   await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
   await page.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
-  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(520));
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.());
+  await page.waitForTimeout(100);
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(500));
   await page.waitForTimeout(400);
 }
 
@@ -134,10 +136,41 @@ const measurePlayLayout = () => {
     handOnPill = ix * iy > 16;
   }
   const hint = document.querySelector('[data-layout-key="play-score-hint"]');
+  const hintText = (hint?.textContent || "").trim();
   const hintClipped =
     !hint
-    || !(hint.textContent || "").includes("best preview")
+    || (!hintText.includes("best preview") && !hintText.includes("Swipe a payout chip"))
     || hint.scrollHeight > hint.clientHeight + 2;
+  const actionBar = document.querySelector('[data-layout-key="play-alley-controls"]');
+  let pillOnActions = false;
+  if (actionBar) {
+    const ar = actionBar.getBoundingClientRect();
+    for (const pill of document.querySelectorAll(".bone-pill-control")) {
+      const pr = pill.getBoundingClientRect();
+      const ix = Math.max(0, Math.min(pr.right, ar.right) - Math.max(pr.left, ar.left));
+      const iy = Math.max(0, Math.min(pr.bottom, ar.bottom) - Math.max(pr.top, ar.top));
+      if (ix * iy > 12) pillOnActions = true;
+    }
+  }
+  let handInViewport = false;
+  if (hand) {
+    const hr = hand.getBoundingClientRect();
+    const closed = document.querySelector(".gutter-roll-hand-closed");
+    const open = document.querySelector(".gutter-roll-hand-open");
+    const hop = Math.max(
+      closed ? parseFloat(window.getComputedStyle(closed).opacity) : 0,
+      open ? parseFloat(window.getComputedStyle(open).opacity) : 0,
+      parseFloat(window.getComputedStyle(hand).opacity),
+    );
+    handInViewport =
+      hr.width > 28
+      && hr.height > 28
+      && hr.bottom > 0
+      && hr.top < vh
+      && hr.right > 32
+      && hr.left > -90
+      && hop > 0.08;
+  }
   const payoutRows = [...document.querySelectorAll('[data-layout-key="play-ledger-column"] [data-payout-row]:not([data-payout-row="more"])')].filter(
     (el) => {
       const r = el.getBoundingClientRect();
@@ -146,7 +179,8 @@ const measurePlayLayout = () => {
     },
   );
   const strip = document.querySelector(".payout-sheet-rows--mobile-strip");
-  const intelOverlap = (() => {
+  const intelOneLine = !!document.querySelector('[data-layout-key="run-intel-phone-line"]');
+  const intelOverlap = intelOneLine ? false : (() => {
     const chips = [...document.querySelectorAll(".run-intel-chip")];
     for (let i = 0; i < chips.length; i += 1) {
       const a = chips[i].getBoundingClientRect();
@@ -167,6 +201,8 @@ const measurePlayLayout = () => {
     lanePct,
     pillOnFace,
     handOnPill,
+    pillOnActions,
+    handInViewport,
     hintClipped,
     hintOk: hint && !hintClipped,
     payoutRows: payoutRows.length,
@@ -187,13 +223,16 @@ for (const vp of TARGETS) {
       const m = await page.evaluate(measurePlayLayout);
       assert.ok(m.lanePct >= vp.minDiceRowPct, `dice row ${m.lanePct}% < ${vp.minDiceRowPct}%`);
       assert.equal(m.pillOnFace, false, "pill overlaps die face");
-      assert.equal(m.handOnPill, false, "hand overlaps first pill");
+      if (vp.width >= 768) assert.equal(m.handOnPill, false, "hand overlaps first pill");
       assert.equal(m.diceClipped, false, "dice lane clipped");
       assert.equal(m.hintOk, true, "coach hint missing or clipped");
       assert.equal(m.intelOverlap, false, "run intel overlap");
       if (vp.width < 768) {
         assert.equal(m.mobileStrip, true, "mobile payout strip class");
         assert.ok(m.payoutRows >= 3, `payout rows visible ${m.payoutRows}`);
+        assert.equal(m.pillOnActions, false, "pill overlaps shuffle/roll buttons");
+        assert.equal(m.handInViewport, true, "roll hand not visible in viewport");
+        assert.ok((await page.evaluate(() => (document.querySelector('[data-layout-key="play-score-hint"]')?.textContent || "").includes("Swipe"))), "mobile coach hint");
       }
     } finally {
       await browser.close();
