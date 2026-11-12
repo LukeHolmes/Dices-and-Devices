@@ -16793,9 +16793,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     const telem = window.__GB_SIM_TELEM__;
                                     telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
                                     telem.laneSetup.attempts += 1;
-                                    (rerollPlan.unfulfilled || rerollPlan.predicates?.unfulfilled || []).forEach((u) => {
+                                    const unful = [
+                                        ...(rerollPlan.unfulfilled || []),
+                                        ...(rerollPlan.predicates?.unfulfilled || []),
+                                    ];
+                                    unful.forEach((u) => {
                                         telem.laneSetup.unfulfilled[u] = (telem.laneSetup.unfulfilled[u] || 0) + 1;
                                     });
+                                    if (unful.length) telem.laneSetup.lastUnfulfilled = unful;
                                 }
                                 window.__GB_E2E__?.recordSimBotDecision?.('reroll', {
                                     reason: rerollPlan.reason,
