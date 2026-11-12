@@ -149,6 +149,9 @@ async function bootPage(page, baseUrl, viewport) {
   });
   await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+  await page.evaluate((rev) => {
+    window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
+  }, simPolicy);
   if (mobile) {
     await page.context().addInitScript(() => {
       Object.defineProperty(navigator, "maxTouchPoints", { value: 1 });
@@ -173,6 +176,9 @@ async function runOneGame(
       { waitUntil: "domcontentloaded", timeout: 90_000 },
     );
     await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    await page.evaluate((rev) => {
+      window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
+    }, simPolicy);
     await page.evaluate(() => {
       localStorage.setItem(
         "gutterbones1977:settings:v1",

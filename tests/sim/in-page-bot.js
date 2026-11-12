@@ -358,12 +358,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
     }
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "CARVING") {
-      const carved = window.__GB_E2E__?.autoCarvePolicyStep?.()
-        || window.__GB_E2E__?.exitCarvingToShop?.("carve_exit_sim_guard");
-      if (carved) {
-        await wait(90);
-        continue;
+      if (!window.__GB_E2E__?.autoCarvePolicyStep?.()) {
+        window.__GB_E2E__?.exitCarvingToShop?.("carve_exit_sim_guard");
       }
+      await wait(90);
+      continue;
     }
     if (shopBot && ph === "SHOP") {
       log._shopPasses = (log._shopPasses || 0) + 1;
@@ -391,7 +390,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         continue;
       }
     }
-    if (shopBot && ph === "CARVING") {
+    if (shopBot && ph === "CARVING" && simPolicyRev !== "2026-11-12-wp3-shop-v1") {
       if (window.__GB_E2E__?.autoCarvePreferred?.()) {
         await wait(90);
         continue;
@@ -421,6 +420,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       if (s.phase === "SHOP") {
         window.__GB_E2E__.clickShopRouteCard?.();
         window.__GB_E2E__.hitStreets();
+      } else if (s.phase === "CARVING" && window.__GB_E2E__?.exitCarvingToShop) {
+        window.__GB_E2E__.exitCarvingToShop("carve_exit_stuck_recovery");
       }
       else if (s.phase === "GAMBLE") {
         window.__GB_E2E__.takeSafeCut?.();
