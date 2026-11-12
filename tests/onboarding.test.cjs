@@ -70,6 +70,47 @@ test("unlockRunForCategory returns run index for gated rows", () => {
   assert.equal(ob.unlockRunForCategory("ONES"), 0);
 });
 
+test("early full sheet opt-in bypasses category gates", () => {
+  const ob = loadOnboarding();
+  const all = [
+    "ONES",
+    "TWOS",
+    "THREES",
+    "FOURS",
+    "FIVES",
+    "SIXES",
+    "TOK",
+    "FOK",
+    "FH",
+    "C",
+    "SS",
+    "LS",
+    "Y",
+  ];
+  assert.deepEqual(ob.getAvailableCategoryIds(0), ob.getAvailableCategoryIds(0, false));
+  assert.equal(ob.getAvailableCategoryIds(0, false).length, 9);
+  assert.equal(ob.getAvailableCategoryIds(0, true), null);
+
+  const gated = ob.getCategoryUnlockInfo(0, all, false);
+  assert.ok(gated.locked.includes("FOK"));
+  assert.ok(gated.locked.includes("Y"));
+
+  const full = ob.getCategoryUnlockInfo(0, all, true);
+  assert.equal(full.locked.length, 0);
+  assert.equal(full.available.length, all.length);
+  assert.ok(full.available.includes("FOK"));
+  assert.ok(full.available.includes("SS"));
+  assert.ok(full.available.includes("LS"));
+  assert.ok(full.available.includes("Y"));
+});
+
+test("early full sheet defaults off when flag omitted", () => {
+  const ob = loadOnboarding();
+  assert.equal(ob.earlyFullSheetActive(false), false);
+  assert.equal(ob.earlyFullSheetActive(undefined), false);
+  assert.equal(ob.getAvailableCategoryIds(1).length, 9);
+});
+
 test("Tier 2 shop faces require run count and Chain manual unlock", () => {
   const ob = loadOnboarding();
   const fuse = { id: "FUSE_FACE", rarity: "rare" };
