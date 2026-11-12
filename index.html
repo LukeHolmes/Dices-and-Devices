@@ -102,6 +102,7 @@
 })();
 </script>
 <script src="assets/audio/gutterbones-audio.js"></script>
+<script src="assets/sim-bot-policy.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -16390,6 +16391,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
             }
             if (params.get('e2e') === '1') {
+                const simPolicyRev = params.get('simPolicy')
+                    || (typeof window.__GB_SIM_POLICY__ === 'object' && window.__GB_SIM_POLICY__?.revision)
+                    || (typeof GutterbonesSimBotPolicy !== 'undefined'
+                        ? GutterbonesSimBotPolicy.LEGACY_REVISION
+                        : '2026-11-11-phase-b-v1');
+                window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
@@ -16419,6 +16426,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         debt,
                         hands,
                         discards,
+                        keptSlots: [...kept],
+                        diceFaceIds: dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        )),
                         selectedShopPathId,
                         roundClearVisible: !!roundClearCardActive,
                         roundClearCanContinue: !!roundClearCanContinue,
@@ -16643,41 +16654,62 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         forfeitRun();
                         return true;
                     },
+                    recordSimBotDecision: (decision, detail = {}) => {
+                        if (!balanceObserverActive()) return;
+                        window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+                            kind: 'bot_policy',
+                            reason: { status: 'ok', value: decision, detail },
+                            before: {
+                                phase,
+                                round,
+                                score,
+                                target: currentTarget,
+                                hands,
+                                discards,
+                                policyRevision: window.__GB_SIM_POLICY__?.revision || null,
+                            },
+                            after: window.GutterbonesBalanceObserver.missingField('bot policy advisory only'),
+                        }));
+                    },
+                    evaluateCategoryCandidates: () => {
+                        const legal = scorablePayoutIds.filter((id) => !usedCats.includes(id));
+                        return legal.map((catId) => {
+                            const r = calculateScore(catId, dice);
+                            return {
+                                catId,
+                                valid: !!r.valid,
+                                total: r.total || 0,
+                                chainLinks: r.chainLinks || [],
+                            };
+                        }).filter((c) => c.valid);
+                    },
                     keepDiceForReroll: () => {
-                        const counts = {};
-                        dice.forEach((d) => {
-                            const v = d.value;
-                            counts[v] = (counts[v] || 0) + 1;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION
+                            || '2026-11-11-phase-b-v1';
+                        const lane = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
+                        const sel = GutterbonesSimBotPolicy.selectKeptSlots({
+                            revision: policyRev,
+                            dice: lane,
                         });
-                        let pairV = -1;
-                        let pairN = 0;
-                        Object.keys(counts).forEach((v) => {
-                            const n = counts[v];
-                            if (n >= 2 && (n > pairN || (n === pairN && Number(v) > pairV))) {
-                                pairV = Number(v);
-                                pairN = n;
-                            }
+                        setKept(sel.kept);
+                        window.__GB_E2E__?.recordSimBotDecision?.('keep_for_reroll', {
+                            reason: sel.reason,
+                            kept: sel.kept,
                         });
-                        if (pairV >= 0) {
-                            setKept(dice.map((d) => d.value === pairV));
-                            return true;
-                        }
-                        const ranked = dice
-                            .map((d, i) => ({ v: d.value, i }))
-                            .sort((a, b) => b.v - a.v);
-                        const keepIdx = new Set(ranked.slice(0, Math.min(3, ranked.length)).map((x) => x.i));
-                        setKept(dice.map((_, i) => keepIdx.has(i)));
                         return true;
                     },
                     pickBestOpenCategory: () => {
-                        let best = null;
-                        Object.keys(CATEGORIES).forEach((catId) => {
-                            if (usedCats.includes(catId)) return;
-                            const r = calculateScore(catId, dice);
-                            if (!r.valid) return;
-                            if (!best || r.total > best.total) best = { catId, total: r.total };
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION
+                            || '2026-11-11-phase-b-v1';
+                        const candidates = window.__GB_E2E__.evaluateCategoryCandidates();
+                        return GutterbonesSimBotPolicy.pickCategory({
+                            revision: policyRev,
+                            candidates,
+                            score,
+                            target: currentTarget,
                         });
-                        return best;
                     },
                     autoPlayHand: () => {
                         if (phase !== 'PLAY' || rolling || hands <= 0 || swapMode) return false;
@@ -16718,23 +16750,49 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         }
                         const best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION
+                            || '2026-11-11-phase-b-v1';
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
                             && window.__GB_E2E_QUERY__();
-                        const gap = Math.max(0, currentTarget - score);
-                        const need = gap / Math.max(1, hands);
-                        const mustScore = hands <= 1 || discards <= 0;
-                        const minPlay = e2eGreedy
-                            ? 1
-                            : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
-                        if (!e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
+                        const bankClear = GutterbonesSimBotPolicy.mustBankClear({
+                            revision: policyRev,
+                            score,
+                            target: currentTarget,
+                            bestTotal: best.total,
+                            hands,
+                        });
+                        const mustScore = hands <= 1 || discards <= 0 || bankClear;
+                        const rerollPlan = GutterbonesSimBotPolicy.shouldReroll({
+                            revision: policyRev,
+                            score,
+                            target: currentTarget,
+                            hands,
+                            discards,
+                            bestTotal: best.total,
+                            e2eGreedy,
+                            dice,
+                        });
+                        if (!mustScore && rerollPlan.reroll && discards > 0) {
                             if (rollBtn) {
+                                window.__GB_E2E__?.recordSimBotDecision?.('reroll', {
+                                    reason: rerollPlan.reason,
+                                    bestCat: best.catId,
+                                    bestTotal: best.total,
+                                });
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
                                 return true;
                             }
                             return false;
                         }
+                        window.__GB_E2E__?.recordSimBotDecision?.('score', {
+                            reason: mustScore && bankClear ? 'bank_clear_quota' : (best.decision || 'score_best'),
+                            catId: best.catId,
+                            total: best.total,
+                            organicPairs: best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks),
+                        });
                         setPlayDock('payouts');
                         setShowMobileStash(false);
                         if (typeof window !== 'undefined' && window.innerWidth < 900) {
@@ -16789,6 +16847,42 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             if (delta > 6) bad.push({ idx, label: label.textContent, delta });
                         });
                         return { ok: bad.length === 0, bad, rowCount: rows.length };
+                    },
+                    getDiceLaneForPolicy: () => dice.map((d) => ({
+                        value: d.value,
+                        faceId: d.faceId,
+                        faces: d.faces,
+                        showingFace: d.showingFace,
+                        isEchoed: d.isEchoed,
+                        isGhost: d.isGhost,
+                    })),
+                    setDiceLaneForSimPolicyTest: (specs) => {
+                        if (phase !== 'PLAY') return false;
+                        const next = (specs || []).map((s) => {
+                            const bone = makeBone();
+                            const faceId = s.faceId ?? null;
+                            const carved = !!faceId;
+                            const faces = bone.faces.map((f, fi) => (
+                                fi === 0
+                                    ? { ...f, faceId, type: carved ? 'carved' : 'standard', id: faceId || f.id }
+                                    : f
+                            ));
+                            return {
+                                ...bone,
+                                value: Number(s.value) || 1,
+                                faceId,
+                                faceLabel: carved ? faceId : null,
+                                type: carved ? 'carved' : 'standard',
+                                faces,
+                                showingFace: 0,
+                            };
+                        });
+                        setDice(next);
+                        setHasRolled(true);
+                        setKept([false, false, false, false, false]);
+                        setRollLock(false);
+                        setPayoutInputLock(false);
+                        return true;
                     },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;

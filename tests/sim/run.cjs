@@ -87,7 +87,12 @@ async function bootPage(page, baseUrl, viewport) {
   page.setDefaultTimeout(120_000);
   const mobile = viewport.width < 700 || viewport.height < 500;
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
-  await page.goto(`${baseUrl}/index.html?e2e=1`, { waitUntil: "networkidle", timeout: 120_000 });
+  const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
+  const observerQ = process.env.SIM_POLICY_OBSERVER === "1" ? "&balanceObserver=1" : "";
+  await page.goto(
+    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}`,
+    { waitUntil: "networkidle", timeout: 120_000 },
+  );
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
   await page.evaluate(() => {
     localStorage.setItem(
@@ -162,7 +167,11 @@ async function runOneGame(
     booted.value = true;
   } else {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.goto(`${page.__baseUrl}/index.html?e2e=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
+    await page.goto(
+      `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}`,
+      { waitUntil: "domcontentloaded", timeout: 90_000 },
+    );
     await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
     await page.evaluate(() => {
       localStorage.setItem(
