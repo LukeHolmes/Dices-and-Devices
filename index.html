@@ -3294,16 +3294,21 @@
         }
     }
     @media (min-width: 768px) {
-        #root-gutterbones[data-ui-redesign="1"] {
-            --gb-play-ledger-w: clamp(21.25rem, 28vw, 26.25rem);
-        }
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
             --hand-wrist-inset-x: 0%;
             --hand-wrist-lift-y: 41%;
             --hand-sprite-size: clamp(11rem, min(26vw, 48vh), 21rem);
         }
     }
+    @media (min-width: 768px) and (max-width: 1023px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-play-ledger-w: clamp(9.25rem, 22vw, 15.5rem);
+        }
+    }
     @media (min-width: 1024px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-play-ledger-w: clamp(21.25rem, 28vw, 26.25rem);
+        }
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
             --hand-wrist-inset-x: -1%;
             --hand-wrist-lift-y: 40%;
