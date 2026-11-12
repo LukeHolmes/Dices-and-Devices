@@ -3381,6 +3381,200 @@
         color: rgba(212, 212, 216, 0.85);
         letter-spacing: 0.06em;
     }
+  /* Option C HUD polish — status bar, roll pips, contextual controls */
+  #root-gutterbones[data-ui-redesign="1"] .street-ledger-hud .street-ledger-quota--legacy {
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-hud-foldable-intel,
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-next-threat-slot"],
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-next-threat-slot-md"],
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-stash"] .stash-intel-scroll {
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-top--unified {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 2.35rem;
+        padding: 0.22rem 0.45rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.18rem 0.4rem;
+        border-radius: 999px;
+        border: 1px solid rgba(63, 63, 70, 0.85);
+        background: rgba(9, 9, 11, 0.72);
+        font-family: "Courier New", monospace;
+        font-size: max(10px, var(--gb-min-font));
+        color: #e4e4e7;
+        min-height: var(--gb-min-tap);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-bar--open {
+        border-color: rgba(0, 221, 255, 0.55);
+        box-shadow: 0 0 0 1px rgba(0, 221, 255, 0.25);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-segment {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-segment--round {
+        color: #fafafa;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-segment--quota {
+        flex: 1 1 auto;
+        min-width: 3.5rem;
+        gap: 0.3rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-quota-track {
+        flex: 1 1 auto;
+        min-width: 1.8rem;
+        height: 0.35rem;
+        border-radius: 999px;
+        background: rgba(24, 24, 27, 0.95);
+        border: 1px solid rgba(63, 63, 70, 0.75);
+        overflow: hidden;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-quota-fill {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-quota-nums {
+        font-variant-numeric: tabular-nums;
+        font-size: max(9px, 0.52rem);
+        color: #fda4af;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-segment.street-ledger-icon {
+        padding: 0.1rem 0.35rem;
+        font-size: max(9px, 0.52rem);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-breakdown {
+        margin: 0 0.45rem 0.25rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.45rem;
+        border: 1px solid rgba(0, 221, 255, 0.35);
+        background: rgba(8, 24, 32, 0.92);
+        font-family: "Courier New", monospace;
+        font-size: max(9px, 0.55rem);
+        color: #e4e4e7;
+        line-height: 1.35;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-rolls-pips {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.28rem;
+        width: 100%;
+        padding: 0.15rem 0.5rem 0.05rem;
+        z-index: 31;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-roll-pip {
+        width: 0.42rem;
+        height: 0.42rem;
+        border-radius: 999px;
+        border: 1px solid rgba(212, 212, 216, 0.55);
+        background: rgba(9, 9, 11, 0.6);
+        flex-shrink: 0;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-roll-pip--on {
+        background: #fafafa;
+        border-color: #e4e4e7;
+        box-shadow: 0 0 6px rgba(250, 250, 250, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-roll-pip--spent {
+        opacity: 0.28;
+        transform: scale(0.85);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp--compact .boss-warrant-rule {
+        display: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp--compact {
+        max-width: 6.5rem;
+        padding: 0.12rem 0.4rem;
+        flex: 0 0 auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp--open .boss-warrant-rule {
+        display: inline;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .boss-warrant-detail-popover {
+        position: absolute;
+        top: calc(100% + 0.25rem);
+        right: 0;
+        z-index: 140;
+        width: min(18rem, 92vw);
+        padding: 0.45rem 0.55rem;
+        border-radius: 0.45rem;
+        border: 1px solid rgba(248, 113, 113, 0.55);
+        background: rgba(12, 12, 14, 0.96);
+        font-family: "Courier New", monospace;
+        font-size: max(9px, 0.55rem);
+        color: #fecaca;
+        text-align: left;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-alley-controls--score-mode .play-control-shuffle,
+    #root-gutterbones[data-ui-redesign="1"] .play-alley-controls--score-mode .play-control-roll {
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-alley-controls--pre-roll .play-control-shuffle {
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-alley-controls .play-control-unavailable {
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-alley-controls:not(.play-alley-controls--score-mode):not(.play-alley-controls--pre-roll) .play-control-roll:disabled {
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet--score-ready {
+        border-color: rgba(255, 0, 127, 0.65);
+        box-shadow: 0 0 0 2px rgba(255, 0, 127, 0.25), 0 -6px 22px rgba(255, 0, 127, 0.2);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet--score-ready .mobile-score-sheet-open {
+        background: linear-gradient(180deg, #ff007f 0%, #c40062 100%);
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        border-top-color: rgba(255, 255, 255, 0.25);
+        animation: scoreReadyPulse 1.75s ease-in-out infinite;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--score-ready {
+        box-shadow: inset 0 0 0 2px rgba(255, 0, 127, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-program-grid button.stash-program--spent {
+        min-height: 0 !important;
+        padding: 0.12rem 0.2rem !important;
+        max-height: 1.35rem;
+        opacity: 0.32;
+        filter: grayscale(0.85);
+        transform: scale(0.96);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .stash-program-grid button.stash-program--spent span:last-child {
+        display: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--disabled:not(.hardware-rail-socket--empty) {
+        max-width: 2.1rem;
+        min-height: 0;
+        padding: 0.08rem 0.12rem;
+        opacity: 0.38;
+        filter: grayscale(0.9);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket--disabled .hardware-rail-socket-label {
+        font-size: max(7px, 0.48rem);
+        line-height: 1.1;
+    }
+    @keyframes scoreReadyPulse {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.12); }
+    }
     #root-gutterbones[data-ui-redesign="1"] .bone-die-perspective {
         order: 1;
     }
@@ -8429,6 +8623,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         unlockHeader,
         earlyFullSheetOptIn,
         hidden,
+        scoreReady = false,
     }) => {
         const swipeRef = useRef({ y0: 0, tracking: false });
         if (hidden) return null;
@@ -8464,7 +8659,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 )}
                 <div
                     data-layout-key="play-mobile-score-sheet"
-                    className={`mobile-score-sheet md:hidden matchbook-ledger text-gray-900 font-mono ${open ? 'mobile-score-sheet--expanded' : 'mobile-score-sheet--collapsed'}`}
+                    className={`mobile-score-sheet md:hidden matchbook-ledger text-gray-900 font-mono ${open ? 'mobile-score-sheet--expanded' : 'mobile-score-sheet--collapsed'}${scoreReady ? ' mobile-score-sheet--score-ready' : ''}`}
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
@@ -8488,7 +8683,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 aria-expanded={open}
                             >
                                 <span className="mobile-score-sheet-grab" aria-hidden="true" />
-                                {earlyFullSheetOptIn ? 'FULL SHEET' : 'SCORE'}
+                                {scoreReady ? 'SCORE NOW' : (earlyFullSheetOptIn ? 'FULL SHEET' : 'SCORE')}
                             </button>
                         </div>
                     ) : (
@@ -10341,18 +10536,72 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const BossWarrantStamp = ({ boss }) => {
+    const RollsRemainingPips = ({ hands, maxHands }) => {
+        const total = Math.max(1, maxHands || hands);
+        return (
+            <div data-layout-key="play-rolls-pips" className="play-rolls-pips" role="status" aria-label={`${hands} roll${hands === 1 ? '' : 's'} remaining`}>
+                {Array.from({ length: total }, (_, i) => (
+                    <span key={i} className={`play-roll-pip ${i < hands ? 'play-roll-pip--on' : 'play-roll-pip--spent'}`} aria-hidden="true" />
+                ))}
+            </div>
+        );
+    };
+
+    const PlayStatusBar = ({
+        round,
+        displayScore,
+        currentTarget,
+        quotaProgressPct,
+        quotaFillTone,
+        displayGold,
+        debt,
+        discards,
+        scorePulse,
+        displayJobRound,
+        breakdownOpen,
+        onToggleBreakdown,
+    }) => (
+        <button
+            type="button"
+            data-layout-key="play-status-bar"
+            className={`play-status-bar gb-tappable-label ${breakdownOpen ? 'play-status-bar--open' : ''}`}
+            onClick={onToggleBreakdown}
+            aria-expanded={breakdownOpen}
+        >
+            <span className="play-status-segment play-status-segment--round" title="Round">◷ R{displayJobRound('PLAY', round)}</span>
+            <span className="play-status-segment play-status-segment--quota" title="Heat quota">
+                <span className="play-status-quota-track" role="presentation" aria-hidden="true">
+                    <span className={`play-status-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
+                </span>
+                <span className="play-status-quota-nums">{displayScore}/{currentTarget}</span>
+            </span>
+            <span className="play-status-segment play-status-segment--cash street-ledger-icon street-ledger-icon--cash" title="Dirty cash">${Math.max(0, displayGold)}</span>
+            {debt > 0 && <span className="play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt" title="Debt">IOU ${debt}</span>}
+            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills">💊 {discards}</span>
+        </button>
+    );
+
+    const BossWarrantStamp = ({ boss, detailOpen, onToggleDetail, runDetail }) => {
         if (!boss) return null;
         const shortName = (boss.name || '').replace(/^THE\s+/i, '');
         return (
-            <div
-                data-layout-key="boss-warrant-stamp"
-                className="boss-warrant-stamp"
-                title={boss.desc}
-                aria-label={`Active boss warrant: ${boss.name}. ${boss.desc}`}
-            >
-                <span className="boss-warrant-name">{shortName}: </span>
-                <span className="boss-warrant-rule">{boss.desc}</span>
+            <div className="boss-warrant-wrap relative shrink-0">
+                <button
+                    type="button"
+                    data-layout-key="boss-warrant-stamp"
+                    className={`boss-warrant-stamp gb-tappable-label ${detailOpen ? 'boss-warrant-stamp--open' : 'boss-warrant-stamp--compact'}`}
+                    onClick={onToggleDetail}
+                    aria-expanded={detailOpen}
+                    title={detailOpen ? 'Hide boss intel' : 'Show boss intel'}
+                >
+                    <span className="boss-warrant-name" aria-hidden>⚠ {shortName}</span>
+                    <span className="boss-warrant-rule">{boss.desc}</span>
+                </button>
+                {detailOpen && runDetail && (
+                    <div data-layout-key="boss-warrant-detail" className="boss-warrant-detail-popover" role="dialog" aria-label="Boss and run intel">
+                        {runDetail}
+                    </div>
+                )}
             </div>
         );
     };
@@ -10435,7 +10684,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             key={idx}
                             type="button"
                             data-layout-key={`hardware-rail-socket-${idx + 1}`}
-                            className={`hardware-rail-socket ${item ? '' : 'hardware-rail-socket--empty'} ${hardwareDisabled && item ? 'hardware-rail-socket--disabled' : ''}`}
+                            className={`hardware-rail-socket ${item ? '' : 'hardware-rail-socket--empty'} ${hardwareDisabled && item ? 'hardware-rail-socket--disabled hardware-rail-socket--spent' : ''}`}
                             onMouseEnter={() => item && setFocusIdx(idx)}
                             onMouseLeave={() => setFocusIdx((v) => (v === idx ? null : v))}
                             onFocus={() => item && setFocusIdx(idx)}
@@ -11060,6 +11309,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [mobileScoreSheetOpen, setMobileScoreSheetOpen] = useState(false);
         const [pillTrayArmed, setPillTrayArmed] = useState(false);
         const [pillAttachedSlot, setPillAttachedSlot] = useState(null);
+        const [playStatusBreakdownOpen, setPlayStatusBreakdownOpen] = useState(false);
+        const [bossWarrantOpen, setBossWarrantOpen] = useState(false);
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
         const [dailyRunActive, setDailyRunActive] = useState(false);
@@ -15298,6 +15549,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return best;
             }, { id: null, total: 0 }).id
             : null;
+        const playScoreReady = phase === 'PLAY' && hasRolled && !rolling && !rollLocked && !payoutInputLock
+            && !!bestPreviewCatId && (bestPreviewHeat ?? 0) > 0;
+        const shuffleControlVisible = hasRolled && !rolling && !rollLocked && !playScoreReady;
+        const rollControlVisible = !playScoreReady && rollReady;
         const quotaProgressPct = Math.min(100, Math.round((displayScore / Math.max(1, currentTarget)) * 1000) / 10);
         const quotaFillTone = displayScore >= currentTarget
             ? 'street-ledger-quota-fill--clear'
@@ -17171,8 +17426,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     return [...lane.querySelectorAll('.bone-slot-wrap')].indexOf(el);
                 },
                 countPillTargets: () => document.querySelectorAll('.bone-slot-wrap.bone-pill-target').length,
+                rollsPipOnCount: () => document.querySelectorAll('.play-roll-pip--on').length,
+                playScoreReadyUi: () => !!document.querySelector('.mobile-score-sheet--score-ready, .matchbook-ledger--score-ready'),
+                togglePlayStatusBreakdown: () => {
+                    setPlayStatusBreakdownOpen((open) => !open);
+                    return true;
+                },
+                playStatusBreakdownOpen: () => !!document.querySelector('[data-layout-key="play-status-breakdown"]'),
+                toggleBossWarrant: () => {
+                    setBossWarrantOpen((open) => !open);
+                    return true;
+                },
+                bossWarrantDetailOpen: () => !!document.querySelector('[data-layout-key="boss-warrant-detail"]'),
+                bossWarrantCompact: () => !!document.querySelector('.boss-warrant-stamp--compact'),
+                shuffleControlDisplayed: () => !!document.querySelector('[data-layout-key="play-shuffle-btn"]'),
+                rollControlDisplayed: () => !!document.querySelector('[data-layout-key="play-roll-btn"]'),
+                spentProgramCount: () => document.querySelectorAll('.stash-program--spent').length,
             };
-        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot]);
+        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot, playStatusBreakdownOpen, bossWarrantOpen]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
@@ -17649,24 +17920,51 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         {activeBoss?.id === 'CROOKED_COP' && !reducedMotion && <div className="cop-lights-sweep"></div>}
                         <div ref={playHudRef} data-layout-key="play-hud" className="street-ledger-hud shrink-0 flex flex-col mb-1 md:mb-2">
                             {activeBoss && <div className="boss-banner-scan px-4 py-2 border-b border-red-900 bg-red-950/40 font-mono text-xs flex items-center gap-3"><BossPortrait boss={activeBoss} variant="banner" /><div className="flex-1 flex justify-between gap-2 min-w-0"><span className={`${activeBoss.color} font-bold shrink-0`}>{activeBoss.name}</span><span className="text-gray-300 text-right leading-snug gb-hud-compact-hide">{activeBoss.desc}</span></div></div>}
-                            <div className="street-ledger-top">
-                                <div className="street-ledger-cluster">
-                                    <span className="street-ledger-icon street-ledger-icon--plays" title="Plays remaining">▶ {hands}</span>
-                                    <span className={`street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills remaining">💊 {discards}</span>
-                                    <span className="sr-only play-hud-round-line">Round {displayJobRound('PLAY', round)}</span>
-                                </div>
-                                <BossWarrantStamp boss={activeBoss} />
-                                <div className="street-ledger-cluster">
+                            <div className="street-ledger-top street-ledger-top--unified">
+                                <PlayStatusBar
+                                    round={round}
+                                    displayScore={displayScore}
+                                    currentTarget={currentTarget}
+                                    quotaProgressPct={quotaProgressPct}
+                                    quotaFillTone={quotaFillTone}
+                                    displayGold={displayGold}
+                                    debt={debt}
+                                    discards={discards}
+                                    scorePulse={scorePulse}
+                                    displayJobRound={displayJobRound}
+                                    breakdownOpen={playStatusBreakdownOpen}
+                                    onToggleBreakdown={() => setPlayStatusBreakdownOpen((open) => !open)}
+                                />
+                                <BossWarrantStamp
+                                    boss={activeBoss}
+                                    detailOpen={bossWarrantOpen}
+                                    onToggleDetail={() => setBossWarrantOpen((open) => !open)}
+                                    runDetail={activeBoss ? (
+                                        <>
+                                            <div className={`font-bold ${activeBoss.color}`}>{activeBoss.name}</div>
+                                            <div className="text-red-200/90 mt-0.5 leading-snug">{activeBoss.desc}</div>
+                                            <div className="mt-2 pt-1 border-t border-red-900/50 text-zinc-300">FLOW ×{flowMultiplier.toFixed(2)} · COMBO {synergyState.comboMeter || 0}</div>
+                                            <div className="text-zinc-400 mt-0.5">{currentRouteEffect?.name || 'Standard alley path'}</div>
+                                        </>
+                                    ) : null}
+                                />
+                                <div className="street-ledger-cluster street-ledger-cluster--actions shrink-0">
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
-                                    <span className={`street-ledger-icon street-ledger-icon--cash ${cashDropFlash ? 'hud-cash-drop' : ''}`} title="Dirty cash">${Math.max(0, displayGold)}</span>
-                                    {debt > 0 && <span className={`street-ledger-icon street-ledger-icon--debt ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`} title="Debt">IOU ${debt}</span>}
+                                    <span className="sr-only play-hud-round-line">Round {displayJobRound('PLAY', round)}</span>
                                     <button type="button" data-layout-key="play-stash-open-mobile" className="md:hidden street-ledger-icon font-mono text-[10px] px-1.5 py-0.5 border border-zinc-600 text-zinc-200" onClick={() => setShowMobileStash(true)} aria-label="Open stash programs">STASH</button>
                                     <button type="button" data-layout-key="system-menu-street" onClick={() => setShowSystemMenu(true)} aria-label="Open system menu" title="System settings">SYS</button>
                                     <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
                                     <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
                                 </div>
                             </div>
-                            <div className="street-ledger-quota" data-tutorial="heat-quota">
+                            {playStatusBreakdownOpen && (
+                                <div data-layout-key="play-status-breakdown" className="play-status-breakdown">
+                                    <div><span className="text-gray-500">HEAT</span> {displayScore} / quota {currentTarget} · <span className="text-gray-500">FLOW</span> ×{flowMultiplier.toFixed(2)}</div>
+                                    <div className="mt-0.5"><span className="text-gray-500">CASH</span> ${Math.max(0, displayGold)}{debt > 0 ? <> · <span className="text-red-300">DEBT ${debt}</span></> : null} · <span className="text-gray-500">PILLS</span> {discards} · <span className="text-gray-500">ROLLS</span> {hands}</div>
+                                    <div className="mt-0.5 opacity-80">{fixerLine}</div>
+                                </div>
+                            )}
+                            <div className="street-ledger-quota street-ledger-quota--legacy" data-tutorial="heat-quota" aria-hidden="true">
                                 <div className="street-ledger-quota-track" role="progressbar" aria-valuenow={quotaProgressPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Street heat ${displayScore} of quota ${currentTarget}`}>
                                     <div className={`street-ledger-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
                                 </div>
@@ -17679,7 +17977,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             <div className="relative" ref={mechanicPillsAnchorRef} onMouseLeave={dismissMechanicPopup}>
                                 {activeMechanicPopup === 'pills' && (
                                     <div ref={mechanicPopoverRef} data-layout-key="mechanic-popover-hud" className="mechanic-popover text-left overflow-auto" style={mechanicPopoverHudStyle || { position: 'fixed', left: 8, top: 8, width: 288, zIndex: 140 }}>
-                                        <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the PILL badge on a bone to reroll that slot instantly.</div>
+                                        <div className="font-mono text-sm text-cyan-100 leading-relaxed">Tap the pill tray, then tap a bone to reroll that slot instantly.</div>
                                         <div className="font-mono text-xs text-gray-100 mt-2 leading-relaxed">Each pill spends 1 charge. During THE RAID, each use also costs $2 (or adds debt if short).</div>
                                         {inventory.some(i => i.id === 'BLACK_BOOK') && !hardwareDisabled && (
                                             <div className="font-mono text-xs text-emerald-200 mt-2">BLACK BOOK active: gain +$1 when you pop a pill.</div>
@@ -17687,7 +17985,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </div>
                                 )}
                             </div>
-                            <div data-layout-key="play-mobile-intel" className="md:hidden shrink-0 px-1.5 pb-1 min-h-0">
+                            <div data-layout-key="play-mobile-intel" className="play-hud-foldable-intel md:hidden shrink-0 px-1.5 pb-1 min-h-0">
                                 <RunIntelSummary
                                     inline
                                     flowMultiplier={flowMultiplier}
@@ -17764,7 +18062,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         </div>
                         <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
-                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`hidden md:flex order-2 md:order-2 md:col-span-4 min-h-0 min-w-0 matchbook-ledger matchbook-ledger--compact bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex-col ${playDock === 'stash' ? '!hidden' : ''}`}>
+                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`hidden md:flex order-2 md:order-2 md:col-span-4 min-h-0 min-w-0 matchbook-ledger matchbook-ledger--compact bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex-col ${playScoreReady ? 'matchbook-ledger--score-ready' : ''} ${playDock === 'stash' ? '!hidden' : ''}`}>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     return (
@@ -17838,11 +18136,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-600">STASH {stash}/100</span>
                                         {activeBoss?.id === 'INFORMANT' && <span className="text-[10px] text-yellow-600">FROZEN</span>}
                                     </div>
-                                    <div className="stash-program-grid">{PROGRAMS.map((p) => (
-                                        <button key={p.id} type="button" data-layout-key={`stash-program-${p.id}`} disabled={stash < p.cost || activeBoss?.id === 'INFORMANT' || !hasRolled || rolling} onClick={() => handleProgram(p)} title={p.desc} className="gb-tappable-label flex flex-col items-center justify-center py-1 px-1 rounded border border-gray-700 bg-gray-900/40 hover:border-amber-500 disabled:opacity-45 disabled:grayscale min-h-[var(--gb-min-tap)] font-mono text-[10px]">
+                                    <div className="stash-program-grid">{PROGRAMS.map((p) => {
+                                        const progDisabled = stash < p.cost || activeBoss?.id === 'INFORMANT' || !hasRolled || rolling;
+                                        return (
+                                        <button key={p.id} type="button" data-layout-key={`stash-program-${p.id}`} disabled={progDisabled} onClick={() => handleProgram(p)} title={p.desc} className={`gb-tappable-label flex flex-col items-center justify-center py-1 px-1 rounded border border-gray-700 bg-gray-900/40 hover:border-amber-500 disabled:opacity-45 disabled:grayscale min-h-[var(--gb-min-tap)] font-mono text-[10px]${progDisabled ? ' stash-program--spent' : ''}`}>
                                             <span>{p.name}</span><span className="text-amber-300">{p.cost}%</span>
                                         </button>
-                                    ))}</div>
+                                        );
+                                    })}</div>
                                 </div>
                             </div>
                             <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-8 min-h-0 min-w-0 felt-surface gb-alley-stage play-alley-layout border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'stash' ? 'hidden' : 'flex'} md:flex`}>
@@ -17867,6 +18168,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         Hit ROLL 'EM to throw your bones.
                                     </div>
                                 )}
+                                <RollsRemainingPips hands={hands} maxHands={persona.plays} />
                                 <div
                                     data-layout-key="play-dice-lane"
                                     className={`play-dice-lane relative flex gap-2 md:gap-4 mb-2 md:mb-3 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}
@@ -17980,12 +18282,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         )}
                                     </div>
                                 )}
-                                <div data-layout-key="play-alley-controls" className="play-alley-controls flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
-                                    <button type="button" data-layout-key="play-shuffle-btn" onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
-                                    <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 relative bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight disabled:grayscale disabled:opacity-50 py-3 overflow-visible ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>
-                                        <span className={`pointer-events-none absolute inset-0 rounded-[inherit] ${rollReady ? 'roll-ready-pulse-inner' : ''}`} aria-hidden />
-                                        <span className="relative z-10 inline-flex items-center justify-center gap-2 w-full active:translate-y-px">ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 font-mono">TOLL</span>}</span>
-                                    </button>
+                                <div data-layout-key="play-alley-controls" className={`play-alley-controls flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30${playScoreReady ? ' play-alley-controls--score-mode' : ''}${!hasRolled ? ' play-alley-controls--pre-roll' : ''}`}>
+                                    {shuffleControlVisible && (
+                                        <button type="button" data-layout-key="play-shuffle-btn" onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`play-control-shuffle flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
+                                    )}
+                                    {rollControlVisible && (
+                                        <button data-tutorial="roll-btn" data-layout-key="play-roll-btn" onClick={rollBones} disabled={!rollReady} className={`play-control-roll flex-1 relative bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight disabled:grayscale disabled:opacity-50 py-3 overflow-visible ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>
+                                            <span className={`pointer-events-none absolute inset-0 rounded-[inherit] ${rollReady ? 'roll-ready-pulse-inner' : ''}`} aria-hidden />
+                                            <span className="relative z-10 inline-flex items-center justify-center gap-2 w-full active:translate-y-px">ROLL 'EM {(activeBoss?.id === 'LOAN_SHARK' || inventory.some(i=>i.id==='BLOOD_PACT') || insaneContract) && <span className="text-[10px] bg-red-900 border border-red-500 px-1 font-mono">TOLL</span>}</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             {(() => {
@@ -18083,6 +18389,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         unlockHeader={unlockHeader}
                                         earlyFullSheetOptIn={!!audioSettings.earlyFullSheetOptIn}
                                         hidden={playDock === 'stash' || !hasRolled || rolling}
+                                        scoreReady={playScoreReady}
                                     />
                                 );
                             })()}

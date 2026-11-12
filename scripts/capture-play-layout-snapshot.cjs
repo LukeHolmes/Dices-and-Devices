@@ -79,12 +79,24 @@ async function main() {
     return page;
   }
 
-  const phoneCollapsed = await preparePhonePage();
-  await phoneCollapsed.waitForTimeout(350);
-  await phoneCollapsed.screenshot({
-    path: path.join(outDir, "option-c-phone-score-sheet-collapsed.png"),
+  const phoneScoreReady = await preparePhonePage();
+  await phoneScoreReady.waitForSelector(".mobile-score-sheet--score-ready", { timeout: 15_000 });
+  await phoneScoreReady.waitForTimeout(300);
+  await phoneScoreReady.screenshot({
+    path: path.join(outDir, "option-c-phone-score-ready.png"),
     scale: "css",
   });
+  await phoneScoreReady.close();
+
+  const phoneStatus = await preparePhonePage();
+  await phoneStatus.evaluate(() => window.__GB_LAYOUT_AUDIT__.togglePlayStatusBreakdown());
+  await phoneStatus.waitForSelector('[data-layout-key="play-status-breakdown"]', { timeout: 10_000 });
+  await phoneStatus.waitForTimeout(250);
+  await phoneStatus.screenshot({
+    path: path.join(outDir, "option-c-phone-status-bar.png"),
+    scale: "css",
+  });
+  await phoneStatus.close();
 
   const phonePillArmed = await preparePhonePage();
   await phonePillArmed.evaluate(() => window.__GB_LAYOUT_AUDIT__.setPillTrayArmed(true));
@@ -95,17 +107,6 @@ async function main() {
     scale: "css",
   });
   await phonePillArmed.close();
-
-  const phoneScored = await preparePhonePage();
-  const tokBtn = phoneScored.locator('[data-layout-key="mobile-payout-chip-TOK"]');
-  await tokBtn.click({ timeout: 10_000 });
-  await phoneScored.waitForTimeout(800);
-  await phoneScored.screenshot({
-    path: path.join(outDir, "option-c-phone-after-score.png"),
-    scale: "css",
-  });
-  await phoneScored.close();
-  await phoneCollapsed.close();
 
   const lap = await browser.newPage();
   await lap.setViewportSize({ width: VIEWPORTS.laptop.w, height: VIEWPORTS.laptop.h });

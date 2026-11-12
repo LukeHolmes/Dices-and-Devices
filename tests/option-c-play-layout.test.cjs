@@ -381,3 +381,99 @@ test("mobile score sheet — open, dismiss, score from sheet", async () => {
     await browser.close();
   }
 });
+
+test("HUD polish — status bar, roll pips, warrant, contextual controls", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resumePostRoll(page);
+    const bar = await page.$('[data-layout-key="play-status-bar"]');
+    assert.ok(bar, "status bar missing");
+    const barText = await bar.evaluate((el) => el.textContent || "");
+    assert.match(barText, /\$\d+/, "cash visible on status bar");
+    assert.match(barText, /\/161/, "quota target on status bar");
+    const legacyQuota = await page.$(".street-ledger-quota--legacy");
+    const legacyVisible = legacyQuota
+      ? await legacyQuota.evaluate((el) => window.getComputedStyle(el).display !== "none")
+      : true;
+    assert.equal(legacyVisible, false, "legacy quota row should be hidden");
+    const pipsOn = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.rollsPipOnCount());
+    assert.equal(pipsOn, 2, `roll pips on count ${pipsOn}`);
+    const playsHud = await page.$(".street-ledger-icon--plays");
+    assert.equal(playsHud, null, "plays counter box should be gone");
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.togglePlayStatusBreakdown());
+    await page.waitForSelector('[data-layout-key="play-status-breakdown"]');
+    assert.equal(await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.playStatusBreakdownOpen()), true);
+    const warrantCompact = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.bossWarrantCompact());
+    assert.equal(warrantCompact, true, "warrant should start compact");
+    const ruleVisible = await page.evaluate(() => {
+      const rule = document.querySelector(".boss-warrant-rule");
+      if (!rule) return false;
+      return window.getComputedStyle(rule).display !== "none";
+    });
+    assert.equal(ruleVisible, false, "warrant rule should be hidden when compact");
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.toggleBossWarrant());
+    await page.waitForSelector('[data-layout-key="boss-warrant-detail"]');
+    const scoreReady = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.playScoreReadyUi());
+    assert.equal(scoreReady, true, "score-ready emphasis missing");
+    const shuffle = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.shuffleControlDisplayed());
+    const rollBtn = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.rollControlDisplayed());
+    assert.equal(shuffle, false, "shuffle should hide when score-ready");
+    assert.equal(rollBtn, false, "roll should hide when score-ready");
+    const scoreLabel = await page.locator(".mobile-score-sheet-open").textContent();
+    assert.match(scoreLabel || "", /SCORE NOW/i);
+    const spent = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.spentProgramCount());
+    assert.ok(spent >= 1, "expected at least one spent/collapsed program");
+  } finally {
+    await browser.close();
+  }
+});
+
+test("HUD polish — pre-roll shows roll only", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    const payload = plain(
+      createGame(fixtures.snapshot()).api.normalizeSavedRun(
+        fixtures.run({
+          phase: "PLAY",
+          round: 4,
+          score: 0,
+          target: 161,
+          hands: 3,
+          discards: 3,
+          gold: 28,
+          hasRolled: false,
+          dice: fixtures.dice([1, 1, 1, 1, 1]),
+          activeBossId: "LOAN_SHARK",
+        }),
+      ),
+    );
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await page.evaluate(
+      ({ key, data }) => {
+        localStorage.setItem(
+          "gutterbones1977:settings:v1",
+          JSON.stringify({ pacing: "fast", reducedMotion: true, tutorialCompleted: true, skippedAlleyIntro: true }),
+        );
+        localStorage.setItem(key, JSON.stringify(data));
+      },
+      { key: RUN_KEY, data: payload },
+    );
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+    await page.waitForSelector('[data-layout-key="play-roll-btn"]', { timeout: 45_000 });
+    const shuffle = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.shuffleControlDisplayed());
+    const rollBtn = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.rollControlDisplayed());
+    assert.equal(shuffle, false, "shuffle hidden pre-roll");
+    assert.equal(rollBtn, true, "roll visible pre-roll");
+    const pips = await page.evaluate(() => document.querySelectorAll('[data-layout-key="play-rolls-pips"] .play-roll-pip--on').length);
+    assert.equal(pips, 3, "roll pips reflect hands remaining");
+  } finally {
+    await browser.close();
+  }
+});
