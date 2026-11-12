@@ -233,6 +233,7 @@ function createGame(snapshot = {}, options = {}) {
     },
     overlayInputGuardUntilRef: { current: 0 },
     balanceObserverActive: () => sandbox.window?.__GB_BALANCE_OBSERVER__?.enabled === true,
+    linkObserverActive: () => sandbox.window?.__GB_SIM_TELEM__?.linkObserver?.enabled === true,
     armBalanceObserverDiceWatch: noOp,
     queueBalanceObserverStateCommit: noOp,
   };

@@ -102,6 +102,9 @@
 })();
 </script>
 <script src="assets/audio/gutterbones-audio.js"></script>
+<script src="assets/rule-experiments.js"></script>
+<script src="assets/sim-bot-policy.js"></script>
+<script src="assets/sim-link-observer.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -7116,6 +7119,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         typeof window !== 'undefined' && window.__GB_BALANCE_OBSERVER__?.enabled === true
     );
 
+    const linkObserverActive = () => (
+        typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.linkObserver?.enabled === true
+    );
+
     const GAME_BRANDING = window.__GUTTERBONES_BRANDING__ || Object.freeze({
         title: 'GUTTERBONES',
         year: '1977',
@@ -7827,9 +7834,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const carvedDieFromFace = (die, faceId) => {
         const face = FACE_DATABASE[faceId];
         if (!face) return die;
-        const pipValue = face.id === 'MULT_FACE'
+        const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+        let pipValue = face.id === 'MULT_FACE'
             ? (typeof die.value === 'number' && die.value >= 1 && die.value <= 6 ? die.value : 1)
             : face.value;
+        if (RE?.e1?.() && face.id !== 'GHOST_FACE' && typeof die.value === 'number' && die.value >= 1 && die.value <= 6) {
+            pipValue = die.value;
+        }
         return {
             ...die,
             id: Math.random(),
@@ -8326,7 +8337,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }
         const face = d.faces[Math.floor(runRandomFn() * d.faces.length)];
         const isStandard = face.type === 'standard';
-        let value = face.value;
+        const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+        let value = isStandard
+            ? face.value
+            : (RE?.showingPipForFace?.(face, d) ?? face.value);
         if (junkieBoss && value === 6) value = 1;
         return {
             ...d,
@@ -14016,7 +14030,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     : p.pills);
             setDiscards(round1Pills);
             setPillRunBonus(0);
-            setGold(p.cash);
+            if (typeof GutterbonesRuleExperiments !== 'undefined') GutterbonesRuleExperiments.resetRun();
+            const e3Gold = typeof GutterbonesRuleExperiments !== 'undefined'
+                ? GutterbonesRuleExperiments.e3StartingGoldBonus()
+                : 0;
+            setGold(p.cash + e3Gold);
             setDebt(0);
             setStash(tut ? tut.openingStash : (EARLY_GAME_TUNING.openingStashGrant || 0));
             setUsedCats([]);
@@ -14459,7 +14477,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (!die) return prev;
                     const face = die.faces[Math.floor(Math.random() * die.faces.length)];
                     const isStandard = face.type === 'standard';
-                    let value = face.value;
+                    const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+                    let value = isStandard
+                        ? face.value
+                        : (RE?.showingPipForFace?.(face, die) ?? face.value);
                     if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
                     next[idx] = {
                         ...die,
@@ -14699,7 +14720,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const e2ePending = typeof e2ePendingDiceRef !== "undefined" ? e2ePendingDiceRef.current : null;
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
+            if (linkObserverActive()) {
+                GutterbonesSimLinkObserver?.getObs?.()?.shadowBeforeScore({
+                    catId,
+                    dice: diceForScore,
+                    inventory,
+                    score: scoreAtPlay,
+                    target: quotaTargetAtPlay,
+                    hands,
+                    usedCats,
+                    calculateScore,
+                    scorablePayoutIds,
+                });
+            }
             const result = calculateScore(catId, diceForScore);
+            if (linkObserverActive()) {
+                GutterbonesSimLinkObserver?.getObs?.()?.recordScoredLinks(result.chainLinks);
+                GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(diceForScore, inventory);
+            }
             if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => {
                     const lane = window.GutterbonesBalanceObserver.scoringLaneForObserver(
@@ -15472,6 +15510,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (primaryBuild === BUILD_IDS.UNKNOWN) return 0;
                 return itemFitsCurrentBuild(item.id, primaryBuild) ? 2.5 : 0;
             };
+            const pityKitFaceId = typeof GutterbonesRuleExperiments !== 'undefined'
+                ? GutterbonesRuleExperiments.consumeKitFacePity()
+                : null;
+            const kitPityWeight = (item) => (
+                pityKitFaceId && item.id === pityKitFaceId ? 14 : 0
+            );
             const baseWeight = (item) => {
                 let weight = 0;
                 if (item.cost <= gold) weight += 4;
@@ -15484,6 +15528,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (item.id === 'SMELLING_SALTS' && round <= 4) weight += 4;
                 if (!item.type) weight += 1;
                 weight += shopTagWeightDelta(item);
+                weight += kitPityWeight(item);
                 return weight;
             };
             const weightedSort = (items, extraWeight = () => 0) => items
@@ -15615,6 +15660,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                 });
             }
+            if (linkObserverActive()) {
+                const familyIds = [
+                    'BOOKENDS', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_BOX', 'BLOOD_6',
+                    'ENGINE', 'CROWBAR', 'WIREBAG_FACE',
+                ];
+                const familyStock = shopOfferSlice
+                    .filter((item) => familyIds.includes(item.id))
+                    .map((item) => ({ id: item.id, price: shopListPrice(item) }));
+                const reserve = typeof GutterbonesSimBotPolicy !== 'undefined'
+                    ? GutterbonesSimBotPolicy.shopBudgetReserve({
+                        gold,
+                        debt,
+                        score,
+                        target: currentTarget,
+                        refreshCost: shopRefreshCost,
+                        sinkEstimate: 0,
+                    })
+                    : 0;
+                GutterbonesSimLinkObserver?.getObs?.()?.recordShopKitOffers(familyStock, gold, reserve);
+            }
             setShopItems(shopOfferSlice);
             if (!preserveRefreshes) setShopRefreshes(0);
             if (preservePaths) {
@@ -15691,6 +15756,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setGold(g => Math.max(0, g - cost));
             setShopRefreshes(count => count + 1);
             setSoldItems([]);
+            if (typeof GutterbonesRuleExperiments !== 'undefined' && GutterbonesRuleExperiments.e2()) {
+                const diceFaceIds = dice.map((d) => (
+                    d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                ));
+                const kit = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds, dice);
+                const owned = new Set(inventory.map((i) => i.id));
+                if (kit && !kit.hasGhostFace && !owned.has('GHOST_FACE')) {
+                    GutterbonesRuleExperiments.queueKitFacePity('GHOST_FACE');
+                } else if (kit && !kit.hasEchoFace && !owned.has('ECHO_FACE')) {
+                    GutterbonesRuleExperiments.queueKitFacePity('ECHO_FACE');
+                }
+            }
             generateShop({ preservePaths: true, preserveRefreshes: true });
             spawnPaperStamp('REROLLED', '#0f766e');
             AudioSystem.playTone(950, 'triangle', 0.1);
@@ -15826,6 +15903,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         const handlePurchase = (item) => {
+            if (linkObserverActive()) {
+                GutterbonesSimLinkObserver?.getObs?.()?.recordPurchase(item?.id);
+            }
             const purchaseBefore = {
                 gold,
                 debt,
@@ -15970,7 +16050,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 faces: i === dieIdx ? [...d.faces] : d.faces
             }));
             const carvedTarget = { ...carvedDice[dieIdx], faces: [...carvedDice[dieIdx].faces] };
-            carvedTarget.faces[faceIdx] = selectedItem;
+            const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+            const carvedFace = RE?.applyCarveFace?.(selectedItem, carvedTarget, faceIdx) || selectedItem;
+            carvedTarget.faces[faceIdx] = carvedFace;
             carvedDice[dieIdx] = carvedTarget;
             const carveAfter = {
                 dice: GutterbonesBalanceObserver?.snapshotRawLane(carvedDice)
@@ -15986,7 +16068,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setDice(prev => {
                 const next = [...prev];
                 const target = { ...next[dieIdx], faces: [...next[dieIdx].faces] };
-                target.faces[faceIdx] = selectedItem;
+                const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+                target.faces[faceIdx] = RE?.applyCarveFace?.(selectedItem, target, faceIdx) || selectedItem;
                 next[dieIdx] = target;
                 return next;
             });
@@ -16003,6 +16086,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }));
                 setCarveSparks(sparks);
                 scheduleTimeout(() => setCarveSparks([]), 360);
+            }
+            if (linkObserverActive() && carveBefore.faceId) {
+                GutterbonesSimLinkObserver?.getObs?.()?.recordCarve(carveBefore.faceId, dieIdx, dice);
             }
             returnToInRunShop();
         };
@@ -16152,9 +16238,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     Math.floor(gold * SHOP_AGENCY_TUNING.lateCarrySinkRate),
                 );
                 if (sink > 0) {
-                    sinkApplied = sink;
-                    setGold((g) => Math.max(0, g - sink));
-                    setFixerLine(`Street tax skimmed $${sink} off the stash.`);
+                    const diceFaceIds = dice.map((d) => (
+                        d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                    ));
+                    const kitIncomplete = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds, dice)?.fullKit === false;
+                    const adjusted = typeof GutterbonesRuleExperiments !== 'undefined'
+                        ? GutterbonesRuleExperiments.e3AdjustFirstSink(sink, kitIncomplete)
+                        : sink;
+                    sinkApplied = adjusted;
+                    if (adjusted > 0) {
+                        setGold((g) => Math.max(0, g - adjusted));
+                        setFixerLine(`Street tax skimmed $${adjusted} off the stash.`);
+                    }
                 }
             }
             if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordRoundEvent) {
@@ -16389,19 +16484,49 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                 }
             }
+            const ruleExpRaw = params.get('ruleExp');
+            if (ruleExpRaw && typeof GutterbonesRuleExperiments !== 'undefined') {
+                GutterbonesRuleExperiments.setFlags(ruleExpRaw);
+            }
             if (params.get('e2e') === '1') {
+                const simPolicyRev = params.get('simPolicy')
+                    || (typeof window.__GB_SIM_POLICY__ === 'object' && window.__GB_SIM_POLICY__?.revision)
+                    || (typeof GutterbonesSimBotPolicy !== 'undefined'
+                        ? GutterbonesSimBotPolicy.LEGACY_REVISION
+                        : '2026-11-11-phase-b-v1');
+                window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
+                if (
+                    params.get('linkObserver') === '1'
+                    && typeof GutterbonesSimLinkObserver !== 'undefined'
+                    && !window.__GB_SIM_TELEM__?.linkObserver
+                ) {
+                    window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {};
+                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
+                        enabled: true,
+                        policyRevision: simPolicyRev,
+                    });
+                }
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
+                    shopPolicySteps: [],
                     record(entry) {
                         this.hands.push({ ...entry, at: this.hands.length });
                     },
                     recordRoundEvent(entry) {
                         this.roundEvents.push({ ...entry, at: this.roundEvents.length });
                     },
+                    recordShopPolicyStep(entry) {
+                        this.shopPolicySteps = this.shopPolicySteps || [];
+                        this.shopPolicySteps.push({
+                            ...entry,
+                            at: this.shopPolicySteps.length,
+                        });
+                    },
                     reset() {
                         this.hands.length = 0;
                         this.roundEvents.length = 0;
+                        this.shopPolicySteps = [];
                     },
                 };
                 if (!window.__GB_E2E__) window.__GB_E2E__ = {};
@@ -16419,6 +16544,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         debt,
                         hands,
                         discards,
+                        keptSlots: [...kept],
+                        diceFaceIds: dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        )),
                         selectedShopPathId,
                         roundClearVisible: !!roundClearCardActive,
                         roundClearCanContinue: !!roundClearCanContinue,
@@ -16497,6 +16626,213 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (available.length >= 2 || shopRefreshes >= 3 || gold < cost + 8) return false;
                         refreshShop();
                         return true;
+                    },
+                    noteSimKitAcquisition: () => {
+                        if (!window.__GB_SIM_TELEM__) return;
+                        const diceFaceIds = dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        ));
+                        const kit = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds);
+                        if (kit?.fullKit) {
+                            window.__GB_SIM_TELEM__.kitAcquired = window.__GB_SIM_TELEM__.kitAcquired || {};
+                            if (window.__GB_SIM_TELEM__.kitAcquired.round == null) {
+                                window.__GB_SIM_TELEM__.kitAcquired.round = round;
+                                window.__GB_SIM_TELEM__.kitAcquired.atPhase = phase;
+                            }
+                        }
+                    },
+                    autoShopPolicyStep: () => {
+                        if (phase !== 'SHOP') return false;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION;
+                        if (policyRev !== GutterbonesSimBotPolicy?.WP3_SHOP_REVISION) return false;
+                        const diceFaceIds = dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        ));
+                        const diceForPolicy = dice;
+                        const sinkEstimate = (
+                            round >= SHOP_AGENCY_TUNING.lateCarrySinkMinRound
+                            && gold > SHOP_AGENCY_TUNING.lateCarrySinkGoldFloor
+                        )
+                            ? Math.min(
+                                SHOP_AGENCY_TUNING.lateCarrySinkCap,
+                                Math.floor(gold * SHOP_AGENCY_TUNING.lateCarrySinkRate),
+                            )
+                            : 0;
+                        const available = shopItems
+                            .filter((i) => !soldItems.includes(i.id))
+                            .map((i) => ({
+                                id: i.id,
+                                type: i.type || null,
+                                price: shopListPrice(i),
+                            }));
+                        const reserve = GutterbonesSimBotPolicy.shopBudgetReserve({
+                            gold,
+                            debt,
+                            score,
+                            target: currentTarget,
+                            refreshCost: shopRefreshCost,
+                            sinkEstimate,
+                        });
+                        const kitGap = GutterbonesSimBotPolicy.assessFullLinkKit(
+                            inventory,
+                            diceFaceIds,
+                            diceForPolicy,
+                        );
+                        const plan = GutterbonesSimBotPolicy.planShopAction({
+                            revision: policyRev,
+                            gold,
+                            debt,
+                            round,
+                            score,
+                            target: currentTarget,
+                            inventory,
+                            diceFaceIds,
+                            dice: diceForPolicy,
+                            available,
+                            refreshCost: shopRefreshCost,
+                            shopRefreshes,
+                            selectedShopPathId,
+                            sinkEstimate,
+                        });
+                        const kitStock = available
+                            .filter((i) => ['BOOKENDS', 'GHOST_FACE', 'ECHO_FACE'].includes(i.id))
+                            .map((i) => ({ id: i.id, price: i.price }));
+                        const familyStock = available
+                            .filter((i) => [
+                                'BOOKENDS', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_BOX', 'BLOOD_6',
+                                'ENGINE', 'CROWBAR', 'WIREBAG_FACE',
+                            ].includes(i.id))
+                            .map((i) => ({ id: i.id, price: i.price }));
+                        if (linkObserverActive()) {
+                            GutterbonesSimLinkObserver?.getObs?.()?.recordShopKitOffers(familyStock, gold, reserve);
+                        }
+                        const stepSig = JSON.stringify({
+                            round,
+                            gold,
+                            kitMissing: kitGap.missing,
+                            kitStock,
+                            planReason: plan.reason,
+                            planAction: plan.action,
+                        });
+                        const telem = window.__GB_SIM_TELEM__;
+                        if (telem?.recordShopPolicyStep) {
+                            const prior = telem.shopPolicySteps?.[telem.shopPolicySteps.length - 1];
+                            const priorSig = prior
+                                ? JSON.stringify({
+                                    round: prior.round,
+                                    gold: prior.gold,
+                                    kitMissing: prior.kitMissing,
+                                    kitStock: prior.stock,
+                                    planReason: prior.planReason,
+                                    planAction: prior.planAction,
+                                })
+                                : null;
+                            if (stepSig !== priorSig) {
+                                telem.recordShopPolicyStep({
+                                    round,
+                                    gold,
+                                    debt,
+                                    reserve,
+                                    sinkEstimate,
+                                    shopRefreshes,
+                                    selectedShopPathId,
+                                    kitMissing: kitGap.missing,
+                                    stock: kitStock,
+                                    planFamily: plan.family,
+                                    planAction: plan.action,
+                                    planReason: plan.reason,
+                                    planItemId: plan.itemId || null,
+                                });
+                            }
+                        }
+                        window.__GB_E2E__?.recordSimBotDecision?.(`shop_${plan.family}`, {
+                            reason: plan.reason,
+                            action: plan.action,
+                            detail: plan,
+                        });
+                        if (plan.action === 'pay_debt' && plan.amount) {
+                            payDebtFromCash(plan.amount);
+                            return true;
+                        }
+                        if (plan.action === 'refresh') {
+                            refreshShop();
+                            return true;
+                        }
+                        if (plan.action === 'buy' && plan.itemId) {
+                            const item = shopItems.find((i) => i.id === plan.itemId);
+                            if (item) {
+                                handlePurchase(item);
+                                window.__GB_E2E__?.noteSimKitAcquisition?.();
+                                return true;
+                            }
+                            return false;
+                        }
+                        if (plan.action === 'select_route') {
+                            return window.__GB_E2E__?.clickShopRouteCard?.() || false;
+                        }
+                        if (plan.action === 'hit_streets') {
+                            return window.__GB_E2E__?.hitStreets?.() || false;
+                        }
+                        return false;
+                    },
+                    exitCarvingToShop: (reason, detail = {}) => {
+                        if (phase !== 'CARVING') return false;
+                        window.__GB_E2E__?.recordSimBotDecision?.('shop_carve_exit', {
+                            reason: reason || 'carve_exit_unspecified',
+                            ...detail,
+                        });
+                        setCarvingDie(null);
+                        setSelectedItem(null);
+                        setCarveSparks([]);
+                        returnToInRunShop();
+                        return true;
+                    },
+                    autoCarvePolicyStep: () => {
+                        if (phase !== 'CARVING') return false;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION;
+                        if (policyRev !== GutterbonesSimBotPolicy?.WP3_SHOP_REVISION) return false;
+                        if (!selectedItem) {
+                            return window.__GB_E2E__?.exitCarvingToShop?.('carve_exit_no_selected_face');
+                        }
+                        const diceFaceIds = dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        ));
+                        const plan = GutterbonesSimBotPolicy.planCarveAction({
+                            revision: policyRev,
+                            inventory,
+                            dice,
+                            diceFaceIds,
+                            carveOfferId: selectedItem?.id || null,
+                        });
+                        window.__GB_E2E__?.recordSimBotDecision?.('shop_carve', {
+                            reason: plan.reason,
+                            action: plan.action,
+                            detail: plan,
+                        });
+                        if (plan.action === 'exit') {
+                            return window.__GB_E2E__?.exitCarvingToShop?.(plan.reason, { plan });
+                        }
+                        if (plan.action === 'carve') {
+                            const dieIdx = typeof plan.dieIdx === 'number'
+                                ? plan.dieIdx
+                                : (carvingDie ?? 0);
+                            if (carvingDie === null) {
+                                setCarvingDie(dieIdx);
+                            }
+                            const faceIdx = typeof plan.faceIdx === 'number'
+                                ? plan.faceIdx
+                                : (() => {
+                                    const faces = dice[dieIdx]?.faces || [];
+                                    const fi = faces.findIndex((f) => !f?.type || f.type === 'standard');
+                                    return fi < 0 ? 0 : fi;
+                                })();
+                            executeCarve(dieIdx, faceIdx);
+                            window.__GB_E2E__?.noteSimKitAcquisition?.();
+                            return true;
+                        }
+                        return window.__GB_E2E__?.exitCarvingToShop?.('carve_exit_fallback', { plan });
                     },
                     autoCarvePreferred: () => {
                         if (phase !== 'CARVING') return false;
@@ -16643,41 +16979,66 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         forfeitRun();
                         return true;
                     },
+                    recordSimBotDecision: (decision, detail = {}) => {
+                        if (!balanceObserverActive()) return;
+                        window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+                            kind: 'bot_policy',
+                            reason: { status: 'ok', value: decision, detail },
+                            before: {
+                                phase,
+                                round,
+                                score,
+                                target: currentTarget,
+                                hands,
+                                discards,
+                                policyRevision: window.__GB_SIM_POLICY__?.revision || null,
+                            },
+                            after: window.GutterbonesBalanceObserver.missingField('bot policy advisory only'),
+                        }));
+                    },
+                    evaluateCategoryCandidates: () => {
+                        const legal = scorablePayoutIds.filter((id) => !usedCats.includes(id));
+                        return legal.map((catId) => {
+                            const r = calculateScore(catId, dice);
+                            return {
+                                catId,
+                                valid: !!r.valid,
+                                total: r.total || 0,
+                                chainLinks: r.chainLinks || [],
+                            };
+                        }).filter((c) => c.valid);
+                    },
                     keepDiceForReroll: () => {
-                        const counts = {};
-                        dice.forEach((d) => {
-                            const v = d.value;
-                            counts[v] = (counts[v] || 0) + 1;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION
+                            || '2026-11-11-phase-b-v1';
+                        const lane = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
+                        const sel = GutterbonesSimBotPolicy.selectKeptSlots({
+                            revision: policyRev,
+                            dice: lane,
+                            inventory,
                         });
-                        let pairV = -1;
-                        let pairN = 0;
-                        Object.keys(counts).forEach((v) => {
-                            const n = counts[v];
-                            if (n >= 2 && (n > pairN || (n === pairN && Number(v) > pairV))) {
-                                pairV = Number(v);
-                                pairN = n;
-                            }
+                        setKept(sel.kept);
+                        window.__GB_E2E__?.recordSimBotDecision?.('keep_for_reroll', {
+                            reason: sel.reason,
+                            kept: sel.kept,
                         });
-                        if (pairV >= 0) {
-                            setKept(dice.map((d) => d.value === pairV));
-                            return true;
-                        }
-                        const ranked = dice
-                            .map((d, i) => ({ v: d.value, i }))
-                            .sort((a, b) => b.v - a.v);
-                        const keepIdx = new Set(ranked.slice(0, Math.min(3, ranked.length)).map((x) => x.i));
-                        setKept(dice.map((_, i) => keepIdx.has(i)));
                         return true;
                     },
                     pickBestOpenCategory: () => {
-                        let best = null;
-                        Object.keys(CATEGORIES).forEach((catId) => {
-                            if (usedCats.includes(catId)) return;
-                            const r = calculateScore(catId, dice);
-                            if (!r.valid) return;
-                            if (!best || r.total > best.total) best = { catId, total: r.total };
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION
+                            || '2026-11-11-phase-b-v1';
+                        const candidates = window.__GB_E2E__.evaluateCategoryCandidates();
+                        const laneDice = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
+                        return GutterbonesSimBotPolicy.pickCategory({
+                            revision: policyRev,
+                            candidates,
+                            score,
+                            target: currentTarget,
+                            dice: laneDice,
+                            inventory,
                         });
-                        return best;
                     },
                     autoPlayHand: () => {
                         if (phase !== 'PLAY' || rolling || hands <= 0 || swapMode) return false;
@@ -16716,25 +17077,95 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             }
                             return false;
                         }
+                        const laneDicePre = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
+                        if (linkObserverActive()) {
+                            GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(laneDicePre, inventory);
+                        }
                         const best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION
+                            || '2026-11-11-phase-b-v1';
+                        const candidates = window.__GB_E2E__.evaluateCategoryCandidates?.() || [];
+                        const laneDice = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
                             && window.__GB_E2E_QUERY__();
-                        const gap = Math.max(0, currentTarget - score);
-                        const need = gap / Math.max(1, hands);
-                        const mustScore = hands <= 1 || discards <= 0;
-                        const minPlay = e2eGreedy
-                            ? 1
-                            : Math.min(gap, Math.max(12, Math.ceil(need * 0.58)));
-                        if (!e2eGreedy && !mustScore && best.total < minPlay && discards > 0) {
+                        const bankClear = GutterbonesSimBotPolicy.mustBankClear({
+                            revision: policyRev,
+                            score,
+                            target: currentTarget,
+                            bestTotal: best.total,
+                            hands,
+                            discards,
+                            dice: laneDice,
+                            inventory,
+                            candidates,
+                            best,
+                        });
+                        const mustScore = hands <= 1 || discards <= 0 || bankClear;
+                        const rerollPlan = GutterbonesSimBotPolicy.shouldReroll({
+                            revision: policyRev,
+                            score,
+                            target: currentTarget,
+                            hands,
+                            discards,
+                            bestTotal: best.total,
+                            e2eGreedy,
+                            dice: laneDice,
+                            inventory,
+                            candidates,
+                        });
+                        if (!mustScore && rerollPlan.reroll && discards > 0) {
                             if (rollBtn) {
+                                if (GutterbonesSimBotPolicy?.isLanePlayRevision?.(policyRev) && window.__GB_SIM_TELEM__) {
+                                    const telem = window.__GB_SIM_TELEM__;
+                                    telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
+                                    telem.laneSetup.attempts += 1;
+                                    const unful = [
+                                        ...(rerollPlan.unfulfilled || []),
+                                        ...(rerollPlan.predicates?.unfulfilled || []),
+                                    ];
+                                    unful.forEach((u) => {
+                                        telem.laneSetup.unfulfilled[u] = (telem.laneSetup.unfulfilled[u] || 0) + 1;
+                                    });
+                                    if (unful.length) telem.laneSetup.lastUnfulfilled = unful;
+                                }
+                                window.__GB_E2E__?.recordSimBotDecision?.('reroll', {
+                                    reason: rerollPlan.reason,
+                                    bestCat: best.catId,
+                                    bestTotal: best.total,
+                                    unfulfilled: rerollPlan.unfulfilled || rerollPlan.predicates?.unfulfilled,
+                                });
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
                                 return true;
                             }
                             return false;
                         }
+                        const scoreReason = mustScore && bankClear ? 'bank_clear_quota' : (best.decision || 'score_best');
+                        if (GutterbonesSimBotPolicy?.isLanePlayRevision?.(policyRev) && window.__GB_SIM_TELEM__) {
+                            const preds = GutterbonesSimBotPolicy.evaluateOrganicPredicates({ dice: laneDice, inventory });
+                            if (preds.linkKitEligible) {
+                                const telem = window.__GB_SIM_TELEM__;
+                                telem.laneKit = telem.laneKit || { eligibleHands: 0, scoredWithLink: 0 };
+                                telem.laneKit.eligibleHands += 1;
+                                if ((best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks)) > 0) {
+                                    telem.laneKit.scoredWithLink += 1;
+                                }
+                                telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
+                                (preds.unfulfilled || []).forEach((u) => {
+                                    telem.laneSetup.unfulfilled[u] = (telem.laneSetup.unfulfilled[u] || 0) + 1;
+                                });
+                            }
+                        }
+                        window.__GB_E2E__?.recordSimBotDecision?.('score', {
+                            reason: scoreReason,
+                            catId: best.catId,
+                            total: best.total,
+                            organicPairs: best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks),
+                            bankClearForced: !!bankClear,
+                        });
                         setPlayDock('payouts');
                         setShowMobileStash(false);
                         if (typeof window !== 'undefined' && window.innerWidth < 900) {
@@ -16789,6 +17220,42 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             if (delta > 6) bad.push({ idx, label: label.textContent, delta });
                         });
                         return { ok: bad.length === 0, bad, rowCount: rows.length };
+                    },
+                    getDiceLaneForPolicy: () => dice.map((d) => ({
+                        value: d.value,
+                        faceId: d.faceId,
+                        faces: d.faces,
+                        showingFace: d.showingFace,
+                        isEchoed: d.isEchoed,
+                        isGhost: d.isGhost,
+                    })),
+                    setDiceLaneForSimPolicyTest: (specs) => {
+                        if (phase !== 'PLAY') return false;
+                        const next = (specs || []).map((s) => {
+                            const bone = makeBone();
+                            const faceId = s.faceId ?? null;
+                            const carved = !!faceId;
+                            const faces = bone.faces.map((f, fi) => (
+                                fi === 0
+                                    ? { ...f, faceId, type: carved ? 'carved' : 'standard', id: faceId || f.id }
+                                    : f
+                            ));
+                            return {
+                                ...bone,
+                                value: Number(s.value) || 1,
+                                faceId,
+                                faceLabel: carved ? faceId : null,
+                                type: carved ? 'carved' : 'standard',
+                                faces,
+                                showingFace: 0,
+                            };
+                        });
+                        setDice(next);
+                        setHasRolled(true);
+                        setKept([false, false, false, false, false]);
+                        setRollLock(false);
+                        setPayoutInputLock(false);
+                        return true;
                     },
                     prepareScore: (catId, values) => {
                         if (phase !== 'PLAY' || hands <= 0) return false;
