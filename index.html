@@ -3251,8 +3251,8 @@
         position: absolute;
         left: var(--hand-wrist-inset-x);
         bottom: var(--hand-wrist-lift-y);
-        width: var(--hand-sprite-size, clamp(7.5rem, min(42vw, 34vh), 15.5rem));
-        height: var(--hand-sprite-size, clamp(7.5rem, min(42vw, 34vh), 15.5rem));
+        width: var(--hand-sprite-size, clamp(8.25rem, min(46vw, 38vh), 17rem));
+        height: var(--hand-sprite-size, clamp(8.25rem, min(46vw, 38vh), 17rem));
         transform-origin: var(--hand-anchor-x) var(--hand-anchor-y);
         will-change: transform, opacity;
     }
@@ -3290,7 +3290,7 @@
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
             --hand-wrist-inset-x: 4.5%;
             --hand-wrist-lift-y: 44%;
-            --hand-sprite-size: clamp(7rem, min(36vw, 42vh), 14rem);
+            --hand-sprite-size: clamp(7.75rem, min(42vw, 46vh), 15.5rem);
         }
     }
     @media (min-width: 1280px) and (max-height: 900px) {
@@ -4208,9 +4208,9 @@
             min-width: 0;
         }
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            --hand-wrist-inset-x: -12%;
-            --hand-wrist-lift-y: 42%;
-            --hand-sprite-size: clamp(4.5rem, 28vw, 7.5rem);
+            --hand-wrist-inset-x: -16%;
+            --hand-wrist-lift-y: 40%;
+            --hand-sprite-size: clamp(7.25rem, 48vw, 11.5rem);
             z-index: 36;
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] .stash-dock-compact {
