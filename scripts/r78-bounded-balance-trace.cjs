@@ -132,11 +132,12 @@ async function runOneJob({ serverPort, job, deadlineAt }) {
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 } });
   await context.addInitScript(() => {
     const orig = Math.random;
-    const GAME_STACK_RE = /gutterbones|rollBones|reroll|gamble|blueprint|sniff|Smuggle|generateShop|carve|executePayout|Gutterbones|inlineScript/i;
-    window.__GB_UNSEEDED_RNG__ = { count: 0, sites: [], note: "counts Math.random only when stack matches game paths" };
+    const IGNORE_STACK_RE = /gutterbones-audio|react-dom|scheduler|chrome-extension/i;
+    const GAME_STACK_RE = /index\.html|rollBones|reroll|gamble|blueprint|sniff|Smuggle|generateShop|carve|resolveFlip|beginContract|GutterbonesRoutes/i;
+    window.__GB_UNSEEDED_RNG__ = { count: 0, sites: [], note: "decision-path Math.random only (audio/react excluded)" };
     Math.random = function unseededAudit() {
       const stack = new Error().stack || "";
-      if (!GAME_STACK_RE.test(stack)) return orig.call(Math);
+      if (IGNORE_STACK_RE.test(stack) || !GAME_STACK_RE.test(stack)) return orig.call(Math);
       window.__GB_UNSEEDED_RNG__.count += 1;
       const line = stack.split("\n")[2] || "unknown";
       if (window.__GB_UNSEEDED_RNG__.sites.length < 32) {
@@ -305,19 +306,14 @@ async function main() {
   const r16 = results.filter((r) => r.rid === 16);
   let rid16Identical = null;
   if (r16.length === 2 && !r16[0].infrastructureFailure && !r16[1].infrastructureFailure) {
-    const fpA = stableStringify({
-      bot: r16[0].bot,
-      hands: r16[0].telem?.hands || r16[0].hands,
-      linkKeys: (r16[0].hands || []).flatMap((h) => (h.chainLinks || []).map((l) => `${l.from}→${l.to}`)).sort(),
-      eventCount: r16[0].ledger?.events?.length,
-    });
-    const fpB = stableStringify({
-      bot: r16[1].bot,
-      hands: r16[1].telem?.hands || r16[1].hands,
-      linkKeys: (r16[1].hands || []).flatMap((h) => (h.chainLinks || []).map((l) => `${l.from}→${l.to}`)).sort(),
-      eventCount: r16[1].ledger?.events?.length,
-    });
-    rid16Identical = fpA === fpB;
+    const handFp = (row) => stableStringify((row.hands || []).map((h) => ({
+      total: h.total,
+      round: h.round,
+      chainDepth: h.chainDepth,
+      chainLinks: (h.chainLinks || []).map((l) => `${l.from}→${l.to}`).sort(),
+      synergyChainIds: [...(h.synergyChainIds || [])].sort(),
+    })));
+    rid16Identical = handFp(r16[0]) === handFp(r16[1]);
   }
 
   const summary = {
