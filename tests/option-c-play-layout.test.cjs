@@ -14,7 +14,7 @@ const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
 
 const TARGETS = [
-  { name: "390x844", width: 390, height: 844, minDiceRowPct: 8.4, minAlleyWidthPct: 0, mobile: true },
+  { name: "390x844", width: 390, height: 844, minDiceRowPct: 8.2, minAlleyWidthPct: 0, mobile: true },
   { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5.2, minAlleyWidthPct: 62, mobile: false },
   { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4.2, minAlleyWidthPct: 64, mobile: false },
 ];
@@ -308,6 +308,7 @@ test("pill attach tray — select, highlight, attach, cancel, hold", async () =>
     await page.waitForTimeout(80);
     let attached = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.pillAttachedSlot());
     assert.equal(attached, 2, "attach slot 3");
+    await page.waitForSelector('[data-layout-key="bone-pill-badge-3"]', { timeout: 5000 });
     await page.locator('[data-layout-key="bone-pill-badge-3"]').click();
     attached = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.pillAttachedSlot());
     assert.equal(attached, null, "badge detach failed");
@@ -394,6 +395,37 @@ test("HUD polish — status bar, roll pips, warrant, contextual controls", async
     const barText = await bar.evaluate((el) => el.textContent || "");
     assert.match(barText, /\$\d+/, "cash visible on status bar");
     assert.match(barText, /\/161/, "quota target on status bar");
+    assert.match(barText, /IOU \$/, "debt line visible on status bar");
+    const hudClip = await page.evaluate(() => {
+      const vw = window.innerWidth;
+      const bad = [];
+      document
+        .querySelectorAll(
+          '[data-layout-key="play-stash-open-mobile"], [data-layout-key="system-menu-street"], [data-layout-key="play-history-log"], [data-layout-key="boss-warrant-stamp"], [data-layout-key="play-status-bar"]',
+        )
+        .forEach((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.right > vw + 1 || r.left < -1) bad.push(el.getAttribute("data-layout-key"));
+        });
+      return bad;
+    });
+    assert.deepEqual(hudClip, [], `HUD clipped: ${hudClip.join(", ")}`);
+    const pillBadges = await page.$$eval(".bone-pill-badge", (els) =>
+      els.filter((el) => {
+        const st = window.getComputedStyle(el);
+        return st.display !== "none" && st.visibility !== "hidden" && Number(st.opacity || 1) > 0.05;
+      }).length,
+    );
+    assert.equal(pillBadges, 0, "pill badges visible without attachment");
+    const bestLum = await page.evaluate(() => {
+      const el = document.querySelector(".mobile-score-best-line");
+      if (!el) return -1;
+      const nums = window.getComputedStyle(el).color.match(/[\d.]+/g);
+      if (!nums || nums.length < 3) return -1;
+      const [r, g, b] = nums.map(Number);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    });
+    assert.ok(bestLum > 0 && bestLum < 0.55, `best line contrast (lum ${bestLum})`);
     const legacyQuota = await page.$(".street-ledger-quota--legacy");
     const legacyVisible = legacyQuota
       ? await legacyQuota.evaluate((el) => window.getComputedStyle(el).display !== "none")

@@ -2771,6 +2771,11 @@
     #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--pill { color: #22d3ee; border-color: rgba(34, 211, 238, 0.45); }
     #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--cash { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }
     #root-gutterbones[data-ui-redesign="1"] .street-ledger-icon--debt { color: #f87171; border-color: rgba(248, 113, 113, 0.45); }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-segment--debt-clear {
+        color: #a1a1aa;
+        border-color: rgba(113, 113, 122, 0.45);
+        opacity: 0.92;
+    }
     #root-gutterbones[data-ui-redesign="1"] .street-ledger-quota {
         padding: 0 0.65rem 0.5rem;
     }
@@ -3307,34 +3312,28 @@
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge {
         position: absolute;
-        top: 0.12rem;
-        right: 0.12rem;
+        top: -0.2rem;
+        right: -0.2rem;
         z-index: 55;
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 1.65rem;
-        min-width: 1.65rem;
-        padding: 0.1rem;
+        min-height: 1.35rem;
+        min-width: 1.35rem;
+        padding: 0.08rem;
         border-radius: 999px;
-        border: 1px solid rgba(0, 221, 255, 0.55);
-        background: rgba(0, 0, 0, 0.88);
-        font-size: max(9px, 0.58rem);
+        border: 1px solid rgba(255, 0, 127, 0.65);
+        background: rgba(0, 0, 0, 0.9);
+        font-size: max(8px, 0.5rem);
         line-height: 1;
-        color: #0df;
-        box-shadow: 0 0 8px rgba(0, 221, 255, 0.2);
-        opacity: 0.55;
+        color: #ff9fcf;
+        box-shadow: 0 0 8px rgba(255, 0, 127, 0.35);
         pointer-events: auto;
     }
-    #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge--visible {
-        opacity: 1;
-    }
     #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge--attached {
-        opacity: 1;
         border-color: #ff007f;
         color: #ff9fcf;
         box-shadow: 0 0 10px rgba(255, 0, 127, 0.45);
-        transform: scale(1.08);
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-slot-wrap.bone-pill-target .bone-die-btn {
         box-shadow: 0 0 0 2px rgba(0, 221, 255, 0.85), 0 0 14px rgba(0, 221, 255, 0.35);
@@ -3392,19 +3391,42 @@
         display: none !important;
     }
     #root-gutterbones[data-ui-redesign="1"] .street-ledger-top--unified {
-        flex-wrap: nowrap;
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 0.35rem;
         min-height: 2.35rem;
         padding: 0.22rem 0.45rem;
+        overflow: hidden;
     }
-    #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
-        flex: 1 1 auto;
-        min-width: 0;
+    #root-gutterbones[data-ui-redesign="1"] .play-hud-row--meta {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 0.35rem;
-        padding: 0.18rem 0.4rem;
+        min-width: 0;
+        flex: 0 1 auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions {
+        flex: 0 1 auto;
+        min-width: 0;
+        gap: 0.28rem !important;
+        justify-content: flex-end;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="active-modifiers-panel"] {
+        max-width: 4.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
+        flex: 1 1 12rem;
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.22rem 0.35rem;
+        padding: 0.22rem 0.4rem;
         border-radius: 999px;
         border: 1px solid rgba(63, 63, 70, 0.85);
         background: rgba(9, 9, 11, 0.72);
@@ -3412,6 +3434,7 @@
         font-size: max(10px, var(--gb-min-font));
         color: #e4e4e7;
         min-height: var(--gb-min-tap);
+        box-sizing: border-box;
     }
     #root-gutterbones[data-ui-redesign="1"] .play-status-bar--open {
         border-color: rgba(0, 221, 255, 0.55);
@@ -3430,9 +3453,10 @@
         letter-spacing: 0.04em;
     }
     #root-gutterbones[data-ui-redesign="1"] .play-status-segment--quota {
-        flex: 1 1 auto;
-        min-width: 3.5rem;
+        flex: 1 1 5.5rem;
+        min-width: 4.25rem;
         gap: 0.3rem;
+        max-width: 100%;
     }
     #root-gutterbones[data-ui-redesign="1"] .play-status-quota-track {
         flex: 1 1 auto;
@@ -3498,9 +3522,16 @@
         display: none;
     }
     #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp--compact {
-        max-width: 6.5rem;
-        padding: 0.12rem 0.4rem;
-        flex: 0 0 auto;
+        max-width: 5.25rem;
+        padding: 0.12rem 0.35rem;
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet .mobile-score-best-line {
+        color: #881337;
     }
     #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp--open .boss-warrant-rule {
         display: inline;
@@ -3844,11 +3875,53 @@
     /* Option C — dice-forward play layout (ui-redesign) */
     @media (max-width: 767px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(3.35rem, calc((100vw - 2.15rem) / 5), 6.2rem);
+            --gb-die: clamp(3.45rem, calc((100vw - 2rem) / 5), 6.75rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .street-ledger-top--unified {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.22rem;
+            min-height: 0;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-hud-row--meta {
+            width: 100%;
+            justify-content: space-between;
+            gap: 0.25rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
+            width: 100%;
+            flex: 1 1 auto;
+            border-radius: 0.45rem;
+            padding: 0.28rem 0.45rem;
         }
         #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge {
-            min-height: 2.75rem;
-            min-width: 2.75rem;
+            min-height: 1.25rem;
+            min-width: 1.25rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="active-modifiers-panel"] {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="system-menu-street"],
+        #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="play-history-log"],
+        #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="play-stash-open-mobile"] {
+            min-height: 2.25rem;
+            min-width: 2.25rem;
+            padding: 0.12rem 0.32rem !important;
+            font-size: max(9px, 0.52rem) !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-status-quota-track {
+            display: none;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
+            font-size: max(9px, 0.52rem);
+            padding: 0.32rem 0.4rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp {
+            flex: 0 1 auto;
+            max-width: 4.75rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] .play-dice-lane {
+            margin-bottom: 0.15rem;
         }
     }
     @media (min-width: 768px) and (max-width: 1023px) {
@@ -3922,8 +3995,8 @@
             font-size: max(9px, 0.55rem);
         }
         #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp {
-            flex: 1 1 auto;
-            max-width: min(100%, 14rem);
+            flex: 0 1 auto;
+            max-width: 4.75rem;
             margin: 0;
             padding: 0.12rem 0.35rem;
             font-size: max(8px, 0.52rem);
@@ -8178,12 +8251,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
                         {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
                         <img className="bone-die-img" src={faceSrc} alt="" draggable={false} decoding="async" />
-                        {attachPillUi && !rolling && canPill && (
+                        {attachPillUi && !rolling && canPill && pillAttached && (
                             <button
                                 type="button"
                                 data-layout-key={`bone-pill-badge-${slot + 1}`}
-                                className={`bone-pill-badge gb-tappable-label ${pillTrayArmed ? 'bone-pill-badge--visible' : ''} ${pillAttached ? 'bone-pill-badge--attached' : ''}`}
-                                aria-label={pillAttached ? `Detach pill from bone ${slot + 1}` : (pillTrayArmed ? `Attach pill to bone ${slot + 1}` : `Pill target bone ${slot + 1}`)}
+                                className="bone-pill-badge bone-pill-badge--attached gb-tappable-label"
+                                aria-label={`Detach pill from bone ${slot + 1}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onDismissPillHint?.();
@@ -8667,7 +8740,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 >
                     {!open ? (
                         <div data-layout-key="mobile-score-sheet-collapsed" className="mobile-score-sheet-collapsed-inner">
-                            <p className="mobile-score-best-line m-0 text-center text-[10px] font-semibold text-rose-100 leading-snug">
+                            <p className="mobile-score-best-line m-0 text-center text-[10px] font-semibold leading-snug">
                                 {bestPreviewHeat > 0
                                     ? `Best: ${bestPreviewLabel} · ${bestPreviewHeat} heat`
                                     : 'Tap a chip to score or open the full sheet'}
@@ -10576,7 +10649,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 <span className="play-status-quota-nums">{displayScore}/{currentTarget}</span>
             </span>
             <span className="play-status-segment play-status-segment--cash street-ledger-icon street-ledger-icon--cash" title="Dirty cash">${Math.max(0, displayGold)}</span>
-            {debt > 0 && <span className="play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt" title="Debt">IOU ${debt}</span>}
+            <span className={`play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt${debt > 0 ? '' : ' play-status-segment--debt-clear'}`} title="Debt">IOU ${debt}</span>
             <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills">💊 {discards}</span>
         </button>
     );
@@ -17935,26 +18008,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     breakdownOpen={playStatusBreakdownOpen}
                                     onToggleBreakdown={() => setPlayStatusBreakdownOpen((open) => !open)}
                                 />
-                                <BossWarrantStamp
-                                    boss={activeBoss}
-                                    detailOpen={bossWarrantOpen}
-                                    onToggleDetail={() => setBossWarrantOpen((open) => !open)}
-                                    runDetail={activeBoss ? (
-                                        <>
-                                            <div className={`font-bold ${activeBoss.color}`}>{activeBoss.name}</div>
-                                            <div className="text-red-200/90 mt-0.5 leading-snug">{activeBoss.desc}</div>
-                                            <div className="mt-2 pt-1 border-t border-red-900/50 text-zinc-300">FLOW ×{flowMultiplier.toFixed(2)} · COMBO {synergyState.comboMeter || 0}</div>
-                                            <div className="text-zinc-400 mt-0.5">{currentRouteEffect?.name || 'Standard alley path'}</div>
-                                        </>
-                                    ) : null}
-                                />
-                                <div className="street-ledger-cluster street-ledger-cluster--actions shrink-0">
-                                    <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
-                                    <span className="sr-only play-hud-round-line">Round {displayJobRound('PLAY', round)}</span>
-                                    <button type="button" data-layout-key="play-stash-open-mobile" className="md:hidden street-ledger-icon font-mono text-[10px] px-1.5 py-0.5 border border-zinc-600 text-zinc-200" onClick={() => setShowMobileStash(true)} aria-label="Open stash programs">STASH</button>
-                                    <button type="button" data-layout-key="system-menu-street" onClick={() => setShowSystemMenu(true)} aria-label="Open system menu" title="System settings">SYS</button>
-                                    <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
-                                    <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
+                                <div className="play-hud-row--meta">
+                                    <BossWarrantStamp
+                                        boss={activeBoss}
+                                        detailOpen={bossWarrantOpen}
+                                        onToggleDetail={() => setBossWarrantOpen((open) => !open)}
+                                        runDetail={activeBoss ? (
+                                            <>
+                                                <div className={`font-bold ${activeBoss.color}`}>{activeBoss.name}</div>
+                                                <div className="text-red-200/90 mt-0.5 leading-snug">{activeBoss.desc}</div>
+                                                <div className="mt-2 pt-1 border-t border-red-900/50 text-zinc-300">FLOW ×{flowMultiplier.toFixed(2)} · COMBO {synergyState.comboMeter || 0}</div>
+                                                <div className="text-zinc-400 mt-0.5">{currentRouteEffect?.name || 'Standard alley path'}</div>
+                                            </>
+                                        ) : null}
+                                    />
+                                    <div className="street-ledger-cluster street-ledger-cluster--actions shrink-0">
+                                        <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
+                                        <span className="sr-only play-hud-round-line">Round {displayJobRound('PLAY', round)}</span>
+                                        <button type="button" data-layout-key="play-stash-open-mobile" className="md:hidden street-ledger-icon font-mono text-[10px] px-1.5 py-0.5 border border-zinc-600 text-zinc-200" onClick={() => setShowMobileStash(true)} aria-label="Open stash programs">STASH</button>
+                                        <button type="button" data-layout-key="system-menu-street" onClick={() => setShowSystemMenu(true)} aria-label="Open system menu" title="System settings">SYS</button>
+                                        <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
+                                        <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
+                                    </div>
                                 </div>
                             </div>
                             {playStatusBreakdownOpen && (
