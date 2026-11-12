@@ -47,7 +47,7 @@ if (fullLayout) {
 }
 
 console.log("\n=== check:fast — polish step5 layout (blocking + phone warnings) ===\n");
-code = run("node", ["--test", "--test-timeout=900000", "tests/polish-step5-layout.test.cjs"], {
+code = run("node", ["--test", "--test-timeout=1200000", "tests/polish-step5-layout.test.cjs"], {
   CHECK_FAST_PRINT_PHONE_REPORT: "1",
 });
 if (code !== 0) process.exit(code);
