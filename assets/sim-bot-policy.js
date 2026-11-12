@@ -386,10 +386,13 @@
         if (!kit.hasGhostFace) targetFace = 'GHOST_FACE';
         else if (!kit.hasEchoFace) targetFace = 'ECHO_FACE';
         if (!targetFace) {
-            return { family: 'carve', action: 'done', reason: 'carve_faces_complete' };
+            return { family: 'carve', action: 'exit', reason: 'carve_exit_faces_complete' };
         }
-        if (offerId && offerId !== targetFace) {
-            return { family: 'carve', action: 'done', reason: 'carve_wrong_offer_for_kit' };
+        if (!offerId) {
+            return { family: 'carve', action: 'exit', reason: 'carve_exit_no_offer' };
+        }
+        if (offerId !== targetFace) {
+            return { family: 'carve', action: 'exit', reason: 'carve_exit_wrong_offer_for_kit' };
         }
         let dieIdx = targetFace === 'ECHO_FACE' ? 4 : 0;
         return { family: 'carve', action: 'carve', reason: 'carve_kit_face', faceId: targetFace, dieIdx };

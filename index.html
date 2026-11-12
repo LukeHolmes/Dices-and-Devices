@@ -16592,11 +16592,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         }
                         return false;
                     },
+                    exitCarvingToShop: (reason, detail = {}) => {
+                        if (phase !== 'CARVING') return false;
+                        window.__GB_E2E__?.recordSimBotDecision?.('shop_carve_exit', {
+                            reason: reason || 'carve_exit_unspecified',
+                            ...detail,
+                        });
+                        setCarvingDie(null);
+                        setSelectedItem(null);
+                        setCarveSparks([]);
+                        returnToInRunShop();
+                        return true;
+                    },
                     autoCarvePolicyStep: () => {
                         if (phase !== 'CARVING') return false;
                         const policyRev = window.__GB_SIM_POLICY__?.revision
                             || GutterbonesSimBotPolicy?.LEGACY_REVISION;
                         if (policyRev !== GutterbonesSimBotPolicy?.WP3_SHOP_REVISION) return false;
+                        if (!selectedItem) {
+                            return window.__GB_E2E__?.exitCarvingToShop?.('carve_exit_no_selected_face');
+                        }
                         const diceFaceIds = dice.map((d) => (
                             d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
                         ));
@@ -16611,7 +16626,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             action: plan.action,
                             detail: plan,
                         });
-                        if (plan.action === 'done') return false;
+                        if (plan.action === 'exit') {
+                            return window.__GB_E2E__?.exitCarvingToShop?.(plan.reason, { plan });
+                        }
                         if (carvingDie === null && plan.action === 'carve') {
                             setCarvingDie(typeof plan.dieIdx === 'number' ? plan.dieIdx : 0);
                             return true;
@@ -16624,7 +16641,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             window.__GB_E2E__?.noteSimKitAcquisition?.();
                             return true;
                         }
-                        return false;
+                        return window.__GB_E2E__?.exitCarvingToShop?.('carve_exit_fallback', { plan });
                     },
                     autoCarvePreferred: () => {
                         if (phase !== 'CARVING') return false;

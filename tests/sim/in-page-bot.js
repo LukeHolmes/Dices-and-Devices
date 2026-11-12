@@ -358,7 +358,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
     }
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "CARVING") {
-      if (window.__GB_E2E__?.autoCarvePolicyStep?.()) {
+      const carved = window.__GB_E2E__?.autoCarvePolicyStep?.()
+        || window.__GB_E2E__?.exitCarvingToShop?.("carve_exit_sim_guard");
+      if (carved) {
         await wait(90);
         continue;
       }

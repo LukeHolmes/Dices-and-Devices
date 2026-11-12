@@ -108,6 +108,27 @@ test("WP3 carve — targets missing Ghost on end slot", () => {
   assert.equal(plan.dieIdx, 0);
 });
 
+test("WP3 carve — wrong offer exits instead of done stall", () => {
+  const plan = P.planCarveAction({
+    revision: WP3,
+    inventory: [{ id: "BOOKENDS" }],
+    diceFaceIds: [null, null, null, null, null],
+    carveOfferId: "BLOOD_6",
+  });
+  assert.equal(plan.action, "exit");
+  assert.match(plan.reason, /wrong_offer/);
+});
+
+test("WP3 carve — faces complete exits to shop", () => {
+  const plan = P.planCarveAction({
+    revision: WP3,
+    inventory: [{ id: "BOOKENDS" }],
+    diceFaceIds: ["GHOST_FACE", null, null, null, "ECHO_FACE"],
+    carveOfferId: "GHOST_FACE",
+  });
+  assert.equal(plan.action, "exit");
+});
+
 test("WP3 built on lane — play revision dispatches to lane family", () => {
   assert.equal(P.isLanePlayRevision(WP3), true);
   const preds = P.evaluateOrganicPredicates({
