@@ -22,6 +22,12 @@ const VIEWPORTS = [
   { id: "1920x1080", width: 1920, height: 1080 },
 ];
 
+const DICE_ROW_THRESH = {
+  "390x844": 8,
+  "1366x768": 5,
+  "1920x1080": 5,
+};
+
 const OPTIONS = [
   { id: "a", css: "option-a.css", prefix: "option-a" },
   { id: "b", css: "option-b.css", prefix: "option-b" },
@@ -115,10 +121,69 @@ const measureDiceSpace = () => {
       clippedAtViewportEdge: left < -2 || top < -2 || right > vw + 2 || bottom > vh + 2,
     };
   }
+  const dieBtns = [...document.querySelectorAll(".play-dice-lane .bone-die-btn")];
+  let dieUnion = null;
+  if (dieBtns.length) {
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+    dieBtns.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      left = Math.min(left, r.left);
+      top = Math.min(top, r.top);
+      right = Math.max(right, r.right);
+      bottom = Math.max(bottom, r.bottom);
+    });
+    const visW = Math.max(0, Math.min(right, vw) - Math.max(left, 0));
+    const visH = Math.max(0, Math.min(bottom, vh) - Math.max(top, 0));
+    dieUnion = {
+      name: "dice-faces-union",
+      visibleAreaPx: Math.round(visW * visH),
+      pctOfViewport: +(100 * ((visW * visH) / vpArea)).toFixed(2),
+    };
+  }
+
+  const overlapsDieFace = (die, other) => {
+    if (!die || !other || other.offsetParent === null) return false;
+    const dr = die.getBoundingClientRect();
+    const pr = other.getBoundingClientRect();
+    const ix = Math.max(0, Math.min(dr.right, pr.right) - Math.max(dr.left, pr.left));
+    const iy = Math.max(0, Math.min(dr.bottom, pr.bottom) - Math.max(dr.top, pr.top));
+    return ix * iy > 24;
+  };
+
+  const pillOnFace = (() => {
+    for (const slot of document.querySelectorAll(".bone-slot-wrap")) {
+      const die = slot.querySelector(".bone-die-btn");
+      const pill = slot.querySelector(".bone-pill-control");
+      const intel = slot.querySelector(".bone-face-intel-btn");
+      if (overlapsDieFace(die, pill) || overlapsDieFace(die, intel)) return true;
+    }
+    return false;
+  })();
+
+  const intelOverlap = (() => {
+    const chips = [...document.querySelectorAll(".run-intel-chip")];
+    for (let i = 0; i < chips.length; i += 1) {
+      const a = chips[i].getBoundingClientRect();
+      for (let j = i + 1; j < chips.length; j += 1) {
+        const b = chips[j].getBoundingClientRect();
+        const ix = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+        const iy = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+        if (ix > 4 && iy > 4) return true;
+      }
+    }
+    return false;
+  })();
+
   return {
     viewport: { width: vw, height: vh },
     diceLane: measureEl('[data-layout-key="play-dice-lane"]', "dice-lane-row"),
     diceBonesUnion: boneUnion,
+    diceFacesUnion: dieUnion,
+    pillOverlapsFace: pillOnFace,
+    runIntelChipOverlap: intelOverlap,
     alley: measureEl('[data-layout-key="play-alley"]', "dice-tray"),
     hand: measureEl(".gutter-roll-hand-sprite", "hand-sprite"),
     hud: measureEl('[data-layout-key="play-hud"]', "control-strip"),
@@ -164,7 +229,14 @@ async function prepareScene(page, optionId) {
       window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.();
       window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(520);
       const intelToggle = document.querySelector('[data-layout-key="run-intel-details-toggle"]');
-      if (id === "b" && intelToggle && intelToggle.textContent?.includes("DETAILS")) intelToggle.click();
+      if (
+        id === "b" &&
+        window.innerWidth >= 768 &&
+        intelToggle &&
+        intelToggle.textContent?.includes("DETAILS")
+      ) {
+        intelToggle.click();
+      }
     },
     optionId,
   );
@@ -214,16 +286,27 @@ async function main() {
           const outFile = `${opt.prefix}_${vp.id}.png`;
           await page.screenshot({ path: path.join(OUT, outFile), scale: "css" });
 
+          const lane =
+            metrics.diceLane?.pctOfViewport ??
+            metrics.diceBonesUnion?.pctOfViewport ??
+            "?";
+          const clip = metrics.diceLane?.clippedAtViewportEdge ?? false;
+          const minPct = DICE_ROW_THRESH[vp.id];
+          const qa = [];
+          if (typeof lane === "number" && lane < minPct) qa.push(`dice-row ${lane}% < ${minPct}%`);
+          if (metrics.pillOverlapsFace) qa.push("pill overlaps face");
+          if (metrics.runIntelChipOverlap) qa.push("run-intel overlap");
+          if (clip) qa.push("dice clipped");
+          const status = qa.length ? `WARN ${qa.join("; ")}` : "OK";
+          console.log(`${status} ${opt.prefix} @ ${vp.id} dice-row-share=${lane}%`);
           report.proposals.push({
             option: opt.id,
             prefix: opt.prefix,
             viewport: vp.id,
             screenshot: `mock-screenshots/${outFile}`,
             metrics,
+            qa: { issues: qa, diceRowSharePct: lane },
           });
-          const lane = metrics.diceBonesUnion?.pctOfViewport ?? metrics.diceLane?.pctOfViewport ?? "?";
-          const clip = metrics.diceBonesUnion?.clippedAtViewportEdge ?? metrics.diceLane?.clippedAtViewportEdge;
-          console.log(`OK ${opt.prefix} @ ${vp.id} dice-share=${lane}% clip=${clip}`);
         } finally {
           await page.close();
         }

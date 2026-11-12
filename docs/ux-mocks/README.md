@@ -80,17 +80,18 @@ When drawers open (`05-control-panel-revealed`), alley share drops to **~44%** (
 
 Compared to **baseline** `03-after-roll-rows-lit` on **390×844** (PAYOUTS tab required for scores; dock visible):
 
-| Metric | Baseline main | Proposals A/B/C (overlay CSS) |
-|--------|---------------|--------------------------------|
-| Dice bbox (% viewport, bone union) | **2.67%** | **~2.5%** bbox *but* ~1.28–1.34× visual scale + 1.1× die art — reads larger in PNGs |
+| Metric | Baseline main | Proposals A/B/C (v3 overlay CSS) |
+|--------|---------------|----------------------------------|
+| **Dice row share** (`play-dice-lane` % viewport area) | **2.67%** | **11–12%** phone · **9.5%** 1366×768 · **7.7%** 1920×1080 |
+| Pill / face controls on pips | yes (corner / loupe overlap) | **no** (QA + visual pass; pills under faces) |
+| RUN INTEL overlap (phone chips) | yes (cramped 3-col) | **no** (2-col stack; boss in chip not HUD banner) |
 | Dice lane clipped | no | **no** (all captures) |
 | Hand sprite visible | roll animation only | **yes** (frozen open grip, production assets) |
-| Payout rows on phone w/o tab switch | no | **yes** (ledger under alley; option C adds horizontal chip row) |
+| Payout rows on phone w/o tab switch | no | **yes** (ledger under alley; option C horizontal chips) |
 | RUN INTEL on phone w/o STASH tab | no | **yes** (inline strip above alley) |
-| MODS / hardware names | toggle | **chip** (panel collapsed in mocks) |
-| Alley tray % viewport | 65% (payouts hidden) | **~41%** — trade: smaller tray, **full decision surface on one screen** |
+| Alley tray % viewport (phone) | ~65% (payouts on tab) | **~50–66%** depending on option — traded for one-screen decisions |
 
-Full per-option numbers: `mock-screenshots/proposal-measurements.json`.
+Full per-option numbers: `mock-screenshots/proposal-measurements.json` (captured 2026-11-12, incl. `pillOverlapsFace` / `runIntelChipOverlap` flags).
 
 ---
 

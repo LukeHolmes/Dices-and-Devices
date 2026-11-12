@@ -53,12 +53,23 @@
   #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .payout-tier-best {
     box-shadow: 0 0 0 2px #ff007f !important;
   }
+  #root-gutterbones[data-ux-mock="c"] {
+    --gb-die: clamp(4.15rem, 18.5vw, 4.6rem);
+  }
   #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-alley"] {
-    min-height: 52% !important;
-    max-height: 60% !important;
+    min-height: 50vh !important;
+    max-height: none !important;
   }
   #root-gutterbones[data-ux-mock="c"] .play-dice-lane {
-    transform: scale(1.16);
+    transform: none !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .stash-programs-pinned,
+  #root-gutterbones[data-ux-mock="c"] .stash-dock-compact,
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] [class*="stash"] {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] > div:has(.stash-dock-compact) {
+    display: none !important;
   }
 }
 
