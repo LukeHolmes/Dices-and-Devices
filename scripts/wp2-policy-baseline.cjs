@@ -50,21 +50,18 @@ function runPolicy(revision) {
 
 // run.cjs uses rid 0..games-1; offset via starting games count only — document subset as first N seeds
 function aggregate(summary) {
-  const results = summary.results || [];
-  const wins = results.filter((r) => r.outcome === "WIN").length;
-  const busts = results.filter((r) => r.outcome === "BUST").length;
-  const stuck = results.filter((r) => r.stuck).length;
-  const maxRounds = results.map((r) => r.maxRound || 0);
-  const medianRound = maxRounds.length
-    ? maxRounds.sort((a, b) => a - b)[Math.floor(maxRounds.length / 2)]
-    : 0;
-  let pairwiseHands = 0;
-  results.forEach((r) => {
-    (r.telem?.hands || []).forEach((h) => {
-      if ((h.chainLinks || []).some((l) => `${l.from}→${l.to}` === ORGANIC_PAIR)) pairwiseHands += 1;
-    });
-  });
-  return { wins, busts, stuck, medianRound, games: results.length, pairwiseHands };
+  const linkCounts = summary.synergy?.linkCounts || {};
+  return {
+    wins: summary.wins || 0,
+    busts: summary.busts || 0,
+    stuck: summary.failureCount || 0,
+    medianRound: summary.maxRoundMedian || 0,
+    avgMaxRound: summary.avgMaxRound || 0,
+    games: summary.completed || summary.games || 0,
+    pairwiseLinkActivations: linkCounts[ORGANIC_PAIR] || 0,
+    linkCounts,
+    winRate: summary.winRate || 0,
+  };
 }
 
 const legacy = runPolicy("2026-11-11-phase-b-v1");
