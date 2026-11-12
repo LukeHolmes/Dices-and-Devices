@@ -2976,6 +2976,23 @@
         padding: 0.15rem;
         pointer-events: none;
     }
+    @media (min-width: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket {
+            width: auto;
+            min-width: 4.35rem;
+            max-width: 7rem;
+            height: auto;
+            min-height: 3rem;
+            padding: 0.2rem 0.4rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket-label {
+            display: block;
+            overflow: visible;
+            -webkit-line-clamp: unset;
+            line-clamp: unset;
+            white-space: normal;
+        }
+    }
     #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket:focus-visible {
         outline: 2px solid #fbbf24;
         outline-offset: 2px;
@@ -3587,10 +3604,82 @@
             padding: 0.1rem 0.35rem;
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] {
-            order: 2;
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-score-hint-slot {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] {
+            flex: 1 1 auto;
+            min-height: min(50vh, 26rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet {
             flex: 0 0 auto;
-            min-height: 3.65rem;
-            max-height: 24vh;
+            order: 2;
+            width: 100%;
+            border-radius: 0.65rem 0.65rem 0.35rem 0.35rem;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: #e8e6e1;
+            box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.35);
+            z-index: 45;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet--expanded {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: 60vh;
+            border-radius: 0.85rem 0.85rem 0 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 44;
+            background: rgba(0, 0, 0, 0.45);
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet-grab {
+            display: block;
+            width: 2.25rem;
+            height: 0.22rem;
+            border-radius: 999px;
+            background: rgba(63, 63, 70, 0.75);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet-open {
+            min-height: 2.75rem !important;
+            padding-top: 0.55rem !important;
+            padding-bottom: 0.55rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-payout-chip {
+            min-height: 2.75rem !important;
+            min-width: 2.75rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-payout-chip.payout-tier-best {
+            box-shadow: 0 0 0 2px #ff007f;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet-expanded-inner .payout-tier-best {
+            outline: 2px solid #ff007f;
+            outline-offset: 1px;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket-label {
+            font-size: max(8px, 0.52rem);
+            line-height: 1.05;
+            text-align: center;
+            word-break: break-word;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail {
+            flex-wrap: nowrap;
+            gap: 0.2rem;
+            padding: 0.1rem 0.25rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .hardware-rail-socket {
+            min-width: 3.1rem;
+            max-width: 4.25rem;
+            padding: 0.15rem 0.2rem;
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] .play-dice-lane {
             flex: 1 1 auto;
@@ -3626,44 +3715,6 @@
             --hand-wrist-lift-y: 42%;
             --hand-sprite-size: clamp(4.5rem, 28vw, 7.5rem);
             z-index: 36;
-        }
-        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: stretch;
-            overflow-x: auto;
-            overflow-y: hidden;
-            gap: 0.35rem;
-            min-height: 4.1rem;
-            -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x proximity;
-        }
-        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip [data-payout-row="more"] {
-            display: none !important;
-        }
-        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip > [data-payout-row] {
-            flex: 0 0 auto;
-            width: auto !important;
-            min-width: 6.25rem;
-            max-width: 8.5rem;
-            min-height: 3.65rem;
-            max-height: none !important;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(0, 0, 0, 0.14) !important;
-            scroll-snap-align: start;
-            padding: 0.35rem 0.4rem !important;
-        }
-        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip .score-row-name {
-            white-space: normal;
-            line-height: 1.1;
-            font-size: max(9px, 0.62rem);
-        }
-        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip .payout-tier-best {
-            box-shadow: 0 0 0 2px #ff007f !important;
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] .stash-dock-compact {
             display: none !important;
@@ -7356,7 +7407,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             diceSpeed,
             pacing,
             colorblindHeld: !!stored.colorblindHeld,
-            colorblindScoring: !!stored.colorblindScoring
+            colorblindScoring: !!stored.colorblindScoring,
+            earlyFullSheetOptIn: !!stored.earlyFullSheetOptIn
         };
     };
 
@@ -8065,14 +8117,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         useLayoutEffect(() => {
             const container = containerRef.current;
             if (!container) return undefined;
-            const mobileStripActive = () => {
-                const root = document.getElementById('root-gutterbones');
-                return !!(
-                    root?.dataset?.uiRedesign === '1'
-                    && typeof window !== 'undefined'
-                    && window.matchMedia('(max-width: 767px)').matches
-                );
-            };
+            const mobileStripActive = () => false;
             const syncStripClass = () => {
                 const strip = mobileStripActive();
                 container.classList.toggle('payout-sheet-rows--mobile-strip', strip);
@@ -8145,6 +8190,122 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     </div>
                 )}
             </div>
+        );
+    };
+
+    const MobilePayoutChip = ({ cat, result, canScore, isBest, onScore, scoringLocked }) => {
+        const rowCanScore = canScore && !scoringLocked && result.valid;
+        const tierClass = rowCanScore ? (isBest ? 'payout-tier-best' : 'payout-tier-live') : 'payout-tier-idle';
+        return (
+            <button
+                type="button"
+                data-layout-key={`mobile-payout-chip-${cat.id}`}
+                disabled={!rowCanScore}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (rowCanScore) onScore(cat.id);
+                }}
+                className={`mobile-payout-chip gb-tappable-label min-h-11 min-w-11 px-2 py-1 font-mono text-[10px] border rounded-md flex flex-col items-center justify-center gap-0.5 ${tierClass}`}
+                aria-label={rowCanScore ? `Score ${cat.name} for ${result.total} heat` : `${cat.name} not available`}
+            >
+                <span className="score-row-name font-bold truncate max-w-full">{cat.name}</span>
+                <span className="tabular-nums font-bold">{rowCanScore ? `+${result.total}` : (result.valid === false ? 'BUST' : '—')}</span>
+            </button>
+        );
+    };
+
+    const MobilePlayScoreSheet = ({
+        open,
+        onOpenChange,
+        bestPreviewHeat,
+        bestPreviewLabel,
+        collapsedChips,
+        payoutRows,
+        unlockHeader,
+        earlyFullSheetOptIn,
+        hidden,
+    }) => {
+        const swipeRef = useRef({ y0: 0, tracking: false });
+        if (hidden) return null;
+        const onTouchStart = (e) => {
+            if (e.touches.length !== 1) return;
+            swipeRef.current = { y0: e.touches[0].clientY, tracking: true };
+        };
+        const onTouchMove = (e) => {
+            if (!swipeRef.current.tracking || e.touches.length !== 1) return;
+            const dy = e.touches[0].clientY - swipeRef.current.y0;
+            if (!open && dy < -32) {
+                onOpenChange(true);
+                swipeRef.current.tracking = false;
+            } else if (open && dy > 36) {
+                onOpenChange(false);
+                swipeRef.current.tracking = false;
+            }
+        };
+        const onTouchEnd = () => {
+            swipeRef.current.tracking = false;
+        };
+        const openSheet = () => onOpenChange(true);
+        return (
+            <>
+                {open && (
+                    <button
+                        type="button"
+                        data-layout-key="mobile-score-sheet-backdrop"
+                        className="mobile-score-sheet-backdrop md:hidden"
+                        aria-label="Close score sheet without scoring"
+                        onClick={() => onOpenChange(false)}
+                    />
+                )}
+                <div
+                    data-layout-key="play-mobile-score-sheet"
+                    className={`mobile-score-sheet md:hidden matchbook-ledger text-gray-900 font-mono ${open ? 'mobile-score-sheet--expanded' : 'mobile-score-sheet--collapsed'}`}
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                    onTouchCancel={onTouchEnd}
+                >
+                    {!open ? (
+                        <div data-layout-key="mobile-score-sheet-collapsed" className="mobile-score-sheet-collapsed-inner">
+                            <p className="mobile-score-best-line m-0 text-center text-[10px] font-semibold text-rose-100 leading-snug">
+                                {bestPreviewHeat > 0
+                                    ? `Best: ${bestPreviewLabel} · ${bestPreviewHeat} heat`
+                                    : 'Tap a chip to score or open the full sheet'}
+                            </p>
+                            <div className="mobile-score-chip-row flex gap-1 justify-center items-stretch px-1 py-0.5">
+                                {collapsedChips}
+                            </div>
+                            <button
+                                type="button"
+                                data-layout-key="mobile-score-sheet-open"
+                                className="mobile-score-sheet-open gb-tappable-label w-full min-h-[2.75rem] py-2 flex items-center justify-center gap-2 font-mono text-[11px] tracking-wider border-t border-zinc-700/80 text-cyan-950 bg-[#e8e6e1]/95"
+                                onClick={openSheet}
+                                aria-expanded={open}
+                            >
+                                <span className="mobile-score-sheet-grab" aria-hidden="true" />
+                                {earlyFullSheetOptIn ? 'FULL SHEET' : 'SCORE'}
+                            </button>
+                        </div>
+                    ) : (
+                        <div data-layout-key="mobile-score-sheet-expanded" className="mobile-score-sheet-expanded-inner flex flex-col min-h-0">
+                            <button
+                                type="button"
+                                data-layout-key="mobile-score-sheet-handle"
+                                className="mobile-score-sheet-handle gb-tappable-label min-h-11 w-full flex flex-col items-center justify-center gap-0.5 shrink-0 border-b border-zinc-700/50 bg-[#dedcd7]"
+                                onClick={() => onOpenChange(false)}
+                                aria-label="Close score sheet"
+                            >
+                                <span className="mobile-score-sheet-grab" aria-hidden="true" />
+                                <span className="text-[10px] tracking-[0.2em] text-zinc-600">MATCHBOOK</span>
+                            </button>
+                            {unlockHeader}
+                            <div className="mobile-score-sheet-body min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 pt-1">
+                                <PayoutSheetRows>{payoutRows}</PayoutSheetRows>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </>
         );
     };
 
@@ -9461,12 +9622,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const abbrevBossChipName = (name) => {
         if (!name || typeof name !== 'string') return '—';
-        const parts = name.trim().split(/\s+/).filter(Boolean);
-        if (!parts.length) return '—';
-        const skip = new Set(['THE', 'A', 'AN']);
-        const core = parts.filter((p) => !skip.has(p.toUpperCase()));
-        const label = (core.length ? core[core.length - 1] : parts[parts.length - 1]).toUpperCase();
-        return label.slice(0, 12);
+        const stripped = name.replace(/^THE\s+/i, '').trim();
+        if (stripped.length <= 18) return stripped.toUpperCase();
+        return stripped.slice(0, 17).toUpperCase() + '…';
+    };
+
+    const hardwareRailShortLabel = (name) => {
+        if (!name || typeof name !== 'string') return '—';
+        const stripped = name.replace(/^The\s+/i, '').trim();
+        if (/engine/i.test(stripped)) return 'Engine';
+        if (/fuse\s*box/i.test(stripped)) return 'Fuse Box';
+        const words = stripped.split(/\s+/).filter(Boolean);
+        if (words.length === 1) return words[0].slice(0, 12);
+        return `${words[0].slice(0, 8)} ${words[1].slice(0, 7)}`;
     };
 
     const abbrevRouteChipName = (name) => {
@@ -9578,7 +9746,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const activeBp = blueprints.filter((bp) => !bp.consumed);
         const routeShort = abbrevRouteChipName(routeEffect?.name);
         const bossShort = boss ? abbrevBossChipName(boss.name) : '—';
-        const phoneIntelLine = `FLOW ×${flowMultiplier.toFixed(2)} · COMBO ${comboMeter}${heatSpikeNextHand > 0 ? `+${heatSpikeNextHand}` : ''} · ${routeShort} · BOSS ${bossShort} · RIG ${inventory.length || 0}`;
+        const bossIntelDisplay = boss
+            ? boss.name.replace(/^THE\s+/i, '').trim().toUpperCase()
+            : '—';
+        const phoneIntelLine = `FLOW ×${flowMultiplier.toFixed(2)} · COMBO ${comboMeter}${heatSpikeNextHand > 0 ? `+${heatSpikeNextHand}` : ''} · ${routeShort} · BOSS ${bossIntelDisplay} · RIG ${inventory.length || 0}`;
         const chips = [
             { id: 'flow', label: 'FLOW', value: `x${flowMultiplier.toFixed(2)}`, hot: flowMultiplier > 1 },
             { id: 'combo', label: 'COMBO', value: `${comboMeter}${heatSpikeNextHand > 0 ? `+${heatSpikeNextHand}` : ''}`, hot: comboMeter >= 3 },
@@ -9656,7 +9827,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     </div>
                 </div>
                 {phoneIntelStrip && inlineCollapsed && (
-                    <p className="run-intel-phone-line text-[10px] text-zinc-300 truncate leading-snug py-0.5 m-0" data-layout-key="run-intel-phone-line">
+                    <p className="run-intel-phone-line text-[10px] text-zinc-300 leading-snug py-0.5 m-0 line-clamp-2 break-words" data-layout-key="run-intel-phone-line">
                         {phoneIntelLine}
                     </p>
                 )}
@@ -10042,7 +10213,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             aria-label={item ? `Hardware slot ${idx + 1}: ${item.name}. ${item.desc}` : `Hardware slot ${idx + 1}: empty`}
                             title={item ? item.name : 'Empty slot'}
                         >
-                            {item ? <span className="leading-tight line-clamp-3">{item.name.split(' ').slice(0, 2).join(' ')}</span> : <span className="opacity-40" aria-hidden>—</span>}
+                            {item ? <span className="leading-tight line-clamp-2 hardware-rail-socket-label">{hardwareRailShortLabel(item.name)}</span> : <span className="opacity-40" aria-hidden>—</span>}
                             {tipOpen && (
                                 <span className="hardware-rail-tip" role="tooltip">
                                     <span className="font-bold text-amber-200">{item.name}</span>
@@ -10656,6 +10827,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [shopInspectBone, setShopInspectBone] = useState(null);
         const [shopPreviewItem, setShopPreviewItem] = useState(null);
         const [playDock, setPlayDock] = useState('lane');
+        const [mobileScoreSheetOpen, setMobileScoreSheetOpen] = useState(false);
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
         const [dailyRunActive, setDailyRunActive] = useState(false);
@@ -11952,6 +12124,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             window.addEventListener('keydown', onKeyDown);
             return () => window.removeEventListener('keydown', onKeyDown);
         }, [showLorePanel]);
+
+        useEffect(() => {
+            if (rolling) setMobileScoreSheetOpen(false);
+        }, [rolling]);
 
         useEffect(() => {
             if (!IS_DEV_BUILD) return undefined;
@@ -16694,6 +16870,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         interactives: { ok: interBad.length === 0, bad: interBad.slice(0, 12), count: interBad.length }
                     };
                 },
+                setMobileScoreSheetOpen: (open) => {
+                    setMobileScoreSheetOpen(!!open);
+                    return true;
+                },
+                mobileScoreSheetExpanded: () => !!document.querySelector('.mobile-score-sheet--expanded'),
                 stashProgramLayoutKeys: () => ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER']
             };
         }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
@@ -17288,7 +17469,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                         </div>
                         <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
-                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex flex-col ${playDock === 'stash' ? 'hidden' : 'flex'} md:flex`}>
+                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`hidden md:flex order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex-col ${playDock === 'stash' ? '!hidden' : ''}`}>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     return (
@@ -17477,6 +17658,104 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </button>
                                 </div>
                             </div>
+                            {(() => {
+                                const unlockInfo = getCategoryUnlockInfo(meta);
+                                const availableSet = new Set(unlockInfo.available);
+                                const lockedById = Object.fromEntries(unlockInfo.lockedDetails.map((row) => [row.id, row]));
+                                const scorableOrder = Object.values(CATEGORIES).filter((c) => availableSet.has(c.id)).map((c) => c.id);
+                                const focusId = scorableOrder[payoutKeyboardIndex % Math.max(1, scorableOrder.length)];
+                                const scoreFromSheet = (catId) => {
+                                    executePayout(catId);
+                                    setMobileScoreSheetOpen(false);
+                                };
+                                let revealIdx = 0;
+                                const payoutRows = Object.values(CATEGORIES).map((cat) => {
+                                    if (availableSet.has(cat.id)) {
+                                        revealIdx += 1;
+                                        const canScoreRow = hasRolled && !usedCats.includes(cat.id) && !rollLocked;
+                                        const rowResult = calculateScore(cat.id, dice);
+                                        return (
+                                            <ScoreRow
+                                                key={`m-sheet-${cat.id}`}
+                                                id={cat.id}
+                                                cat={cat}
+                                                handLevel={handLevels[cat.id] || HAND_MASTERY_TUNING.baseLevel}
+                                                ruleTooltip={CATEGORY_RULE_TOOLTIPS[cat.id] || ''}
+                                                result={rowResult}
+                                                used={usedCats.includes(cat.id)}
+                                                canScore={canScoreRow}
+                                                onScore={scoreFromSheet}
+                                                onPreviewChange={setPayoutPreviewCatId}
+                                                payoutSquash={payoutSquashCatId === cat.id}
+                                                scoringLocked={payoutInputLock}
+                                                keyboardFocus={canScoreRow && cat.id === focusId}
+                                                postRollReveal={false}
+                                                postRollDelayMs={0}
+                                                isBestPreview={canScoreRow && rowResult.valid && cat.id === bestPreviewCatId}
+                                            />
+                                        );
+                                    }
+                                    const gate = lockedById[cat.id];
+                                    return (
+                                        <LockedPayoutRow
+                                            key={`m-sheet-lock-${cat.id}`}
+                                            cat={cat}
+                                            unlockAtRun={gate?.unlockAtRun || 0}
+                                            runsUntil={gate?.runsUntil ?? 0}
+                                        />
+                                    );
+                                });
+                                const chipOrder = [...scorableOrder].sort((a, b) => {
+                                    if (a === bestPreviewCatId) return -1;
+                                    if (b === bestPreviewCatId) return 1;
+                                    return scorableOrder.indexOf(a) - scorableOrder.indexOf(b);
+                                }).slice(0, 3);
+                                const collapsedChips = chipOrder.map((catId) => {
+                                    const cat = CATEGORIES[catId];
+                                    const canScoreRow = hasRolled && !usedCats.includes(catId) && !rollLocked;
+                                    const rowResult = calculateScore(catId, dice);
+                                    return (
+                                        <MobilePayoutChip
+                                            key={`chip-${catId}`}
+                                            cat={cat}
+                                            result={rowResult}
+                                            canScore={canScoreRow}
+                                            isBest={canScoreRow && rowResult.valid && catId === bestPreviewCatId}
+                                            onScore={executePayout}
+                                            scoringLocked={payoutInputLock}
+                                        />
+                                    );
+                                });
+                                const unlockHeader = (
+                                    <div className="flex items-center justify-between gap-2 shrink-0 px-2">
+                                        <span className="font-bold tracking-[0.18em] text-[11px] flex-1 text-center text-zinc-800">MATCHBOOK · PAYOUTS</span>
+                                        {unlockInfo.locked.length > 0 && (
+                                            <button
+                                                type="button"
+                                                data-layout-key="payout-unlock-open-mobile"
+                                                onClick={() => setPayoutUnlockOpen(true)}
+                                                className="gb-tappable-label shrink-0 min-h-11 min-w-11 px-2 border border-zinc-600 text-zinc-700 font-mono text-[10px]"
+                                            >
+                                                LOCKED ({unlockInfo.locked.length})
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                                const bestLabel = bestPreviewCatId && CATEGORIES[bestPreviewCatId] ? CATEGORIES[bestPreviewCatId].name : 'Payout';
+                                return (
+                                    <MobilePlayScoreSheet
+                                        open={mobileScoreSheetOpen}
+                                        onOpenChange={setMobileScoreSheetOpen}
+                                        bestPreviewHeat={bestPreviewHeat || 0}
+                                        bestPreviewLabel={bestLabel}
+                                        collapsedChips={collapsedChips}
+                                        payoutRows={payoutRows}
+                                        unlockHeader={unlockHeader}
+                                        earlyFullSheetOptIn={!!audioSettings.earlyFullSheetOptIn}
+                                        hidden={playDock === 'stash' || !hasRolled || rolling}
+                                    />
+                                );
+                            })()}
                             <div data-layout-key="play-stash" className={`${showMobileStash ? 'fixed inset-0 bg-black/95 z-[120] p-4 flex flex-col overflow-hidden' : 'hidden'} order-3 md:order-3 md:static md:col-span-3 md:flex flex-col gap-2 min-h-0 min-w-0 overflow-hidden pr-1 md:!flex play-stash-column`}>
                                 <button onClick={() => setShowMobileStash(false)} className="md:hidden self-end bg-red-900 text-white px-4 py-2 font-mono border border-red-500 rounded">CLOSE</button>
                                 <div data-layout-key="play-next-threat-slot-md" className="hidden md:block shrink-0 mb-1 w-full max-w-full">

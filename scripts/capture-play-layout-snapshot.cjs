@@ -9,9 +9,13 @@ const fixtures = require("../tests/fixtures/runs.cjs");
 const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
 
+const VIEWPORTS = {
+  phone: { id: "390x844", w: 390, h: 844 },
+  laptop: { id: "1366x768", w: 1366, h: 768 },
+};
+
 async function main() {
   const outDir = process.argv[2] || "/opt/cursor/artifacts";
-  const label = process.argv[3] || "after";
   fs.mkdirSync(outDir, { recursive: true });
 
   const server = http.createServer((req, res) => {
@@ -47,13 +51,10 @@ async function main() {
     currentRouteEffect: { name: "BACK ALLEY", effects: ["Standard hustle"] },
   });
 
-  for (const { id, w, h } of [
-    { id: "390x844", w: 390, h: 844 },
-    { id: "1366x768", w: 1366, h: 768 },
-  ]) {
+  async function preparePhonePage() {
     const page = await browser.newPage();
-    await page.setViewportSize({ width: w, height: h });
-    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "networkidle", timeout: 120_000 });
+    await page.setViewportSize({ width: VIEWPORTS.phone.w, height: VIEWPORTS.phone.h });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 120_000 });
     const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixturePayload()));
     await page.evaluate(
       ({ key, data }) => {
@@ -61,7 +62,7 @@ async function main() {
           "gutterbones1977:settings:v1",
           JSON.stringify({
             pacing: "fast",
-            reducedMotion: false,
+            reducedMotion: true,
             tutorialCompleted: true,
             skippedAlleyIntro: true,
           }),
@@ -73,23 +74,66 @@ async function main() {
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-    await page.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
-    await page.evaluate(() => {
-      window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.();
-    });
-    await page.waitForTimeout(100);
-    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(500));
-    await page.waitForTimeout(500);
-    await page.screenshot({
-      path: path.join(outDir, `option-c-${label}_${id}.png`),
-      scale: "css",
-    });
-    await page.close();
+    await page.waitForSelector('[data-layout-key="play-mobile-score-sheet"]', { timeout: 45_000 });
+    return page;
   }
+
+  const phoneCollapsed = await preparePhonePage();
+  await phoneCollapsed.waitForTimeout(350);
+  await phoneCollapsed.screenshot({
+    path: path.join(outDir, "option-c-phone-score-sheet-collapsed.png"),
+    scale: "css",
+  });
+
+  const phoneExpanded = await preparePhonePage();
+  await phoneExpanded.evaluate(() => window.__GB_LAYOUT_AUDIT__.setMobileScoreSheetOpen(true));
+  await phoneExpanded.waitForSelector(".mobile-score-sheet--expanded", { timeout: 10_000 });
+  await phoneExpanded.waitForTimeout(300);
+  await phoneExpanded.screenshot({
+    path: path.join(outDir, "option-c-phone-score-sheet-expanded.png"),
+    scale: "css",
+  });
+  await phoneExpanded.close();
+
+  const phoneScored = await preparePhonePage();
+  const tokBtn = phoneScored.locator('[data-layout-key="mobile-payout-chip-TOK"]');
+  await tokBtn.click({ timeout: 10_000 });
+  await phoneScored.waitForTimeout(800);
+  await phoneScored.screenshot({
+    path: path.join(outDir, "option-c-phone-after-score.png"),
+    scale: "css",
+  });
+  await phoneScored.close();
+  await phoneCollapsed.close();
+
+  const lap = await browser.newPage();
+  await lap.setViewportSize({ width: VIEWPORTS.laptop.w, height: VIEWPORTS.laptop.h });
+  await lap.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+  const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixturePayload()));
+  await lap.evaluate(
+    ({ key, data }) => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({ pacing: "fast", reducedMotion: true, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+      localStorage.setItem(key, JSON.stringify(data));
+    },
+    { key: RUN_KEY, data: payload },
+  );
+  await lap.reload({ waitUntil: "domcontentloaded" });
+  await lap.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
+  await lap.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+  await lap.waitForSelector('[data-layout-key="play-ledger-column"]', { timeout: 45_000 });
+  await lap.waitForTimeout(350);
+  await lap.screenshot({
+    path: path.join(outDir, "option-c-laptop-layout.png"),
+    scale: "css",
+  });
+  await lap.close();
 
   await browser.close();
   await new Promise((r) => server.close(r));
-  console.log(`Wrote snapshots to ${outDir} (${label})`);
+  console.log(`Wrote score-sheet snapshots to ${outDir}`);
 }
 
 main().catch((e) => {

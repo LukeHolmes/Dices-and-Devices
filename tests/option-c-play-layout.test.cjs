@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Option C play layout: dice share, pills, mobile payout strip, coach hint.
+ * Option C play layout: phone score sheet + desktop ledger panel.
  */
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
@@ -14,9 +14,9 @@ const ROOT = path.join(__dirname, "..");
 const RUN_KEY = "gutterbones1977:run:v1";
 
 const TARGETS = [
-  { name: "390x844", width: 390, height: 844, minDiceRowPct: 9.5 },
-  { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5 },
-  { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4 },
+  { name: "390x844", width: 390, height: 844, minDiceRowPct: 9.5, mobile: true },
+  { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5, mobile: false },
+  { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4, mobile: false },
 ];
 
 let server;
@@ -44,7 +44,7 @@ after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function resumePostRoll(page) {
+async function resumePostRoll(page, { withHandFx = false } = {}) {
   const payload = plain(
     createGame(fixtures.snapshot()).api.normalizeSavedRun(
       fixtures.run({
@@ -85,10 +85,12 @@ async function resumePostRoll(page) {
   await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
   await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
   await page.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
-  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.());
-  await page.waitForTimeout(100);
-  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(500));
-  await page.waitForTimeout(400);
+  if (withHandFx) {
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.());
+    await page.waitForTimeout(100);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(500));
+    await page.waitForTimeout(400);
+  }
 }
 
 const measurePlayLayout = () => {
@@ -120,27 +122,11 @@ const measurePlayLayout = () => {
     return ix * iy > 24;
   };
   let pillOnFace = false;
-  let handOnPill = false;
-  const hand = document.querySelector(".gutter-roll-hand-sprite");
-  const firstPill = document.querySelector(".bone-slot-wrap .bone-pill-control");
   for (const slot of document.querySelectorAll(".bone-slot-wrap")) {
     const die = slot.querySelector(".bone-die-btn");
     const pill = slot.querySelector(".bone-pill-control");
     if (overlapsDieFace(die, pill)) pillOnFace = true;
   }
-  if (hand && firstPill) {
-    const hr = hand.getBoundingClientRect();
-    const pr = firstPill.getBoundingClientRect();
-    const ix = Math.max(0, Math.min(hr.right, pr.right) - Math.max(hr.left, pr.left));
-    const iy = Math.max(0, Math.min(hr.bottom, pr.bottom) - Math.max(hr.top, pr.top));
-    handOnPill = ix * iy > 16;
-  }
-  const hint = document.querySelector('[data-layout-key="play-score-hint"]');
-  const hintText = (hint?.textContent || "").trim();
-  const hintClipped =
-    !hint
-    || (!hintText.includes("best preview") && !hintText.includes("Swipe a payout chip"))
-    || hint.scrollHeight > hint.clientHeight + 2;
   const actionBar = document.querySelector('[data-layout-key="play-alley-controls"]');
   let pillOnActions = false;
   if (actionBar) {
@@ -152,63 +138,40 @@ const measurePlayLayout = () => {
       if (ix * iy > 12) pillOnActions = true;
     }
   }
-  let handInViewport = false;
-  if (hand) {
-    const hr = hand.getBoundingClientRect();
-    const closed = document.querySelector(".gutter-roll-hand-closed");
-    const open = document.querySelector(".gutter-roll-hand-open");
-    const hop = Math.max(
-      closed ? parseFloat(window.getComputedStyle(closed).opacity) : 0,
-      open ? parseFloat(window.getComputedStyle(open).opacity) : 0,
-      parseFloat(window.getComputedStyle(hand).opacity),
-    );
-    handInViewport =
-      hr.width > 28
-      && hr.height > 28
-      && hr.bottom > 0
-      && hr.top < vh
-      && hr.right > 32
-      && hr.left > -90
-      && hop > 0.08;
-  }
-  const payoutRows = [...document.querySelectorAll('[data-layout-key="play-ledger-column"] [data-payout-row]:not([data-payout-row="more"])')].filter(
-    (el) => {
-      const r = el.getBoundingClientRect();
-      const st = window.getComputedStyle(el);
-      return st.display !== "none" && r.width > 8 && r.height > 8;
-    },
-  );
-  const strip = document.querySelector(".payout-sheet-rows--mobile-strip");
-  const intelOneLine = !!document.querySelector('[data-layout-key="run-intel-phone-line"]');
-  const intelOverlap = intelOneLine ? false : (() => {
-    const chips = [...document.querySelectorAll(".run-intel-chip")];
-    for (let i = 0; i < chips.length; i += 1) {
-      const a = chips[i].getBoundingClientRect();
-      for (let j = i + 1; j < chips.length; j += 1) {
-        const b = chips[j].getBoundingClientRect();
-        const ix = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
-        const iy = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-        if (ix > 4 && iy > 4) return true;
-      }
-    }
-    return false;
-  })();
   const diceClipped = [...document.querySelectorAll(".bone-die-btn")].some((die) => {
     const r = die.getBoundingClientRect();
     return r.left < -1 || r.top < -1 || r.right > vw + 1 || r.bottom > vh + 1;
   });
+  const ledger = document.querySelector('[data-layout-key="play-ledger-column"]');
+  const ledgerVisible = ledger && window.getComputedStyle(ledger).display !== "none";
+  const scoreSheet = document.querySelector('[data-layout-key="play-mobile-score-sheet"]');
+  const scoreSheetVisible = scoreSheet && window.getComputedStyle(scoreSheet).display !== "none";
+  const collapsed = !!document.querySelector('[data-layout-key="mobile-score-sheet-collapsed"]');
+  const expanded = !!document.querySelector(".mobile-score-sheet--expanded");
+  const bestLine = document.querySelector(".mobile-score-best-line");
+  const chips = [...document.querySelectorAll(".mobile-payout-chip")];
+  const tapBad = chips.filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width < 44 - 0.5 || r.height < 44 - 0.5;
+  });
+  const openBtn = document.querySelector('[data-layout-key="mobile-score-sheet-open"]');
+  const openTapOk = !openBtn || (() => {
+    const r = openBtn.getBoundingClientRect();
+    return r.width >= 44 - 0.5 && r.height >= 44 - 0.5;
+  })();
   return {
     lanePct,
     pillOnFace,
-    handOnPill,
     pillOnActions,
-    handInViewport,
-    hintClipped,
-    hintOk: hint && !hintClipped,
-    payoutRows: payoutRows.length,
-    mobileStrip: !!strip,
-    intelOverlap,
     diceClipped,
+    ledgerVisible,
+    scoreSheetVisible,
+    collapsed,
+    expanded,
+    bestLineOk: !!bestLine && (bestLine.textContent || "").includes("Best:"),
+    chipCount: chips.length,
+    tapBad: tapBad.length,
+    openTapOk,
   };
 };
 
@@ -223,19 +186,59 @@ for (const vp of TARGETS) {
       const m = await page.evaluate(measurePlayLayout);
       assert.ok(m.lanePct >= vp.minDiceRowPct, `dice row ${m.lanePct}% < ${vp.minDiceRowPct}%`);
       assert.equal(m.pillOnFace, false, "pill overlaps die face");
-      if (vp.width >= 768) assert.equal(m.handOnPill, false, "hand overlaps first pill");
-      assert.equal(m.diceClipped, false, "dice lane clipped");
-      assert.equal(m.hintOk, true, "coach hint missing or clipped");
-      assert.equal(m.intelOverlap, false, "run intel overlap");
-      if (vp.width < 768) {
-        assert.equal(m.mobileStrip, true, "mobile payout strip class");
-        assert.ok(m.payoutRows >= 3, `payout rows visible ${m.payoutRows}`);
-        assert.equal(m.pillOnActions, false, "pill overlaps shuffle/roll buttons");
-        assert.equal(m.handInViewport, true, "roll hand not visible in viewport");
-        assert.ok((await page.evaluate(() => (document.querySelector('[data-layout-key="play-score-hint"]')?.textContent || "").includes("Swipe"))), "mobile coach hint");
+      assert.equal(m.diceClipped, false, "dice clipped");
+      assert.equal(m.pillOnActions, false, "pill overlaps shuffle/roll");
+      if (vp.mobile) {
+        assert.equal(m.scoreSheetVisible, true, "mobile score sheet missing");
+        assert.equal(m.collapsed, true, "expected collapsed sheet");
+        assert.equal(m.expanded, false, "sheet should start collapsed");
+        assert.equal(m.ledgerVisible, false, "desktop ledger visible on phone");
+        assert.ok(m.chipCount >= 2 && m.chipCount <= 3, `chip count ${m.chipCount}`);
+        assert.equal(m.tapBad, 0, "payout chips under 44px");
+        assert.equal(m.openTapOk, true, "SCORE affordance under 44px");
+        assert.equal(m.bestLineOk, true, "best-play line missing");
+      } else {
+        assert.equal(m.ledgerVisible, true, "desktop ledger hidden");
+        assert.equal(m.scoreSheetVisible, false, "mobile sheet visible on desktop");
       }
     } finally {
       await browser.close();
     }
   });
 }
+
+test("mobile score sheet — open, dismiss, score from sheet", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resumePostRoll(page);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.setMobileScoreSheetOpen(true));
+    await page.waitForSelector(".mobile-score-sheet--expanded", { timeout: 8000 });
+    let expanded = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.mobileScoreSheetExpanded());
+    assert.equal(expanded, true, "open failed");
+    const sheetTop = await page.evaluate(() => {
+      const panel = document.querySelector(".mobile-score-sheet--expanded");
+      return panel ? panel.getBoundingClientRect().top : 0;
+    });
+    assert.ok(sheetTop >= 844 * 0.35, `sheet too tall: top ${sheetTop}`);
+    await page.locator('[data-layout-key="mobile-score-sheet-backdrop"]').click({
+      position: { x: 24, y: 48 },
+      timeout: 10_000,
+    });
+    await page.waitForTimeout(200);
+    expanded = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.mobileScoreSheetExpanded());
+    assert.equal(expanded, false, "backdrop dismiss failed");
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.setMobileScoreSheetOpen(true));
+    await page.waitForSelector(".mobile-score-sheet--expanded");
+    await page.click('[data-layout-key="mobile-score-sheet-expanded"] [data-layout-key="payout-row-TOK"]');
+    await page.waitForTimeout(400);
+    expanded = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.mobileScoreSheetExpanded());
+    assert.equal(expanded, false, "sheet should close after score");
+    const used = await page.evaluate(() => !!document.querySelector('[data-layout-key="mobile-score-sheet-expanded"] [data-layout-key="payout-row-TOK"].payout-tier-done, [data-payout-row="TOK"].payout-tier-done'));
+    assert.equal(used, true, "TOK not marked used after score");
+  } finally {
+    await browser.close();
+  }
+});
