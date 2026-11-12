@@ -1,0 +1,286 @@
+/* UX layout mocks — tokens aligned with index.html redesign (#79/#80/#82). Mock-only. */
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --ink: #121113;
+  --felt: #6e1d24;
+  --paper: #e8e6e1;
+  --neon: #ff007f;
+  --cyan: #0df;
+  --cash: #c78b16;
+  --gb-pad: clamp(6px, 1.6vmin, 14px);
+  --mock-vw: 390px;
+  --mock-vh: 844px;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: var(--mock-vw);
+  height: var(--mock-vh);
+  overflow: hidden;
+  background: var(--ink);
+  color: #d6b85c;
+  font-family: "Courier Prime", "Courier New", monospace;
+}
+
+.mock-shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gb-pad);
+  gap: 6px;
+}
+
+.mock-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  padding: 4px 8px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,0,0,.82);
+}
+
+/* —— Option A: slim strip —— */
+.mock-strip {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid #333;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0a0a0c, #050506);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.mock-strip .quota-mini {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: 4px;
+  background: #2a1018;
+  overflow: hidden;
+  position: relative;
+}
+.mock-strip .quota-mini > span {
+  display: block;
+  height: 100%;
+  width: 36%;
+  background: linear-gradient(90deg, var(--neon), #f4a);
+}
+.mock-strip .quota-nums {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #f88;
+}
+.mock-chip {
+  border: 1px solid #444;
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.mock-chip.hot { border-color: var(--cyan); color: var(--cyan); }
+
+.mock-tray {
+  flex: 1;
+  min-height: 0;
+  border: 10px solid #2a2a2a;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  background: var(--felt) url('../../assets/scenes/alley-playfield.png') center/cover no-repeat;
+  box-shadow: inset 0 0 40px rgba(0,0,0,.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.mock-tray .alley-title {
+  position: absolute;
+  top: 14px;
+  font-family: Impact, sans-serif;
+  font-size: 26px;
+  color: var(--neon);
+  opacity: 0.22;
+  font-style: italic;
+}
+.mock-dice-row {
+  display: flex;
+  gap: clamp(8px, 2.5vw, 18px);
+  transform: scale(1.35);
+  transform-origin: center center;
+  margin-bottom: 18%;
+  z-index: 2;
+}
+.mock-die {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #e8c96a, #9a6f1c);
+  border: 2px solid #3a2a08;
+  box-shadow: 0 4px 0 #2a1800;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #111;
+  font-size: 22px;
+}
+.mock-hand {
+  position: absolute;
+  right: -4%;
+  bottom: 8%;
+  width: 52%;
+  opacity: 0.92;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.55));
+}
+.mock-actions {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 8px;
+}
+.mock-actions button {
+  min-height: 44px;
+  border: 3px solid #111;
+  font-family: Impact, sans-serif;
+  letter-spacing: 0.08em;
+  font-size: 15px;
+}
+.mock-actions .shuffle { background: var(--cash); color: #111; }
+.mock-actions .roll { background: var(--neon); color: #111; }
+
+/* payout peek (A) */
+.mock-payout-peek {
+  flex-shrink: 0;
+  background: var(--paper);
+  color: #111;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mock-payout-peek strong { color: var(--neon); }
+
+/* —— Option B: split panel —— */
+.mock-split {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 6px;
+  height: 100%;
+}
+.mock-primary {
+  border: 1px solid #2a3540;
+  border-radius: 10px;
+  padding: 8px;
+  background: #08090c;
+}
+.mock-primary .row1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.mock-secondary {
+  border: 1px dashed #0df55;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 9px;
+  color: #8ab;
+  max-height: 72px;
+  overflow: hidden;
+}
+.mock-secondary.open {
+  max-height: 140px;
+  background: rgba(0, 40, 50, 0.35);
+}
+.mock-tray.b-split { flex: 1; }
+.mock-tray.b-split .mock-dice-row { transform: scale(1.22); margin-bottom: 14%; }
+
+/* —— Option C: phase-aware —— */
+.mock-phase-banner {
+  text-align: center;
+  font-size: 10px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--cyan);
+  color: #bdf;
+  background: rgba(0, 40, 60, 0.35);
+  flex-shrink: 0;
+}
+.mock-phase-banner.post-roll {
+  border-color: var(--neon);
+  color: #f9c;
+}
+.mock-inline-payouts {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+.mock-inline-payouts .pill {
+  flex: 0 0 auto;
+  background: var(--paper);
+  color: #111;
+  font-size: 9px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #999;
+}
+.mock-inline-payouts .pill.best {
+  border-color: var(--neon);
+  box-shadow: 0 0 0 1px var(--neon);
+  font-weight: 700;
+}
+.mock-tray.c-phase .mock-dice-row { transform: scale(1.28); }
+
+/* Desktop breakpoint overrides via body class */
+body.vp-1366 {
+  --mock-vw: 1366px;
+  --mock-vh: 768px;
+}
+body.vp-1920 {
+  --mock-vw: 1920px;
+  --mock-vh: 1080px;
+}
+body.vp-1366 .mock-shell,
+body.vp-1920 .mock-shell {
+  max-width: 1152px;
+  margin: 0 auto;
+}
+body.vp-1366 .mock-split-desktop,
+body.vp-1920 .mock-split-desktop {
+  display: grid;
+  grid-template-columns: 58% 42%;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+body.vp-1366 .mock-ledger,
+body.vp-1920 .mock-ledger {
+  background: var(--paper);
+  color: #111;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 12px;
+  overflow: hidden;
+}
+body.vp-1366 .mock-dice-row,
+body.vp-1920 .mock-dice-row {
+  transform: scale(1.15);
+}

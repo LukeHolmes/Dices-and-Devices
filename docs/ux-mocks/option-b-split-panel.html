@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UX Mock B — Split control panel</title>
+  <link rel="stylesheet" href="mock-shared.css" />
+  <script>
+    (function () {
+      const q = new URLSearchParams(location.search).get('vp');
+      if (q === '1366') document.documentElement.classList.add('vp-1366');
+      if (q === '1920') document.documentElement.classList.add('vp-1920');
+    })();
+  </script>
+</head>
+<body>
+<div class="mock-shell mock-split">
+  <span class="mock-badge">MOCK B · SPLIT PANEL</span>
+  <div class="mock-primary">
+    <div class="row1">
+      <span>▶ <b>2</b> plays · 💊 <b>3</b> pills</span>
+      <span style="color:#f88"><b>0048</b> / 135 quota · <span style="color:#0df">×1.12</span></span>
+      <span>$20 · MODS ▸</span>
+    </div>
+    <div class="quota-mini" style="height:6px;border-radius:3px;background:#2a1018"><span style="display:block;height:100%;width:36%;background:linear-gradient(90deg,#ff007f,#fa4)"></span></div>
+  </div>
+  <div class="mock-secondary open" aria-label="Secondary drawer (collapsed by default in build)">
+    <b style="color:#0df">RUN INTEL</b> · FLOW ×1.12 · COMBO 2 · ROUTE Back Alley · BOSS — · RIG 2 · best preview <b style="color:#f8f">112 TOK</b> · side bet & wager tucked here
+  </div>
+  <div class="mock-split-desktop" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <section class="mock-tray b-split" style="flex:1">
+      <div class="alley-title">THE ALLEYWAY</div>
+      <div class="mock-dice-row">
+        <div class="mock-die">2</div><div class="mock-die">2</div><div class="mock-die">2</div><div class="mock-die">3</div><div class="mock-die">4</div>
+      </div>
+      <img class="mock-hand" src="../../tests/fixtures/hand-roll/hand-open.png" alt="" />
+      <div class="mock-actions">
+        <button type="button" class="shuffle">SHUFFLE</button>
+        <button type="button" class="roll">ROLL 'EM</button>
+      </div>
+    </section>
+    <aside class="mock-ledger" id="ledger" style="display:none;margin-top:6px;flex:0 0 38%">
+      <div style="font-weight:700;letter-spacing:.18em">PAYOUTS (unchanged rules)</div>
+    </aside>
+  </div>
+</div>
+<script>
+  if (document.documentElement.classList.contains('vp-1366') || document.documentElement.classList.contains('vp-1920')) {
+    const wrap = document.querySelector('.mock-split-desktop');
+    wrap.style.display = 'grid';
+    wrap.style.gridTemplateColumns = '58% 42%';
+    document.getElementById('ledger').style.display = 'block';
+    document.querySelector('.mock-secondary').style.display = 'none';
+  }
+  document.body.className = document.documentElement.className;
+</script>
+</body>
+</html>

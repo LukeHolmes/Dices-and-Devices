@@ -1,0 +1,1017 @@
+{
+  "capturedAt": "2026-11-12T10:21:37.180Z",
+  "viewports": [
+    {
+      "id": "390x844",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "1366x768",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "id": "1920x1080",
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "moments": [
+    {
+      "id": "01-run-start",
+      "label": "Run start (round 1, before first roll)",
+      "viewport": "390x844",
+      "screenshot": "baseline/01-run-start_390x844.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 378,
+            "heightPx": 261,
+            "topPx": 6,
+            "bottomPx": 267,
+            "areaPx": 98376,
+            "visibleAreaPx": 98376,
+            "pctOfViewport": 29.89,
+            "pctOfViewportHeight": 30.87,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 378,
+            "heightPx": 567,
+            "topPx": 271,
+            "bottomPx": 838,
+            "areaPx": 214043,
+            "visibleAreaPx": 214043,
+            "pctOfViewport": 65.03,
+            "pctOfViewportHeight": 67.17,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 220,
+            "heightPx": 40,
+            "topPx": 514,
+            "bottomPx": 554,
+            "areaPx": 8795,
+            "visibleAreaPx": 8795,
+            "pctOfViewport": 2.67,
+            "pctOfViewportHeight": 4.74,
+            "pctOfViewportWidth": 56.4
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 378,
+            "heightPx": 567,
+            "topPx": 271,
+            "bottomPx": 838,
+            "areaPx": 214043,
+            "visibleAreaPx": 214043,
+            "pctOfViewport": 65.03,
+            "pctOfViewportHeight": 67.17,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "payout ledger column",
+            "hidden": true,
+            "display": "none"
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 53,
+        "spaceAboveDiceTrayPx": 271,
+        "alleyToViewportHeightRatio": 67.17
+      }
+    },
+    {
+      "id": "02-before-roll",
+      "label": "Before roll (same hand, dice idle)",
+      "viewport": "390x844",
+      "screenshot": "baseline/02-before-roll_390x844.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 378,
+            "heightPx": 261,
+            "topPx": 6,
+            "bottomPx": 267,
+            "areaPx": 98376,
+            "visibleAreaPx": 98376,
+            "pctOfViewport": 29.89,
+            "pctOfViewportHeight": 30.87,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 378,
+            "heightPx": 567,
+            "topPx": 271,
+            "bottomPx": 838,
+            "areaPx": 214043,
+            "visibleAreaPx": 214043,
+            "pctOfViewport": 65.03,
+            "pctOfViewportHeight": 67.17,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 220,
+            "heightPx": 40,
+            "topPx": 514,
+            "bottomPx": 554,
+            "areaPx": 8795,
+            "visibleAreaPx": 8795,
+            "pctOfViewport": 2.67,
+            "pctOfViewportHeight": 4.74,
+            "pctOfViewportWidth": 56.4
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 378,
+            "heightPx": 567,
+            "topPx": 271,
+            "bottomPx": 838,
+            "areaPx": 214043,
+            "visibleAreaPx": 214043,
+            "pctOfViewport": 65.03,
+            "pctOfViewportHeight": 67.17,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "payout ledger column",
+            "hidden": true,
+            "display": "none"
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 53,
+        "spaceAboveDiceTrayPx": 271,
+        "alleyToViewportHeightRatio": 67.17
+      }
+    },
+    {
+      "id": "03-after-roll-rows-lit",
+      "label": "After roll — payout rows highlighted",
+      "viewport": "390x844",
+      "screenshot": "baseline/03-after-roll-rows-lit_390x844.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 378,
+            "heightPx": 239,
+            "topPx": 6,
+            "bottomPx": 245,
+            "areaPx": 90071,
+            "visibleAreaPx": 90071,
+            "pctOfViewport": 27.36,
+            "pctOfViewportHeight": 28.27,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 378,
+            "heightPx": 589,
+            "topPx": 249,
+            "bottomPx": 838,
+            "areaPx": 222348,
+            "visibleAreaPx": 222348,
+            "pctOfViewport": 67.55,
+            "pctOfViewportHeight": 69.78,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 220,
+            "heightPx": 40,
+            "topPx": 526,
+            "bottomPx": 566,
+            "areaPx": 8795,
+            "visibleAreaPx": 8795,
+            "pctOfViewport": 2.67,
+            "pctOfViewportHeight": 4.74,
+            "pctOfViewportWidth": 56.4
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 378,
+            "heightPx": 589,
+            "topPx": 249,
+            "bottomPx": 838,
+            "areaPx": 222348,
+            "visibleAreaPx": 222348,
+            "pctOfViewport": 67.55,
+            "pctOfViewportHeight": 69.78,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "payout ledger column",
+            "hidden": true,
+            "display": "none"
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 53,
+        "spaceAboveDiceTrayPx": 249,
+        "alleyToViewportHeightRatio": 69.78
+      }
+    },
+    {
+      "id": "04-shop",
+      "label": "Shop",
+      "viewport": "390x844",
+      "screenshot": "baseline/04-shop_390x844.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "shop": true
+      }
+    },
+    {
+      "id": "05-control-panel-revealed",
+      "label": "Control panel — drawers / intel open",
+      "viewport": "390x844",
+      "screenshot": "baseline/05-control-panel-revealed_390x844.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 378,
+            "heightPx": 443,
+            "topPx": 6,
+            "bottomPx": 450,
+            "areaPx": 167382,
+            "visibleAreaPx": 167382,
+            "pctOfViewport": 50.85,
+            "pctOfViewportHeight": 52.53,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 378,
+            "heightPx": 384,
+            "topPx": 454,
+            "bottomPx": 838,
+            "areaPx": 145037,
+            "visibleAreaPx": 145037,
+            "pctOfViewport": 44.06,
+            "pctOfViewportHeight": 45.52,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 220,
+            "heightPx": 40,
+            "topPx": 628,
+            "bottomPx": 668,
+            "areaPx": 8795,
+            "visibleAreaPx": 8795,
+            "pctOfViewport": 2.67,
+            "pctOfViewportHeight": 4.74,
+            "pctOfViewportWidth": 56.4
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 378,
+            "heightPx": 384,
+            "topPx": 454,
+            "bottomPx": 838,
+            "areaPx": 145037,
+            "visibleAreaPx": 145037,
+            "pctOfViewport": 44.06,
+            "pctOfViewportHeight": 45.52,
+            "pctOfViewportWidth": 96.8
+          },
+          {
+            "name": "payout ledger column",
+            "hidden": true,
+            "display": "none"
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 53,
+        "spaceAboveDiceTrayPx": 454,
+        "alleyToViewportHeightRatio": 45.52
+      }
+    },
+    {
+      "id": "01-run-start",
+      "label": "Run start (round 1, before first roll)",
+      "viewport": "1366x768",
+      "screenshot": "baseline/01-run-start_1366x768.png",
+      "metrics": {
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1341,
+            "heightPx": 184,
+            "topPx": 12,
+            "bottomPx": 196,
+            "areaPx": 246259,
+            "visibleAreaPx": 246259,
+            "pctOfViewport": 23.47,
+            "pctOfViewportHeight": 23.9,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 773,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 426682,
+            "visibleAreaPx": 426682,
+            "pctOfViewport": 40.67,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 56.6
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 340,
+            "heightPx": 58,
+            "topPx": 450,
+            "bottomPx": 508,
+            "areaPx": 19632,
+            "visibleAreaPx": 19632,
+            "pctOfViewport": 1.87,
+            "pctOfViewportHeight": 7.51,
+            "pctOfViewportWidth": 24.92
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1341,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 740285,
+            "visibleAreaPx": 740285,
+            "pctOfViewport": 70.56,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 552,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 304773,
+            "visibleAreaPx": 304773,
+            "pctOfViewport": 29.05,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 40.43
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 204,
+        "alleyToViewportHeightRatio": 71.86
+      }
+    },
+    {
+      "id": "02-before-roll",
+      "label": "Before roll (same hand, dice idle)",
+      "viewport": "1366x768",
+      "screenshot": "baseline/02-before-roll_1366x768.png",
+      "metrics": {
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1341,
+            "heightPx": 184,
+            "topPx": 12,
+            "bottomPx": 196,
+            "areaPx": 246259,
+            "visibleAreaPx": 246259,
+            "pctOfViewport": 23.47,
+            "pctOfViewportHeight": 23.9,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 773,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 426682,
+            "visibleAreaPx": 426682,
+            "pctOfViewport": 40.67,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 56.6
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 340,
+            "heightPx": 58,
+            "topPx": 450,
+            "bottomPx": 508,
+            "areaPx": 19632,
+            "visibleAreaPx": 19632,
+            "pctOfViewport": 1.87,
+            "pctOfViewportHeight": 7.51,
+            "pctOfViewportWidth": 24.92
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1341,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 740285,
+            "visibleAreaPx": 740285,
+            "pctOfViewport": 70.56,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 552,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 304773,
+            "visibleAreaPx": 304773,
+            "pctOfViewport": 29.05,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 40.43
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 204,
+        "alleyToViewportHeightRatio": 71.86
+      }
+    },
+    {
+      "id": "03-after-roll-rows-lit",
+      "label": "After roll — payout rows highlighted",
+      "viewport": "1366x768",
+      "screenshot": "baseline/03-after-roll-rows-lit_1366x768.png",
+      "metrics": {
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1341,
+            "heightPx": 184,
+            "topPx": 12,
+            "bottomPx": 196,
+            "areaPx": 246259,
+            "visibleAreaPx": 246259,
+            "pctOfViewport": 23.47,
+            "pctOfViewportHeight": 23.9,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 773,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 426682,
+            "visibleAreaPx": 426682,
+            "pctOfViewport": 40.67,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 56.6
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 340,
+            "heightPx": 58,
+            "topPx": 450,
+            "bottomPx": 508,
+            "areaPx": 19632,
+            "visibleAreaPx": 19632,
+            "pctOfViewport": 1.87,
+            "pctOfViewportHeight": 7.51,
+            "pctOfViewportWidth": 24.92
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1341,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 740285,
+            "visibleAreaPx": 740285,
+            "pctOfViewport": 70.56,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 552,
+            "heightPx": 552,
+            "topPx": 204,
+            "bottomPx": 756,
+            "areaPx": 304773,
+            "visibleAreaPx": 304773,
+            "pctOfViewport": 29.05,
+            "pctOfViewportHeight": 71.86,
+            "pctOfViewportWidth": 40.43
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 204,
+        "alleyToViewportHeightRatio": 71.86
+      }
+    },
+    {
+      "id": "04-shop",
+      "label": "Shop",
+      "viewport": "1366x768",
+      "screenshot": "baseline/04-shop_1366x768.png",
+      "metrics": {
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "shop": true
+      }
+    },
+    {
+      "id": "05-control-panel-revealed",
+      "label": "Control panel — drawers / intel open",
+      "viewport": "1366x768",
+      "screenshot": "baseline/05-control-panel-revealed_1366x768.png",
+      "metrics": {
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1341,
+            "heightPx": 356,
+            "topPx": 12,
+            "bottomPx": 368,
+            "areaPx": 476986,
+            "visibleAreaPx": 476986,
+            "pctOfViewport": 45.47,
+            "pctOfViewportHeight": 46.3,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 773,
+            "heightPx": 380,
+            "topPx": 376,
+            "bottomPx": 756,
+            "areaPx": 293697,
+            "visibleAreaPx": 293697,
+            "pctOfViewport": 28,
+            "pctOfViewportHeight": 49.46,
+            "pctOfViewportWidth": 56.6
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 340,
+            "heightPx": 58,
+            "topPx": 536,
+            "bottomPx": 594,
+            "areaPx": 19632,
+            "visibleAreaPx": 19632,
+            "pctOfViewport": 1.87,
+            "pctOfViewportHeight": 7.51,
+            "pctOfViewportWidth": 24.92
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1341,
+            "heightPx": 380,
+            "topPx": 376,
+            "bottomPx": 756,
+            "areaPx": 509558,
+            "visibleAreaPx": 509558,
+            "pctOfViewport": 48.57,
+            "pctOfViewportHeight": 49.46,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 552,
+            "heightPx": 380,
+            "topPx": 376,
+            "bottomPx": 756,
+            "areaPx": 209783,
+            "visibleAreaPx": 209783,
+            "pctOfViewport": 20,
+            "pctOfViewportHeight": 49.46,
+            "pctOfViewportWidth": 40.43
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 376,
+        "alleyToViewportHeightRatio": 49.46
+      }
+    },
+    {
+      "id": "01-run-start",
+      "label": "Run start (round 1, before first roll)",
+      "viewport": "1920x1080",
+      "screenshot": "baseline/01-run-start_1920x1080.png",
+      "metrics": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1885,
+            "heightPx": 184,
+            "topPx": 17,
+            "bottomPx": 201,
+            "areaPx": 346131,
+            "visibleAreaPx": 346131,
+            "pctOfViewport": 16.69,
+            "pctOfViewportHeight": 17,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 1091,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 931181,
+            "visibleAreaPx": 931181,
+            "pctOfViewport": 44.91,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 56.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 453,
+            "heightPx": 80,
+            "topPx": 595,
+            "bottomPx": 675,
+            "areaPx": 36284,
+            "visibleAreaPx": 36284,
+            "pctOfViewport": 1.75,
+            "pctOfViewportHeight": 7.42,
+            "pctOfViewportWidth": 23.58
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1885,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 1609984,
+            "visibleAreaPx": 1609984,
+            "pctOfViewport": 77.64,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 779,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 665141,
+            "visibleAreaPx": 665141,
+            "pctOfViewport": 32.08,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 40.57
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 209,
+        "alleyToViewportHeightRatio": 79.06
+      }
+    },
+    {
+      "id": "02-before-roll",
+      "label": "Before roll (same hand, dice idle)",
+      "viewport": "1920x1080",
+      "screenshot": "baseline/02-before-roll_1920x1080.png",
+      "metrics": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1885,
+            "heightPx": 184,
+            "topPx": 17,
+            "bottomPx": 201,
+            "areaPx": 346131,
+            "visibleAreaPx": 346131,
+            "pctOfViewport": 16.69,
+            "pctOfViewportHeight": 17,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 1091,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 931181,
+            "visibleAreaPx": 931181,
+            "pctOfViewport": 44.91,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 56.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 453,
+            "heightPx": 80,
+            "topPx": 595,
+            "bottomPx": 675,
+            "areaPx": 36284,
+            "visibleAreaPx": 36284,
+            "pctOfViewport": 1.75,
+            "pctOfViewportHeight": 7.42,
+            "pctOfViewportWidth": 23.58
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1885,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 1609984,
+            "visibleAreaPx": 1609984,
+            "pctOfViewport": 77.64,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 779,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 665141,
+            "visibleAreaPx": 665141,
+            "pctOfViewport": 32.08,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 40.57
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 209,
+        "alleyToViewportHeightRatio": 79.06
+      }
+    },
+    {
+      "id": "03-after-roll-rows-lit",
+      "label": "After roll — payout rows highlighted",
+      "viewport": "1920x1080",
+      "screenshot": "baseline/03-after-roll-rows-lit_1920x1080.png",
+      "metrics": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1885,
+            "heightPx": 184,
+            "topPx": 17,
+            "bottomPx": 201,
+            "areaPx": 346131,
+            "visibleAreaPx": 346131,
+            "pctOfViewport": 16.69,
+            "pctOfViewportHeight": 17,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 1091,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 931181,
+            "visibleAreaPx": 931181,
+            "pctOfViewport": 44.91,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 56.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 453,
+            "heightPx": 80,
+            "topPx": 595,
+            "bottomPx": 675,
+            "areaPx": 36284,
+            "visibleAreaPx": 36284,
+            "pctOfViewport": 1.75,
+            "pctOfViewportHeight": 7.42,
+            "pctOfViewportWidth": 23.58
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1885,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 1609984,
+            "visibleAreaPx": 1609984,
+            "pctOfViewport": 77.64,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 779,
+            "heightPx": 854,
+            "topPx": 209,
+            "bottomPx": 1063,
+            "areaPx": 665141,
+            "visibleAreaPx": 665141,
+            "pctOfViewport": 32.08,
+            "pctOfViewportHeight": 79.06,
+            "pctOfViewportWidth": 40.57
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 209,
+        "alleyToViewportHeightRatio": 79.06
+      }
+    },
+    {
+      "id": "04-shop",
+      "label": "Shop",
+      "viewport": "1920x1080",
+      "screenshot": "baseline/04-shop_1920x1080.png",
+      "metrics": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "shop": true
+      }
+    },
+    {
+      "id": "05-control-panel-revealed",
+      "label": "Control panel — drawers / intel open",
+      "viewport": "1920x1080",
+      "screenshot": "baseline/05-control-panel-revealed_1920x1080.png",
+      "metrics": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "playPhase": "PLAY",
+        "measures": [
+          {
+            "name": "control-strip (play-hud)",
+            "widthPx": 1885,
+            "heightPx": 356,
+            "topPx": 17,
+            "bottomPx": 373,
+            "areaPx": 670431,
+            "visibleAreaPx": 670431,
+            "pctOfViewport": 32.33,
+            "pctOfViewportHeight": 32.92,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "dice tray (play-alley)",
+            "widthPx": 1091,
+            "heightPx": 682,
+            "topPx": 381,
+            "bottomPx": 1063,
+            "areaPx": 743612,
+            "visibleAreaPx": 743612,
+            "pctOfViewport": 35.86,
+            "pctOfViewportHeight": 63.14,
+            "pctOfViewportWidth": 56.8
+          },
+          {
+            "name": "dice lane row",
+            "widthPx": 453,
+            "heightPx": 80,
+            "topPx": 681,
+            "bottomPx": 761,
+            "areaPx": 36284,
+            "visibleAreaPx": 36284,
+            "pctOfViewport": 1.75,
+            "pctOfViewportHeight": 7.42,
+            "pctOfViewportWidth": 23.58
+          },
+          {
+            "name": "hand grid (dice + ledger)",
+            "widthPx": 1885,
+            "heightPx": 682,
+            "topPx": 381,
+            "bottomPx": 1063,
+            "areaPx": 1285683,
+            "visibleAreaPx": 1285683,
+            "pctOfViewport": 62,
+            "pctOfViewportHeight": 63.14,
+            "pctOfViewportWidth": 98.2
+          },
+          {
+            "name": "payout ledger column",
+            "widthPx": 779,
+            "heightPx": 682,
+            "topPx": 381,
+            "bottomPx": 1063,
+            "areaPx": 531161,
+            "visibleAreaPx": 531161,
+            "pctOfViewport": 25.62,
+            "pctOfViewportHeight": 63.14,
+            "pctOfViewportWidth": 40.57
+          },
+          {
+            "name": "stash column",
+            "missing": true
+          }
+        ],
+        "mobileDockHeightPx": 0,
+        "spaceAboveDiceTrayPx": 381,
+        "alleyToViewportHeightRatio": 63.14
+      }
+    }
+  ]
+}
