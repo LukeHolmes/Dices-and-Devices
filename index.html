@@ -4393,7 +4393,10 @@ const GutterbonesOnboarding = (() => {
         return true;
     };
 
-    const getAvailableCategoryIds = (totalRuns = 0) => {
+    const earlyFullSheetActive = (earlyFullSheetOptIn) => !!earlyFullSheetOptIn;
+
+    const getAvailableCategoryIds = (totalRuns = 0, earlyFullSheetOptIn = false) => {
+        if (earlyFullSheetActive(earlyFullSheetOptIn)) return null;
         const runs = Math.max(0, Math.floor(Number(totalRuns) || 0));
         if (runs < THRESHOLDS.BASIC_COMBOS) {
             return ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES', 'TOK', 'FH', 'C'];
@@ -4410,9 +4413,19 @@ const GutterbonesOnboarding = (() => {
         return 0;
     };
 
-    const getCategoryUnlockInfo = (totalRuns, allCategoryIds) => {
+    const getCategoryUnlockInfo = (totalRuns, allCategoryIds, earlyFullSheetOptIn = false) => {
         const runs = Math.max(0, Math.floor(Number(totalRuns) || 0));
         const all = Array.isArray(allCategoryIds) ? allCategoryIds : [];
+        if (earlyFullSheetActive(earlyFullSheetOptIn)) {
+            return {
+                totalRuns: runs,
+                available: all,
+                locked: [],
+                lockedDetails: [],
+                nextThreshold: null,
+                runsUntilNext: 0
+            };
+        }
         const limited = getAvailableCategoryIds(runs);
         const available = limited === null ? all : limited.filter((id) => all.includes(id));
         const availableSet = new Set(available);
@@ -4444,6 +4457,7 @@ const GutterbonesOnboarding = (() => {
     return Object.freeze({
         THRESHOLDS,
         TIER2_FACE_IDS,
+        earlyFullSheetActive,
         getAvailableCategoryIds,
         getCategoryUnlockInfo,
         unlockRunForCategory,
@@ -7039,13 +7053,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const getAvailableCategories = (meta) => {
         const runs = meta?.totalRuns || 0;
         const allIds = Object.keys(CATEGORIES);
-        const limited = GutterbonesOnboarding?.getAvailableCategoryIds(runs);
+        const early = !!meta?.earlyFullSheetOptIn;
+        const limited = GutterbonesOnboarding?.getAvailableCategoryIds(runs, early);
         if (limited === null) return allIds;
         return limited.filter((id) => allIds.includes(id));
     };
 
     const getCategoryUnlockInfo = (meta) => (
-        GutterbonesOnboarding?.getCategoryUnlockInfo(meta?.totalRuns || 0, Object.keys(CATEGORIES))
+        GutterbonesOnboarding?.getCategoryUnlockInfo(meta?.totalRuns || 0, Object.keys(CATEGORIES), !!meta?.earlyFullSheetOptIn)
         || { totalRuns: 0, available: Object.keys(CATEGORIES), locked: [], lockedDetails: [], nextThreshold: null, runsUntilNext: 0 }
     );
 
@@ -7166,7 +7181,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         dailyBestHeat: 0,
         dailyLastDate: null,
         dailyAttempts: {},
-        recordsViews: 0
+        recordsViews: 0,
+        earlyFullSheetOptIn: false
     };
 
     const displayNameForUnlockId = (id) => {
@@ -7206,7 +7222,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         totalRuns: Math.max(0, Math.floor(Number(stored?.totalRuns) || 0)),
         completedRuns: Math.max(0, Math.floor(Number(stored?.completedRuns) || 0)),
         launderedCash: Math.max(0, Math.floor(Number(stored?.launderedCash) || 0)),
-        bestHeat: Math.max(0, Math.floor(Number(stored?.bestHeat) || 0))
+        bestHeat: Math.max(0, Math.floor(Number(stored?.bestHeat) || 0)),
+        earlyFullSheetOptIn: !!(stored && stored.earlyFullSheetOptIn)
     });
 
     const loadJson = (key) => {
@@ -7899,8 +7916,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const LockedPayoutRow = ({ cat, runsUntil, unlockAtRun, compact = true }) => {
         const [tipOpen, setTipOpen] = useState(false);
         const detail = runsUntil > 0
-            ? `Unlocks after ${unlockAtRun} completed runs (${runsUntil} to go)`
-            : `Unlocks after ${unlockAtRun} completed runs`;
+            ? `Unlocks after ${unlockAtRun} finished runs (wins or busts) (${runsUntil} to go)`
+            : `Unlocks after ${unlockAtRun} finished runs (wins or busts)`;
         return (
             <div
                 data-payout-row={cat.id}
@@ -10228,7 +10245,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             <section className="border border-gray-700 bg-black/40 rounded p-3">
                                 <div className="font-mono text-[11px] tracking-[.25em] text-cyan-300 mb-2">PAYOUT SHEET PROGRESSION</div>
                                 <p className="font-mono text-xs text-gray-200 leading-relaxed">
-                                    The fixer limits which payout rows you can hit early on. Quad unlocks after <b>{ONBOARDING_THRESHOLDS.BASIC_COMBOS}</b> completed runs;
+                                    The fixer limits which payout rows you can hit early on. Quad unlocks after <b>{ONBOARDING_THRESHOLDS.BASIC_COMBOS}</b> finished runs (wins or busts);
                                     Short Run, Long Run, and Jackpot unlock after <b>{ONBOARDING_THRESHOLDS.ALL_CATEGORIES}</b>.
                                     Rare shop faces appear after <b>{ONBOARDING_THRESHOLDS.RARE_FACES}</b> runs.
                                 </p>
@@ -11721,6 +11738,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, []);
 
         useEffect(() => {
+            if (meta.earlyFullSheetOptIn) return;
             const prev = prevTotalRunsRef.current;
             const curr = meta.totalRuns;
             prevTotalRunsRef.current = curr;
@@ -11738,7 +11756,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (phase === 'RAP_SHEET' || (phase === 'PLAY' && bustActive)) return;
             pushToast({ kind: 'unlock', message: msg, layoutKey: 'unlock-toast' });
             pendingUnlockMessageRef.current = null;
-        }, [meta.totalRuns, phase, bustActive]);
+        }, [meta.totalRuns, meta.earlyFullSheetOptIn, phase, bustActive]);
 
         useEffect(() => {
             if (!bossIntro) {
@@ -12557,6 +12575,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, [phase, rapSheetRevealReady, rapSheetScale, history.length, showIncarceratedStamp, typedCase, reducedMotion]);
 
         useEffect(() => {
+            if (meta.earlyFullSheetOptIn) return;
             if (phase !== 'RAP_SHEET' || !showIncarceratedStamp || !pendingUnlockMessageRef.current) return;
             const msg = pendingUnlockMessageRef.current;
             pendingUnlockMessageRef.current = null;
@@ -16797,7 +16816,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <div className="font-marker text-sm md:text-lg italic text-[#ff007f] leading-none">INSANE CONTRACT</div>
                                     <div className="font-mono text-[9px] text-gray-300 truncate">Hardcore terms — optional.</div>
                                 </div>
-                                <button type="button" onClick={() => setInsaneContract(v => !v)} className={`shrink-0 px-3 py-1 border-2 font-mono text-[10px] tracking-wider ${insaneContract ? 'border-[#ff007f] bg-[#ff007f] text-black' : 'border-gray-600 bg-black/50 text-gray-200 hover:border-[#ff007f]'}`}>
+                                <button type="button" onClick={() => setInsaneContract(v => !v)} className={`shrink-0 min-h-[44px] px-3 py-1 border-2 font-mono text-[10px] tracking-wider ${insaneContract ? 'border-[#ff007f] bg-[#ff007f] text-black' : 'border-gray-600 bg-black/50 text-gray-200 hover:border-[#ff007f]'}`}>
                                     {insaneContract ? 'ON' : 'OFF'}
                                 </button>
                             </div>
@@ -16808,6 +16827,36 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     ))}
                                 </div>
                             )}
+                        </div>
+                        <div data-layout-key="lineup-full-sheet-opt" className={`shrink-0 w-full border rounded-lg px-2 py-1.5 md:px-3 md:py-2 mt-1 ${meta.earlyFullSheetOptIn ? 'border-[#0df]/60 bg-cyan-950/25' : 'border-gray-700 bg-black/40'}`}>
+                            <label className="flex items-start sm:items-center gap-2 cursor-pointer min-h-[44px] py-1">
+                                <span className="relative shrink-0 flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px]">
+                                    <input
+                                        type="checkbox"
+                                        data-layout-key="lineup-full-sheet-checkbox"
+                                        checked={!!meta.earlyFullSheetOptIn}
+                                        onChange={(e) => {
+                                            const on = e.target.checked;
+                                            AudioSystem.init();
+                                            AudioSystem.paper();
+                                            updateMeta((m) => ({ ...m, earlyFullSheetOptIn: on }));
+                                        }}
+                                        className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer"
+                                    />
+                                    <span
+                                        aria-hidden
+                                        className={`pointer-events-none flex items-center justify-center w-5 h-5 border-2 rounded-sm ${meta.earlyFullSheetOptIn ? 'border-[#0df] bg-[#0df]/25' : 'border-gray-500 bg-black/40'}`}
+                                    >
+                                        {meta.earlyFullSheetOptIn && <span className="text-[#0df] text-xs leading-none">✓</span>}
+                                    </span>
+                                </span>
+                                <span className="font-mono text-[11px] md:text-xs text-gray-100 leading-snug select-none">
+                                    I know Yahtzee — show full payout sheet
+                                </span>
+                            </label>
+                            <p className="font-mono text-[9px] text-gray-400 pl-8 sm:pl-8 leading-snug">
+                                All 13 Matchbook rows from run one. Off keeps the gentle unlock for new hustlers.
+                            </p>
                         </div>
                         </div>
                         <div className="shrink-0 w-full max-w-6xl mx-auto pt-1 pb-0.5">
