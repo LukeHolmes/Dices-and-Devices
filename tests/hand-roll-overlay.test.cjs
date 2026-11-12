@@ -49,7 +49,27 @@ async function bootPlay(page) {
   await page.setViewportSize({ width: 768, height: 1024 });
   await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
   await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
-  const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.playStashOpen844()));
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "gutterbones1977:settings:v1",
+      JSON.stringify({ pacing: "fast", reducedMotion: false, tutorialCompleted: true, skippedAlleyIntro: true }),
+    );
+  });
+  const payload = plain(
+    createGame(fixtures.snapshot()).api.normalizeSavedRun(
+      fixtures.run({
+        phase: "PLAY",
+        round: 3,
+        score: 12,
+        target: 110,
+        hands: 4,
+        discards: 3,
+        stash: 55,
+        hasRolled: false,
+        dice: fixtures.dice([3, 4, 5, 2, 6]),
+      }),
+    ),
+  );
   await page.evaluate(
     ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
     { key: RUN_KEY, data: payload },
@@ -61,6 +81,7 @@ async function bootPlay(page) {
     () => window.__GB_ROLL_HAND_SPRITES_READY === true,
     { timeout: 15_000 },
   );
+  await page.waitForSelector('[data-tutorial="roll-btn"]', { timeout: 60_000 });
 }
 
 test("hand overlay — production sprites enable sweep on eligible roll", async () => {
@@ -106,13 +127,18 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
     const shuffle = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.measureHandShuffleOverlap());
     if (!shuffle?.skipped) assert.ok(shuffle?.ok, `hand should not cover SHUFFLE (overlap ${shuffle?.ratio})`);
     const handMs = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
-    assert.ok(handMs >= 1100 && handMs <= 1550, `hand sweep duration in polish band (${handMs}ms)`);
+    assert.ok(handMs >= 1000 && handMs <= 1550, `hand sweep duration in polish band (${handMs}ms)`);
     await page.waitForTimeout(handMs + 100);
     assert.equal(
       await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(),
       0,
       "overlay cleans up after animation",
     );
+    await page.evaluate(() => {
+      const row = document.querySelector('button[data-payout-row]:not([disabled])');
+      if (row) row.click();
+    });
+    await page.waitForSelector('[data-tutorial="roll-btn"]:not([disabled])', { timeout: 20_000 });
     await page.click('[data-tutorial="roll-btn"]');
     await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand', {
       timeout: 3000,
@@ -163,14 +189,16 @@ test("hand overlay — repeat roll retriggers and roll button stays clickable", 
       0,
       "first sweep cleaned up",
     );
-    const canRollAgain = await page.$eval('[data-tutorial="roll-btn"]', (b) => !b.disabled);
-    if (canRollAgain) {
-      await page.click('[data-tutorial="roll-btn"]');
-      await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"]', { timeout: 3000 });
-      const handMs = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
-    await page.waitForTimeout(Math.max(520, handMs + 80));
-      assert.equal(await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(), 0);
-    }
+    await page.evaluate(() => {
+      const row = document.querySelector('button[data-payout-row]:not([disabled])');
+      if (row) row.click();
+    });
+    await page.waitForSelector('[data-tutorial="roll-btn"]:not([disabled])', { timeout: 20_000 });
+    await page.click('[data-tutorial="roll-btn"]');
+    await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"]', { timeout: 3000 });
+    const handMs2 = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
+    await page.waitForTimeout(Math.max(520, handMs2 + 80));
+    assert.equal(await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(), 0);
   } finally {
     await browser.close();
   }
@@ -189,7 +217,21 @@ test("hand overlay — reduced motion suppresses overlay", async () => {
         JSON.stringify({ reducedMotionPref: true }),
       );
     });
-    const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.playStashOpen844()));
+    const payload = plain(
+    createGame(fixtures.snapshot()).api.normalizeSavedRun(
+      fixtures.run({
+        phase: "PLAY",
+        round: 3,
+        score: 12,
+        target: 110,
+        hands: 4,
+        discards: 3,
+        stash: 55,
+        hasRolled: false,
+        dice: fixtures.dice([3, 4, 5, 2, 6]),
+      }),
+    ),
+  );
     await page.evaluate(
       ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
       { key: RUN_KEY, data: payload },

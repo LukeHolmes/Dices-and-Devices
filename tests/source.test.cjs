@@ -203,7 +203,9 @@ test("Pro polish roll and transition hooks", () => {
   assert.match(appSource, /tutorial-coach-mask/);
   assert.match(appSource, /roll-ready-pulse-inner/);
   assert.match(html, /@keyframes rollReadyPulse[\s\S]*?box-shadow: 0 6px 0 #7a003d/);
-  assert.doesNotMatch(html, /@keyframes rollReadyPulse[\s\S]*?translateY\(-1px\)/);
+  const rollReadyPulseBlock = html.match(/@keyframes rollReadyPulse\s*\{[\s\S]*?\n\s*\}/);
+  assert.ok(rollReadyPulseBlock, "rollReadyPulse keyframes block");
+  assert.doesNotMatch(rollReadyPulseBlock[0], /translateY\(-1px\)/);
   const audioSource = fs.readFileSync(
     path.join(__dirname, "../assets/audio/gutterbones-audio.js"),
     "utf8",
