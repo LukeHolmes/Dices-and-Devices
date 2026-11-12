@@ -89,8 +89,9 @@ async function bootPage(page, baseUrl, viewport) {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const observerQ = process.env.SIM_POLICY_OBSERVER === "1" ? "&balanceObserver=1" : "";
+  const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
   await page.goto(
-    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}`,
+    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}`,
     { waitUntil: "networkidle", timeout: 120_000 },
   );
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
@@ -171,8 +172,9 @@ async function runOneGame(
   } else {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
+    const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
     await page.goto(
-      `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}`,
+      `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${linkQ}`,
       { waitUntil: "domcontentloaded", timeout: 90_000 },
     );
     await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
@@ -238,8 +240,21 @@ async function runOneGame(
       window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
     }, simPolicy);
   }
+  const linkObs = process.env.SIM_LINK_OBSERVER === "1";
+  const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const result = await page.evaluate(
-    async ({ botSource, opts }) => {
+    async ({ botSource, opts, linkObs: linkObsFlag, policyRev }) => {
+      if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
+        window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
+          hands: [],
+          roundEvents: [],
+          shopPolicySteps: [],
+        };
+        window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
+          enabled: true,
+          policyRevision: policyRev,
+        });
+      }
       // eslint-disable-next-line no-eval
       eval(botSource);
       return await runBotSession(opts);
@@ -253,6 +268,8 @@ async function runOneGame(
         stuckThreshold,
         maxFallbacks,
       },
+      linkObs,
+      policyRev: simPolicyRev,
     },
   );
   const telem = await page.evaluate(() => {
@@ -270,6 +287,7 @@ async function runOneGame(
       laneKit: window.__GB_SIM_TELEM__?.laneKit || null,
       kitAcquired: window.__GB_SIM_TELEM__?.kitAcquired || null,
       shopPolicySteps: window.__GB_SIM_TELEM__?.shopPolicySteps || [],
+      linkObserver: window.__GB_SIM_TELEM__?.linkObserver?.summarize?.() || null,
     };
   });
   return { rid, viewport: viewport.name, ...result, telem };
@@ -432,6 +450,13 @@ async function main() {
     }
   }
 
+  let linkObserverByRid;
+  if (process.env.SIM_LINK_OBSERVER === "1") {
+    linkObserverByRid = Object.fromEntries(
+      results.map((r) => [r.rid, (r.telem && r.telem.linkObserver) || null]),
+    );
+  }
+
   let shopPolicyExportPath;
   if (process.env.SIM_EXPORT_SHOP_STEPS === "1") {
     const shopPolicyByRid = Object.fromEntries(
@@ -496,6 +521,7 @@ async function main() {
       steps: g.steps,
     })),
     ...(shopPolicyExportPath ? { shopPolicyExportPath } : {}),
+    ...(linkObserverByRid ? { linkObserverByRid } : {}),
   };
 
   console.log(JSON.stringify(summary, null, 2));

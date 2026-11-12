@@ -103,6 +103,7 @@
 </script>
 <script src="assets/audio/gutterbones-audio.js"></script>
 <script src="assets/sim-bot-policy.js"></script>
+<script src="assets/sim-link-observer.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -7115,6 +7116,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
     const balanceObserverActive = () => (
         typeof window !== 'undefined' && window.__GB_BALANCE_OBSERVER__?.enabled === true
+    );
+
+    const linkObserverActive = () => (
+        typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.linkObserver?.enabled === true
     );
 
     const GAME_BRANDING = window.__GUTTERBONES_BRANDING__ || Object.freeze({
@@ -14700,7 +14705,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const e2ePending = typeof e2ePendingDiceRef !== "undefined" ? e2ePendingDiceRef.current : null;
             const diceForScore = e2ePending || dice;
             if (e2ePending && typeof e2ePendingDiceRef !== "undefined") e2ePendingDiceRef.current = null;
+            if (linkObserverActive()) {
+                GutterbonesSimLinkObserver?.getObs?.()?.shadowBeforeScore({
+                    catId,
+                    dice: diceForScore,
+                    inventory,
+                    score: scoreAtPlay,
+                    target: quotaTargetAtPlay,
+                    hands,
+                    usedCats,
+                    calculateScore,
+                    scorablePayoutIds,
+                });
+            }
             const result = calculateScore(catId, diceForScore);
+            if (linkObserverActive()) {
+                GutterbonesSimLinkObserver?.getObs?.()?.recordScoredLinks(result.chainLinks);
+                GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(diceForScore, inventory);
+            }
             if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => {
                     const lane = window.GutterbonesBalanceObserver.scoringLaneForObserver(
@@ -15616,6 +15638,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                 });
             }
+            if (linkObserverActive()) {
+                const familyIds = [
+                    'BOOKENDS', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_BOX', 'BLOOD_6',
+                    'ENGINE', 'CROWBAR', 'WIREBAG_FACE',
+                ];
+                const familyStock = shopOfferSlice
+                    .filter((item) => familyIds.includes(item.id))
+                    .map((item) => ({ id: item.id, price: shopListPrice(item) }));
+                const reserve = typeof GutterbonesSimBotPolicy !== 'undefined'
+                    ? GutterbonesSimBotPolicy.shopBudgetReserve({
+                        gold,
+                        debt,
+                        score,
+                        target: currentTarget,
+                        refreshCost: shopRefreshCost,
+                        sinkEstimate: 0,
+                    })
+                    : 0;
+                GutterbonesSimLinkObserver?.getObs?.()?.recordShopKitOffers(familyStock, gold, reserve);
+            }
             setShopItems(shopOfferSlice);
             if (!preserveRefreshes) setShopRefreshes(0);
             if (preservePaths) {
@@ -15827,6 +15869,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
 
         const handlePurchase = (item) => {
+            if (linkObserverActive()) {
+                GutterbonesSimLinkObserver?.getObs?.()?.recordPurchase(item?.id);
+            }
             const purchaseBefore = {
                 gold,
                 debt,
@@ -16004,6 +16049,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }));
                 setCarveSparks(sparks);
                 scheduleTimeout(() => setCarveSparks([]), 360);
+            }
+            if (linkObserverActive() && carveBefore.faceId) {
+                GutterbonesSimLinkObserver?.getObs?.()?.recordCarve(carveBefore.faceId, dieIdx, dice);
             }
             returnToInRunShop();
         };
@@ -16397,6 +16445,17 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         ? GutterbonesSimBotPolicy.LEGACY_REVISION
                         : '2026-11-11-phase-b-v1');
                 window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
+                if (
+                    params.get('linkObserver') === '1'
+                    && typeof GutterbonesSimLinkObserver !== 'undefined'
+                    && !window.__GB_SIM_TELEM__?.linkObserver
+                ) {
+                    window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {};
+                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
+                        enabled: true,
+                        policyRevision: simPolicyRev,
+                    });
+                }
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
@@ -16583,6 +16642,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const kitStock = available
                             .filter((i) => ['BOOKENDS', 'GHOST_FACE', 'ECHO_FACE'].includes(i.id))
                             .map((i) => ({ id: i.id, price: i.price }));
+                        const familyStock = available
+                            .filter((i) => [
+                                'BOOKENDS', 'GHOST_FACE', 'ECHO_FACE', 'FUSE_BOX', 'BLOOD_6',
+                                'ENGINE', 'CROWBAR', 'WIREBAG_FACE',
+                            ].includes(i.id))
+                            .map((i) => ({ id: i.id, price: i.price }));
+                        if (linkObserverActive()) {
+                            GutterbonesSimLinkObserver?.getObs?.()?.recordShopKitOffers(familyStock, gold, reserve);
+                        }
                         const stepSig = JSON.stringify({
                             round,
                             gold,
@@ -16947,6 +17015,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 return true;
                             }
                             return false;
+                        }
+                        const laneDicePre = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
+                        if (linkObserverActive()) {
+                            GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(laneDicePre, inventory);
                         }
                         const best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;

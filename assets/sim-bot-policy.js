@@ -643,6 +643,7 @@
         mustBankClear,
         lanesGhostEchoReach,
         ghostEchoMinDistance,
+        ghostEchoIndices,
         isLanePlayRevision,
     };
 
