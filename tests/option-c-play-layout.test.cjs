@@ -463,6 +463,85 @@ test("HUD polish — status bar, roll pips, warrant, contextual controls", async
   }
 });
 
+test("phone pill armed — dice lane not clipped", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resumePostRoll(page);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.setPillTrayArmed(true));
+    await page.waitForSelector(".pill-attach-tray--armed");
+    const clip = await page.evaluate(() => {
+      const vw = window.innerWidth;
+      return [...document.querySelectorAll(".bone-die-btn")].some((die) => {
+        const r = die.getBoundingClientRect();
+        return r.left < -1 || r.right > vw + 1;
+      });
+    });
+    assert.equal(clip, false, "dice clipped when pill armed");
+    const targets = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.countPillTargets());
+    assert.equal(targets, 5, "pill targets present");
+  } finally {
+    await browser.close();
+  }
+});
+
+test("desktop matchbook — used and bust rows collapse thin", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resumePostRoll(page, { usedCats: ["ONES"] });
+    const rows = await page.evaluate(() => {
+      const h = (el) => (el ? el.getBoundingClientRect().height : -1);
+      const used = document.querySelector('[data-layout-key="play-ledger-column"] [data-payout-row="ONES"].payout-tier-done');
+      const bust = document.querySelector('[data-layout-key="play-ledger-column"] .payout-tier-bust');
+      return { used: h(used), bust: h(bust) };
+    });
+    assert.ok(rows.used > 0 && rows.used <= 22, `used row height ${rows.used}px`);
+    assert.ok(rows.bust > 0 && rows.bust <= 22, `bust row height ${rows.bust}px`);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("roll hand overlay visible during throw", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await page.evaluate(
+      ({ key }) => {
+        localStorage.setItem(
+          "gutterbones1977:settings:v1",
+          JSON.stringify({
+            pacing: "fast",
+            reducedMotion: false,
+            tutorialCompleted: true,
+            skippedAlleyIntro: true,
+          }),
+        );
+      },
+      { key: RUN_KEY },
+    );
+    await resumePostRoll(page);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.triggerRollHandOverlayFx());
+    await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"]', { timeout: 8000 });
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(520));
+    await page.waitForTimeout(60);
+    const vis = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandVisibility());
+    assert.equal(vis.ok, true, `hand not visible (clipArea ${vis.clipArea}, opacity ${vis.opacity})`);
+    const px = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels());
+    assert.equal(px.ok, true, px.reason || "hand pixels not sampled");
+    assert.ok((px.opaque ?? 0) > 80, `hand too faint (opaque ${px.opaque})`);
+  } finally {
+    await browser.close();
+  }
+});
+
 test("HUD polish — pre-roll shows roll only", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();

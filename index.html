@@ -3227,8 +3227,14 @@
         82% { opacity: 0.48; }
         92%, 100% { opacity: 0; }
     }
-    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.gutter-roll-hand-overlay .animate-gutter-hand) {
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.gutter-roll-hand-overlay .animate-gutter-hand),
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.gutter-roll-hand-overlay [data-layout-key="roll-hand-throw-overlay"]) {
         overflow: visible;
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.bone-pill-target) .play-dice-lane {
+        padding-left: 0.15rem;
+        padding-right: 0.15rem;
+        box-sizing: border-box;
     }
     #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-overlay {
         position: absolute;
@@ -3336,10 +3342,10 @@
         box-shadow: 0 0 10px rgba(255, 0, 127, 0.45);
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-slot-wrap.bone-pill-target .bone-die-btn {
-        box-shadow: 0 0 0 2px rgba(0, 221, 255, 0.85), 0 0 14px rgba(0, 221, 255, 0.35);
+        box-shadow: inset 0 0 0 2px rgba(0, 221, 255, 0.9), inset 0 0 10px rgba(0, 221, 255, 0.28);
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-slot-wrap.bone-pill-attached .bone-die-btn {
-        box-shadow: 0 0 0 2px rgba(255, 0, 127, 0.75), 0 0 12px rgba(255, 0, 127, 0.3);
+        box-shadow: inset 0 0 0 2px rgba(255, 0, 127, 0.82), inset 0 0 10px rgba(255, 0, 127, 0.28);
     }
     #root-gutterbones[data-ui-redesign="1"] .pill-attach-tray {
         display: inline-flex;
@@ -3651,6 +3657,24 @@
         padding-bottom: 0.25rem !important;
         align-items: center;
     }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact:not(.payout-tier-live):not(.payout-tier-best) {
+        min-height: 1rem !important;
+        max-height: 1.2rem !important;
+        padding-top: 0.05rem !important;
+        padding-bottom: 0.05rem !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact.payout-tier-done,
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact.payout-tier-bust {
+        opacity: 0.45 !important;
+        background: rgba(113, 113, 122, 0.14) !important;
+        border-color: rgba(161, 161, 170, 0.45) !important;
+        color: #71717a !important;
+        animation: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact.payout-tier-bust .score-row-danger,
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact.payout-tier-bust {
+        background: rgba(113, 113, 122, 0.14) !important;
+    }
     #root-gutterbones[data-ui-redesign="1"] .score-row-name-block {
         flex: 1 1 auto;
         min-width: 0;
@@ -3924,9 +3948,27 @@
             margin-bottom: 0.15rem;
         }
     }
+    @media (min-width: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
+            font-size: max(12px, 0.78rem);
+            padding: 0.3rem 0.65rem;
+            gap: 0.3rem 0.55rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-status-bar .street-ledger-icon {
+            padding: 0.18rem 0.55rem;
+            font-size: max(11px, 0.72rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-status-quota-nums {
+            font-size: max(12px, 0.78rem);
+            font-weight: 700;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-status-segment--round {
+            font-size: max(11px, 0.7rem);
+        }
+    }
     @media (min-width: 768px) and (max-width: 1023px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(3.15rem, calc((100vw - 23.5rem) / 5 - 0.45rem), 4.65rem);
+            --gb-die: clamp(3.65rem, calc((100vw - 22rem) / 5 - 0.15rem), 5.35rem);
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] .play-dice-lane {
             gap: clamp(0.15rem, 0.85vw, 0.4rem);
@@ -3940,17 +3982,17 @@
     }
     @media (min-width: 1024px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(6rem, 7.85vw, 7.15rem);
+            --gb-die: clamp(6.35rem, 9.2vw, 8.35rem);
         }
     }
     @media (min-width: 1600px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(6rem, 6.4vw, 7.35rem);
+            --gb-die: clamp(6.65rem, 7.35vw, 8.55rem);
         }
     }
     @media (min-width: 1920px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(6.45rem, 6.85vw, 7.95rem);
+            --gb-die: clamp(6.85rem, 7.65vw, 8.85rem);
         }
     }
     #root-gutterbones[data-ui-redesign="1"] .play-score-hint-slot {
@@ -18131,7 +18173,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
                                     <div data-layout-key="play-score-hint" className="absolute inset-0 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide flex items-center justify-center pointer-events-none md:!absolute">
                                         <span className="md:hidden">Swipe a payout chip below to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.</span>
-                                        <span className="hidden md:inline">Tap a payout row on THE PAYOUTS to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.</span>
+                                        <span className="hidden md:inline">Tap a payout row on the Matchbook to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.</span>
                                     </div>
                                 )}
                             </div>
