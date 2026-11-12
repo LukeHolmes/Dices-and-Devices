@@ -3483,7 +3483,21 @@
             --gb-die: clamp(3.95rem, calc((100vw - 2.65rem) / 5 - 0.2rem), 5.45rem);
         }
     }
-    @media (min-width: 768px) {
+    @media (min-width: 768px) and (max-width: 1023px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-die: clamp(3.15rem, calc((100vw - 23.5rem) / 5 - 0.45rem), 4.65rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] .play-dice-lane {
+            gap: clamp(0.15rem, 0.85vw, 0.4rem);
+            justify-content: center;
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+            padding-left: 0.2rem;
+            padding-right: 0.2rem;
+        }
+    }
+    @media (min-width: 1024px) {
         #root-gutterbones[data-ui-redesign="1"] {
             --gb-die: clamp(5.75rem, 7.35vw, 6.85rem);
         }
