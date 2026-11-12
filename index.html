@@ -16509,6 +16509,123 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         refreshShop();
                         return true;
                     },
+                    noteSimKitAcquisition: () => {
+                        if (!window.__GB_SIM_TELEM__) return;
+                        const diceFaceIds = dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        ));
+                        const kit = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds);
+                        if (kit?.fullKit) {
+                            window.__GB_SIM_TELEM__.kitAcquired = window.__GB_SIM_TELEM__.kitAcquired || {};
+                            if (window.__GB_SIM_TELEM__.kitAcquired.round == null) {
+                                window.__GB_SIM_TELEM__.kitAcquired.round = round;
+                                window.__GB_SIM_TELEM__.kitAcquired.atPhase = phase;
+                            }
+                        }
+                    },
+                    autoShopPolicyStep: () => {
+                        if (phase !== 'SHOP') return false;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION;
+                        if (policyRev !== GutterbonesSimBotPolicy?.WP3_SHOP_REVISION) return false;
+                        const diceFaceIds = dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        ));
+                        const sinkEstimate = (
+                            round >= SHOP_AGENCY_TUNING.lateCarrySinkMinRound
+                            && gold > SHOP_AGENCY_TUNING.lateCarrySinkGoldFloor
+                        )
+                            ? Math.min(
+                                SHOP_AGENCY_TUNING.lateCarrySinkCap,
+                                Math.floor(gold * SHOP_AGENCY_TUNING.lateCarrySinkRate),
+                            )
+                            : 0;
+                        const available = shopItems
+                            .filter((i) => !soldItems.includes(i.id))
+                            .map((i) => ({
+                                id: i.id,
+                                type: i.type || null,
+                                price: shopListPrice(i),
+                            }));
+                        const plan = GutterbonesSimBotPolicy.planShopAction({
+                            revision: policyRev,
+                            gold,
+                            debt,
+                            round,
+                            score,
+                            target: currentTarget,
+                            inventory,
+                            diceFaceIds,
+                            available,
+                            refreshCost: shopRefreshCost,
+                            shopRefreshes,
+                            selectedShopPathId,
+                            sinkEstimate,
+                        });
+                        window.__GB_E2E__?.recordSimBotDecision?.(`shop_${plan.family}`, {
+                            reason: plan.reason,
+                            action: plan.action,
+                            detail: plan,
+                        });
+                        if (plan.action === 'pay_debt' && plan.amount) {
+                            payDebtFromCash(plan.amount);
+                            return true;
+                        }
+                        if (plan.action === 'refresh') {
+                            refreshShop();
+                            return true;
+                        }
+                        if (plan.action === 'buy' && plan.itemId) {
+                            const item = shopItems.find((i) => i.id === plan.itemId);
+                            if (item) {
+                                handlePurchase(item);
+                                window.__GB_E2E__?.noteSimKitAcquisition?.();
+                                return true;
+                            }
+                            return false;
+                        }
+                        if (plan.action === 'select_route') {
+                            return window.__GB_E2E__?.clickShopRouteCard?.() || false;
+                        }
+                        if (plan.action === 'hit_streets') {
+                            return window.__GB_E2E__?.hitStreets?.() || false;
+                        }
+                        return false;
+                    },
+                    autoCarvePolicyStep: () => {
+                        if (phase !== 'CARVING') return false;
+                        const policyRev = window.__GB_SIM_POLICY__?.revision
+                            || GutterbonesSimBotPolicy?.LEGACY_REVISION;
+                        if (policyRev !== GutterbonesSimBotPolicy?.WP3_SHOP_REVISION) return false;
+                        const diceFaceIds = dice.map((d) => (
+                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                        ));
+                        const plan = GutterbonesSimBotPolicy.planCarveAction({
+                            revision: policyRev,
+                            inventory,
+                            diceFaceIds,
+                            carveOfferId: selectedItem?.id || null,
+                        });
+                        window.__GB_E2E__?.recordSimBotDecision?.('shop_carve', {
+                            reason: plan.reason,
+                            action: plan.action,
+                            detail: plan,
+                        });
+                        if (plan.action === 'done') return false;
+                        if (carvingDie === null && plan.action === 'carve') {
+                            setCarvingDie(typeof plan.dieIdx === 'number' ? plan.dieIdx : 0);
+                            return true;
+                        }
+                        if (plan.action === 'carve' && carvingDie !== null) {
+                            const faces = dice[carvingDie]?.faces || [];
+                            let faceIdx = faces.findIndex((f) => !f?.type || f.type === 'standard');
+                            if (faceIdx < 0) faceIdx = 0;
+                            executeCarve(carvingDie, faceIdx);
+                            window.__GB_E2E__?.noteSimKitAcquisition?.();
+                            return true;
+                        }
+                        return false;
+                    },
                     autoCarvePreferred: () => {
                         if (phase !== 'CARVING') return false;
                         if (carvingDie === null) {
@@ -16789,7 +16906,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         });
                         if (!mustScore && rerollPlan.reroll && discards > 0) {
                             if (rollBtn) {
-                                if (policyRev === GutterbonesSimBotPolicy?.WP2_LANE_REVISION && window.__GB_SIM_TELEM__) {
+                                if (GutterbonesSimBotPolicy?.isLanePlayRevision?.(policyRev) && window.__GB_SIM_TELEM__) {
                                     const telem = window.__GB_SIM_TELEM__;
                                     telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
                                     telem.laneSetup.attempts += 1;
@@ -16815,7 +16932,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             return false;
                         }
                         const scoreReason = mustScore && bankClear ? 'bank_clear_quota' : (best.decision || 'score_best');
-                        if (policyRev === GutterbonesSimBotPolicy?.WP2_LANE_REVISION && window.__GB_SIM_TELEM__) {
+                        if (GutterbonesSimBotPolicy?.isLanePlayRevision?.(policyRev) && window.__GB_SIM_TELEM__) {
                             const preds = GutterbonesSimBotPolicy.evaluateOrganicPredicates({ dice: laneDice, inventory });
                             if (preds.linkKitEligible) {
                                 const telem = window.__GB_SIM_TELEM__;
@@ -16824,6 +16941,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 if ((best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks)) > 0) {
                                     telem.laneKit.scoredWithLink += 1;
                                 }
+                                telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
+                                (preds.unfulfilled || []).forEach((u) => {
+                                    telem.laneSetup.unfulfilled[u] = (telem.laneSetup.unfulfilled[u] || 0) + 1;
+                                });
                             }
                         }
                         window.__GB_E2E__?.recordSimBotDecision?.('score', {

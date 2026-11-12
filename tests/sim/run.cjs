@@ -259,6 +259,7 @@ async function runOneGame(
       roundEvents,
       laneSetup: window.__GB_SIM_TELEM__?.laneSetup || null,
       laneKit: window.__GB_SIM_TELEM__?.laneKit || null,
+      kitAcquired: window.__GB_SIM_TELEM__?.kitAcquired || null,
     };
   });
   return { rid, viewport: viewport.name, ...result, telem };
@@ -404,6 +405,8 @@ async function main() {
   let laneKitEligibleRuns = 0;
   let laneSetupAttempts = 0;
   const laneSetupUnfulfilled = {};
+  let fullKitRuns = 0;
+  const kitAcquireRounds = [];
   for (const r of results) {
     if ((r.telem?.laneKit?.eligibleHands || 0) > 0) laneKitEligibleRuns += 1;
     const setup = r.telem?.laneSetup;
@@ -412,6 +415,10 @@ async function main() {
       for (const [k, v] of Object.entries(setup.unfulfilled || {})) {
         laneSetupUnfulfilled[k] = (laneSetupUnfulfilled[k] || 0) + v;
       }
+    }
+    if (r.telem?.kitAcquired?.round != null) {
+      fullKitRuns += 1;
+      kitAcquireRounds.push(r.telem.kitAcquired.round);
     }
   }
 
@@ -440,6 +447,9 @@ async function main() {
       kitEligibleRuns: laneKitEligibleRuns,
       setupAttempts: laneSetupAttempts,
       setupUnfulfilled: laneSetupUnfulfilled,
+      fullKitRuns,
+      kitAcquireRounds,
+      kitAcquireRoundMedian: kitAcquireRounds.length ? median(kitAcquireRounds) : 0,
     },
     telemetry: {
       crookedCop: {

@@ -5,6 +5,15 @@
     const LEGACY_REVISION = '2026-11-11-phase-b-v1';
     const WP2_REVISION = '2026-11-12-wp2-v1';
     const WP2_LANE_REVISION = '2026-11-12-wp2-lane-v1';
+    const WP3_SHOP_REVISION = '2026-11-12-wp3-shop-v1';
+
+    const KIT_HARDWARE_PRIORITY = ['BOOKENDS', 'FUSE_BOX', 'CROWBAR', 'ENGINE'];
+    const KIT_FACE_IDS = ['GHOST_FACE', 'ECHO_FACE'];
+    const NEVER_SELL_HARDWARE = new Set([
+        'BOOKENDS', 'FUSE_BOX', 'CROWBAR', 'ENGINE', 'MIRROR_RIG', 'DEBT_COLLECTOR', 'HOT_STREAK_COIL',
+    ]);
+
+    const isLanePlayRevision = (rev) => rev === WP2_LANE_REVISION || rev === WP3_SHOP_REVISION;
 
     const ORGANIC_PAIR_KEYS = [
         'blood_ripple→fuse_spark',
@@ -230,9 +239,160 @@
 
     const pickCategory = (ctx) => {
         const rev = ctx.revision || LEGACY_REVISION;
-        if (rev === WP2_LANE_REVISION) return pickCategoryLane(ctx);
+        if (isLanePlayRevision(rev)) return pickCategoryLane(ctx);
         if (rev === WP2_REVISION) return pickCategoryWp2(ctx);
         return pickCategoryLegacy(ctx);
+    };
+
+    const assessFullLinkKit = (inventory, diceFaceIds) => {
+        const ids = inventoryIds(inventory);
+        const faces = new Set((diceFaceIds || []).filter(Boolean));
+        const missing = [];
+        if (!ids.includes('BOOKENDS')) missing.push('BOOKENDS');
+        if (!faces.has('GHOST_FACE')) missing.push('GHOST_FACE');
+        if (!faces.has('ECHO_FACE')) missing.push('ECHO_FACE');
+        return {
+            hasBookends: ids.includes('BOOKENDS'),
+            hasGhostFace: faces.has('GHOST_FACE'),
+            hasEchoFace: faces.has('ECHO_FACE'),
+            fullKit: missing.length === 0,
+            missing,
+        };
+    };
+
+    const shopBudgetReserve = (ctx) => {
+        let reserve = 10;
+        reserve += Number(ctx.refreshCost) || 0;
+        reserve += Number(ctx.sinkEstimate) || 0;
+        if ((ctx.debt || 0) > 0) reserve += Math.min(14, Math.max(4, Math.ceil(ctx.debt * 0.3)));
+        const quotaGap = Math.max(0, (ctx.target || 0) - (ctx.score || 0));
+        if (quotaGap > 0 && (ctx.gold || 0) < quotaGap * 0.35) reserve += 8;
+        return reserve;
+    };
+
+    const planShopPayDebt = (ctx) => {
+        if ((ctx.debt || 0) < 4) {
+            return { family: 'pay_debt', action: 'skip', reason: 'debt_low_skip' };
+        }
+        const reserve = shopBudgetReserve(ctx);
+        if ((ctx.gold || 0) <= reserve + 8) {
+            return { family: 'pay_debt', action: 'skip', reason: 'debt_hold_toll_reserve' };
+        }
+        return { family: 'pay_debt', action: 'pay_debt', reason: 'debt_pay_budgeted', amount: 10 };
+    };
+
+    const planShopSell = (ctx) => ({
+        family: 'sell',
+        action: 'skip',
+        reason: 'sell_never_kit_hardware',
+        protectedIds: [...NEVER_SELL_HARDWARE],
+    });
+
+    const planShopRefresh = (ctx) => {
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        if (kit.fullKit) {
+            return { family: 'refresh', action: 'skip', reason: 'refresh_kit_complete' };
+        }
+        const stockIds = new Set((ctx.available || []).map((i) => i.id));
+        const seekable = kit.missing.filter((id) => KIT_HARDWARE_PRIORITY.includes(id) || KIT_FACE_IDS.includes(id));
+        if (seekable.some((id) => stockIds.has(id))) {
+            return { family: 'refresh', action: 'skip', reason: 'refresh_missing_already_listed' };
+        }
+        if ((ctx.shopRefreshes || 0) >= 3) {
+            return { family: 'refresh', action: 'skip', reason: 'refresh_cap_reached' };
+        }
+        const reserve = shopBudgetReserve(ctx);
+        const cost = Number(ctx.refreshCost) || 0;
+        if ((ctx.gold || 0) < cost + reserve) {
+            return { family: 'refresh', action: 'skip', reason: 'refresh_budget_toll_debt' };
+        }
+        if (!seekable.length) {
+            return { family: 'refresh', action: 'skip', reason: 'refresh_no_kit_gap' };
+        }
+        return { family: 'refresh', action: 'refresh', reason: 'refresh_seek_missing_kit', missing: seekable };
+    };
+
+    const planShopBuy = (ctx) => {
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const reserve = shopBudgetReserve(ctx);
+        const gold = ctx.gold || 0;
+        const afford = (price) => gold >= price + reserve;
+        const loanOk = (price) => gold + 14 >= price;
+        const available = ctx.available || [];
+        const invIds = new Set(inventoryIds(ctx.inventory));
+        const wants = [];
+        if (!kit.hasBookends) wants.push('BOOKENDS');
+        if (!kit.hasGhostFace) wants.push('GHOST_FACE');
+        if (!kit.hasEchoFace) wants.push('ECHO_FACE');
+        KIT_HARDWARE_PRIORITY.forEach((id) => {
+            if (!invIds.has(id) && id !== 'BOOKENDS') wants.push(id);
+        });
+        for (const want of wants) {
+            const item = available.find((i) => i.id === want);
+            if (!item) continue;
+            const price = item.price != null ? item.price : (item.cost || 0);
+            if (afford(price)) {
+                return { family: 'buy', action: 'buy', reason: 'buy_kit_within_reserve', itemId: item.id, price };
+            }
+            if (loanOk(price) && want === 'BOOKENDS') {
+                return { family: 'buy', action: 'buy', reason: 'buy_bookends_loan_buffer', itemId: item.id, price };
+            }
+        }
+        if (kit.fullKit) {
+            return { family: 'buy', action: 'skip', reason: 'buy_kit_satisfied' };
+        }
+        return { family: 'buy', action: 'skip', reason: 'buy_no_affordable_kit_offer' };
+    };
+
+    const planShopSkip = (ctx) => {
+        if (!ctx.selectedShopPathId) {
+            return { family: 'skip', action: 'select_route', reason: 'skip_select_route_first' };
+        }
+        const reserve = shopBudgetReserve(ctx);
+        const goldAfterToll = (ctx.gold || 0) - (ctx.sinkEstimate || 0);
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        if (goldAfterToll < reserve && kit.missing.length > 0) {
+            return { family: 'skip', action: 'hold', reason: 'skip_toll_exceeds_kit_budget' };
+        }
+        return {
+            family: 'skip',
+            action: 'hit_streets',
+            reason: kit.fullKit ? 'skip_kit_complete' : 'skip_shop_exhausted_budgeted',
+        };
+    };
+
+    const planShopAction = (ctx) => {
+        const rev = ctx.revision || LEGACY_REVISION;
+        if (rev !== WP3_SHOP_REVISION) {
+            return { family: 'none', action: 'none', reason: 'shop_policy_not_active' };
+        }
+        const debt = planShopPayDebt(ctx);
+        if (debt.action === 'pay_debt') return debt;
+        const refresh = planShopRefresh(ctx);
+        if (refresh.action === 'refresh') return refresh;
+        const buy = planShopBuy(ctx);
+        if (buy.action === 'buy') return buy;
+        return planShopSkip(ctx);
+    };
+
+    const planCarveAction = (ctx) => {
+        const rev = ctx.revision || LEGACY_REVISION;
+        if (rev !== WP3_SHOP_REVISION) {
+            return { family: 'carve', action: 'skip', reason: 'carve_policy_not_active' };
+        }
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const offerId = ctx.carveOfferId || (ctx.carveOffers && ctx.carveOffers[0]?.id);
+        let targetFace = null;
+        if (!kit.hasGhostFace) targetFace = 'GHOST_FACE';
+        else if (!kit.hasEchoFace) targetFace = 'ECHO_FACE';
+        if (!targetFace) {
+            return { family: 'carve', action: 'done', reason: 'carve_faces_complete' };
+        }
+        if (offerId && offerId !== targetFace) {
+            return { family: 'carve', action: 'done', reason: 'carve_wrong_offer_for_kit' };
+        }
+        let dieIdx = targetFace === 'ECHO_FACE' ? 4 : 0;
+        return { family: 'carve', action: 'carve', reason: 'carve_kit_face', faceId: targetFace, dieIdx };
     };
 
     const shouldRerollLegacy = ({ score, target, hands, discards, bestTotal, e2eGreedy }) => {
@@ -322,9 +482,18 @@
 
     const shouldReroll = (ctx) => {
         const rev = ctx.revision || LEGACY_REVISION;
-        if (rev === WP2_LANE_REVISION) return shouldRerollLane(ctx);
-        if (rev === WP2_REVISION) return shouldRerollWp2(ctx);
-        return shouldRerollLegacy(ctx);
+        let plan;
+        if (isLanePlayRevision(rev)) plan = shouldRerollLane(ctx);
+        else if (rev === WP2_REVISION) plan = shouldRerollWp2(ctx);
+        else plan = shouldRerollLegacy(ctx);
+        if (plan.reroll && isLanePlayRevision(rev)) {
+            const preds = plan.predicates || evaluateOrganicPredicates(ctx);
+            plan.predicates = preds;
+            if (!plan.unfulfilled?.length && preds.unfulfilled?.length) {
+                plan.unfulfilled = preds.unfulfilled;
+            }
+        }
+        return plan;
     };
 
     const keepKeptLegacy = (dice) => {
@@ -381,7 +550,7 @@
         const rev = ctx.revision || LEGACY_REVISION;
         let kept;
         let reason;
-        if (rev === WP2_LANE_REVISION) {
+        if (isLanePlayRevision(rev)) {
             kept = keepKeptLane(ctx);
             reason = 'lane_preserve_kit_and_bookends';
         } else if (rev === WP2_REVISION) {
@@ -406,7 +575,7 @@
         if (revision === LEGACY_REVISION) return false;
         if (!clearsQuota(score, bestTotal, target)) return false;
         if (revision === WP2_REVISION) return true;
-        if (revision === WP2_LANE_REVISION) {
+        if (isLanePlayRevision(revision)) {
             const preds = evaluateOrganicPredicates(ctx);
             if (!preds.linkKitEligible) return true;
             if (preds.sameHandLowRisk) return true;
@@ -425,18 +594,32 @@
         LEGACY_REVISION,
         WP2_REVISION,
         WP2_LANE_REVISION,
+        WP3_SHOP_REVISION,
+        KIT_HARDWARE_PRIORITY,
+        KIT_FACE_IDS,
+        NEVER_SELL_HARDWARE,
         ORGANIC_PAIR_KEYS,
         SETUP_REACH_MAX,
         organicPairCount,
         clearsQuota,
         evaluateOrganicPredicates,
         hasLinkKit,
+        assessFullLinkKit,
+        shopBudgetReserve,
+        planShopAction,
+        planShopBuy,
+        planShopRefresh,
+        planShopSell,
+        planShopPayDebt,
+        planShopSkip,
+        planCarveAction,
         pickCategory,
         shouldReroll,
         selectKeptSlots,
         mustBankClear,
         lanesGhostEchoReach,
         ghostEchoMinDistance,
+        isLanePlayRevision,
     };
 
     if (typeof module !== 'undefined' && module.exports) {

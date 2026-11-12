@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 /**
- * Compare legacy vs WP2 vs WP2-lane sim policies on a bounded seed window.
- * Usage: WP2_RID_END=9 WP2_MAX_STEPS=4000 node scripts/wp2-policy-baseline.cjs
+ * Compare sim policy revisions on a bounded seed window.
+ * Default: legacy vs lane-v1 vs wp3-shop-v1 (Luke WP3 measurement).
  */
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
@@ -16,11 +16,13 @@ const MAX_STEPS = Number(process.env.WP2_MAX_STEPS || 4000);
 const games = RID_END - RID_START + 1;
 
 const ORGANIC_PAIR = "ghost_echo→bookends_retrigger";
-const REVISIONS = [
-  "2026-11-11-phase-b-v1",
-  "2026-11-12-wp2-v1",
-  "2026-11-12-wp2-lane-v1",
-];
+const REVISIONS = (process.env.WP2_POLICY_SET || "legacy,lane,wp3").split(",").map((s) => s.trim()).filter(Boolean);
+const REVISION_MAP = {
+  legacy: "2026-11-11-phase-b-v1",
+  wp2: "2026-11-12-wp2-v1",
+  lane: "2026-11-12-wp2-lane-v1",
+  wp3: "2026-11-12-wp3-shop-v1",
+};
 
 function runPolicy(revision) {
   const r = spawnSync(
@@ -69,11 +71,15 @@ function aggregate(summary) {
     kitEligibleRuns: lane.kitEligibleRuns || 0,
     laneSetupAttempts: lane.setupAttempts || 0,
     laneSetupUnfulfilled: lane.setupUnfulfilled || {},
+    fullKitRuns: lane.fullKitRuns || 0,
+    kitAcquireRoundMedian: lane.kitAcquireRoundMedian || 0,
+    kitAcquireRounds: lane.kitAcquireRounds || [],
   };
 }
 
 const policies = {};
-for (const rev of REVISIONS) {
+for (const key of REVISIONS) {
+  const rev = REVISION_MAP[key] || key;
   policies[rev] = runPolicy(rev);
 }
 
@@ -82,16 +88,15 @@ const report = {
   viewport: "blocking (includes 1024×768)",
   ridRange: `${RID_START}-${RID_END}`,
   maxSteps: MAX_STEPS,
-  note: "Bounded seeds 0–9 per Luke WP2 lane measurement",
+  note: "WP3 measurement: legacy + lane + shop policies",
   policies: Object.fromEntries(
-    REVISIONS.map((rev) => {
-      const run = policies[rev];
+    Object.entries(policies).map(([rev, run]) => {
       if (run.error) return [rev, run];
       return [rev, { ...aggregate(run.summary), exit: run.exit }];
     }),
   ),
 };
 
-const out = "/opt/cursor/artifacts/wp2-lane-policy-baseline.json";
+const out = process.env.WP2_BASELINE_OUT || "/opt/cursor/artifacts/wp3-shop-policy-baseline.json";
 fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify({ out, report }, null, 2));
