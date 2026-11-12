@@ -15,8 +15,10 @@ const RUN_KEY = "gutterbones1977:run:v1";
 
 const TARGETS = [
   { name: "390x844", width: 390, height: 844, minDiceRowPct: 8.2, minAlleyWidthPct: 0, mobile: true },
-  { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5.2, minAlleyWidthPct: 62, mobile: false },
-  { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4.2, minAlleyWidthPct: 64, mobile: false },
+  { name: "1366x768", width: 1366, height: 768, minDiceRowPct: 5.0, minAlleyWidthPct: 68, minLedgerPx: 335, maxLedgerPx: 400, mobile: false },
+  { name: "1536x864", width: 1536, height: 864, minDiceRowPct: 4.6, minAlleyWidthPct: 69, minLedgerPx: 340, maxLedgerPx: 430, mobile: false },
+  { name: "1920x1080", width: 1920, height: 1080, minDiceRowPct: 4.0, minAlleyWidthPct: 72, minLedgerPx: 380, maxLedgerPx: 430, mobile: false },
+  { name: "2560x1440", width: 2560, height: 1440, minDiceRowPct: 3.15, minAlleyWidthPct: 78, minLedgerPx: 400, maxLedgerPx: 430, mobile: false },
 ];
 
 const DESKTOP_ALLEY_BASELINE_PCT = 58;
@@ -166,6 +168,14 @@ const measurePlayLayout = () => {
   const alleyWidthPct = alley
     ? +((alley.getBoundingClientRect().width * 100) / vw).toFixed(2)
     : 0;
+  const ledgerWidthPx = ledger ? Math.round(ledger.getBoundingClientRect().width) : 0;
+  const handSprite = document.querySelector(".gutter-roll-hand-sprite");
+  let handSpritePx = 0;
+  if (handSprite) {
+    const hs = getComputedStyle(handSprite);
+    handSpritePx = parseFloat(hs.width) || handSprite.getBoundingClientRect().width;
+    handSpritePx = Math.round(handSpritePx);
+  }
   const ledgerCompact = !!document.querySelector(".matchbook-ledger--compact");
   const compactRowCount = document.querySelectorAll(
     '[data-layout-key="play-ledger-column"] .score-row--compact',
@@ -214,6 +224,8 @@ const measurePlayLayout = () => {
     tapBad: tapBad.length,
     openTapOk,
     alleyWidthPct,
+    ledgerWidthPx,
+    handSpritePx,
     ledgerCompact,
     compactRowCount,
     moreRailVisible: !!moreRailVisible,
@@ -266,6 +278,18 @@ for (const vp of TARGETS) {
           m.alleyWidthPct > DESKTOP_ALLEY_BASELINE_PCT,
           `alley not wider than old 7/12 baseline (${m.alleyWidthPct}% vs ${DESKTOP_ALLEY_BASELINE_PCT}%)`,
         );
+        if (vp.minLedgerPx) {
+          assert.ok(
+            m.ledgerWidthPx >= vp.minLedgerPx,
+            `ledger ${m.ledgerWidthPx}px < ${vp.minLedgerPx}px`,
+          );
+        }
+        if (vp.maxLedgerPx) {
+          assert.ok(
+            m.ledgerWidthPx <= vp.maxLedgerPx + 8,
+            `ledger ${m.ledgerWidthPx}px > ${vp.maxLedgerPx}px cap`,
+          );
+        }
       }
     } finally {
       await browser.close();
@@ -281,7 +305,7 @@ test("desktop compact ledger — used row thins", async () => {
     await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
     await resumePostRoll(page, { usedCats: ["ONES"] });
     const m = await page.evaluate(measurePlayLayout);
-    assert.ok(m.usedRowHeight > 0 && m.usedRowHeight <= 22, `used row height ${m.usedRowHeight}px`);
+    assert.ok(m.usedRowHeight >= 28 && m.usedRowHeight <= 36, `used row height ${m.usedRowHeight}px`);
     const aces = await page.$('[data-layout-key="play-ledger-column"] [data-payout-row="ONES"]');
     assert.ok(aces, "Aces row missing");
     const cls = await aces.evaluate((el) => el.className);
@@ -500,8 +524,8 @@ test("desktop matchbook — used and bust rows collapse thin", async () => {
       const bust = document.querySelector('[data-layout-key="play-ledger-column"] .payout-tier-bust');
       return { used: h(used), bust: h(bust) };
     });
-    assert.ok(rows.used > 0 && rows.used <= 22, `used row height ${rows.used}px`);
-    assert.ok(rows.bust > 0 && rows.bust <= 22, `bust row height ${rows.bust}px`);
+    assert.ok(rows.used >= 28 && rows.used <= 36, `used row height ${rows.used}px`);
+    assert.ok(rows.bust >= 28 && rows.bust <= 36, `bust row height ${rows.bust}px`);
   } finally {
     await browser.close();
   }
@@ -560,6 +584,28 @@ test("phone HUD — warrant stamp and hardware tabs visible", async () => {
     assert.ok(hud.warrantW >= 48, `warrant too narrow (${hud.warrantW}px)`);
     assert.ok(hud.tabs.some((t) => /engine/i.test(t)), "Engine tab missing");
     assert.ok(hud.tabs.some((t) => /fuse/i.test(t)), "Fuse Box tab missing");
+  } finally {
+    await browser.close();
+  }
+});
+
+test("desktop roll hand sprite scales up on laptop", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    for (const { width, height, minHandPx } of [
+      { width: 1366, height: 768, minHandPx: 170 },
+      { width: 1920, height: 1080, minHandPx: 175 },
+    ]) {
+      await page.setViewportSize({ width, height });
+      await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+      await resumePostRoll(page, { withHandFx: true });
+      const handPx = await page.evaluate(() => {
+        const el = document.querySelector(".gutter-roll-hand-sprite");
+        return el ? Math.round(el.getBoundingClientRect().width) : 0;
+      });
+      assert.ok(handPx >= minHandPx, `${width}x${height} hand ${handPx}px < ${minHandPx}px`);
+    }
   } finally {
     await browser.close();
   }

@@ -146,6 +146,31 @@ async function main() {
   });
   await desk.close();
 
+  const hand1536 = await browser.newPage();
+  await hand1536.setViewportSize({ width: 1536, height: 864 });
+  await seedPage(hand1536, { hasRolled: false, hands: 3, score: 0 }, SETTINGS_ANIM);
+  await hand1536.waitForSelector('[data-tutorial="roll-btn"]', { timeout: 45_000 });
+  await hand1536.click('[data-tutorial="roll-btn"]');
+  await hand1536.waitForSelector('[data-layout-key="roll-hand-throw-overlay"]', { timeout: 12_000 });
+  await hand1536.evaluate(() => window.__GB_LAYOUT_AUDIT__.freezeRollHandThrowAt(520));
+  await hand1536.waitForTimeout(80);
+  await hand1536.screenshot({
+    path: path.join(outDir, "option-c-1536-mid-roll-hand.png"),
+    scale: "css",
+  });
+  await hand1536.close();
+
+  const match1920 = await browser.newPage();
+  await match1920.setViewportSize({ width: 1920, height: 1080 });
+  await seedPage(match1920, { usedCats: ["ONES"] }, SETTINGS_STILL);
+  await match1920.waitForSelector('[data-layout-key="play-ledger-column"]', { timeout: 45_000 });
+  await match1920.waitForTimeout(350);
+  await match1920.screenshot({
+    path: path.join(outDir, "option-c-1920-wide-matchbook.png"),
+    scale: "css",
+  });
+  await match1920.close();
+
   try {
     const videoDir = path.join(outDir, "_roll-video-tmp");
     fs.mkdirSync(videoDir, { recursive: true });

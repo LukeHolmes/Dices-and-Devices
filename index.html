@@ -3286,25 +3286,38 @@
             --hand-sprite-size: clamp(8rem, min(52vw, 36vh), 16rem);
         }
     }
-    @media (max-height: 820px) {
+    @media (max-width: 767px) and (max-height: 820px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
             --hand-wrist-inset-x: 4.5%;
             --hand-wrist-lift-y: 44%;
             --hand-sprite-size: clamp(7.75rem, min(42vw, 46vh), 15.5rem);
         }
     }
-    @media (min-width: 1280px) and (max-height: 900px) {
+    @media (min-width: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-play-ledger-w: clamp(21.25rem, 28vw, 26.25rem);
+        }
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            --hand-wrist-inset-x: 3%;
-            --hand-wrist-lift-y: 45%;
-            --hand-sprite-size: clamp(7.25rem, min(24vw, 48vh), 14.5rem);
+            --hand-wrist-inset-x: 0%;
+            --hand-wrist-lift-y: 41%;
+            --hand-sprite-size: clamp(11rem, min(26vw, 48vh), 21rem);
         }
     }
-    @media (min-width: 1800px) and (min-height: 900px) {
+    @media (min-width: 1024px) {
         #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
-            --hand-wrist-inset-x: 4%;
-            --hand-wrist-lift-y: 46%;
-            --hand-sprite-size: clamp(8rem, min(18vw, 38vh), 15rem);
+            --hand-wrist-inset-x: -1%;
+            --hand-wrist-lift-y: 40%;
+            --hand-sprite-size: clamp(11.5rem, min(24vw, 50vh), 22rem);
+        }
+    }
+    @media (min-width: 1600px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-sprite-size: clamp(12rem, min(20vw, 48vh), 23rem);
+        }
+    }
+    @media (min-width: 2560px) {
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-sprite-size: clamp(13rem, min(17vw, 46vh), 24rem);
         }
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-slot-inner {
@@ -3906,12 +3919,14 @@
     }
     @media (min-width: 768px) {
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-phase-grid"] {
-            grid-template-columns: minmax(0, 1fr) minmax(9.25rem, 15.5rem);
+            grid-template-columns: minmax(0, 1fr) var(--gb-play-ledger-w, clamp(21.25rem, 28vw, 26.25rem));
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] { grid-column: 1; }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] {
             grid-column: 2;
-            max-width: 16.5rem;
+            max-width: none;
+            width: 100%;
+            min-width: 0;
         }
         #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact {
             padding: 0.35rem 0.45rem 0.5rem !important;
@@ -4021,6 +4036,59 @@
             display: none !important;
         }
     }
+    @media (min-width: 1024px) {
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact {
+            padding: 0.45rem 0.55rem 0.55rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .matchbook-compact-head h2 {
+            font-size: max(11px, 0.72rem);
+            letter-spacing: 0.12em;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-rule-tip {
+            font-size: max(11px, 0.68rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact {
+            min-height: 2rem !important;
+            max-height: 2.35rem !important;
+            padding: 0.14rem 0.45rem !important;
+            font-size: max(12px, 0.75rem) !important;
+            gap: 0.35rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact:not(.payout-tier-live):not(.payout-tier-best) {
+            min-height: 2rem !important;
+            max-height: 2.2rem !important;
+            padding-top: 0.1rem !important;
+            padding-bottom: 0.1rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .score-row-name {
+            font-size: max(12px, 0.75rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-heat-pill {
+            min-width: 2.55rem;
+            font-size: max(12px, 0.75rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-row-state {
+            font-size: max(11px, 0.68rem);
+            flex: 0 0 2.35rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .score-preview-inline {
+            display: inline !important;
+            font-size: max(11px, 0.68rem);
+            opacity: 0.85;
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .locked-payout-row-compact {
+            min-height: 1.35rem !important;
+            font-size: max(11px, 0.68rem) !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact.payout-tier-done .paid-stamp {
+            font-size: max(10px, 0.62rem);
+        }
+    }
     /* Option C — dice-forward play layout (ui-redesign) */
     @media (max-width: 767px) {
         #root-gutterbones[data-ui-redesign="1"] {
@@ -4093,7 +4161,7 @@
     }
     @media (min-width: 768px) and (max-width: 1023px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(3.65rem, calc((100vw - 22rem) / 5 - 0.15rem), 5.35rem);
+            --gb-die: clamp(3.65rem, calc((100vw - var(--gb-play-ledger-w, 22rem) - 2.5rem) / 5 - 0.15rem), 5.35rem);
         }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] .play-dice-lane {
             gap: clamp(0.15rem, 0.85vw, 0.4rem);
