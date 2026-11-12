@@ -132,10 +132,12 @@ async function runOneJob({ serverPort, job, deadlineAt }) {
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 } });
   await context.addInitScript(() => {
     const orig = Math.random;
-    window.__GB_UNSEEDED_RNG__ = { count: 0, sites: [] };
+    const GAME_STACK_RE = /gutterbones|rollBones|reroll|gamble|blueprint|sniff|Smuggle|generateShop|carve|executePayout|Gutterbones|inlineScript/i;
+    window.__GB_UNSEEDED_RNG__ = { count: 0, sites: [], note: "counts Math.random only when stack matches game paths" };
     Math.random = function unseededAudit() {
-      window.__GB_UNSEEDED_RNG__.count += 1;
       const stack = new Error().stack || "";
+      if (!GAME_STACK_RE.test(stack)) return orig.call(Math);
+      window.__GB_UNSEEDED_RNG__.count += 1;
       const line = stack.split("\n")[2] || "unknown";
       if (window.__GB_UNSEEDED_RNG__.sites.length < 32) {
         window.__GB_UNSEEDED_RNG__.sites.push(line.trim());
@@ -237,7 +239,10 @@ async function runOneJob({ serverPort, job, deadlineAt }) {
       ledger: harvested.ledger,
       organicPredicateDiag: harvested.organicPredicateDiag,
     });
-    out.outsideDeterministicCoverage = (harvested.unseededRng?.count || 0) > 0;
+    const seeded = !!harvested.bootstrap?.rngSeeded;
+    const gameUnseeded = (harvested.unseededRng?.count || 0) > 0;
+    out.outsideDeterministicCoverage = seeded && gameUnseeded;
+    out.seededRngCalls = harvested.bootstrap?.rngCalls ?? null;
     return out;
   } catch (e) {
     return {
