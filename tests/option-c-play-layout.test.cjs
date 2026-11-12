@@ -530,8 +530,9 @@ test("alley critter crawl — cosmetic, non-blocking", async () => {
     });
     const critterBox = await page.$eval('[data-layout-key="alley-critter-crawl"]', (el) => {
       const r = el.getBoundingClientRect();
-      return { b: r.bottom, t: r.top };
+      return { b: r.bottom, t: r.top, w: r.width, h: r.height };
     });
+    assert.ok(critterBox.w >= 70 && critterBox.w <= 100, `rat width ${critterBox.w}px`);
     assert.ok(critterBox.b <= laneBox.b + 2, "critter should stay in dice lane band");
     assert.ok(critterBox.t >= laneBox.t - 4, "critter should stay in dice lane band");
     await page.setViewportSize({ width: 1366, height: 768 });

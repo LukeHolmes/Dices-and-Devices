@@ -3350,17 +3350,26 @@
     #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl {
         position: absolute;
         left: var(--critter-from, -10%);
-        bottom: 6%;
-        z-index: 28;
-        width: 2.35rem;
-        height: 1.2rem;
+        bottom: 4%;
+        z-index: 31;
         pointer-events: none;
         user-select: none;
-        opacity: 0.92;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
+        opacity: 0.96;
+        filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.72)) drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45));
+        animation: alleyCritterScuttle var(--critter-ms, 2200ms) linear forwards;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl--rat {
+        width: 5.5rem;
+        height: 2.45rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl--roach {
+        width: 3.15rem;
+        height: 1.95rem;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .alley-critter-sprite-wrap {
         animation:
-            alleyCritterScuttle var(--critter-ms, 2200ms) linear forwards,
-            alleyCritterWobble calc(var(--critter-ms, 2200ms) / 5) ease-in-out infinite;
+            alleyCritterWobble calc(var(--critter-ms, 2200ms) / 6) ease-in-out infinite,
+            alleyCritterSkitter 0.16s steps(2, end) infinite;
     }
     #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl--ltr {
         --critter-from: -12%;
@@ -3391,29 +3400,53 @@
     }
     #root-gutterbones[data-ui-redesign="1"] .alley-critter-leg {
         position: absolute;
-        width: 0.35rem;
-        height: 1px;
-        background: rgba(23, 23, 23, 0.85);
+        width: 0.55rem;
+        height: 2px;
+        background: rgba(12, 12, 14, 0.92);
+        box-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
         transform-origin: left center;
-        animation: alleyCritterLegKick 0.22s ease-in-out infinite alternate;
+        animation: alleyCritterLegKick 0.14s ease-in-out infinite alternate;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .alley-critter-leg--roach {
+        width: 0.45rem;
+        height: 1.5px;
+        animation-duration: 0.11s;
     }
     #root-gutterbones[data-ui-redesign="1"] .alley-critter-tail {
         position: absolute;
-        right: 8%;
-        top: 42%;
-        width: 0.9rem;
-        height: 1px;
-        background: rgba(39, 39, 42, 0.9);
+        left: 2%;
+        top: 44%;
+        width: 38%;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(82, 47, 47, 0.95), rgba(161, 98, 98, 0.85));
+        border-radius: 2px;
         transform-origin: right center;
-        animation: alleyCritterTailWag 0.35s ease-in-out infinite alternate;
+        animation: alleyCritterTailWag 0.28s ease-in-out infinite alternate;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .alley-critter-antenna {
+        position: absolute;
+        width: 1px;
+        height: 0.65rem;
+        background: rgba(24, 24, 27, 0.9);
+        transform-origin: bottom center;
+        animation: alleyCritterAntennaWiggle 0.2s ease-in-out infinite alternate;
     }
     @keyframes alleyCritterScuttle {
         from { left: var(--critter-from); }
         to { left: var(--critter-to); }
     }
     @keyframes alleyCritterWobble {
-        0%, 100% { transform: translateY(0) rotate(-5deg); }
-        50% { transform: translateY(-2px) rotate(4deg); }
+        0%, 100% { transform: translateY(0) rotate(-6deg); }
+        50% { transform: translateY(-3px) rotate(5deg); }
+    }
+    @keyframes alleyCritterSkitter {
+        0% { transform: translateY(0) rotate(-6deg); }
+        50% { transform: translateY(1px) rotate(-4deg); }
+        100% { transform: translateY(-1px) rotate(-7deg); }
+    }
+    @keyframes alleyCritterAntennaWiggle {
+        from { transform: rotate(-14deg); }
+        to { transform: rotate(12deg); }
     }
     @keyframes alleyCritterLegKick {
         from { transform: rotate(18deg); }
@@ -3428,10 +3461,15 @@
     }
     @media (min-width: 768px) {
         #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl {
-            width: 3.1rem;
-            height: 1.55rem;
-            bottom: 11%;
-            opacity: 0.97;
+            bottom: 7%;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl--rat {
+            width: 7.75rem;
+            height: 3.35rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .alley-critter-crawl--roach {
+            width: 4.75rem;
+            height: 2.4rem;
         }
     }
     #root-gutterbones[data-ui-redesign="1"] .pill-attach-tray {
@@ -8680,22 +8718,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const AlleyCritterRatSvg = () => (
-        <svg className="alley-critter-sprite" viewBox="0 0 64 32" aria-hidden="true">
-            <ellipse cx="24" cy="18" rx="17" ry="9" fill="#3f3f46" />
-            <circle cx="38" cy="14" r="8" fill="#52525b" />
-            <circle cx="41" cy="11" r="2.2" fill="#0a0a0a" />
-            <path d="M12 17 Q2 12 0 8" stroke="#52525b" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-            <ellipse cx="44" cy="21" rx="2.2" ry="1.4" fill="#18181b" />
-            <ellipse cx="48" cy="22" rx="2.2" ry="1.4" fill="#18181b" />
+        <svg className="alley-critter-sprite" viewBox="0 0 96 44" aria-hidden="true">
+            <ellipse cx="34" cy="26" rx="26" ry="12" fill="#3f3f46" stroke="#18181b" strokeWidth="1.2" />
+            <ellipse cx="34" cy="26" rx="22" ry="9" fill="#52525b" opacity="0.45" />
+            <circle cx="58" cy="20" r="11" fill="#52525b" stroke="#18181b" strokeWidth="1" />
+            <circle cx="62" cy="16" r="3" fill="#0a0a0a" />
+            <circle cx="54" cy="12" r="3.5" fill="#71717a" opacity="0.7" />
+            <circle cx="66" cy="12" r="3.5" fill="#71717a" opacity="0.7" />
+            <path d="M8 25 Q0 18 -4 12" stroke="#a16262" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+            <path d="M62 31 L68 36 M70 31 L76 36 M52 33 L58 38 M46 33 L52 38" stroke="#18181b" strokeWidth="2.1" strokeLinecap="round" />
+            <path d="M82 21 L90 15 M82 26 L90 32" stroke="#27272a" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
     );
 
     const AlleyCritterRoachSvg = () => (
-        <svg className="alley-critter-sprite" viewBox="0 0 64 28" aria-hidden="true">
-            <ellipse cx="32" cy="14" rx="20" ry="9" fill="#27272a" />
-            <ellipse cx="46" cy="12" rx="7" ry="6" fill="#3f3f46" />
-            <path d="M12 10 L0 6 M12 18 L0 22 M52 9 L64 5 M52 19 L64 23" stroke="#52525b" strokeWidth="1.4" strokeLinecap="round" />
-            <circle cx="49" cy="11" r="1.3" fill="#09090b" />
+        <svg className="alley-critter-sprite" viewBox="0 0 72 40" aria-hidden="true">
+            <ellipse cx="34" cy="22" rx="24" ry="11" fill="#27272a" stroke="#18181b" strokeWidth="1" />
+            <ellipse cx="52" cy="20" rx="9" ry="8" fill="#3f3f46" stroke="#18181b" strokeWidth="0.8" />
+            <ellipse cx="22" cy="21" rx="10" ry="8" fill="#3f3f46" opacity="0.9" />
+            <path d="M58 14 L66 6 M58 18 L66 26" stroke="#18181b" strokeWidth="1.6" strokeLinecap="round" />
+            <path d="M12 12 L2 8 M12 20 L2 24 M50 11 L62 7 M50 19 L62 23 M32 13 L32 4 M32 21 L32 30" stroke="#3f3f46" strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="55" cy="17" r="1.8" fill="#09090b" />
+            <circle cx="49" cy="17" r="1.3" fill="#27272a" />
         </svg>
     );
 
@@ -8708,13 +8752,38 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 style={{ '--critter-ms': `${crawl.durationMs}ms` }}
                 aria-hidden="true"
             >
-                <div className="alley-critter-sprite-wrap">
+                <div className="alley-critter-sprite-wrap" style={{ '--critter-ms': `${crawl.durationMs}ms` }}>
                     {crawl.kind === 'roach' ? <AlleyCritterRoachSvg /> : <AlleyCritterRatSvg />}
                     {crawl.kind === 'rat' && <span className="alley-critter-tail" aria-hidden="true" />}
+                    {crawl.kind === 'roach' && (
+                        <>
+                            <span className="alley-critter-antenna" style={{ right: '18%', top: '8%', transform: 'rotate(-18deg)' }} />
+                            <span className="alley-critter-antenna" style={{ right: '24%', top: '6%', transform: 'rotate(12deg)', animationDelay: '0.08s' }} />
+                        </>
+                    )}
                     <span className="alley-critter-legs" aria-hidden="true">
-                        <span className="alley-critter-leg" style={{ left: '30%', top: '72%', animationDelay: '0ms' }} />
-                        <span className="alley-critter-leg" style={{ left: '48%', top: '78%', animationDelay: '60ms' }} />
-                        <span className="alley-critter-leg" style={{ left: '64%', top: '72%', animationDelay: '120ms' }} />
+                        {(crawl.kind === 'roach'
+                            ? [
+                                { left: '22%', top: '74%', delay: '0ms' },
+                                { left: '34%', top: '82%', delay: '50ms' },
+                                { left: '46%', top: '78%', delay: '95ms' },
+                                { left: '58%', top: '84%', delay: '40ms' },
+                                { left: '70%', top: '76%', delay: '120ms' },
+                                { left: '78%', top: '80%', delay: '75ms' },
+                            ]
+                            : [
+                                { left: '28%', top: '76%', delay: '0ms' },
+                                { left: '42%', top: '84%', delay: '55ms' },
+                                { left: '56%', top: '78%', delay: '95ms' },
+                                { left: '68%', top: '82%', delay: '40ms' },
+                            ]
+                        ).map((leg, i) => (
+                            <span
+                                key={i}
+                                className={`alley-critter-leg${crawl.kind === 'roach' ? ' alley-critter-leg--roach' : ''}`}
+                                style={{ left: leg.left, top: leg.top, animationDelay: leg.delay }}
+                            />
+                        ))}
                     </span>
                 </div>
             </div>
@@ -14177,7 +14246,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 if (typeof notifyTutorial === 'function') notifyTutorial('roll_settled');
                 if (!reducedMotion) setPayoutPostRollGen((g) => g + 1);
-                maybeScheduleAlleyCritterAfterRoll();
+                if (typeof maybeScheduleAlleyCritterAfterRoll === 'function') maybeScheduleAlleyCritterAfterRoll();
                 const pending = pendingPayoutRef.current;
                 if (pending) {
                     pendingPayoutRef.current = null;
