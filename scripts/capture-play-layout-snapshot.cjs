@@ -168,6 +168,82 @@ async function main() {
     console.warn("Roll video capture skipped:", e.message);
   }
 
+  const critterPhone = await browser.newPage();
+  await critterPhone.setViewportSize({ width: VIEWPORTS.phone.w, height: VIEWPORTS.phone.h });
+  await critterPhone.goto(`${baseUrl}/index.html?layoutAudit=1&critters=force`, { waitUntil: "domcontentloaded" });
+  await seedPage(critterPhone, {}, SETTINGS_ANIM);
+  await critterPhone.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
+  await critterPhone.evaluate(() => window.__GB_LAYOUT_AUDIT__.forceAlleyCritter("rat"));
+  await critterPhone.waitForSelector('[data-layout-key="alley-critter-crawl"]', { timeout: 8000 });
+  await critterPhone.evaluate(() => window.__GB_LAYOUT_AUDIT__.freezeAlleyCritterMid());
+  await critterPhone.waitForTimeout(120);
+  await critterPhone.screenshot({
+    path: path.join(outDir, "option-c-phone-critter.png"),
+    scale: "css",
+  });
+  await critterPhone.close();
+
+  const critterDesk = await browser.newPage();
+  await critterDesk.setViewportSize({ width: VIEWPORTS.desktop.w, height: VIEWPORTS.desktop.h });
+  await critterDesk.goto(`${baseUrl}/index.html?layoutAudit=1&critters=force`, { waitUntil: "domcontentloaded" });
+  await seedPage(critterDesk, { usedCats: ["ONES"] }, SETTINGS_ANIM);
+  await critterDesk.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
+  await critterDesk.evaluate(() => window.__GB_LAYOUT_AUDIT__.forceAlleyCritter("roach"));
+  await critterDesk.waitForSelector('[data-layout-key="alley-critter-crawl"]', { timeout: 8000 });
+  await critterDesk.evaluate(() => {
+    window.__GB_LAYOUT_AUDIT__.freezeAlleyCritterMid();
+    const el = document.querySelector('[data-layout-key="alley-critter-crawl"]');
+    if (el) {
+      el.getAnimations().forEach((a) => {
+        try {
+          const dur = a.effect?.getComputedTiming?.()?.duration;
+          if (typeof dur === "number") {
+            a.currentTime = dur * 0.52;
+          }
+        } catch (_) { /* noop */ }
+      });
+    }
+  });
+  await critterDesk.waitForTimeout(120);
+  await critterDesk.screenshot({
+    path: path.join(outDir, "option-c-desktop-critter.png"),
+    scale: "css",
+  });
+  await critterDesk.close();
+
+  const phoneHud = await preparePhonePage();
+  await phoneHud.screenshot({
+    path: path.join(outDir, "option-c-phone-hud-warrant-tabs.png"),
+    scale: "css",
+  });
+  await phoneHud.close();
+
+  try {
+    const critterVideoDir = path.join(outDir, "_critter-video-tmp");
+    fs.mkdirSync(critterVideoDir, { recursive: true });
+    const critterCtx = await browser.newContext({
+      viewport: { width: VIEWPORTS.phone.w, height: VIEWPORTS.phone.h },
+      recordVideo: { dir: critterVideoDir, size: { width: VIEWPORTS.phone.w, height: VIEWPORTS.phone.h } },
+    });
+    const critterVidPage = await critterCtx.newPage();
+    await critterVidPage.goto(`${baseUrl}/index.html?layoutAudit=1&critters=force`, { waitUntil: "domcontentloaded" });
+    await seedPage(critterVidPage, {}, SETTINGS_ANIM);
+    await critterVidPage.waitForSelector('[data-layout-key="play-dice-lane"]', { timeout: 45_000 });
+    await critterVidPage.evaluate(() => window.__GB_LAYOUT_AUDIT__.forceAlleyCritter("rat"));
+    await critterVidPage.waitForTimeout(2800);
+    await critterCtx.close();
+    const critterWebm = fs.readdirSync(critterVideoDir).find((f) => f.endsWith(".webm"));
+    if (critterWebm) {
+      fs.renameSync(
+        path.join(critterVideoDir, critterWebm),
+        path.join(outDir, "option-c-alley-critter-crawl.webm"),
+      );
+    }
+    fs.rmSync(critterVideoDir, { recursive: true, force: true });
+  } catch (e) {
+    console.warn("Critter video capture skipped:", e.message);
+  }
+
   await browser.close();
   await new Promise((r) => server.close(r));
   console.log(`Wrote score-sheet snapshots to ${outDir}`);

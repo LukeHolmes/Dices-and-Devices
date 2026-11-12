@@ -507,6 +507,63 @@ test("desktop matchbook — used and bust rows collapse thin", async () => {
   }
 });
 
+test("alley critter crawl — cosmetic, non-blocking", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1&critters=force`, { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({ pacing: "fast", reducedMotion: false, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+    });
+    await resumePostRoll(page);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.forceAlleyCritter("rat"));
+    await page.waitForSelector('[data-layout-key="alley-critter-crawl"]', { timeout: 8000 });
+    const pe = await page.$eval('[data-layout-key="alley-critter-crawl"]', (el) => getComputedStyle(el).pointerEvents);
+    assert.equal(pe, "none", "critter blocks pointer events");
+    const laneBox = await page.$eval('[data-layout-key="play-dice-lane"]', (el) => {
+      const r = el.getBoundingClientRect();
+      return { b: r.bottom, t: r.top };
+    });
+    const critterBox = await page.$eval('[data-layout-key="alley-critter-crawl"]', (el) => {
+      const r = el.getBoundingClientRect();
+      return { b: r.bottom, t: r.top };
+    });
+    assert.ok(critterBox.b <= laneBox.b + 2, "critter should stay in dice lane band");
+    assert.ok(critterBox.t >= laneBox.t - 4, "critter should stay in dice lane band");
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.forceAlleyCritter("roach"));
+    await page.waitForSelector('[data-layout-key="alley-critter-crawl"]', { timeout: 8000 });
+    assert.equal(await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.alleyCritterActive()), true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("phone HUD — warrant stamp and hardware tabs visible", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded" });
+    await resumePostRoll(page);
+    const hud = await page.evaluate(() => ({
+      warrant: !!document.querySelector('[data-layout-key="boss-warrant-stamp"]'),
+      warrantW: document.querySelector('[data-layout-key="boss-warrant-stamp"]')?.getBoundingClientRect().width ?? 0,
+      tabs: [...document.querySelectorAll(".hardware-rail-socket-label")].map((e) => (e.textContent || "").trim()),
+    }));
+    assert.equal(hud.warrant, true, "boss warrant missing");
+    assert.ok(hud.warrantW >= 48, `warrant too narrow (${hud.warrantW}px)`);
+    assert.ok(hud.tabs.some((t) => /engine/i.test(t)), "Engine tab missing");
+    assert.ok(hud.tabs.some((t) => /fuse/i.test(t)), "Fuse Box tab missing");
+  } finally {
+    await browser.close();
+  }
+});
+
 test("roll hand overlay visible during throw", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
