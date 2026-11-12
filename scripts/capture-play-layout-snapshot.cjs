@@ -86,15 +86,15 @@ async function main() {
     scale: "css",
   });
 
-  const phoneExpanded = await preparePhonePage();
-  await phoneExpanded.evaluate(() => window.__GB_LAYOUT_AUDIT__.setMobileScoreSheetOpen(true));
-  await phoneExpanded.waitForSelector(".mobile-score-sheet--expanded", { timeout: 10_000 });
-  await phoneExpanded.waitForTimeout(300);
-  await phoneExpanded.screenshot({
-    path: path.join(outDir, "option-c-phone-score-sheet-expanded.png"),
+  const phonePillArmed = await preparePhonePage();
+  await phonePillArmed.evaluate(() => window.__GB_LAYOUT_AUDIT__.setPillTrayArmed(true));
+  await phonePillArmed.waitForSelector(".pill-attach-tray--armed", { timeout: 10_000 });
+  await phonePillArmed.waitForTimeout(300);
+  await phonePillArmed.screenshot({
+    path: path.join(outDir, "option-c-phone-pill-tray-armed.png"),
     scale: "css",
   });
-  await phoneExpanded.close();
+  await phonePillArmed.close();
 
   const phoneScored = await preparePhonePage();
   const tokBtn = phoneScored.locator('[data-layout-key="mobile-payout-chip-TOK"]');

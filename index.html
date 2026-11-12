@@ -3303,20 +3303,83 @@
         gap: 0.12rem;
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-slot-inner > .bone-pill-control {
-        position: relative;
-        top: auto;
-        bottom: auto;
-        right: auto;
-        left: auto;
-        order: 2;
-        margin-top: 0.28rem;
+        display: none !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge {
+        position: absolute;
+        top: 0.12rem;
+        right: 0.12rem;
+        z-index: 55;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 1.65rem;
+        min-width: 1.65rem;
+        padding: 0.1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 221, 255, 0.55);
+        background: rgba(0, 0, 0, 0.88);
+        font-size: max(9px, 0.58rem);
+        line-height: 1;
+        color: #0df;
+        box-shadow: 0 0 8px rgba(0, 221, 255, 0.2);
+        opacity: 0.55;
+        pointer-events: auto;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge--visible {
+        opacity: 1;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge--attached {
+        opacity: 1;
+        border-color: #ff007f;
+        color: #ff9fcf;
+        box-shadow: 0 0 10px rgba(255, 0, 127, 0.45);
+        transform: scale(1.08);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-wrap.bone-pill-target .bone-die-btn {
+        box-shadow: 0 0 0 2px rgba(0, 221, 255, 0.85), 0 0 14px rgba(0, 221, 255, 0.35);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-wrap.bone-pill-attached .bone-die-btn {
+        box-shadow: 0 0 0 2px rgba(255, 0, 127, 0.75), 0 0 12px rgba(255, 0, 127, 0.3);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .pill-attach-tray {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
         min-height: 2.75rem;
         min-width: 2.75rem;
-        width: auto;
-        padding: 0.15rem 0.45rem;
-        font-size: max(9px, 0.58rem);
-        z-index: 2;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 221, 255, 0.45);
+        background: rgba(0, 10, 18, 0.92);
+        color: #0df;
+        font-family: "Courier New", monospace;
+        font-size: max(10px, 0.62rem);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .pill-attach-tray--armed {
+        border-color: #ff007f;
+        color: #ff9fcf;
+        box-shadow: 0 0 0 2px rgba(255, 0, 127, 0.35), 0 4px 14px rgba(0, 0, 0, 0.5);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .pill-attach-tray-row {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.15rem 0.5rem 0.05rem;
+        z-index: 32;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .pill-attach-tray-hint {
+        font-family: "Courier New", monospace;
+        font-size: max(9px, 0.55rem);
+        color: rgba(212, 212, 216, 0.85);
+        letter-spacing: 0.06em;
     }
     #root-gutterbones[data-ui-redesign="1"] .bone-die-perspective {
         order: 1;
@@ -3587,7 +3650,11 @@
     /* Option C — dice-forward play layout (ui-redesign) */
     @media (max-width: 767px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(3.95rem, calc((100vw - 2.65rem) / 5 - 0.2rem), 5.45rem);
+            --gb-die: clamp(3.35rem, calc((100vw - 2.15rem) / 5), 6.2rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .bone-pill-badge {
+            min-height: 2.75rem;
+            min-width: 2.75rem;
         }
     }
     @media (min-width: 768px) and (max-width: 1023px) {
@@ -3606,7 +3673,7 @@
     }
     @media (min-width: 1024px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(5.75rem, 7.35vw, 6.85rem);
+            --gb-die: clamp(6rem, 7.85vw, 7.15rem);
         }
     }
     @media (min-width: 1600px) {
@@ -3616,7 +3683,7 @@
     }
     @media (min-width: 1920px) {
         #root-gutterbones[data-ui-redesign="1"] {
-            --gb-die: clamp(6.25rem, 6.65vw, 7.75rem);
+            --gb-die: clamp(6.45rem, 6.85vw, 7.95rem);
         }
     }
     #root-gutterbones[data-ui-redesign="1"] .play-score-hint-slot {
@@ -7812,7 +7879,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, onOpenUpgradeIntel, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false }) => {
+    const Bone = ({ data, scoringDie = null, rolling, kept, selected, slot, onClick, onPill, onExplainPill, onDismissPillHint, onOpenUpgradeIntel, raidPill, reducedMotion, canPill = true, pillPulse = false, previewTint = null, colorblindHeld = false, attachPillUi = false, pillTrayArmed = false, pillAttached = false, pillHighlight = false, onPillBadgeClick = null }) => {
         const [loupeOpen, setLoupeOpen] = useState(false);
         const loupeRef = useRef(null);
         const faceIntelBtnRef = useRef(null);
@@ -7917,6 +7984,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         {verdictColor && !rolling && <div className="absolute inset-0 rounded-lg pointer-events-none bone-verdict-glow" style={{ '--verdict-color': verdictColor }} />}
                         {impactParticles.map((particle) => <span key={particle.id} className="impact-particle" style={{ color: particle.color, left: particle.left, top: particle.top, '--px': particle.px, '--py': particle.py }} />)}
                         <img className="bone-die-img" src={faceSrc} alt="" draggable={false} decoding="async" />
+                        {attachPillUi && !rolling && canPill && (
+                            <button
+                                type="button"
+                                data-layout-key={`bone-pill-badge-${slot + 1}`}
+                                className={`bone-pill-badge gb-tappable-label ${pillTrayArmed ? 'bone-pill-badge--visible' : ''} ${pillAttached ? 'bone-pill-badge--attached' : ''}`}
+                                aria-label={pillAttached ? `Detach pill from bone ${slot + 1}` : (pillTrayArmed ? `Attach pill to bone ${slot + 1}` : `Pill target bone ${slot + 1}`)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDismissPillHint?.();
+                                    if (onPillBadgeClick) onPillBadgeClick();
+                                }}
+                            >
+                                💊
+                            </button>
+                        )}
                         {!rolling && isCarved && (
                             multFace ? (
                                 <div className="absolute top-1 right-1 z-10 rounded border border-[#0df] bg-black/85 px-1.5 py-0.5 font-mono text-[10px] md:text-[11px] font-bold text-[#0df] shadow-[0_0_8px_rgba(0,221,255,.45)]" aria-hidden>
@@ -7976,7 +8058,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         </div>
                     </div>
                 )}
-                {!rolling && (
+                {!attachPillUi && !rolling && (
                     <button
                         type="button"
                         disabled={!canPill}
@@ -10976,6 +11058,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [shopPreviewItem, setShopPreviewItem] = useState(null);
         const [playDock, setPlayDock] = useState('lane');
         const [mobileScoreSheetOpen, setMobileScoreSheetOpen] = useState(false);
+        const [pillTrayArmed, setPillTrayArmed] = useState(false);
+        const [pillAttachedSlot, setPillAttachedSlot] = useState(null);
         const [insaneContract, setInsaneContract] = useState(false);
         const [runModifierIds, setRunModifierIds] = useState([]);
         const [dailyRunActive, setDailyRunActive] = useState(false);
@@ -12274,7 +12358,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, [showLorePanel]);
 
         useEffect(() => {
-            if (rolling) setMobileScoreSheetOpen(false);
+            if (rolling) {
+                setMobileScoreSheetOpen(false);
+                setPillTrayArmed(false);
+                setPillAttachedSlot(null);
+            }
         }, [rolling]);
 
         useEffect(() => {
@@ -13670,6 +13758,47 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
 
         const popPill = (idx) => {
             rerollBoneSlot(idx, { consumePill: true });
+        };
+
+        const pillInteractReady = discards > 0 && hasRolled && !rolling && !rollLocked && !payoutInputLock;
+        const clearPillAttachUi = () => {
+            setPillTrayArmed(false);
+            setPillAttachedSlot(null);
+        };
+        const handlePillTrayToggle = () => {
+            if (!pillInteractReady) return;
+            dismissMechanicToasts();
+            if (pillTrayArmed) {
+                clearPillAttachUi();
+                return;
+            }
+            setPillTrayArmed(true);
+            if (!audioSettings.seenPillPop) {
+                showMechanicPopup('PILL');
+                patchSettings({ seenPillPop: true, dismissPillPulse: true });
+            }
+        };
+        const handleBonePillAttach = (idx) => {
+            if (!pillTrayArmed || !pillInteractReady) return false;
+            dismissMechanicToasts();
+            if (pillAttachedSlot === idx) {
+                popPill(idx);
+                clearPillAttachUi();
+            } else {
+                setPillAttachedSlot(idx);
+            }
+            return true;
+        };
+        const handlePillBadgeClick = (idx) => {
+            if (!pillInteractReady) return;
+            dismissMechanicToasts();
+            if (pillTrayArmed && pillAttachedSlot === idx) {
+                setPillAttachedSlot(null);
+                return;
+            }
+            if (pillTrayArmed) {
+                setPillAttachedSlot(idx);
+            }
         };
 
         useEffect(() => {
@@ -17023,9 +17152,27 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     return true;
                 },
                 mobileScoreSheetExpanded: () => !!document.querySelector('.mobile-score-sheet--expanded'),
-                stashProgramLayoutKeys: () => ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER']
+                stashProgramLayoutKeys: () => ['stash-program-SNIFF', 'stash-program-BRIBE', 'stash-program-FIX', 'stash-program-LAUNDER'],
+                setPillTrayArmed: (open) => {
+                    setPillTrayArmed(!!open);
+                    if (!open) setPillAttachedSlot(null);
+                    return true;
+                },
+                setPillAttachedSlot: (idx) => {
+                    setPillAttachedSlot(typeof idx === 'number' && idx >= 0 ? idx : null);
+                    return true;
+                },
+                pillTrayArmed: () => !!document.querySelector('.pill-attach-tray--armed'),
+                pillAttachedSlot: () => {
+                    const el = document.querySelector('.bone-slot-wrap.bone-pill-attached');
+                    if (!el) return null;
+                    const lane = document.querySelector('[data-layout-key="play-dice-lane"]');
+                    if (!lane) return null;
+                    return [...lane.querySelectorAll('.bone-slot-wrap')].indexOf(el);
+                },
+                countPillTargets: () => document.querySelectorAll('.bone-slot-wrap.bone-pill-target').length,
             };
-        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags]);
+        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
@@ -17720,7 +17867,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         Hit ROLL 'EM to throw your bones.
                                     </div>
                                 )}
-                                <div data-layout-key="play-dice-lane" className={`play-dice-lane relative flex gap-2 md:gap-4 mb-14 md:mb-16 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}>
+                                <div
+                                    data-layout-key="play-dice-lane"
+                                    className={`play-dice-lane relative flex gap-2 md:gap-4 mb-2 md:mb-3 z-30 ${rolling ? 'dice-lane-roll' : 'dice-lane-idle'}`}
+                                    onClick={(e) => {
+                                        if (e.target === e.currentTarget && pillTrayArmed) clearPillAttachUi();
+                                    }}
+                                >
                                     {synergyLinks.length > 0 && !reducedMotion && (
                                         <div className="synergy-link-layer" aria-hidden="true">
                                             {synergyLinks.map((link) => {
@@ -17742,7 +17895,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         <div
                                             key={d.id}
                                             ref={(el) => { boneSlotRefs.current[i] = el; }}
-                                            className="bone-slot-wrap bone-hover-ready relative"
+                                            className={`bone-slot-wrap bone-hover-ready relative${pillTrayArmed && pillInteractReady ? ' bone-pill-target' : ''}${pillAttachedSlot === i ? ' bone-pill-attached' : ''}`}
                                             style={boneSlotStyles[i] || undefined}
                                         >
                                             <Bone
@@ -17755,6 +17908,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                 raidPill={activeBoss?.id === 'THE_RAID'}
                                                 reducedMotion={reducedMotion}
                                                 colorblindHeld={audioSettings.colorblindHeld}
+                                                attachPillUi
+                                                pillTrayArmed={pillTrayArmed}
+                                                pillAttached={pillAttachedSlot === i}
+                                                pillHighlight={pillTrayArmed && pillInteractReady}
+                                                onPillBadgeClick={() => handlePillBadgeClick(i)}
                                                 previewTint={
                                                     payoutPreviewCatId && categoryPreviewSlotActive(payoutPreviewCatId, dice, i)
                                                         ? (audioSettings.colorblindScoring
@@ -17782,6 +17940,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                             setSwapMode(false);
                                                             AudioSystem.playTone(400, 'triangle', .1);
                                                         }
+                                                    } else if (handleBonePillAttach(i)) {
+                                                        return;
                                                     } else if (hasRolled) {
                                                         setKept(prev => {
                                                             const n = [...prev];
@@ -17799,6 +17959,27 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     ))}
                                 </div>
                                 <RollHandThrowOverlay generation={rollHandFxGen} spritesReady={rollHandSpritesReady} />
+                                {pillInteractReady && (
+                                    <div data-layout-key="play-pill-tray-row" className="pill-attach-tray-row">
+                                        <button
+                                            type="button"
+                                            data-layout-key="play-pill-tray"
+                                            onClick={handlePillTrayToggle}
+                                            className={`pill-attach-tray gb-tappable-label ${pillTrayArmed ? 'pill-attach-tray--armed' : ''} ${!audioSettings.dismissPillPulse && meta.totalRuns === 0 ? 'animate-pulse' : ''}`}
+                                            aria-pressed={pillTrayArmed}
+                                            aria-label={`Pill tray, ${discards} remaining`}
+                                        >
+                                            <span aria-hidden>💊</span>
+                                            <span>PILL · {discards}</span>
+                                            {activeBoss?.id === 'THE_RAID' && <span className="text-[9px] text-red-400 font-mono">−$2</span>}
+                                        </button>
+                                        {pillTrayArmed && (
+                                            <span className="pill-attach-tray-hint">
+                                                {pillAttachedSlot != null ? 'Tap bone again to pop' : 'Tap a highlighted bone'}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                                 <div data-layout-key="play-alley-controls" className="play-alley-controls flex gap-3 md:gap-4 w-full px-4 md:px-12 absolute bottom-5 z-30">
                                     <button type="button" data-layout-key="play-shuffle-btn" onClick={() => setSwapMode(!swapMode)} disabled={rolling || !hasRolled} className={`flex-1 rounded border-4 font-bold text-sm md:text-xl transition-all font-mono py-3 ${swapMode ? 'bg-[#0df] text-black border-white' : 'bg-[#c78b16] text-black border-[#5c4305] disabled:opacity-50'}`}>{swapMode ? 'CANCEL' : 'SHUFFLE'}</button>
                                     <button data-tutorial="roll-btn" onClick={rollBones} disabled={!rollReady} className={`flex-1 relative bg-[#ff007f] text-white border-4 border-[#4a0024] shadow-[0_6px_0_#7a003d] font-marker text-2xl md:text-3xl italic tracking-tight disabled:grayscale disabled:opacity-50 py-3 overflow-visible ${rollReady ? 'roll-ready-pulse' : ''} ${rollBtnSquash ? 'gb-roll-btn-squash' : ''}`}>
