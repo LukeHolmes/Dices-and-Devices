@@ -2877,6 +2877,8 @@
     }
     #root-gutterbones[data-ui-redesign="1"] .payout-tier-live.payout-tier-best {
         box-shadow: inset 0 0 0 1px rgba(234, 179, 8, 0.35);
+        outline: 2px solid #ff007f;
+        outline-offset: 1px;
     }
     #root-gutterbones[data-ui-redesign="1"] .payout-heat-pill {
         font-family: "Courier New", monospace;
@@ -3277,17 +3279,43 @@
             --hand-sprite-size: clamp(8rem, min(18vw, 38vh), 15rem);
         }
     }
+    #root-gutterbones[data-ui-redesign="1"] .bone-slot-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.12rem;
+    }
     #root-gutterbones[data-ui-redesign="1"] .bone-slot-inner > .bone-pill-control {
+        position: relative;
         top: auto;
-        bottom: -0.5rem;
-        right: -0.35rem;
+        bottom: auto;
+        right: auto;
         left: auto;
-        min-height: 2rem;
-        min-width: 2rem;
-        padding: 0.15rem 0.35rem;
-        font-size: max(9px, 0.62rem);
-        z-index: 45;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+        order: 2;
+        margin-top: 0.28rem;
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        width: auto;
+        padding: 0.15rem 0.45rem;
+        font-size: max(9px, 0.58rem);
+        z-index: 2;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-die-perspective {
+        order: 1;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-die-perspective .bone-face-intel-btn {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        order: 2;
+        margin-top: 0.1rem;
+        transform: none;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .bone-loupe-btn {
+        display: none;
     }
     #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .animate-gutter-hand,
     #root-gutterbones.gb-hand-review-slowmo[data-ui-redesign="1"] .gutter-roll-hand-closed,
@@ -3429,6 +3457,161 @@
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] { grid-column: 1; }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] { grid-column: 2; }
         #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-stash"] {
+            display: none !important;
+        }
+    }
+    /* Option C — dice-forward play layout (ui-redesign) */
+    @media (max-width: 767px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-die: clamp(3.95rem, calc((100vw - 2.65rem) / 5 - 0.2rem), 5.45rem);
+        }
+    }
+    @media (min-width: 768px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-die: clamp(5.75rem, 7.35vw, 6.85rem);
+        }
+    }
+    @media (min-width: 1600px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-die: clamp(6rem, 6.4vw, 7.35rem);
+        }
+    }
+    @media (min-width: 1920px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-die: clamp(6.25rem, 6.65vw, 7.75rem);
+        }
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-score-hint-slot {
+        min-height: 2.5rem;
+        max-height: none;
+        overflow: visible;
+    }
+    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-score-hint"] {
+        position: relative !important;
+        inset: auto !important;
+        width: 100%;
+        min-height: 2.35rem;
+        border-color: rgba(255, 0, 127, 0.55) !important;
+        background: rgba(42, 0, 23, 0.82) !important;
+        color: #fecdd3 !important;
+        font-weight: 600;
+        white-space: normal;
+        line-height: 1.25;
+        font-size: max(9px, 0.58rem);
+        padding: 0.35rem 0.5rem !important;
+        display: block !important;
+        text-align: center;
+        pointer-events: none;
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones[data-ui-redesign="1"] .gb-play-dock {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-phase-grid"] {
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-mobile-intel"] {
+            order: 1;
+            flex: 0 0 auto;
+            min-height: 0;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"] {
+            order: 2;
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: 52vh;
+            overflow: visible;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] {
+            order: 3;
+            flex: 0 0 auto;
+            min-height: 4.25rem;
+            max-height: 30vh;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .gutter-roll-hand-sprite {
+            --hand-wrist-inset-x: -14%;
+            --hand-wrist-lift-y: 44%;
+            --hand-sprite-size: clamp(3.1rem, 14vw, 5.25rem);
+            z-index: 12;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .play-dice-lane {
+            padding-left: 1rem;
+            padding-right: 0.45rem;
+            gap: clamp(0.16rem, 1.1vw, 0.32rem);
+            margin-bottom: 2.5rem;
+            flex-wrap: nowrap;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .bone-slot-wrap {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .run-intel-summary--inline {
+            height: auto;
+            max-height: none;
+            min-height: 0;
+            overflow: visible;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .run-intel-summary--inline .run-intel-chip-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.22rem 0.38rem;
+            max-height: none;
+            overflow: visible;
+            flex-wrap: unset;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .run-intel-chip {
+            min-width: 0;
+            overflow: hidden;
+            line-height: 1.12;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .run-intel-chip .font-bold {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 0.35rem;
+            min-height: 4.1rem;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip [data-payout-row="more"] {
+            display: none !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip > [data-payout-row] {
+            flex: 0 0 auto;
+            width: auto !important;
+            min-width: 6.25rem;
+            max-width: 8.5rem;
+            min-height: 3.65rem;
+            max-height: none !important;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.14) !important;
+            scroll-snap-align: start;
+            padding: 0.35rem 0.4rem !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip .score-row-name {
+            white-space: normal;
+            line-height: 1.1;
+            font-size: max(9px, 0.62rem);
+        }
+        #root-gutterbones[data-ui-redesign="1"] .payout-sheet-rows--mobile-strip .payout-tier-best {
+            box-shadow: 0 0 0 2px #ff007f !important;
+        }
+        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-ledger-column"] .stash-dock-compact {
             display: none !important;
         }
     }
@@ -7828,10 +8011,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         useLayoutEffect(() => {
             const container = containerRef.current;
             if (!container) return undefined;
+            const mobileStripActive = () => {
+                const root = document.getElementById('root-gutterbones');
+                return !!(
+                    root?.dataset?.uiRedesign === '1'
+                    && typeof window !== 'undefined'
+                    && window.matchMedia('(max-width: 767px)').matches
+                );
+            };
+            const syncStripClass = () => {
+                const strip = mobileStripActive();
+                container.classList.toggle('payout-sheet-rows--mobile-strip', strip);
+                return strip;
+            };
             const fit = () => {
+                const strip = syncStripClass();
                 const rows = Array.from(container.querySelectorAll('[data-payout-row]'));
                 rows.forEach((row) => row.classList.remove('payout-row-collapsed'));
                 setMoreCount(0);
+                if (strip) return;
                 if (!rows.length) return;
                 const cr = container.getBoundingClientRect();
                 const limit = cr.bottom - 1;
@@ -16923,6 +17121,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <ActiveModifiers inventory={inventory} boss={activeBoss} insaneContract={insaneContract} runModifierIds={runModifierIds} inline />
                                     <span className={`street-ledger-icon street-ledger-icon--cash ${cashDropFlash ? 'hud-cash-drop' : ''}`} title="Dirty cash">${Math.max(0, displayGold)}</span>
                                     {debt > 0 && <span className={`street-ledger-icon street-ledger-icon--debt ${activeBoss?.id === 'LOAN_SHARK' ? 'loan-shark-debt' : 'debt-pulse'}`} title="Debt">IOU ${debt}</span>}
+                                    <button type="button" data-layout-key="play-stash-open-mobile" className="md:hidden street-ledger-icon font-mono text-[10px] px-1.5 py-0.5 border border-zinc-600 text-zinc-200" onClick={() => setShowMobileStash(true)} aria-label="Open stash programs">STASH</button>
                                     <button type="button" data-layout-key="system-menu-street" onClick={() => setShowSystemMenu(true)} aria-label="Open system menu" title="System settings">SYS</button>
                                     <button type="button" data-layout-key="play-history-log" onClick={() => setPlayHistoryDrawerOpen(true)} aria-expanded={playHistoryDrawerOpen} aria-label="Open hand history log">LOG</button>
                                     <button type="button" onClick={() => toggleMechanicPopup('pills')} className="sr-only">Pills help</button>
@@ -17000,16 +17199,32 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </button>
                                 ))}
                             </div>
-                            <div className="relative mx-3 md:mx-4 mb-1 min-h-[2.75rem] shrink-0">
+                            <div className="play-score-hint-slot relative mx-3 md:mx-4 mb-1 min-h-[2.75rem] shrink-0">
                                 {!audioSettings.dismissScoreHint && hasRolled && !rolling && usedCats.length === 0 && (
-                                    <div className="absolute inset-0 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide flex items-center justify-center pointer-events-none">
+                                    <div data-layout-key="play-score-hint" className="absolute inset-0 px-3 py-2 border border-[#0df]/40 bg-cyan-950/30 font-mono text-[10px] md:text-xs text-cyan-100 text-center tracking-wide flex items-center justify-center pointer-events-none md:!absolute">
                                         Tap a payout row on THE PAYOUTS to score this hand{bestPreviewHeat > 0 ? ` — best preview: ${bestPreviewHeat} heat` : ''}.
                                     </div>
                                 )}
                             </div>
                         </div>
                         <div data-layout-key="play-phase-grid" className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 min-h-0 min-w-0 overflow-hidden">
-                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex flex-col ${playDock === 'payouts' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-layout-key="play-mobile-intel" className="md:hidden shrink-0 px-0.5 min-h-0">
+                                <RunIntelSummary
+                                    inline
+                                    flowMultiplier={flowMultiplier}
+                                    flowStreakCap={flowStreakCap}
+                                    comboMeter={synergyState.comboMeter || 0}
+                                    heatSpikeNextHand={synergyState.heatSpikeNextHand || 0}
+                                    blueprints={blueprints}
+                                    activeWager={activeWager}
+                                    insaneContract={insaneContract}
+                                    routeEffect={currentRouteEffect}
+                                    boss={activeBoss}
+                                    consumables={consumables}
+                                    inventory={inventory}
+                                />
+                            </div>
+                            <div data-layout-key="play-ledger-column" data-tutorial="payout-sheet" className={`order-2 md:order-2 md:col-span-5 min-h-0 min-w-0 matchbook-ledger bg-[#e8e6e1] text-gray-900 p-2 md:p-3 font-mono overflow-hidden flex flex-col ${playDock === 'stash' ? 'hidden' : 'flex'} md:flex`}>
                                 {(() => {
                                     const unlockInfo = getCategoryUnlockInfo(meta);
                                     return (
@@ -17089,7 +17304,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     ))}</div>
                                 </div>
                             </div>
-                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-7 min-h-0 min-w-0 felt-surface gb-alley-stage border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'lane' ? 'flex' : 'hidden'} md:flex`}>
+                            <div data-layout-key="play-alley" data-tutorial="dice-lane" className={`order-1 md:order-1 flex-1 md:col-span-7 min-h-0 min-w-0 felt-surface gb-alley-stage border-8 md:border-[12px] border-[#2a2a2a] rounded-xl flex flex-col items-center justify-center relative shadow-inner overflow-hidden ${feltPulse ? 'felt-roll-pulse' : ''} ${playDock === 'stash' ? 'hidden' : 'flex'} md:flex`}>
                                 <HardwareRail inventory={inventory} hardwareDisabled={hardwareDisabled} />
                                 <div className={`felt-edge-ring ${rolling ? 'felt-edge-ring-roll' : ''}`}></div>
                                 <div className="felt-smoke">
