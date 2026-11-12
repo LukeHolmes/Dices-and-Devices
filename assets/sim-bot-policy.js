@@ -42,13 +42,66 @@
         || null
     );
 
+    const kitFaceIdsOnDice = (dice, showingOnly = false) => {
+        const found = new Set();
+        (dice || []).forEach((d) => {
+            if (!showingOnly) {
+                (d?.faces || []).forEach((f) => {
+                    const fid = f?.id || f?.faceId;
+                    if (fid && KIT_FACE_IDS.includes(fid)) found.add(fid);
+                });
+            }
+            const showing = faceIdAt(d);
+            if (showing && KIT_FACE_IDS.includes(showing)) found.add(showing);
+        });
+        return found;
+    };
+
+    const kitFaceDieIndex = (dice, faceId) => {
+        let idx = -1;
+        (dice || []).forEach((d, i) => {
+            if (faceIdAt(d) === faceId) idx = i;
+            (d?.faces || []).forEach((f) => {
+                if ((f?.id || f?.faceId) === faceId) idx = i;
+            });
+        });
+        return idx;
+    };
+
+    const pickKitCarveDie = (faceId, dice) => {
+        const ghostIdx = kitFaceDieIndex(dice, 'GHOST_FACE');
+        const echoIdx = kitFaceDieIndex(dice, 'ECHO_FACE');
+        const prefer = faceId === 'ECHO_FACE' ? 4 : 0;
+        const blocker = faceId === 'ECHO_FACE' ? ghostIdx : echoIdx;
+        if (blocker >= 0 && blocker === prefer) {
+            const alts = faceId === 'GHOST_FACE' ? [0, 1, 2, 3, 4] : [4, 3, 2, 1, 0];
+            return alts.find((i) => i !== blocker) ?? prefer;
+        }
+        return prefer;
+    };
+
+    const pickKitCarveFaceIdx = (die) => {
+        const faces = die?.faces || [];
+        const standard = [];
+        faces.forEach((f, i) => {
+            if (!f?.type || f.type === 'standard') standard.push(i);
+        });
+        return standard.length ? standard[0] : 0;
+    };
+
     const ghostEchoIndices = (dice) => {
         const ghost = [];
         const echo = [];
         (dice || []).forEach((d, i) => {
+            const onDie = new Set();
             const fid = faceIdAt(d);
-            if (fid === 'GHOST_FACE' || d?.isGhost) ghost.push(i);
-            if (fid === 'ECHO_FACE' || d?.isEchoed) echo.push(i);
+            if (fid) onDie.add(fid);
+            (d?.faces || []).forEach((f) => {
+                const id = f?.id || f?.faceId;
+                if (id) onDie.add(id);
+            });
+            if (onDie.has('GHOST_FACE') || d?.isGhost) ghost.push(i);
+            if (onDie.has('ECHO_FACE') || d?.isEchoed) echo.push(i);
         });
         return { ghost, echo };
     };
@@ -165,12 +218,17 @@
     };
 
     const pickCategoryLegacy = ({ candidates, score, target }) => {
+        const valid = (candidates || []).filter((c) => c.valid);
+        if (!valid.length) return null;
+        const clearing = valid.filter((c) => clearsQuota(score, c.total, target));
+        const pool = clearing.length ? clearing : valid;
         let best = null;
-        (candidates || []).forEach((c) => {
-            if (!c.valid) return;
+        pool.forEach((c) => {
             if (!best || c.total > best.total) best = c;
         });
-        return best ? { ...best, decision: 'max_chips' } : null;
+        return best
+            ? { ...best, decision: clearing.length && clearsQuota(score, best.total, target) ? 'clear_quota' : 'max_chips' }
+            : null;
     };
 
     const pickCategoryWp2 = ({ candidates, score, target }) => {
@@ -196,29 +254,22 @@
         if (!valid.length) return null;
         const preds = evaluateOrganicPredicates(ctx);
         const clearing = valid.filter((c) => clearsQuota(ctx.score, c.total, ctx.target));
-        const linkClearing = clearing.filter((c) => organicPairCount(c.chainLinks) > 0);
-        if (linkClearing.length) {
-            const best = linkClearing.reduce((a, b) => (a.total >= b.total ? a : b));
+        if (clearing.length) {
+            const bestClear = clearing.reduce((a, b) => {
+                const rankA = organicPairCount(a.chainLinks) * 1_000_000 + a.total;
+                const rankB = organicPairCount(b.chainLinks) * 1_000_000 + b.total;
+                return rankA >= rankB ? a : b;
+            });
             return {
-                ...best,
-                decision: 'lane_clear_with_link',
-                organicPairs: organicPairCount(best.chainLinks),
+                ...bestClear,
+                decision: organicPairCount(bestClear.chainLinks) > 0 ? 'lane_clear_organic' : 'clear_quota',
+                organicPairs: organicPairCount(bestClear.chainLinks),
                 predicates: preds,
             };
         }
-        if (clearing.length && preds.linkKitEligible && preds.usefulSetupReroll && !preds.sameHandLowRisk) {
-            const best = clearing.reduce((a, b) => (a.total >= b.total ? a : b));
-            return {
-                ...best,
-                decision: 'lane_defer_clear_pool',
-                organicPairs: organicPairCount(best.chainLinks),
-                predicates: preds,
-            };
-        }
-        const pool = clearing.length ? clearing : valid;
         let best = null;
         let bestRank = -1;
-        pool.forEach((c) => {
+        valid.forEach((c) => {
             const pairs = organicPairCount(c.chainLinks);
             const setupBonus = preds.linkKitEligible && pairs > 0 ? 2_000_000 : 0;
             const rank = setupBonus + pairs * 1_000_000 + c.total;
@@ -226,9 +277,7 @@
                 bestRank = rank;
                 best = {
                     ...c,
-                    decision: clearing.length
-                        ? (pairs ? 'lane_clear_organic' : 'clear_quota')
-                        : 'lane_build_organic',
+                    decision: pairs ? 'lane_build_organic' : 'max_chips',
                     organicPairs: pairs,
                     predicates: preds,
                 };
@@ -244,9 +293,11 @@
         return pickCategoryLegacy(ctx);
     };
 
-    const assessFullLinkKit = (inventory, diceFaceIds) => {
+    const assessFullLinkKit = (inventory, diceFaceIds, dice) => {
         const ids = inventoryIds(inventory);
-        const faces = new Set((diceFaceIds || []).filter(Boolean));
+        const faces = dice
+            ? kitFaceIdsOnDice(dice, false)
+            : new Set((diceFaceIds || []).filter(Boolean));
         const missing = [];
         if (!ids.includes('BOOKENDS')) missing.push('BOOKENDS');
         if (!faces.has('GHOST_FACE')) missing.push('GHOST_FACE');
@@ -289,7 +340,7 @@
     });
 
     const planShopRefresh = (ctx) => {
-        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds, ctx.dice);
         if (kit.fullKit) {
             return { family: 'refresh', action: 'skip', reason: 'refresh_kit_complete' };
         }
@@ -313,7 +364,7 @@
     };
 
     const planShopBuy = (ctx) => {
-        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds, ctx.dice);
         const reserve = shopBudgetReserve(ctx);
         const gold = ctx.gold || 0;
         const afford = (price) => gold >= price + reserve;
@@ -322,8 +373,8 @@
         const invIds = new Set(inventoryIds(ctx.inventory));
         const wants = [];
         if (!kit.hasBookends) wants.push('BOOKENDS');
-        if (!kit.hasGhostFace) wants.push('GHOST_FACE');
-        if (!kit.hasEchoFace) wants.push('ECHO_FACE');
+        if (!kit.hasGhostFace && !invIds.has('GHOST_FACE')) wants.push('GHOST_FACE');
+        if (!kit.hasEchoFace && !invIds.has('ECHO_FACE')) wants.push('ECHO_FACE');
         if (kit.missing.length === 0) {
             KIT_HARDWARE_PRIORITY.forEach((id) => {
                 if (!invIds.has(id) && id !== 'BOOKENDS') wants.push(id);
@@ -358,7 +409,7 @@
         }
         const reserve = shopBudgetReserve(ctx);
         const goldAfterToll = (ctx.gold || 0) - (ctx.sinkEstimate || 0);
-        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds, ctx.dice);
         const listedMissing = kit.missing.filter((id) => (ctx.available || []).some((i) => i.id === id));
         if (listedMissing.length > 0) {
             const brokeForKit = listedMissing.every((id) => {
@@ -401,22 +452,32 @@
         if (rev !== WP3_SHOP_REVISION) {
             return { family: 'carve', action: 'skip', reason: 'carve_policy_not_active' };
         }
-        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds);
+        const dice = ctx.dice || [];
+        const kit = assessFullLinkKit(ctx.inventory, ctx.diceFaceIds, dice.length ? dice : null);
         const offerId = ctx.carveOfferId || (ctx.carveOffers && ctx.carveOffers[0]?.id);
-        let targetFace = null;
-        if (!kit.hasGhostFace) targetFace = 'GHOST_FACE';
-        else if (!kit.hasEchoFace) targetFace = 'ECHO_FACE';
-        if (!targetFace) {
+        if (kit.hasGhostFace && kit.hasEchoFace) {
             return { family: 'carve', action: 'exit', reason: 'carve_exit_faces_complete' };
         }
         if (!offerId) {
             return { family: 'carve', action: 'exit', reason: 'carve_exit_no_offer' };
         }
-        if (offerId !== targetFace) {
+        if (!KIT_FACE_IDS.includes(offerId)) {
             return { family: 'carve', action: 'exit', reason: 'carve_exit_wrong_offer_for_kit' };
         }
-        let dieIdx = targetFace === 'ECHO_FACE' ? 4 : 0;
-        return { family: 'carve', action: 'carve', reason: 'carve_kit_face', faceId: targetFace, dieIdx };
+        const onDice = kitFaceIdsOnDice(dice, false);
+        if (onDice.has(offerId)) {
+            return { family: 'carve', action: 'exit', reason: 'carve_exit_face_already_carved' };
+        }
+        const dieIdx = pickKitCarveDie(offerId, dice);
+        const faceIdx = pickKitCarveFaceIdx(dice[dieIdx]);
+        return {
+            family: 'carve',
+            action: 'carve',
+            reason: 'carve_kit_face',
+            faceId: offerId,
+            dieIdx,
+            faceIdx,
+        };
     };
 
     const shouldRerollLegacy = ({ score, target, hands, discards, bestTotal, e2eGreedy }) => {
@@ -460,14 +521,6 @@
         const clearsNow = bestTotal >= gap;
         if (clearsNow && preds.sameHandLowRisk) {
             return { reroll: false, reason: 'lane_score_link_clear_same_hand', predicates: preds };
-        }
-        if (clearsNow && preds.linkKitEligible && preds.usefulSetupReroll && discards > 0) {
-            return {
-                reroll: true,
-                reason: 'lane_defer_clear_for_setup',
-                predicates: preds,
-                unfulfilled: preds.unfulfilled,
-            };
         }
         if (clearsNow) {
             return { reroll: false, reason: 'clear_available', predicates: preds };
@@ -599,6 +652,7 @@
         if (revision === LEGACY_REVISION) return false;
         if (!clearsQuota(score, bestTotal, target)) return false;
         if (revision === WP2_REVISION) return true;
+        if (revision === WP3_SHOP_REVISION) return true;
         if (isLanePlayRevision(revision)) {
             const preds = evaluateOrganicPredicates(ctx);
             if (!preds.linkKitEligible) return true;
@@ -645,6 +699,9 @@
         ghostEchoMinDistance,
         ghostEchoIndices,
         isLanePlayRevision,
+        kitFaceIdsOnDice,
+        pickKitCarveDie,
+        pickKitCarveFaceIdx,
     };
 
     if (typeof module !== 'undefined' && module.exports) {

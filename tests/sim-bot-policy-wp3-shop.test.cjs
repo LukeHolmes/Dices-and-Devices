@@ -145,6 +145,44 @@ test("WP3 carve — wrong offer exits instead of done stall", () => {
   assert.match(plan.reason, /wrong_offer/);
 });
 
+test("WP3 carve — accepts Echo offer before Ghost when Echo missing", () => {
+  const plan = P.planCarveAction({
+    revision: WP3,
+    inventory: [{ id: "BOOKENDS" }, { id: "ECHO_FACE" }],
+    dice: [{ value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }, { value: 5 }],
+    diceFaceIds: [null, null, null, null, null],
+    carveOfferId: "ECHO_FACE",
+  });
+  assert.equal(plan.action, "carve");
+  assert.equal(plan.faceId, "ECHO_FACE");
+  assert.equal(plan.dieIdx, 4);
+});
+
+test("WP3 carve — counts kit face carved on non-showing slot", () => {
+  const plan = P.planCarveAction({
+    revision: WP3,
+    inventory: [{ id: "BOOKENDS" }],
+    dice: [
+      {
+        value: 2,
+        showingFace: 0,
+        faces: [
+          { type: "standard", faceId: null },
+          { id: "GHOST_FACE", type: "carved" },
+        ],
+      },
+      { value: 3 },
+      { value: 4 },
+      { value: 5 },
+      { value: 2 },
+    ],
+    diceFaceIds: [null, null, null, null, null],
+    carveOfferId: "ECHO_FACE",
+  });
+  assert.equal(plan.action, "carve");
+  assert.equal(plan.faceId, "ECHO_FACE");
+});
+
 test("WP3 carve — faces complete exits to shop", () => {
   const plan = P.planCarveAction({
     revision: WP3,

@@ -16599,6 +16599,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const diceFaceIds = dice.map((d) => (
                             d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
                         ));
+                        const diceForPolicy = dice;
                         const sinkEstimate = (
                             round >= SHOP_AGENCY_TUNING.lateCarrySinkMinRound
                             && gold > SHOP_AGENCY_TUNING.lateCarrySinkGoldFloor
@@ -16623,7 +16624,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             refreshCost: shopRefreshCost,
                             sinkEstimate,
                         });
-                        const kitGap = GutterbonesSimBotPolicy.assessFullLinkKit(inventory, diceFaceIds);
+                        const kitGap = GutterbonesSimBotPolicy.assessFullLinkKit(
+                            inventory,
+                            diceFaceIds,
+                            diceForPolicy,
+                        );
                         const plan = GutterbonesSimBotPolicy.planShopAction({
                             revision: policyRev,
                             gold,
@@ -16633,6 +16638,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             target: currentTarget,
                             inventory,
                             diceFaceIds,
+                            dice: diceForPolicy,
                             available,
                             refreshCost: shopRefreshCost,
                             shopRefreshes,
@@ -16746,6 +16752,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const plan = GutterbonesSimBotPolicy.planCarveAction({
                             revision: policyRev,
                             inventory,
+                            dice,
                             diceFaceIds,
                             carveOfferId: selectedItem?.id || null,
                         });
@@ -16764,9 +16771,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             if (carvingDie === null) {
                                 setCarvingDie(dieIdx);
                             }
-                            const faces = dice[dieIdx]?.faces || [];
-                            let faceIdx = faces.findIndex((f) => !f?.type || f.type === 'standard');
-                            if (faceIdx < 0) faceIdx = 0;
+                            const faceIdx = typeof plan.faceIdx === 'number'
+                                ? plan.faceIdx
+                                : (() => {
+                                    const faces = dice[dieIdx]?.faces || [];
+                                    const fi = faces.findIndex((f) => !f?.type || f.type === 'standard');
+                                    return fi < 0 ? 0 : fi;
+                                })();
                             executeCarve(dieIdx, faceIdx);
                             window.__GB_E2E__?.noteSimKitAcquisition?.();
                             return true;

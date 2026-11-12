@@ -96,11 +96,18 @@ function runPolicy(label) {
     ? Object.values(summary.linkObserverByRid)
     : [];
   const merged = mergeLinkObserver(rows);
+  const stuck = (summary.failures || []).filter(
+    (f) => f.reason === "incomplete" || String(f.detail || "").includes("stuck"),
+  ).length;
   return {
     label,
     revision,
     exit: r.status,
     games: summary.completed || games,
+    wins: summary.wins || 0,
+    busts: summary.busts || 0,
+    maxRoundMedian: summary.maxRoundMedian ?? null,
+    stuckRuns: stuck,
     funnel: funnelDrop(merged.families),
     families: merged.families,
     shadow: merged.shadow,
@@ -117,7 +124,7 @@ for (const label of POLICIES) {
 const report = {
   ridRange: `${RID_START}-${RID_END}`,
   maxSteps: MAX_STEPS,
-  note: "observer-only; bot choices unchanged",
+  note: "link observer pass (bot policy active)",
   policies,
 };
 
