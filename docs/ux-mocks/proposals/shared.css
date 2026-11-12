@@ -31,11 +31,11 @@
 #root-gutterbones[data-ux-mock] .gutter-roll-hand-sprite {
   animation: none !important;
   opacity: 1 !important;
-  transform: translate(4%, -12%) rotate(2deg) scale(1.02) !important;
-  --hand-sprite-size: clamp(4.25rem, 20vw, 8.5rem) !important;
+  transform: translate(-6%, -14%) rotate(2deg) scale(0.92) !important;
+  --hand-sprite-size: clamp(3.5rem, 16vw, 7rem) !important;
   --hand-wrist-lift-y: 38% !important;
-  --hand-wrist-inset-x: -1% !important;
-  z-index: 34 !important;
+  --hand-wrist-inset-x: -8% !important;
+  z-index: 20 !important;
 }
 #root-gutterbones[data-ux-mock] .gutter-roll-hand-closed {
   animation: none !important;
@@ -95,16 +95,27 @@
   padding: 0.1rem 0.35rem !important;
 }
 
-/* Best-play banner */
+/* Post-roll coach hint — full line visible (incl. best preview) */
+#root-gutterbones[data-ux-mock] [data-layout-key="play-hud"] .relative.mx-3.mb-1,
 #root-gutterbones[data-ux-mock] .gb-screen .relative.mx-3.mb-1 {
-  min-height: 0 !important;
-  max-height: 1.75rem !important;
-  margin-bottom: 0.15rem !important;
+  min-height: 2.35rem !important;
+  max-height: none !important;
+  height: auto !important;
+  margin-bottom: 0.2rem !important;
+  overflow: visible !important;
 }
+#root-gutterbones[data-ux-mock] [data-layout-key="play-hud"] .relative.mx-3.mb-1 > div,
 #root-gutterbones[data-ux-mock] .gb-screen .relative.mx-3.mb-1 > div {
-  font-size: 8px !important;
-  padding: 0.2rem 0.35rem !important;
-  line-height: 1.15 !important;
+  position: relative !important;
+  inset: auto !important;
+  font-size: 7px !important;
+  padding: 0.28rem 0.4rem !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+  text-overflow: unset !important;
+  overflow: visible !important;
+  display: block !important;
+  pointer-events: none !important;
 }
 
 /* —— Dice lane: large row, pills under faces (not on pips) —— */
@@ -225,7 +236,7 @@
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   grid-auto-rows: minmax(1.15rem, auto) !important;
-  gap: 0.18rem 0.28rem !important;
+  gap: 0.28rem 0.4rem !important;
   max-height: none !important;
   overflow: visible !important;
   flex-wrap: unset !important;
@@ -249,9 +260,11 @@
 }
 #root-gutterbones[data-ux-mock] .run-intel-chip .font-bold,
 #root-gutterbones[data-ux-mock] .run-intel-chip .tabular-nums {
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
   min-width: 0 !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
 }
 
 /* —— Phone: one screen — no dock tabs —— */
@@ -291,19 +304,61 @@
   #root-gutterbones[data-ux-mock] .run-intel-summary--inline .run-intel-chip-row {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+  #root-gutterbones[data-ux-mock] .gutter-roll-hand-sprite {
+    transform: translate(-20%, -16%) rotate(1deg) scale(0.82) !important;
+    z-index: 12 !important;
+    --hand-sprite-size: clamp(3rem, 14vw, 5.5rem) !important;
+    --hand-wrist-inset-x: -14% !important;
+  }
+  #root-gutterbones[data-ux-mock] .play-dice-lane {
+    padding-left: 2.15rem !important;
+    margin-bottom: 3rem !important;
+  }
   #root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] {
     display: flex !important;
     order: 2 !important;
     flex: 1 1 auto !important;
-    min-height: 46vh !important;
+    min-height: 40vh !important;
+    max-height: 52vh !important;
   }
   #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] {
     display: flex !important;
+    flex-direction: column !important;
     order: 3 !important;
     flex: 0 0 auto !important;
-    max-height: 23vh !important;
-    min-height: 6.5rem !important;
+    max-height: 32vh !important;
+    min-height: 9.5rem !important;
     overflow: hidden !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"].hidden {
+    display: flex !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] .flex.items-center.justify-between {
+    flex-shrink: 0 !important;
+    padding-bottom: 0.15rem !important;
+    margin-bottom: 0.1rem !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] h2 {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+  }
+  #root-gutterbones[data-ux-mock] .payout-sheet-rows {
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-height: 6.25rem !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  /* PayoutSheetRows JS hides overflow rows; mocks must show scorable rows on one screen */
+  #root-gutterbones[data-ux-mock] .payout-sheet-rows .payout-row-collapsed {
+    display: flex !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="run-intel-detail-backdrop"],
+  #root-gutterbones[data-ux-mock] [data-layout-key="run-intel-detail-popover"] {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
   }
   #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] .stash-programs-pinned,
   #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] .stash-dock-compact {

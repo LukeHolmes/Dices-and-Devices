@@ -1,4 +1,4 @@
-/* Option C: phase-aware — best-play banner + horizontal payout chips (scroll) */
+/* Option C: best-play banner + horizontal payout chips (phone) */
 @import url("./shared.css");
 
 #root-gutterbones[data-ux-mock="c"] .gb-screen .relative.mx-3.mb-1 > div {
@@ -8,67 +8,84 @@
   font-weight: 700 !important;
 }
 
-#root-gutterbones[data-ux-mock="c"] [data-layout-key="side-wager-row"] {
-  opacity: 0.55;
+/* Reinforce pills-under-die (option C must match A/B) */
+#root-gutterbones[data-ux-mock="c"] .bone-slot-inner > .bone-pill-control,
+#root-gutterbones[data-ux-mock="c"][data-ui-redesign="1"] .bone-slot-inner > .bone-pill-control {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin-top: 0.4rem !important;
 }
 
-/* Horizontal payout “chips” — same real rows, reflow only */
 @media (max-width: 767px) {
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] h2,
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .flex.items-center.justify-between {
-    display: none !important;
+  #root-gutterbones[data-ux-mock="c"] {
+    --gb-die: clamp(4.2rem, 19vw, 4.65rem);
+  }
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-alley"] {
+    min-height: 40vh !important;
+    max-height: 50vh !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .play-dice-lane {
+    transform: none !important;
+    padding-left: 1.75rem !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .run-intel-summary--inline .run-intel-chip-row {
+    gap: 0.32rem 0.45rem !important;
   }
   #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] {
-    max-height: 5.5rem !important;
-    min-height: 4.5rem !important;
-    padding: 0.35rem !important;
+    max-height: 28vh !important;
+    min-height: 5.5rem !important;
+    padding: 0.25rem !important;
   }
-  #root-gutterbones[data-ux-mock="c"] .payout-row-collapsed {
-    display: flex !important;
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] h2 {
+    font-size: 7px !important;
   }
-  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows,
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .payout-sheet-scroll,
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] > div:last-child,
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .overflow-y-auto,
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] [class*="overflow"] {
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .flex.items-center.justify-between {
+    margin-bottom: 0.05rem !important;
+    padding-bottom: 0.1rem !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     gap: 0.35rem !important;
+    min-height: 4.25rem !important;
+    flex: 1 1 auto !important;
     align-items: stretch !important;
   }
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] button[data-payout-row] {
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows [data-payout-row="more"] {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows .score-row-fixed,
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows .locked-payout-row,
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows button[data-payout-row] {
+    width: auto !important;
     flex: 0 0 auto !important;
-    min-width: 5.5rem !important;
-    max-width: 7.5rem !important;
+    min-width: 6.5rem !important;
+    max-width: 8.5rem !important;
     border: 1px solid #999 !important;
     border-radius: 8px !important;
     flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 0.35rem 0.4rem !important;
-    font-size: 9px !important;
+    padding: 0.3rem 0.35rem !important;
+    font-size: 8px !important;
+    min-height: 3.5rem !important;
   }
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .payout-tier-best {
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows .score-row-name {
+    font-size: 7px !important;
+    line-height: 1.1 !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows .payout-tier-best {
     box-shadow: 0 0 0 2px #ff007f !important;
   }
-  #root-gutterbones[data-ux-mock="c"] {
-    --gb-die: clamp(4.15rem, 18.5vw, 4.6rem);
-  }
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-alley"] {
-    min-height: 50vh !important;
-    max-height: none !important;
-  }
-  #root-gutterbones[data-ux-mock="c"] .play-dice-lane {
-    transform: none !important;
-  }
   #root-gutterbones[data-ux-mock="c"] .stash-programs-pinned,
-  #root-gutterbones[data-ux-mock="c"] .stash-dock-compact,
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] [class*="stash"] {
-    display: none !important;
-  }
-  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] > div:has(.stash-dock-compact) {
+  #root-gutterbones[data-ux-mock="c"] .stash-dock-compact {
     display: none !important;
   }
 }

@@ -163,6 +163,51 @@ const measureDiceSpace = () => {
     return false;
   })();
 
+  const handOverlapsPill = (() => {
+    const hand = document.querySelector(".gutter-roll-hand-sprite");
+    const pill = document.querySelector(".bone-slot-wrap .bone-pill-control");
+    if (!hand || !pill) return false;
+    const hr = hand.getBoundingClientRect();
+    const pr = pill.getBoundingClientRect();
+    const ix = Math.max(0, Math.min(hr.right, pr.right) - Math.max(hr.left, pr.left));
+    const iy = Math.max(0, Math.min(hr.bottom, pr.bottom) - Math.max(hr.top, pr.top));
+    return ix * iy > 20;
+  })();
+
+  const coachHintClipped = (() => {
+    const hint = document.querySelector('[data-layout-key="play-hud"] .relative.mx-3.mb-1 > div');
+    if (!hint) return false;
+    const txt = (hint.textContent || "").toLowerCase();
+    if (!txt.includes("best preview")) return true;
+    return hint.scrollHeight > hint.clientHeight + 2;
+  })();
+
+  const payoutRowsVisible = (() => {
+    const rows = [
+      ...document.querySelectorAll(
+        '[data-layout-key="play-ledger-column"] [data-payout-row]:not([data-payout-row="more"])',
+      ),
+    ];
+  const visible = rows.filter((r) => {
+      const st = window.getComputedStyle(r);
+      if (st.display === "none" || st.visibility === "hidden") return false;
+      const rect = r.getBoundingClientRect();
+      return rect.width > 8 && rect.height > 8 && rect.bottom > 0 && rect.top < vh;
+    });
+    return visible.length;
+  })();
+
+  const runIntelDetailOpen = !!document.querySelector(
+    '[data-layout-key="run-intel-detail-popover"]:not([hidden])',
+  ) && (() => {
+    const pop = document.querySelector('[data-layout-key="run-intel-detail-popover"]');
+    if (!pop) return false;
+    const st = window.getComputedStyle(pop);
+    if (st.display === "none" || st.visibility === "hidden" || Number(st.opacity) === 0) return false;
+    const r = pop.getBoundingClientRect();
+    return r.width > 40 && r.height > 40;
+  })();
+
   const intelOverlap = (() => {
     const chips = [...document.querySelectorAll(".run-intel-chip")];
     for (let i = 0; i < chips.length; i += 1) {
@@ -183,6 +228,10 @@ const measureDiceSpace = () => {
     diceBonesUnion: boneUnion,
     diceFacesUnion: dieUnion,
     pillOverlapsFace: pillOnFace,
+    handOverlapsFirstPill: handOverlapsPill,
+    coachHintClipped,
+    payoutRowsVisible,
+    runIntelDetailOpen,
     runIntelChipOverlap: intelOverlap,
     alley: measureEl('[data-layout-key="play-alley"]', "dice-tray"),
     hand: measureEl(".gutter-roll-hand-sprite", "hand-sprite"),
@@ -229,14 +278,24 @@ async function prepareScene(page, optionId) {
       window.__GB_LAYOUT_AUDIT__?.triggerRollHandOverlayFx?.();
       window.__GB_LAYOUT_AUDIT__?.freezeRollHandThrowAt?.(520);
       const intelToggle = document.querySelector('[data-layout-key="run-intel-details-toggle"]');
+      if (intelToggle && (intelToggle.textContent || "").includes("HIDE")) {
+        intelToggle.click();
+      }
       if (
         id === "b" &&
         window.innerWidth >= 768 &&
         intelToggle &&
-        intelToggle.textContent?.includes("DETAILS")
+        (intelToggle.textContent || "").includes("DETAILS")
       ) {
         intelToggle.click();
       }
+      const ledger = document.querySelector('[data-layout-key="play-ledger-column"]');
+      if (ledger) ledger.classList.remove("hidden");
+      document.querySelectorAll(".payout-row-collapsed").forEach((row) => {
+        row.classList.remove("payout-row-collapsed");
+      });
+      const moreEl = document.querySelector('[data-payout-row="more"]');
+      if (moreEl) moreEl.style.display = "none";
     },
     optionId,
   );
@@ -295,6 +354,12 @@ async function main() {
           const qa = [];
           if (typeof lane === "number" && lane < minPct) qa.push(`dice-row ${lane}% < ${minPct}%`);
           if (metrics.pillOverlapsFace) qa.push("pill overlaps face");
+          if (metrics.handOverlapsFirstPill) qa.push("hand overlaps first pill");
+          if (metrics.coachHintClipped) qa.push("coach hint clipped");
+          if (vp.id === "390x844" && (metrics.payoutRowsVisible || 0) < 3) {
+            qa.push(`payout rows visible ${metrics.payoutRowsVisible || 0} < 3`);
+          }
+          if (vp.id === "390x844" && metrics.runIntelDetailOpen) qa.push("run-intel detail open on phone");
           if (metrics.runIntelChipOverlap) qa.push("run-intel overlap");
           if (clip) qa.push("dice clipped");
           const status = qa.length ? `WARN ${qa.join("; ")}` : "OK";

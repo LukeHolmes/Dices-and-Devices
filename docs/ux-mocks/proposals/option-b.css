@@ -7,6 +7,23 @@
 #root-gutterbones[data-ux-mock="b"] .run-intel-summary-head-actions {
   display: flex !important;
 }
+
+@media (max-width: 767px) {
+  #root-gutterbones[data-ux-mock="b"] [data-layout-key="run-intel-detail-backdrop"],
+  #root-gutterbones[data-ux-mock="b"] [data-layout-key="run-intel-detail-popover"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@media (min-width: 768px) {
+  #root-gutterbones[data-ux-mock="b"] [data-layout-key="run-intel-detail-backdrop"],
+  #root-gutterbones[data-ux-mock="b"] [data-layout-key="run-intel-detail-popover"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
 #root-gutterbones[data-ux-mock="b"] [data-layout-key="run-intel-details-toggle"] {
   font-size: 8px !important;
   padding: 0.1rem 0.35rem !important;
