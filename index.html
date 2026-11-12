@@ -102,6 +102,7 @@
 })();
 </script>
 <script src="assets/audio/gutterbones-audio.js"></script>
+<script src="assets/rule-experiments.js"></script>
 <script src="assets/sim-bot-policy.js"></script>
 <script src="assets/sim-link-observer.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -7833,9 +7834,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const carvedDieFromFace = (die, faceId) => {
         const face = FACE_DATABASE[faceId];
         if (!face) return die;
-        const pipValue = face.id === 'MULT_FACE'
+        const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+        let pipValue = face.id === 'MULT_FACE'
             ? (typeof die.value === 'number' && die.value >= 1 && die.value <= 6 ? die.value : 1)
             : face.value;
+        if (RE?.e1?.() && face.id !== 'GHOST_FACE' && typeof die.value === 'number' && die.value >= 1 && die.value <= 6) {
+            pipValue = die.value;
+        }
         return {
             ...die,
             id: Math.random(),
@@ -8332,7 +8337,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }
         const face = d.faces[Math.floor(runRandomFn() * d.faces.length)];
         const isStandard = face.type === 'standard';
-        let value = face.value;
+        const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+        let value = isStandard
+            ? face.value
+            : (RE?.showingPipForFace?.(face, d) ?? face.value);
         if (junkieBoss && value === 6) value = 1;
         return {
             ...d,
@@ -14022,7 +14030,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     : p.pills);
             setDiscards(round1Pills);
             setPillRunBonus(0);
-            setGold(p.cash);
+            if (typeof GutterbonesRuleExperiments !== 'undefined') GutterbonesRuleExperiments.resetRun();
+            const e3Gold = typeof GutterbonesRuleExperiments !== 'undefined'
+                ? GutterbonesRuleExperiments.e3StartingGoldBonus()
+                : 0;
+            setGold(p.cash + e3Gold);
             setDebt(0);
             setStash(tut ? tut.openingStash : (EARLY_GAME_TUNING.openingStashGrant || 0));
             setUsedCats([]);
@@ -14465,7 +14477,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (!die) return prev;
                     const face = die.faces[Math.floor(Math.random() * die.faces.length)];
                     const isStandard = face.type === 'standard';
-                    let value = face.value;
+                    const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+                    let value = isStandard
+                        ? face.value
+                        : (RE?.showingPipForFace?.(face, die) ?? face.value);
                     if (activeBoss?.id === 'JUNKIE' && value === 6) value = 1;
                     next[idx] = {
                         ...die,
@@ -15495,6 +15510,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (primaryBuild === BUILD_IDS.UNKNOWN) return 0;
                 return itemFitsCurrentBuild(item.id, primaryBuild) ? 2.5 : 0;
             };
+            const pityKitFaceId = typeof GutterbonesRuleExperiments !== 'undefined'
+                ? GutterbonesRuleExperiments.consumeKitFacePity()
+                : null;
+            const kitPityWeight = (item) => (
+                pityKitFaceId && item.id === pityKitFaceId ? 14 : 0
+            );
             const baseWeight = (item) => {
                 let weight = 0;
                 if (item.cost <= gold) weight += 4;
@@ -15507,6 +15528,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (item.id === 'SMELLING_SALTS' && round <= 4) weight += 4;
                 if (!item.type) weight += 1;
                 weight += shopTagWeightDelta(item);
+                weight += kitPityWeight(item);
                 return weight;
             };
             const weightedSort = (items, extraWeight = () => 0) => items
@@ -15734,6 +15756,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setGold(g => Math.max(0, g - cost));
             setShopRefreshes(count => count + 1);
             setSoldItems([]);
+            if (typeof GutterbonesRuleExperiments !== 'undefined' && GutterbonesRuleExperiments.e2()) {
+                const diceFaceIds = dice.map((d) => (
+                    d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                ));
+                const kit = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds, dice);
+                const owned = new Set(inventory.map((i) => i.id));
+                if (kit && !kit.hasGhostFace && !owned.has('GHOST_FACE')) {
+                    GutterbonesRuleExperiments.queueKitFacePity('GHOST_FACE');
+                } else if (kit && !kit.hasEchoFace && !owned.has('ECHO_FACE')) {
+                    GutterbonesRuleExperiments.queueKitFacePity('ECHO_FACE');
+                }
+            }
             generateShop({ preservePaths: true, preserveRefreshes: true });
             spawnPaperStamp('REROLLED', '#0f766e');
             AudioSystem.playTone(950, 'triangle', 0.1);
@@ -16016,7 +16050,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 faces: i === dieIdx ? [...d.faces] : d.faces
             }));
             const carvedTarget = { ...carvedDice[dieIdx], faces: [...carvedDice[dieIdx].faces] };
-            carvedTarget.faces[faceIdx] = selectedItem;
+            const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+            const carvedFace = RE?.applyCarveFace?.(selectedItem, carvedTarget, faceIdx) || selectedItem;
+            carvedTarget.faces[faceIdx] = carvedFace;
             carvedDice[dieIdx] = carvedTarget;
             const carveAfter = {
                 dice: GutterbonesBalanceObserver?.snapshotRawLane(carvedDice)
@@ -16032,7 +16068,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setDice(prev => {
                 const next = [...prev];
                 const target = { ...next[dieIdx], faces: [...next[dieIdx].faces] };
-                target.faces[faceIdx] = selectedItem;
+                const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+                target.faces[faceIdx] = RE?.applyCarveFace?.(selectedItem, target, faceIdx) || selectedItem;
                 next[dieIdx] = target;
                 return next;
             });
@@ -16201,9 +16238,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     Math.floor(gold * SHOP_AGENCY_TUNING.lateCarrySinkRate),
                 );
                 if (sink > 0) {
-                    sinkApplied = sink;
-                    setGold((g) => Math.max(0, g - sink));
-                    setFixerLine(`Street tax skimmed $${sink} off the stash.`);
+                    const diceFaceIds = dice.map((d) => (
+                        d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
+                    ));
+                    const kitIncomplete = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds, dice)?.fullKit === false;
+                    const adjusted = typeof GutterbonesRuleExperiments !== 'undefined'
+                        ? GutterbonesRuleExperiments.e3AdjustFirstSink(sink, kitIncomplete)
+                        : sink;
+                    sinkApplied = adjusted;
+                    if (adjusted > 0) {
+                        setGold((g) => Math.max(0, g - adjusted));
+                        setFixerLine(`Street tax skimmed $${adjusted} off the stash.`);
+                    }
                 }
             }
             if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordRoundEvent) {
@@ -16437,6 +16483,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         ruleSha: { status: 'unavailable', reason: 'browser runtime does not compute ruleSha digest' }
                     });
                 }
+            }
+            const ruleExpRaw = params.get('ruleExp');
+            if (ruleExpRaw && typeof GutterbonesRuleExperiments !== 'undefined') {
+                GutterbonesRuleExperiments.setFlags(ruleExpRaw);
             }
             if (params.get('e2e') === '1') {
                 const simPolicyRev = params.get('simPolicy')

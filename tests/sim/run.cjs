@@ -90,8 +90,10 @@ async function bootPage(page, baseUrl, viewport) {
   const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const observerQ = process.env.SIM_POLICY_OBSERVER === "1" ? "&balanceObserver=1" : "";
   const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
+  const ruleExp = process.env.SIM_RULE_EXPERIMENTS || "";
+  const ruleQ = ruleExp ? `&ruleExp=${encodeURIComponent(ruleExp)}` : "";
   await page.goto(
-    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}`,
+    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}${ruleQ}`,
     { waitUntil: "networkidle", timeout: 120_000 },
   );
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
