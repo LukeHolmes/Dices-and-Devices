@@ -16691,6 +16691,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const sel = GutterbonesSimBotPolicy.selectKeptSlots({
                             revision: policyRev,
                             dice: lane,
+                            inventory,
                         });
                         setKept(sel.kept);
                         window.__GB_E2E__?.recordSimBotDecision?.('keep_for_reroll', {
@@ -16704,11 +16705,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             || GutterbonesSimBotPolicy?.LEGACY_REVISION
                             || '2026-11-11-phase-b-v1';
                         const candidates = window.__GB_E2E__.evaluateCategoryCandidates();
+                        const laneDice = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
                         return GutterbonesSimBotPolicy.pickCategory({
                             revision: policyRev,
                             candidates,
                             score,
                             target: currentTarget,
+                            dice: laneDice,
+                            inventory,
                         });
                     },
                     autoPlayHand: () => {
@@ -16753,6 +16757,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const policyRev = window.__GB_SIM_POLICY__?.revision
                             || GutterbonesSimBotPolicy?.LEGACY_REVISION
                             || '2026-11-11-phase-b-v1';
+                        const candidates = window.__GB_E2E__.evaluateCategoryCandidates?.() || [];
+                        const laneDice = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
                         const e2eGreedy = typeof window !== 'undefined'
                             && typeof window.__GB_E2E_QUERY__ === 'function'
                             && window.__GB_E2E_QUERY__();
@@ -16762,6 +16768,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             target: currentTarget,
                             bestTotal: best.total,
                             hands,
+                            discards,
+                            dice: laneDice,
+                            inventory,
+                            candidates,
+                            best,
                         });
                         const mustScore = hands <= 1 || discards <= 0 || bankClear;
                         const rerollPlan = GutterbonesSimBotPolicy.shouldReroll({
@@ -16772,14 +16783,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             discards,
                             bestTotal: best.total,
                             e2eGreedy,
-                            dice,
+                            dice: laneDice,
+                            inventory,
+                            candidates,
                         });
                         if (!mustScore && rerollPlan.reroll && discards > 0) {
                             if (rollBtn) {
+                                if (policyRev === GutterbonesSimBotPolicy?.WP2_LANE_REVISION && window.__GB_SIM_TELEM__) {
+                                    const telem = window.__GB_SIM_TELEM__;
+                                    telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
+                                    telem.laneSetup.attempts += 1;
+                                    (rerollPlan.unfulfilled || rerollPlan.predicates?.unfulfilled || []).forEach((u) => {
+                                        telem.laneSetup.unfulfilled[u] = (telem.laneSetup.unfulfilled[u] || 0) + 1;
+                                    });
+                                }
                                 window.__GB_E2E__?.recordSimBotDecision?.('reroll', {
                                     reason: rerollPlan.reason,
                                     bestCat: best.catId,
                                     bestTotal: best.total,
+                                    unfulfilled: rerollPlan.unfulfilled || rerollPlan.predicates?.unfulfilled,
                                 });
                                 window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
@@ -16787,11 +16809,24 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             }
                             return false;
                         }
+                        const scoreReason = mustScore && bankClear ? 'bank_clear_quota' : (best.decision || 'score_best');
+                        if (policyRev === GutterbonesSimBotPolicy?.WP2_LANE_REVISION && window.__GB_SIM_TELEM__) {
+                            const preds = GutterbonesSimBotPolicy.evaluateOrganicPredicates({ dice: laneDice, inventory });
+                            if (preds.linkKitEligible) {
+                                const telem = window.__GB_SIM_TELEM__;
+                                telem.laneKit = telem.laneKit || { eligibleHands: 0, scoredWithLink: 0 };
+                                telem.laneKit.eligibleHands += 1;
+                                if ((best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks)) > 0) {
+                                    telem.laneKit.scoredWithLink += 1;
+                                }
+                            }
+                        }
                         window.__GB_E2E__?.recordSimBotDecision?.('score', {
-                            reason: mustScore && bankClear ? 'bank_clear_quota' : (best.decision || 'score_best'),
+                            reason: scoreReason,
                             catId: best.catId,
                             total: best.total,
                             organicPairs: best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks),
+                            bankClearForced: !!bankClear,
                         });
                         setPlayDock('payouts');
                         setShowMobileStash(false);

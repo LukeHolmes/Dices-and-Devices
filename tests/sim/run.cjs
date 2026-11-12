@@ -251,7 +251,15 @@ async function runOneGame(
     const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
     const roundEvents = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.roundEvents) || [];
     const build = window.__GB_E2E__?.getBuildProfile?.() || null;
-    return { hands, gold: st.gold, score: st.score, build, roundEvents };
+    return {
+      hands,
+      gold: st.gold,
+      score: st.score,
+      build,
+      roundEvents,
+      laneSetup: window.__GB_SIM_TELEM__?.laneSetup || null,
+      laneKit: window.__GB_SIM_TELEM__?.laneKit || null,
+    };
   });
   return { rid, viewport: viewport.name, ...result, telem };
 }
@@ -393,6 +401,20 @@ async function main() {
   }
   const winRate = results.length ? results.filter((r) => r.outcome === "WIN").length / results.length : 0;
 
+  let laneKitEligibleRuns = 0;
+  let laneSetupAttempts = 0;
+  const laneSetupUnfulfilled = {};
+  for (const r of results) {
+    if ((r.telem?.laneKit?.eligibleHands || 0) > 0) laneKitEligibleRuns += 1;
+    const setup = r.telem?.laneSetup;
+    if (setup) {
+      laneSetupAttempts += setup.attempts || 0;
+      for (const [k, v] of Object.entries(setup.unfulfilled || {})) {
+        laneSetupUnfulfilled[k] = (laneSetupUnfulfilled[k] || 0) + v;
+      }
+    }
+  }
+
   const summary = {
     games: args.games,
     maxSteps: args.maxSteps,
@@ -414,6 +436,11 @@ async function main() {
     generousStepCap: generousCap,
     synergy: { linkCounts, depthHist, handsWithChain, chainMultCapHits, debtCapHits },
     buildOutcomes: { wins: buildWins, busts: buildBusts },
+    laneTelemetry: {
+      kitEligibleRuns: laneKitEligibleRuns,
+      setupAttempts: laneSetupAttempts,
+      setupUnfulfilled: laneSetupUnfulfilled,
+    },
     telemetry: {
       crookedCop: {
         roundStarts: crookedCopStarts,

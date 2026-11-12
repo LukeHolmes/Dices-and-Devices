@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 /**
- * Compare legacy vs WP2 sim policy on a bounded seed window (default 0-19).
- * Usage: node scripts/wp2-policy-baseline.cjs
+ * Compare legacy vs WP2 vs WP2-lane sim policies on a bounded seed window.
+ * Usage: WP2_RID_END=9 WP2_MAX_STEPS=4000 node scripts/wp2-policy-baseline.cjs
  */
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
@@ -11,11 +11,16 @@ const fs = require("node:fs");
 const ROOT = path.join(__dirname, "..");
 const runCjs = path.join(ROOT, "tests/sim/run.cjs");
 const RID_START = Number(process.env.WP2_RID_START || 0);
-const RID_END = Number(process.env.WP2_RID_END || 19);
-const MAX_STEPS = Number(process.env.WP2_MAX_STEPS || 6000);
+const RID_END = Number(process.env.WP2_RID_END || 9);
+const MAX_STEPS = Number(process.env.WP2_MAX_STEPS || 4000);
 const games = RID_END - RID_START + 1;
 
 const ORGANIC_PAIR = "ghost_echo→bookends_retrigger";
+const REVISIONS = [
+  "2026-11-11-phase-b-v1",
+  "2026-11-12-wp2-v1",
+  "2026-11-12-wp2-lane-v1",
+];
 
 function runPolicy(revision) {
   const r = spawnSync(
@@ -48,9 +53,9 @@ function runPolicy(revision) {
   return { revision, exit: r.status, summary };
 }
 
-// run.cjs uses rid 0..games-1; offset via starting games count only — document subset as first N seeds
 function aggregate(summary) {
   const linkCounts = summary.synergy?.linkCounts || {};
+  const lane = summary.laneTelemetry || {};
   return {
     wins: summary.wins || 0,
     busts: summary.busts || 0,
@@ -61,22 +66,32 @@ function aggregate(summary) {
     pairwiseLinkActivations: linkCounts[ORGANIC_PAIR] || 0,
     linkCounts,
     winRate: summary.winRate || 0,
+    kitEligibleRuns: lane.kitEligibleRuns || 0,
+    laneSetupAttempts: lane.setupAttempts || 0,
+    laneSetupUnfulfilled: lane.setupUnfulfilled || {},
   };
 }
 
-const legacy = runPolicy("2026-11-11-phase-b-v1");
-const wp2 = runPolicy("2026-11-12-wp2-v1");
+const policies = {};
+for (const rev of REVISIONS) {
+  policies[rev] = runPolicy(rev);
+}
 
 const report = {
   frozenRuleCommit: "main @ 89210e3+",
   viewport: "blocking (includes 1024×768)",
   ridRange: `${RID_START}-${RID_END}`,
   maxSteps: MAX_STEPS,
-  note: "Full 0-49×2 would exceed agent budget; expand with WP2_RID_END=49 if needed",
-  legacy: legacy.error ? legacy : { ...aggregate(legacy.summary), exit: legacy.exit },
-  wp2: wp2.error ? wp2 : { ...aggregate(wp2.summary), exit: wp2.exit },
+  note: "Bounded seeds 0–9 per Luke WP2 lane measurement",
+  policies: Object.fromEntries(
+    REVISIONS.map((rev) => {
+      const run = policies[rev];
+      if (run.error) return [rev, run];
+      return [rev, { ...aggregate(run.summary), exit: run.exit }];
+    }),
+  ),
 };
 
-const out = "/opt/cursor/artifacts/wp2-policy-baseline.json";
+const out = "/opt/cursor/artifacts/wp2-lane-policy-baseline.json";
 fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify({ out, report }, null, 2));
