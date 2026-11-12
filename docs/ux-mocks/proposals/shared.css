@@ -1,0 +1,235 @@
+/**
+ * UX proposal overlays — mock-only CSS injected at capture time (not loaded by index.html).
+ * Targets #root-gutterbones[data-ux-mock="a|b|c"]. Preserves production dice/hand DOM & assets.
+ */
+
+/* —— Static hand pose for screenshots (same art + animation keyframes; frozen open grip) —— */
+#root-gutterbones[data-ux-mock] .gutter-roll-hand-overlay {
+  display: block !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+}
+#root-gutterbones[data-ux-mock] .gutter-roll-hand-sprite {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: translate(6%, -14%) rotate(1deg) scale(1.01) !important;
+}
+#root-gutterbones[data-ux-mock] .gutter-roll-hand-closed {
+  animation: none !important;
+  opacity: 0 !important;
+}
+#root-gutterbones[data-ux-mock] .gutter-roll-hand-open {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+/* —— Slim status strip (compress chrome, keep quota/plays/pills/cash) —— */
+#root-gutterbones[data-ux-mock] [data-layout-key="play-hud"] {
+  margin-bottom: 0.15rem !important;
+}
+#root-gutterbones[data-ux-mock] .street-ledger-hud .boss-banner-scan {
+  display: none !important;
+}
+#root-gutterbones[data-ux-mock] [data-layout-key="side-wager-row"] {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+#root-gutterbones[data-ux-mock] [data-layout-key="play-next-threat-slot"] {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  max-height: 2.75rem !important;
+  overflow: hidden !important;
+}
+#root-gutterbones[data-ux-mock] [data-layout-key="play-next-threat-slot"] button {
+  padding-top: 0.2rem !important;
+  padding-bottom: 0.2rem !important;
+}
+#root-gutterbones[data-ux-mock] .street-ledger-quota-labels {
+  font-size: 10px !important;
+}
+#root-gutterbones[data-ux-mock] .play-hud-fixer-line {
+  display: none !important;
+}
+
+/* —— Best-play banner (slimmer coach) —— */
+#root-gutterbones[data-ux-mock] [data-layout-key="play-hud"] + * .relative.mx-3,
+#root-gutterbones[data-ux-mock] .street-ledger-hud ~ * .relative.mx-3 {
+  min-height: 0 !important;
+  margin-bottom: 0.15rem !important;
+}
+#root-gutterbones[data-ux-mock] .gb-screen .relative.mx-3.mb-1 {
+  min-height: 1.35rem !important;
+  max-height: 2.25rem !important;
+  margin-bottom: 0.2rem !important;
+}
+#root-gutterbones[data-ux-mock] .gb-screen .relative.mx-3.mb-1 > div {
+  font-size: 9px !important;
+  padding: 0.25rem 0.35rem !important;
+  line-height: 1.2 !important;
+}
+
+/* —— Dice lane: larger, uncropped —— */
+#root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] {
+  overflow: visible !important;
+  justify-content: center !important;
+}
+#root-gutterbones.gb-motion-reduce[data-ux-mock] .gutter-roll-hand-overlay {
+  display: block !important;
+}
+#root-gutterbones[data-ux-mock] .play-dice-lane {
+  transform: scale(1.28);
+  transform-origin: center center;
+  z-index: 45 !important;
+  margin-bottom: 4.25rem !important;
+  max-width: min(94vw, 21rem);
+  padding-inline: 0.5rem;
+  margin-top: 0.15rem !important;
+}
+#root-gutterbones[data-ux-mock] .play-hud-mods-slot .readable-panel {
+  display: none !important;
+}
+#root-gutterbones[data-ux-mock] .bone-slot-wrap {
+  flex: 0 0 auto;
+}
+#root-gutterbones[data-ux-mock] .bone-die-btn .bone-die-img {
+  transform: scale(1.1);
+  transform-origin: center center;
+}
+#root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] {
+  padding-top: 0.25rem !important;
+}
+#root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] .absolute.top-5 {
+  display: none !important;
+}
+#root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] .absolute.inset-x-4.top-\[22\%\] {
+  display: none !important;
+}
+
+/* Hand scale per viewport — keep visible beside dice, avoid clip */
+#root-gutterbones[data-ux-mock] .gutter-roll-hand-sprite {
+  --hand-sprite-size: clamp(5.5rem, 26vw, 10.5rem) !important;
+  --hand-wrist-lift-y: 42% !important;
+  --hand-wrist-inset-x: 0% !important;
+  z-index: 36 !important;
+}
+@media (min-width: 768px) {
+  #root-gutterbones[data-ux-mock] .play-dice-lane {
+    transform: scale(1.08);
+    margin-bottom: 5rem !important;
+    max-width: min(100%, 22rem);
+  }
+  #root-gutterbones[data-ux-mock] .gutter-roll-hand-sprite {
+    --hand-sprite-size: clamp(6.5rem, 18vw, 12rem) !important;
+    --hand-wrist-lift-y: 40% !important;
+  }
+}
+@media (min-width: 1280px) {
+  #root-gutterbones[data-ux-mock] .play-dice-lane {
+    transform: scale(1.12);
+    max-width: 26rem;
+  }
+}
+
+/* —— Phone: stay on alley — show payouts + intel without dock tabs —— */
+#root-gutterbones[data-ux-mock] .gb-play-dock {
+  display: none !important;
+}
+@media (max-width: 767px) {
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-phase-grid"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    gap: 0.35rem !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 42vh !important;
+    max-height: none !important;
+    order: 2 !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    max-height: 30vh !important;
+    min-height: 7.5rem !important;
+    order: 3 !important;
+    overflow: hidden !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] .stash-programs-pinned,
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] .stash-dock-compact {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] .PayoutSheetRows,
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] > *:last-child {
+    overflow-y: auto !important;
+    min-height: 0 !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    z-index: 1 !important;
+    padding: 0 !important;
+    order: 1 !important;
+    flex: 0 0 auto !important;
+    overflow: hidden !important;
+    max-height: 3.5rem !important;
+    border: none !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] > * {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] .stash-intel-scroll {
+    display: flex !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] > button {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] .stash-programs-pinned,
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] .stash-program-grid,
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-stash"] [data-layout-key^="stash-program-"] {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock] .stash-intel-scroll {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 3.15rem !important;
+    overflow: hidden !important;
+  }
+  #root-gutterbones[data-ux-mock] .run-intel-summary-head-actions {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock] .build-indicator-root {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock] .run-intel-summary--inline.run-intel-collapsed .run-intel-chip-row {
+    display: flex !important;
+  }
+  #root-gutterbones[data-ux-mock] .run-intel-summary--inline {
+    max-height: 3.6rem !important;
+    padding: 0.25rem 0.4rem !important;
+  }
+}
+
+/* Desktop: preserve 7/5 split but give alley more vertical room */
+@media (min-width: 768px) {
+  #root-gutterbones[data-ux-mock] .gb-screen {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-phase-grid"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    align-items: stretch !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-alley"] {
+    min-height: 0 !important;
+  }
+  #root-gutterbones[data-ux-mock] [data-layout-key="play-ledger-column"] {
+    display: flex !important;
+  }
+}

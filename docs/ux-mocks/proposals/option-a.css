@@ -1,0 +1,17 @@
+/* Option A: expanded tray + slim strip + inline payout sheet on phone (extends shared.css) */
+@import url("./shared.css");
+
+#root-gutterbones[data-ux-mock="a"] [data-layout-key="side-wager-row"] > div:first-child {
+  max-width: 42%;
+}
+#root-gutterbones[data-ux-mock="a"] [data-layout-key="side-wager-row"] .flex.flex-wrap.gap-1\.5 {
+  transform: scale(0.92);
+  transform-origin: right center;
+}
+
+@media (max-width: 767px) {
+  #root-gutterbones[data-ux-mock="a"] .play-dice-lane {
+    transform: scale(1.34);
+    max-width: min(92vw, 20rem);
+  }
+}

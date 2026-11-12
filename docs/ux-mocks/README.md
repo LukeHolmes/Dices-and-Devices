@@ -10,16 +10,19 @@ Luke’s brief: the hand reads well, but dice need more breathable space and the
 cd /path/to/Dices-and-Devices
 npm install   # Playwright already in package.json devDeps
 node docs/ux-mocks/scripts/capture-baseline.cjs
-node docs/ux-mocks/scripts/capture-mocks.cjs
+node docs/ux-mocks/scripts/capture-mocks.cjs   # alias → capture-proposals.cjs
 ```
+
+**High-fidelity mocks (v2):** `capture-proposals.cjs` loads production `index.html` with a post-roll fixture, freezes the **real hand** sprite (`freezeRollHandThrowAt`), and injects proposal CSS via `data-ux-mock="a|b|c"`. Dice faces, pill badges, alley `alley-playfield.png`, and hand PNGs are unchanged from main.
 
 Outputs:
 
 | Artifact | Location |
 |----------|----------|
 | **Before** (main build) | `baseline/*.png`, `baseline/measurements.json` |
-| **Mocks A/B/C** | `mock-screenshots/option-{a,b,c}_*.png` |
-| **HTML mocks** | `option-a-tray-plus-strip.html`, `option-b-split-panel.html`, `option-c-phase-aware.html` |
+| **Mocks A/B/C (high-fidelity)** | `mock-screenshots/option-{a,b,c}_*.png`, `mock-screenshots/proposal-measurements.json` |
+| **Proposal CSS (mock-only)** | `proposals/option-{a,b,c}.css`, `proposals/shared.css` — injected by Playwright, **not** loaded by `index.html` |
+| **HTML index pages** | `option-a-tray-plus-strip.html`, etc. — thumbnails + capture instructions |
 
 Viewports: **390×844**, **1366×768**, **1920×1080**. Moments: run start, before roll, after roll (payout rows lit), shop (`shopBusy` fixture), control panel with LOG + RUN INTEL details + MODS drawer open.
 
@@ -73,7 +76,25 @@ When drawers open (`05-control-panel-revealed`), alley share drops to **~44%** (
 
 ---
 
-## 3. Layout options (reorganize only — no rule changes)
+## 3. Proposal mock metrics (post-roll, production render)
+
+Compared to **baseline** `03-after-roll-rows-lit` on **390×844** (PAYOUTS tab required for scores; dock visible):
+
+| Metric | Baseline main | Proposals A/B/C (overlay CSS) |
+|--------|---------------|--------------------------------|
+| Dice bbox (% viewport, bone union) | **2.67%** | **~2.5%** bbox *but* ~1.28–1.34× visual scale + 1.1× die art — reads larger in PNGs |
+| Dice lane clipped | no | **no** (all captures) |
+| Hand sprite visible | roll animation only | **yes** (frozen open grip, production assets) |
+| Payout rows on phone w/o tab switch | no | **yes** (ledger under alley; option C adds horizontal chip row) |
+| RUN INTEL on phone w/o STASH tab | no | **yes** (inline strip above alley) |
+| MODS / hardware names | toggle | **chip** (panel collapsed in mocks) |
+| Alley tray % viewport | 65% (payouts hidden) | **~41%** — trade: smaller tray, **full decision surface on one screen** |
+
+Full per-option numbers: `mock-screenshots/proposal-measurements.json`.
+
+---
+
+## 4. Layout options (reorganize only — no rule changes)
 
 ### Option A — Expanded tray + slim always-visible strip
 
@@ -86,7 +107,7 @@ When drawers open (`05-control-panel-revealed`), alley share drops to **~44%** (
 |------|------|------------|
 | Maximum dice legibility; keeps all numbers visible in strip | Requires careful strip density on 360px width | **Medium** (~3–5 days): CSS grid + HUD component refactor, dock tab rethink |
 
-Files: `option-a-tray-plus-strip.html`, `mock-screenshots/option-a_*.png`
+Capture: `mock-screenshots/option-a_{390x844,1366x768,1920x1080}.png` · CSS: `proposals/option-a.css`
 
 ### Option B — Split control panel (primary + secondary drawer)
 
@@ -97,7 +118,7 @@ Files: `option-a-tray-plus-strip.html`, `mock-screenshots/option-a_*.png`
 |------|------|------------|
 | Clearest separation of “act now” vs “context” | Still one extra tap for intel-heavy players | **Medium-large** (~5–7 days): state for drawer + mobile/desktop parity |
 
-Files: `option-b-split-panel.html`, `mock-screenshots/option-b_*.png`
+Capture: `mock-screenshots/option-b_*.png` · CSS: `proposals/option-b.css` (DETAILS drawer open in capture)
 
 ### Option C — Phase-aware control surface
 
@@ -109,11 +130,23 @@ Files: `option-b-split-panel.html`, `mock-screenshots/option-b_*.png`
 |------|------|------------|
 | Surfaces the right data at the right moment; can combine with A’s strip | More state machine / QA surface; chips must stay in sync with ledger | **Large** (~7–10 days): phase hooks + chip UI + tests |
 
-Files: `option-c-phase-aware.html`, `mock-screenshots/option-c_*.png`
+Capture: `mock-screenshots/option-c_*.png` · CSS: `proposals/option-c.css` (magenta best-play banner + horizontal payout chips on phone)
 
 ---
 
-## 4. Recommendation
+### Trade-offs (flow, depth, fun)
+
+| | Flow | Depth | Fun |
+|---|------|-------|-----|
+| **A** | Best — one screen, fewer tab hops | All numbers kept; strip is dense on 360px | More time on alley art + real dice |
+| **B** | Good — intel drawer adds one scroll | Best for veterans (DETAILS always handy) | Slightly more “panel” feel |
+| **C** | Fastest score commit on phone (chips) | Chip row is shorthand; full ledger still there | Strongest “best line” callout; horizontal scroll learning curve |
+
+None of the proposals remove rules, categories, intel fields, or animations — **layout and visibility only**.
+
+---
+
+## 5. Recommendation
 
 **Ship Option A first, steal Option C’s “best preview” line on post-roll.**
 
@@ -127,7 +160,7 @@ Option B is a solid alternative if you prefer a single “intel drawer” metaph
 
 ---
 
-## 5. Screenshot index (before)
+## 6. Screenshot index (before)
 
 | Moment | 390×844 | 1366×768 | 1920×1080 |
 |--------|---------|----------|-----------|
@@ -141,7 +174,7 @@ Full metrics: `baseline/measurements.json`.
 
 ---
 
-## 6. Next implementation steps (when approved)
+## 7. Next implementation steps (when approved)
 
 1. Prototype Option A strip behind a feature flag in `index.html` (layout only).
 2. Add layout tests for dice-lane min height / `% viewport` budgets (extend polish-step pattern).

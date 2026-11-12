@@ -1,0 +1,70 @@
+/* Option C: phase-aware — best-play banner + horizontal payout chips (scroll) */
+@import url("./shared.css");
+
+#root-gutterbones[data-ux-mock="c"] .gb-screen .relative.mx-3.mb-1 > div {
+  border-color: rgba(255, 0, 127, 0.55) !important;
+  background: rgba(42, 0, 23, 0.75) !important;
+  color: #fecdd3 !important;
+  font-weight: 700 !important;
+}
+
+#root-gutterbones[data-ux-mock="c"] [data-layout-key="side-wager-row"] {
+  opacity: 0.55;
+}
+
+/* Horizontal payout “chips” — same real rows, reflow only */
+@media (max-width: 767px) {
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] h2,
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .flex.items-center.justify-between {
+    display: none !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] {
+    max-height: 5.5rem !important;
+    min-height: 4.5rem !important;
+    padding: 0.35rem !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .payout-row-collapsed {
+    display: flex !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .payout-sheet-rows,
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .payout-sheet-scroll,
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] > div:last-child,
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .overflow-y-auto,
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] [class*="overflow"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: 0.35rem !important;
+    align-items: stretch !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] button[data-payout-row] {
+    flex: 0 0 auto !important;
+    min-width: 5.5rem !important;
+    max-width: 7.5rem !important;
+    border: 1px solid #999 !important;
+    border-radius: 8px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 0.35rem 0.4rem !important;
+    font-size: 9px !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .payout-tier-best {
+    box-shadow: 0 0 0 2px #ff007f !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-alley"] {
+    min-height: 52% !important;
+    max-height: 60% !important;
+  }
+  #root-gutterbones[data-ux-mock="c"] .play-dice-lane {
+    transform: scale(1.16);
+  }
+}
+
+@media (min-width: 768px) {
+  #root-gutterbones[data-ux-mock="c"] [data-layout-key="play-ledger-column"] .payout-tier-best {
+    outline: 2px solid #ff007f;
+    outline-offset: 1px;
+  }
+}

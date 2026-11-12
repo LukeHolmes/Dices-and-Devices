@@ -2,62 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>UX Mock A — Expanded tray + slim status strip</title>
-  <link rel="stylesheet" href="mock-shared.css" />
-  <script>
-    (function () {
-      const q = new URLSearchParams(location.search).get('vp');
-      if (q === '1366') document.documentElement.classList.add('vp-1366');
-      if (q === '1920') document.documentElement.classList.add('vp-1920');
-    })();
-  </script>
+  <title>Option A — live-layout overlay (see mock-screenshots)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; padding: 1.5rem; }
+    img { max-width: min(390px, 100%); border: 1px solid #333; }
+    code { color: #0df; }
+  </style>
 </head>
-<body class="">
-<div class="mock-shell">
-  <span class="mock-badge">MOCK A · TRAY + STRIP</span>
-  <header class="mock-strip" aria-label="Always-visible status strip">
-    <span class="mock-chip">▶ 2</span>
-    <span class="mock-chip">💊 3</span>
-    <span class="mock-chip hot">0048 / 135</span>
-    <span class="mock-chip">×1.12</span>
-    <span class="mock-chip">$20</span>
-    <div class="quota-mini"><span></span></div>
-    <div class="quota-nums"><span>heat 0048</span><span>best 112 · TOK</span></div>
-  </header>
-  <div class="mock-payout-peek">
-    <span>Hand: tap full sheet in ledger →</span>
-    <strong>TOK 112 heat</strong>
-  </div>
-  <div class="mock-split-desktop">
-    <section class="mock-tray" aria-label="Dice tray (enlarged lane)">
-      <div class="alley-title">THE ALLEYWAY</div>
-      <div class="mock-dice-row">
-        <div class="mock-die">2</div>
-        <div class="mock-die">2</div>
-        <div class="mock-die">2</div>
-        <div class="mock-die">3</div>
-        <div class="mock-die">4</div>
-      </div>
-      <img class="mock-hand" src="../../tests/fixtures/hand-roll/hand-open.png" alt="" />
-      <div class="mock-actions">
-        <button type="button" class="shuffle">SHUFFLE</button>
-        <button type="button" class="roll">ROLL 'EM</button>
-      </div>
-    </section>
-    <aside class="mock-ledger" style="display:none" id="ledger">
-      <div style="font-weight:700;letter-spacing:.2em;text-align:center;margin-bottom:8px">MATCHBOOK · PAYOUTS</div>
-      <div style="padding:6px 0;border-bottom:1px dashed #666;font-weight:700;color:#be185d">TOK … 112</div>
-      <div style="padding:6px 0;border-bottom:1px dashed #666;opacity:.55">TRI … 48</div>
-      <div style="padding:6px 0;border-bottom:1px dashed #666;opacity:.55">PAIR … bust</div>
-      <p style="font-size:10px;margin-top:8px;color:#444">Same ledger as today; strip replaces dock tabs + wager row on phone.</p>
-    </aside>
-  </div>
-</div>
-<script>
-  if (document.documentElement.classList.contains('vp-1366') || document.documentElement.classList.contains('vp-1920')) {
-    document.getElementById('ledger').style.display = 'block';
-  }
-  document.body.className = document.documentElement.className;
-</script>
+<body>
+  <h1>Option A — tray + slim strip</h1>
+  <p>High-fidelity captures use <strong>production</strong> <code>index.html</code> (real dice faces, hand sprites, alley art). Layout proposal only: CSS in <code>proposals/option-a.css</code> injected at capture time.</p>
+  <p><code>node docs/ux-mocks/scripts/capture-proposals.cjs</code></p>
+  <p><img src="mock-screenshots/option-a_390x844.png" width="390" alt="Option A phone" /></p>
 </body>
 </html>

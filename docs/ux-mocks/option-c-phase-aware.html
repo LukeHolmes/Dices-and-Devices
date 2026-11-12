@@ -2,65 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>UX Mock C — Phase-aware control surface</title>
-  <link rel="stylesheet" href="mock-shared.css" />
-  <script>
-    (function () {
-      const q = new URLSearchParams(location.search).get('vp');
-      if (q === '1366') document.documentElement.classList.add('vp-1366');
-      if (q === '1920') document.documentElement.classList.add('vp-1920');
-      const phase = new URLSearchParams(location.search).get('phase') || 'post-roll';
-      document.documentElement.dataset.phase = phase;
-    })();
-  </script>
+  <title>Option C — phase-aware mock</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; padding: 1.5rem; }
+    img { max-width: min(390px, 100%); border: 1px solid #333; }
+    code { color: #0df; }
+  </style>
 </head>
 <body>
-<div class="mock-shell">
-  <span class="mock-badge">MOCK C · PHASE-AWARE</span>
-  <div class="mock-strip" style="grid-template-columns:1fr auto auto">
-    <span class="mock-chip hot">0048 / 135</span>
-    <span class="mock-chip">▶ 2 · 💊 3</span>
-    <span class="mock-chip">$20</span>
-    <div class="quota-mini" style="grid-column:1/-1"><span style="width:36%"></span></div>
-  </div>
-  <div class="mock-phase-banner post-roll" id="phaseBanner">POST-ROLL · Best line <b>TOK 112</b> — tap row or swipe chips below</div>
-  <div class="mock-inline-payouts" id="chipRow">
-    <span class="pill best">TOK 112</span>
-    <span class="pill">TRI 48</span>
-    <span class="pill">PAIR ✗</span>
-    <span class="pill">FULL …</span>
-  </div>
-  <div class="mock-split-desktop" style="flex:1;min-height:0;display:flex;flex-direction:column">
-    <section class="mock-tray c-phase" style="flex:1">
-      <div class="alley-title">THE ALLEYWAY</div>
-      <div class="mock-dice-row">
-        <div class="mock-die">2</div><div class="mock-die">2</div><div class="mock-die">2</div><div class="mock-die">3</div><div class="mock-die">4</div>
-      </div>
-      <img class="mock-hand" src="../../tests/fixtures/hand-roll/hand-open.png" alt="" />
-      <div class="mock-actions">
-        <button type="button" class="shuffle">SHUFFLE</button>
-        <button type="button" class="roll">ROLL 'EM</button>
-      </div>
-    </section>
-    <aside class="mock-ledger" id="ledger" style="display:none">
-      Full matchbook — same as production; chips are a decision shortcut only.
-    </aside>
-  </div>
-</div>
-<script>
-  const phase = document.documentElement.dataset.phase;
-  if (phase === 'pre-roll') {
-    document.getElementById('phaseBanner').textContent = 'PRE-ROLL · Plays & pills pinned; side bets hidden until after throw';
-    document.getElementById('phaseBanner').classList.remove('post-roll');
-    document.getElementById('chipRow').style.display = 'none';
-  }
-  if (document.documentElement.classList.contains('vp-1366') || document.documentElement.classList.contains('vp-1920')) {
-    const wrap = document.querySelector('.mock-split-desktop');
-    wrap.style.display = 'grid';
-    wrap.style.gridTemplateColumns = '60% 40%';
-    document.getElementById('ledger').style.display = 'block';
-  }
-  document.body.className = document.documentElement.className;
-</script>
+  <h1>Option C — phase-aware</h1>
+  <p>Production render + <code>proposals/option-c.css</code> (best-play banner + horizontal payout chips on phone).</p>
+  <p><img src="mock-screenshots/option-c_390x844.png" width="390" alt="Option C phone" /></p>
 </body>
 </html>
