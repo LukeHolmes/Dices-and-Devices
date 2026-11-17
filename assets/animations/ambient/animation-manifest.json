@@ -1,0 +1,1205 @@
+{
+  "project": "Gutterbones 1977",
+  "pack": "Ambient Complete FX v2.1 — 14 spritesheets and all source masters",
+  "date": "2026-11-17",
+  "status": "ART-PRODUCTION; FILE-LEVEL QA; GAME-INTEGRATION PENDING",
+  "sheet_schema": "RGBA PNG, 4 columns × 2 rows; row-major; per-effect frame_size from manifest",
+  "base_palette": [
+    "#121113",
+    "#e8e6e1",
+    "#d4cfc5",
+    "#c78b16",
+    "#4a3520",
+    "#8c7a5c",
+    "#6e1d24",
+    "#d30000"
+  ],
+  "effects": [
+    {
+      "id": "cash-bill-one",
+      "category": "ambient",
+      "src": "Spritesheets/cash-bill-one-8frame.png",
+      "source": "Source-Masters/money-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 115,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 11311,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 12824,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 13337,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 12516,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 11310,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 12516,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 13337,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 12824,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cash-bill-five",
+      "category": "ambient",
+      "src": "Spritesheets/cash-bill-five-8frame.png",
+      "source": "Source-Masters/money-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 115,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 10608,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 11950,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 12449,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 11692,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 10607,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 11692,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 12449,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 11950,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cash-bill-ten",
+      "category": "ambient",
+      "src": "Spritesheets/cash-bill-ten-8frame.png",
+      "source": "Source-Masters/money-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 115,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 11505,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 12964,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 13513,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 12677,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 11504,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 12677,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 13513,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 12964,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cash-bill-twenty",
+      "category": "ambient",
+      "src": "Spritesheets/cash-bill-twenty-8frame.png",
+      "source": "Source-Masters/money-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 115,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 9114,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 10276,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 10690,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 10050,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 9134,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 10050,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 10690,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 10276,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cash-dollar-token",
+      "category": "ambient",
+      "src": "Spritesheets/cash-dollar-token-8frame.png",
+      "source": "Source-Masters/money-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 140,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 20189,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 22802,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 23796,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 22370,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 19503,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 22370,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 23796,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 22802,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cash-betting-slip",
+      "category": "ambient",
+      "src": "Spritesheets/cash-betting-slip-8frame.png",
+      "source": "Source-Masters/money-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 140,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 14869,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 16746,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 17455,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 16373,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 14872,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 16373,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 17455,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 16746,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cigarette-smoke-rise",
+      "category": "ambient",
+      "src": "Spritesheets/cigarette-smoke-rise-8frame.png",
+      "source": "Source-Masters/smoke-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 165,
+      "loop": false,
+      "render_anchor": "bottom-center",
+      "render_note": "One-shot 8-frame plume. Origin bottom-center; suppress under reduced motion and keep smoke behind UI. White matte removed from provided original.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 1805,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 5712,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 14313,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 24972,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 24422,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 13892,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 6798,
+            "alpha_range": [
+              0,
+              243
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 1027,
+            "alpha_range": [
+              0,
+              187
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "burning-cigarette-ember",
+      "category": "ambient",
+      "src": "Spritesheets/burning-cigarette-ember-8frame.png",
+      "source": "Source-Masters/cigarette-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        512,
+        512
+      ],
+      "sheet_size": [
+        2048,
+        1024
+      ],
+      "frame_ms": 150,
+      "loop": true,
+      "render_anchor": "left-center",
+      "render_note": "Animated ember and smoke on a fixed cigarette; intended for backroom edge, not die lane. Transparent 512-square cells.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 23563,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 24650,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 26422,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 29010,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 28342,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 25991,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 24416,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 23402,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tungsten-bulb-flicker",
+      "category": "ambient",
+      "src": "Spritesheets/tungsten-bulb-flicker-8frame.png",
+      "source": "Source-Masters/bulb-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 185,
+      "loop": true,
+      "render_anchor": "top-center",
+      "render_note": "8-step irregular bright/dim cycle based on approved source; isolate to scene edges. CSS light spill optional; pause under reduced motion.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 18904,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 32619,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 25391,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 19284,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 30725,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 25155,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 20734,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 18534,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "debris-torn-paper",
+      "category": "ambient",
+      "src": "Spritesheets/debris-torn-paper-8frame.png",
+      "source": "Source-Masters/debris-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 175,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 9317,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 10471,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 10923,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 10269,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 9310,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 10269,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 10923,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 10471,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "debris-betting-slip",
+      "category": "ambient",
+      "src": "Spritesheets/debris-betting-slip-8frame.png",
+      "source": "Source-Masters/debris-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 175,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 8974,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 10097,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 10507,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 9888,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 8960,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 9888,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 10507,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 10097,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "debris-rag-scrap",
+      "category": "ambient",
+      "src": "Spritesheets/debris-rag-scrap-8frame.png",
+      "source": "Source-Masters/debris-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 175,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 4879,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 5490,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 5702,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 5382,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 4875,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 5382,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 5702,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 5490,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "debris-newspaper",
+      "category": "ambient",
+      "src": "Spritesheets/debris-newspaper-8frame.png",
+      "source": "Source-Masters/debris-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 175,
+      "loop": true,
+      "render_anchor": "center",
+      "render_note": "In-cell flutter only; game engine translates sprite downward and sideways; loop, no frame-boundary crossing.",
+      "qa": {
+        "frames": [
+          {
+            "frame": 1,
+            "opaque_px": 7682,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 2,
+            "opaque_px": 8662,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 3,
+            "opaque_px": 9017,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 4,
+            "opaque_px": 8482,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 5,
+            "opaque_px": 7690,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 6,
+            "opaque_px": 8482,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 7,
+            "opaque_px": 9017,
+            "alpha_range": [
+              0,
+              255
+            ]
+          },
+          {
+            "frame": 8,
+            "opaque_px": 8662,
+            "alpha_range": [
+              0,
+              255
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cockroach-crawl",
+      "category": "ambient-creature",
+      "src": "Spritesheets/cockroach-crawl-8frame.png",
+      "source": "Source-Masters/cockroach-generation-original.png",
+      "cols": 4,
+      "rows": 2,
+      "frame_count": 8,
+      "frame_size": [
+        256,
+        256
+      ],
+      "sheet_size": [
+        1024,
+        512
+      ],
+      "frame_ms": 115,
+      "loop": true,
+      "render_anchor": "center",
+      "playback_note": "Animate in place 115ms/frame; move DOM overlay with lightweight CSS horizontally, 40–70px illustrated screen size; use pause/reduced-motion gating and low spawn frequency; no gameplay coupling. Generated source was opaque RGB and is retained; production sheet has cleaned alpha."
+    }
+  ],
+  "notes": [
+    "Cash sprite frames show local flutter; do NOT animate the entire fall inside cells. Use CSS transform to move each instance vertically at varied deterministic speeds.",
+    "Smoke original contained a white paper matte; corrected RGB-derived alpha is approximate. Review over both ink black and light manila scenes.",
+    "Bulb sprite includes light halo and frame-dependent intensity; avoid additional large compositing glow on mobile.",
+    "All current sheets use generated artwork cutouts; no vector redrawing or gameplay integration.",
+    "Original sources remain in Source-Masters. Testing in actual Gutterbones gameplay remains outstanding."
+  ],
+  "source_pack": "Ambient Animation v1 + Ambient & Roach v2"
+}
