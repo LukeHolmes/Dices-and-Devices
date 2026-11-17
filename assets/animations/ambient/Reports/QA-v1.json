@@ -1,0 +1,149 @@
+{
+  "errors": [],
+  "files": [
+    {
+      "id": "cash-bill-one",
+      "sheet": "Spritesheets/cash-bill-one-8frame.png",
+      "bytes": 340133,
+      "sha256": "48a81679ca4b04c6ac3a25a916341867a3cfe6cbc5d048b16c9f388ed9bc8af0",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 115
+    },
+    {
+      "id": "cash-bill-five",
+      "sheet": "Spritesheets/cash-bill-five-8frame.png",
+      "bytes": 317006,
+      "sha256": "43a5bae9f35eee718ad4de32ba8ebf6f07381d8eb8427da1a2b1241d96c4334b",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 115
+    },
+    {
+      "id": "cash-bill-ten",
+      "sheet": "Spritesheets/cash-bill-ten-8frame.png",
+      "bytes": 340201,
+      "sha256": "7aae1830d3bd2b9899043acdea5271f11c4c77e1221f9932473ab9579a67b1a5",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 115
+    },
+    {
+      "id": "cash-bill-twenty",
+      "sheet": "Spritesheets/cash-bill-twenty-8frame.png",
+      "bytes": 275982,
+      "sha256": "136ac2d7373a9a709053bbdc85b846dbcfc77b18722430829a9adfcaa13c8f58",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 115
+    },
+    {
+      "id": "cash-dollar-token",
+      "sheet": "Spritesheets/cash-dollar-token-8frame.png",
+      "bytes": 568945,
+      "sha256": "5d067241e9ae0d10758a72dc04353cefee84177f76abb1e7d13d872b6472cb72",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 140
+    },
+    {
+      "id": "cash-betting-slip",
+      "sheet": "Spritesheets/cash-betting-slip-8frame.png",
+      "bytes": 429492,
+      "sha256": "f61173439bca918a1146a06a87390996bc24890f7199f6f4038f1a7acedf92cc",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 140
+    },
+    {
+      "id": "cigarette-smoke-rise",
+      "sheet": "Spritesheets/cigarette-smoke-rise-8frame.png",
+      "bytes": 597817,
+      "sha256": "2f2e8320e26578d300e5f388ebc630df33984a191c2ac624ad625bae231f1886",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 165
+    },
+    {
+      "id": "burning-cigarette-ember",
+      "sheet": "Spritesheets/burning-cigarette-ember-8frame.png",
+      "bytes": 318368,
+      "sha256": "955ebb4499a1ab26dfa681caf9cb698343818f51d21ce87b200b8de5cb920e3c",
+      "frame_size": [
+        512,
+        512
+      ],
+      "frame_ms": 150
+    },
+    {
+      "id": "tungsten-bulb-flicker",
+      "sheet": "Spritesheets/tungsten-bulb-flicker-8frame.png",
+      "bytes": 750052,
+      "sha256": "e6d469a3f2c34615a37c1586c3b30fda5d4d4b5c9ea57af138ccc84723661088",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 185
+    },
+    {
+      "id": "debris-torn-paper",
+      "sheet": "Spritesheets/debris-torn-paper-8frame.png",
+      "bytes": 281546,
+      "sha256": "008070303dbbd700c8660c0047e1fc8eff1c583cd77701bb806b2b21ecb00126",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 175
+    },
+    {
+      "id": "debris-betting-slip",
+      "sheet": "Spritesheets/debris-betting-slip-8frame.png",
+      "bytes": 260255,
+      "sha256": "f6079e0df1266e8dbfd4593634cd5e100ae7fada170970f52521cffb242212f8",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 175
+    },
+    {
+      "id": "debris-rag-scrap",
+      "sheet": "Spritesheets/debris-rag-scrap-8frame.png",
+      "bytes": 155856,
+      "sha256": "945d81b464793ac9a2d39302413dea689efe25a33d3fd8d5d2c4807d069e6787",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 175
+    },
+    {
+      "id": "debris-newspaper",
+      "sheet": "Spritesheets/debris-newspaper-8frame.png",
+      "bytes": 241169,
+      "sha256": "1eb9712041e6dbac0c7f53a24b5051f9280603cf8c6993f2417130f8dbd810a5",
+      "frame_size": [
+        256,
+        256
+      ],
+      "frame_ms": 175
+    }
+  ],
+  "count": 13
+}

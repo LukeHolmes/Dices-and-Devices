@@ -1,0 +1,158 @@
+{
+  "status": "GitHub space-efficient reference proxies; original PNG masters remain in ChatGPT Library",
+  "references": [
+    {
+      "from": "Source-Masters/bulb-original.png",
+      "github": "Source-Masters/bulb-original.webp",
+      "original_bytes": 2373198,
+      "webp_bytes": 944050,
+      "sha256_original": "ef3ab107eefd18e84abbafd81c4f5909e9c11cbff4f9324dd9fbc08110e26f8a",
+      "sha256_webp": "5598badf8a9ff3a3ab0706084499a0d6fbea09b2a79f1ed663b5f97afd57e43f",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Source-Masters/cigarette-original.png",
+      "github": "Source-Masters/cigarette-original.webp",
+      "original_bytes": 1618675,
+      "webp_bytes": 482936,
+      "sha256_original": "4bfb09e405b3cf5e46a17d5b70dd45e0c343a86c4ad8f53fa8afbc22c40f28cd",
+      "sha256_webp": "5befd1dd341879545fcc4471ac53666d5f2edfdb364b780e5e50df4f5657772f",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Source-Masters/cockroach-generation-original.png",
+      "github": "Source-Masters/cockroach-generation-original.webp",
+      "original_bytes": 1759415,
+      "webp_bytes": 294098,
+      "sha256_original": "ac1d065793ed07790462de24f5b55b6c17af8b9da3dcc8a632a08bff5e44b584",
+      "sha256_webp": "436c2e0945da6897bc5ec630896efa9d45bf6f98c0849b4feec75f940f202a6d",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Source-Masters/debris-original.png",
+      "github": "Source-Masters/debris-original.webp",
+      "original_bytes": 2705360,
+      "webp_bytes": 864610,
+      "sha256_original": "62b5f8c74e47b5965880ae0aa0d760582f6bdb85e6a63950038b5bc514ae3912",
+      "sha256_webp": "334db72c0282a45171dee83433683580f5d7cb6a3c0d9ce2563b15271adfd541",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Source-Masters/money-original.png",
+      "github": "Source-Masters/money-original.webp",
+      "original_bytes": 3146322,
+      "webp_bytes": 876472,
+      "sha256_original": "a3937b75086bad94665159854c32e9791f08c268842b72100e8c5eacce4837a1",
+      "sha256_webp": "93ea53470d95ac86a9f8e7c8bc761c557878a233b3867b491e4b4bd7ee194ce8",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Source-Masters/smoke-original.png",
+      "github": "Source-Masters/smoke-original.webp",
+      "original_bytes": 2692074,
+      "webp_bytes": 837398,
+      "sha256_original": "df3b408f673153bb8e5e0958a1721b7bac8a81bc83c032e0cb9e54748b590801",
+      "sha256_webp": "acd4b3cc93324592c3d99421f59ef71b1bec7d6436ef6517d4cd2e9d2fc6a18e",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/burning-cigarette-source.png",
+      "github": "Cutouts/burning-cigarette-source.webp",
+      "original_bytes": 1409780,
+      "webp_bytes": 439090,
+      "sha256_original": "cb03392391a356a154756a992ff7bb2ce6ffda16305df75e633ad47f8f200ea0",
+      "sha256_webp": "42545c0c756e30bd6cef8f9eaf74307618e062876b13aba4c3afca2e99525c3a",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/cash-betting-slip-source.png",
+      "github": "Cutouts/cash-betting-slip-source.webp",
+      "original_bytes": 268035,
+      "webp_bytes": 83956,
+      "sha256_original": "ec58fed5eee60f3acb7d734cc90628e40f16238b6201163261cfec367385dfdf",
+      "sha256_webp": "0451b3112c1290005a5a46d05a5bcbc2d78d573abb73905eefc8bb6c96700717",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/cash-bill-five-source.png",
+      "github": "Cutouts/cash-bill-five-source.webp",
+      "original_bytes": 489137,
+      "webp_bytes": 147544,
+      "sha256_original": "45d73f310ea2eaf1657e1b7769a14a5794c4b74c72a717c1b37a6393d769ac99",
+      "sha256_webp": "519ddaca7abf67e533fd6ed0830e0c87363716819aec0861108a4e55bc6f4621",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/cash-bill-one-source.png",
+      "github": "Cutouts/cash-bill-one-source.webp",
+      "original_bytes": 407600,
+      "webp_bytes": 122844,
+      "sha256_original": "17d37542aa6b53d36b325315c2638a1573f570b888292993730d8360a6d86cee",
+      "sha256_webp": "31be1e21ec67d8237ea6cddc243ac422938e5ceb711fcb4b7ede77f365a7098a",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/cash-bill-ten-source.png",
+      "github": "Cutouts/cash-bill-ten-source.webp",
+      "original_bytes": 405133,
+      "webp_bytes": 123628,
+      "sha256_original": "b7592f32d67b4e50c38659f1bbefdf9b50c49c1a6b7475dc93f52de20ab74daf",
+      "sha256_webp": "6f9efe899b874e237556f3304300aaa632c5e01f38960a87958297d08cd913b7",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/cash-bill-twenty-source.png",
+      "github": "Cutouts/cash-bill-twenty-source.webp",
+      "original_bytes": 481521,
+      "webp_bytes": 146248,
+      "sha256_original": "dada603e1c5f9008ebfddede14450f04476cb80727f29c92029cfca6566cfa20",
+      "sha256_webp": "53c82cd95f06bfdbd3d73677ca40cca166216451e76faf862a19ed24e2f9b825",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/cash-dollar-token-source.png",
+      "github": "Cutouts/cash-dollar-token-source.webp",
+      "original_bytes": 205061,
+      "webp_bytes": 65686,
+      "sha256_original": "ed93ccbf63836ec5dc98d47d3fac4c1f28bbbb21f15c1bb194aff1472c172a3b",
+      "sha256_webp": "9eb0338504caae1123c631e1bb352ca41974a3bfc01029cee11d58f2abaf4811",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/debris-betting-slip-source.png",
+      "github": "Cutouts/debris-betting-slip-source.webp",
+      "original_bytes": 250103,
+      "webp_bytes": 78432,
+      "sha256_original": "577e55b4af5ab6c9fdc860cb88549ea14ff8a26d1bb56624a92ce03f8af03835",
+      "sha256_webp": "5acb8a09dbd33ca88b872c16bec76efd92eaf8360d7d2fd9453e393ee23fd03e",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/debris-newspaper-source.png",
+      "github": "Cutouts/debris-newspaper-source.webp",
+      "original_bytes": 238624,
+      "webp_bytes": 77948,
+      "sha256_original": "c23edc36211608f9fdeee595215db9be41478b8d2be311daa14254097a0c5d7d",
+      "sha256_webp": "352d9c5fda82f714afd5277f8c434b2b4870bc3eae61a1b1f68016fa36002547",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/debris-rag-scrap-source.png",
+      "github": "Cutouts/debris-rag-scrap-source.webp",
+      "original_bytes": 215183,
+      "webp_bytes": 73956,
+      "sha256_original": "2f46e6d47b51ddf6e70e78a4ce73e60f2a0de319f46972cfaa1a5ff2e6384474",
+      "sha256_webp": "1de8705699e926d0f6d81e55bda7621427a92097b7429644a92fadaf79338055",
+      "alpha_unchanged": true
+    },
+    {
+      "from": "Cutouts/debris-torn-paper-source.png",
+      "github": "Cutouts/debris-torn-paper-source.webp",
+      "original_bytes": 253417,
+      "webp_bytes": 79842,
+      "sha256_original": "4f4cb2713c568ff077ebe7734e191dd65e9109111f5254966c556a8cee471e6e",
+      "sha256_webp": "6cb810f28330692a03a0b49acfde06171195db5ace61b980f32feddbb8ac2b1d",
+      "alpha_unchanged": true
+    }
+  ]
+}

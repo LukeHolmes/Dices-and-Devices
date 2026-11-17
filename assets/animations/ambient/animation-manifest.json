@@ -19,7 +19,7 @@
       "id": "cash-bill-one",
       "category": "ambient",
       "src": "Spritesheets/cash-bill-one-8frame.png",
-      "source": "Source-Masters/money-original.png",
+      "source": "Source-Masters/money-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -102,13 +102,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/money-original.png"
     },
     {
       "id": "cash-bill-five",
       "category": "ambient",
       "src": "Spritesheets/cash-bill-five-8frame.png",
-      "source": "Source-Masters/money-original.png",
+      "source": "Source-Masters/money-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -191,13 +192,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/money-original.png"
     },
     {
       "id": "cash-bill-ten",
       "category": "ambient",
       "src": "Spritesheets/cash-bill-ten-8frame.png",
-      "source": "Source-Masters/money-original.png",
+      "source": "Source-Masters/money-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -280,13 +282,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/money-original.png"
     },
     {
       "id": "cash-bill-twenty",
       "category": "ambient",
       "src": "Spritesheets/cash-bill-twenty-8frame.png",
-      "source": "Source-Masters/money-original.png",
+      "source": "Source-Masters/money-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -369,13 +372,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/money-original.png"
     },
     {
       "id": "cash-dollar-token",
       "category": "ambient",
       "src": "Spritesheets/cash-dollar-token-8frame.png",
-      "source": "Source-Masters/money-original.png",
+      "source": "Source-Masters/money-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -458,13 +462,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/money-original.png"
     },
     {
       "id": "cash-betting-slip",
       "category": "ambient",
       "src": "Spritesheets/cash-betting-slip-8frame.png",
-      "source": "Source-Masters/money-original.png",
+      "source": "Source-Masters/money-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -547,13 +552,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/money-original.png"
     },
     {
       "id": "cigarette-smoke-rise",
       "category": "ambient",
       "src": "Spritesheets/cigarette-smoke-rise-8frame.png",
-      "source": "Source-Masters/smoke-original.png",
+      "source": "Source-Masters/smoke-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -636,13 +642,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/smoke-original.png"
     },
     {
       "id": "burning-cigarette-ember",
       "category": "ambient",
       "src": "Spritesheets/burning-cigarette-ember-8frame.png",
-      "source": "Source-Masters/cigarette-original.png",
+      "source": "Source-Masters/cigarette-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -725,13 +732,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/cigarette-original.png"
     },
     {
       "id": "tungsten-bulb-flicker",
       "category": "ambient",
       "src": "Spritesheets/tungsten-bulb-flicker-8frame.png",
-      "source": "Source-Masters/bulb-original.png",
+      "source": "Source-Masters/bulb-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -814,13 +822,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/bulb-original.png"
     },
     {
       "id": "debris-torn-paper",
       "category": "ambient",
       "src": "Spritesheets/debris-torn-paper-8frame.png",
-      "source": "Source-Masters/debris-original.png",
+      "source": "Source-Masters/debris-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -903,13 +912,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/debris-original.png"
     },
     {
       "id": "debris-betting-slip",
       "category": "ambient",
       "src": "Spritesheets/debris-betting-slip-8frame.png",
-      "source": "Source-Masters/debris-original.png",
+      "source": "Source-Masters/debris-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -992,13 +1002,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/debris-original.png"
     },
     {
       "id": "debris-rag-scrap",
       "category": "ambient",
       "src": "Spritesheets/debris-rag-scrap-8frame.png",
-      "source": "Source-Masters/debris-original.png",
+      "source": "Source-Masters/debris-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -1081,13 +1092,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/debris-original.png"
     },
     {
       "id": "debris-newspaper",
       "category": "ambient",
       "src": "Spritesheets/debris-newspaper-8frame.png",
-      "source": "Source-Masters/debris-original.png",
+      "source": "Source-Masters/debris-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -1170,13 +1182,14 @@
             ]
           }
         ]
-      }
+      },
+      "original_png_source_library": "Source-Masters/debris-original.png"
     },
     {
       "id": "cockroach-crawl",
       "category": "ambient-creature",
       "src": "Spritesheets/cockroach-crawl-8frame.png",
-      "source": "Source-Masters/cockroach-generation-original.png",
+      "source": "Source-Masters/cockroach-generation-original.webp",
       "cols": 4,
       "rows": 2,
       "frame_count": 8,
@@ -1191,7 +1204,8 @@
       "frame_ms": 115,
       "loop": true,
       "render_anchor": "center",
-      "playback_note": "Animate in place 115ms/frame; move DOM overlay with lightweight CSS horizontally, 40–70px illustrated screen size; use pause/reduced-motion gating and low spawn frequency; no gameplay coupling. Generated source was opaque RGB and is retained; production sheet has cleaned alpha."
+      "playback_note": "Animate in place 115ms/frame; move DOM overlay with lightweight CSS horizontally, 40–70px illustrated screen size; use pause/reduced-motion gating and low spawn frequency; no gameplay coupling. Generated source was opaque RGB and is retained; production sheet has cleaned alpha.",
+      "original_png_source_library": "Source-Masters/cockroach-generation-original.png"
     }
   ],
   "notes": [
@@ -1201,5 +1215,6 @@
     "All current sheets use generated artwork cutouts; no vector redrawing or gameplay integration.",
     "Original sources remain in Source-Masters. Testing in actual Gutterbones gameplay remains outstanding."
   ],
-  "source_pack": "Ambient Animation v1 + Ambient & Roach v2"
+  "source_pack": "Ambient Animation v1 + Ambient & Roach v2",
+  "source_note": "Source-Masters and Cutouts on GitHub are optimized WebP reference copies; exact source PNGs are archived in ChatGPT Library /Projects/Gutterbones/05_Animations/Ambient/FX-Collection-v2.1."
 }
