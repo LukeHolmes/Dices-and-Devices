@@ -1,0 +1,36 @@
+{
+  "name": "alley-rat",
+  "sprite_sheet": {
+    "file": "alley-rat-8frame-game-ready.png",
+    "size": [
+      1024,
+      512
+    ],
+    "grid": [
+      4,
+      2
+    ],
+    "frame": [
+      256,
+      256
+    ]
+  },
+  "css_strip": "alley-rat-8frame-horizontal.png",
+  "frames": 8,
+  "duration_ms_each": 80,
+  "cycle_duration_ms": 640,
+  "loop": true,
+  "display_width_px": {
+    "small": 50,
+    "default": 80,
+    "large": 100
+  },
+  "visible_rat_width_pct_approx": 92,
+  "notes": [
+    "Preserve the existing 256px master artwork and scale at render time.",
+    "Each frame is anchored within its cell.",
+    "Transparent animations preserve original print texture.",
+    "Do not place in front of dice, scoring, or HUD controls.",
+    "Disable ambient motion when reduced-motion preference is active."
+  ]
+}
