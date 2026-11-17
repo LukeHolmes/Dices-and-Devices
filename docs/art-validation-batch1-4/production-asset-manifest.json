@@ -1,0 +1,656 @@
+{
+  "game": "Gutterbones 1977",
+  "version": "1.1.0-candidate-2026-11-17",
+  "readiness": "REVIEW_REQUIRED",
+  "runtimeVerified": false,
+  "approvedBosses": 1,
+  "bossPortraitsPresent": 6,
+  "unapprovedBossCandidates": 5,
+  "requiredBosses": 6,
+  "assets": [
+    {
+      "path": "01_Characters/Bosses/crooked-cop.webp",
+      "sha256": "d7ec5f0eeaa73777d4c34a509985202926218acff59a3585cc7616e389df3d31",
+      "bytes": 1430092,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        900,
+        1200
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Bosses/informant.webp",
+      "sha256": "129fece259e57361ad06cca51bc27b24d258faa31a19a21c6cdfdf4d1dcae7d7",
+      "bytes": 1482410,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        900,
+        1200
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Bosses/junkie.webp",
+      "sha256": "3b41af523bfd891fc7f06520d983b5ec89f87d642e452f416cebec19c0bd8a09",
+      "bytes": 1517042,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        900,
+        1200
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Bosses/loan-shark.webp",
+      "sha256": "0c7cd907be88b6f44d38461aa67c1e220cb6d70368515fc9671e39668316b782",
+      "bytes": 2198396,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        900,
+        1200
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Bosses/the-bouncer.webp",
+      "sha256": "4d3c341011d1dbd31a2e1774ca3b2baeb513071a87e9384640d72231b9962b89",
+      "bytes": 2729364,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Bosses/the-raid.webp",
+      "sha256": "69903a8a859a5f4be8d487f007c653d024e2d5e0935d64fa1e12ba8445fa6221",
+      "bytes": 1416736,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        900,
+        1200
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Playable/counter.webp",
+      "sha256": "06964fda73c61cf254b3bd64598b1f2f2371777280915e63e62b9c9d06e24a91",
+      "bytes": 2789030,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Playable/enforcer.webp",
+      "sha256": "90f852bd485bafef0e9ec7353941c987fc3b328113aaecb44a0e7f5ff1862bc9",
+      "bytes": 2866972,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Playable/hustler.webp",
+      "sha256": "0274b45db93ce1da24eae2a300fa5d18e7936af31962e6ea5938090c707ec5b0",
+      "bytes": 2840420,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "01_Characters/Playable/street-rat.webp",
+      "sha256": "8966a42ce62f0a7603640a5164164424a2f7e0f2fb1b4bdf0b6d4bef0cf2043d",
+      "bytes": 2716734,
+      "format": "webp",
+      "purpose": "01_Characters",
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "aspect_ratio": 0.75,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/alley-playfield.webp",
+      "sha256": "d61e2a0b06c981e0eb4a272e35870a24bd62598b73be4bebc79ea3254dc227e3",
+      "bytes": 2958166,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/busted.webp",
+      "sha256": "15ccceddc9448c4c8f5b71a7430b3e816ba9b9405418ae4be3be8893dd3d163c",
+      "bytes": 2902964,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/counting-cash.webp",
+      "sha256": "c9c3f780f45167e5d6f75c930492b7b5e8d27d7cb5bc4a3e511bb8e91b319536",
+      "bytes": 2940242,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/gamble-double-or-nothing.webp",
+      "sha256": "0063f9c6108c0bebc1697e009547da3dfde9a8a685eccf11914867d7031f40b1",
+      "bytes": 2841960,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/nightclub-backroom.webp",
+      "sha256": "4499e676d360ae3eab88ab0ca8cf7b81e4fb6c110c802386c777129913760a1d",
+      "bytes": 2960194,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/stairwell-descent.webp",
+      "sha256": "431eab7568b9d0fcfbe06b87c7bc8f80a126349cf2957192f1584c182214d7dd",
+      "bytes": 2994070,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/the-escape.webp",
+      "sha256": "06c3baea7f61fd38b0dbc165fa23390a02324d91f94637ce689abc9be525674c",
+      "bytes": 2974782,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "02_Environments/the-mod-bench.webp",
+      "sha256": "514bef1d090a9050b994456c894b924168bd069d0ef625a4ecee39a8cc33386c",
+      "bytes": 2994948,
+      "format": "webp",
+      "purpose": "02_Environments",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "aspect_ratio": 1.77683,
+      "has_alpha": false
+    },
+    {
+      "path": "03_Dice/Contraband/blood-6.png",
+      "sha256": "f44d116b664127c4ea555f834b4786fb9ec20391d3c5326703fa4b3b8cefab21",
+      "bytes": 264110,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/cash.png",
+      "sha256": "ee062fa871a50a9917e8a93a4336095310eb9ddd649d72f9c01b0a74b4839a02",
+      "bytes": 264508,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/double-down.png",
+      "sha256": "88dae3d3b760537c33bdbe8c3769f8b8309497f045f0b70217e96335c8ef1b55",
+      "bytes": 306536,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/echo.png",
+      "sha256": "4ba9a6ba46274dafc63cc7251e0b28035ca247f9e08b024fedd5384e61e75cc3",
+      "bytes": 338914,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/fuse.png",
+      "sha256": "027eb3597a3ed5678ec8743e2e1b662b119e69f348297d2f60e4c20c5f1139db",
+      "bytes": 147012,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/ghost.png",
+      "sha256": "8e0519e345194181cdea96e7a2fb0df8f4f6d31273df684965b5133f56a2d33d",
+      "bytes": 297215,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/magnet.png",
+      "sha256": "f0c2b6a57f1788a3caee0ffd8597eadbcf2691bcb4fed73a2ea79f78f48b6fa6",
+      "bytes": 322846,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/mark.png",
+      "sha256": "2ab63bdc21a6d880436e72a787ae50bf9d1edeb3e986db7be8b61e73bce32c49",
+      "bytes": 254291,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/mult.png",
+      "sha256": "e289be0fce55434ca08a57781435b5e0dd58fa9a953294b3f7c61fa17ee857d2",
+      "bytes": 262580,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/shiv.png",
+      "sha256": "c4aaaa3d68fbf8279725013d297b78ff4a1c17a8cfb121a39e973eee76f48efe",
+      "bytes": 157094,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/wild.png",
+      "sha256": "2a87061b9eafec381531815ee00acf44128b41e52b23c42827d5ed0f0c6a752f",
+      "bytes": 228580,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Contraband/wirebag.png",
+      "sha256": "6a0d7eb473608a7607ac97a74b6ef4a0022b752bc092f5f97c60895454baec31",
+      "bytes": 272040,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Master/master-bone-die.png",
+      "sha256": "4f5de99c329a50256174900db14782a49fbcf31112c91e3086f5b9d0feab7437",
+      "bytes": 411850,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Numbered/die-1.png",
+      "sha256": "2dc4c574cc95ee94ccf7e16504d83b2b8d7ec3b26b2cb82aa34ad0bdccc62c24",
+      "bytes": 415132,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Numbered/die-2.png",
+      "sha256": "6970d4e2c4cf11d95387dce81d8662c71fce76f2408e4d025971adbe210e138d",
+      "bytes": 415739,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Numbered/die-3.png",
+      "sha256": "47d7a18d4689bbbccfe14c8c90d4955f61f92cf96bbe40258da1ff25d4af6ce4",
+      "bytes": 418977,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Numbered/die-4.png",
+      "sha256": "8a5fc5c5200d701789a97e8c4ca0c2dfda146b6ac52ee6cd291fc9b4e0a421fc",
+      "bytes": 418160,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Numbered/die-5.png",
+      "sha256": "44d8e1434ed53bee1e6d0e00d1895cefeef5f75c2a48d9ff9c1ad4c8ab9f7d35",
+      "bytes": 421336,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "03_Dice/Numbered/die-6.png",
+      "sha256": "18dfc60fa3a8d4fcadc1bcb57f8734b9a01fcb6d902db1557d0c253edf9449cc",
+      "bytes": 422539,
+      "format": "png",
+      "purpose": "03_Dice",
+      "dimensions": [
+        512,
+        512
+      ],
+      "aspect_ratio": 1.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/animation-manifest.json",
+      "sha256": "803c5bd0f22ed72957ed9135918a45fe0a90ed153a91000b06ddc6469e59a8f7",
+      "bytes": 7120,
+      "format": "json",
+      "purpose": "05_Animations"
+    },
+    {
+      "path": "05_Animations/blood-6-8frame-spritesheet.png",
+      "sha256": "a4b5905c5aa579940a029fadf6573babfe130fc622e46c1885bd8a64445652cf",
+      "bytes": 205888,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/cash-8frame-spritesheet.png",
+      "sha256": "7f28f2898e48bcea665d35125e9245db4840da9d74d36b57326e0fa8dd14c77f",
+      "bytes": 182721,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/double-down-8frame-spritesheet.png",
+      "sha256": "e07540ffc3b05c18a88687e0b0d2c4dd3dc04993bf66345fc2c0130a6ad143b7",
+      "bytes": 235730,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/echo-8frame-spritesheet.png",
+      "sha256": "a981fce645c1ab0487455e7edd90c0f3ff807526980e3ea504a4c466549b34cd",
+      "bytes": 229586,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/fuse-8frame-spritesheet.png",
+      "sha256": "573b5da19d579376b7d2bc4b419ccba4002e458e81c44eb21fc22b7009f8a86b",
+      "bytes": 119093,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/ghost-8frame-spritesheet.png",
+      "sha256": "b1b93f8ed10bc32ca017c7f4ed0c543b276023f0b786d9bfc1831db63dac7942",
+      "bytes": 221155,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/magnet-8frame-spritesheet.png",
+      "sha256": "ab5065efa4fb0380e61d7faeb2d353718dcd7dcb9d4760e59b54bceddc82046b",
+      "bytes": 243836,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/mark-8frame-spritesheet.png",
+      "sha256": "029688fbbe2374a9b4efbac7b3239a7892cae6e468101c7aed42fc633281d06a",
+      "bytes": 199161,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/mult-8frame-spritesheet.png",
+      "sha256": "8561f6fb50deeec42c7e6dc8af4d55299a0fba8f86457eb1d14bda667d348994",
+      "bytes": 513611,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/shiv-8frame-spritesheet.png",
+      "sha256": "7993362451dfeaaf17a8c68a2789b49f70d64544bac3a886fbe3df962fa88c05",
+      "bytes": 129501,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/wild-8frame-spritesheet.png",
+      "sha256": "33eacda7fbd4bbe0fc26a81ff45ec198d7f6bec7d9464518378ddf5c700ea198",
+      "bytes": 182987,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    },
+    {
+      "path": "05_Animations/wirebag-8frame-spritesheet.png",
+      "sha256": "a256c17fe6731b2f70261325f0c99b2c77e28f6a3b315a15923c569a1ec4af6e",
+      "bytes": 230683,
+      "format": "png",
+      "purpose": "05_Animations",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "aspect_ratio": 2.0,
+      "has_alpha": true
+    }
+  ]
+}
