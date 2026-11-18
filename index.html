@@ -2595,6 +2595,33 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       pointer-events: none;
     }
+    #root-gutterbones .item-art-tile {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.35rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #root-gutterbones .item-art-tile--hardware { width: 3.5rem; height: 3.5rem; }
+    @media (min-width: 768px) {
+      #root-gutterbones .item-art-tile--hardware { width: 4rem; height: 4rem; }
+    }
+    #root-gutterbones .item-art-tile--consumable,
+    #root-gutterbones .item-art-tile--contraband { width: 3rem; height: 3rem; }
+    @media (min-width: 768px) {
+      #root-gutterbones .item-art-tile--consumable,
+      #root-gutterbones .item-art-tile--contraband { width: 3.25rem; height: 3.25rem; }
+    }
+    #root-gutterbones .item-art-tile--intel { width: 4.5rem; height: 4.5rem; }
+    #root-gutterbones .item-art-tile--hud { width: 2.25rem; height: 2.25rem; border-color: rgba(255, 255, 255, 0.08); }
+    #root-gutterbones .item-art-tile__img { width: 92%; height: 92%; object-fit: contain; display: block; pointer-events: none; }
+    #root-gutterbones .item-art-tile--ink-halo .item-art-tile__img {
+      filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 6px rgba(8, 12, 20, 0.65));
+    }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
     #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
     #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
@@ -8328,6 +8355,61 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             THE_RAID: 'assets/art/bosses/the-raid.webp'
         }
     });
+    const FACE_SYMBOL_ART = Object.freeze({
+        MULT_FACE: 'assets/art/contraband/mult-face.webp',
+        GOLD_FACE: 'assets/art/contraband/gold-face.webp',
+        WILD_FACE: 'assets/art/contraband/wild-face.webp',
+        BLOOD_6: 'assets/art/contraband/blood-6.webp',
+        ECHO_FACE: 'assets/art/contraband/echo-face.webp',
+        SHIV_FACE: 'assets/art/contraband/shiv-face.webp',
+        WIREBAG_FACE: 'assets/art/contraband/wirebag-face.webp',
+        GHOST_FACE: 'assets/art/contraband/ghost-face.webp',
+        FUSE_FACE: 'assets/art/contraband/fuse-face.webp',
+        MAGNET_FACE: 'assets/art/contraband/magnet-face.webp',
+        MARK_FACE: 'assets/art/contraband/mark-face.webp',
+        DOUBLE_DOWN_FACE: 'assets/art/contraband/double-down-face.webp'
+    });
+    const ITEM_ART = Object.freeze({
+        hardware: {
+            CENTERPIECE: 'assets/art/hardware/centerpiece.webp',
+            BOOKENDS: 'assets/art/hardware/bookends.webp',
+            ENGINE: 'assets/art/hardware/engine.webp',
+            LOADED_DIE: 'assets/art/hardware/loaded-die.webp',
+            BLOOD_PACT: 'assets/art/hardware/blood-pact.webp',
+            BLACK_BOOK: 'assets/art/hardware/black-book.webp',
+            BURNER_PHONE: 'assets/art/hardware/burner-phone.webp',
+            SHADY_LEDGER: 'assets/art/hardware/shady-ledger.webp',
+            CROWBAR: 'assets/art/hardware/crowbar.webp',
+            FUSE_BOX: 'assets/art/hardware/fuse-box.webp',
+            MIRROR_RIG: 'assets/art/hardware/mirror-rig.webp',
+            DEBT_COLLECTOR: 'assets/art/hardware/debt-collector.webp',
+            HOT_STREAK_COIL: 'assets/art/hardware/hot-streak-coil.webp'
+        },
+        consumables: {
+            SECOND_WIND: 'assets/art/consumables/second-wind.webp',
+            SMELLING_SALTS: 'assets/art/consumables/smelling-salts.webp',
+            DIRTY_WAD: 'assets/art/consumables/dirty-wad.webp'
+        }
+    });
+    const CONTRABAND_SYMBOL_HALO_IDS = new Set(['GHOST_FACE', 'FUSE_FACE', 'SHIV_FACE', 'MARK_FACE', 'WIREBAG_FACE']);
+    const itemArtLookup = (itemId) => {
+        if (!itemId) return null;
+        if (FACE_SYMBOL_ART[itemId]) return FACE_SYMBOL_ART[itemId];
+        if (ITEM_ART.hardware[itemId]) return ITEM_ART.hardware[itemId];
+        if (ITEM_ART.consumables[itemId]) return ITEM_ART.consumables[itemId];
+        return null;
+    };
+    const itemArtSrcSet = (src) => {
+        if (!src) return undefined;
+        const at2x = src.replace(/\.webp$/, '@2x.webp');
+        return `${src} 1x, ${at2x} 2x`;
+    };
+    const itemArtVariantFromKind = (kind) => {
+        const k = (kind || '').toLowerCase();
+        if (k.includes('contraband') || k.includes('face')) return 'contraband';
+        if (k.includes('consumable')) return 'consumable';
+        return 'hardware';
+    };
     const DICE_ROLL_SETTLE_MS = 680;
     const DICE_LAND_STAGGER_MS = 78;
     const PAYOUT_INPUT_LOCK_MS = 90;
@@ -8937,14 +9019,63 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
+    const ItemArtTile = ({ itemId, variant = 'hardware', size = 'shop', label, className = '' }) => {
+        const src = itemArtLookup(itemId);
+        if (!src) return null;
+        const alt = label || itemId || 'Item icon';
+        const halo = variant === 'contraband' && CONTRABAND_SYMBOL_HALO_IDS.has(itemId);
+        const sizeToken = size === 'intel' ? 'intel' : size === 'hud' ? 'hud' : '';
+        const sizeClass = sizeToken ? ` item-art-tile--${sizeToken}` : '';
+        return (
+            <div
+                className={`item-art-tile item-art-tile--${variant}${sizeClass}${halo ? ' item-art-tile--ink-halo' : ''} ${className}`.trim()}
+                role="img"
+                aria-label={alt}
+            >
+                <img className="item-art-tile__img" src={src} srcSet={itemArtSrcSet(src)} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+            </div>
+        );
+    };
+
+    const ShopItemIconSlot = ({ item, isFace, isConsumable }) => {
+        const rendered = item?.id && itemArtLookup(item.id)
+            ? <ItemArtTile itemId={item.id} variant={isFace ? 'contraband' : isConsumable ? 'consumable' : 'hardware'} label={isFace ? item.label : item.name} />
+            : null;
+        if (rendered) return rendered;
+        if (isFace) {
+            return (
+                <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}>
+                    <span className="text-xl font-marker">{item.label.charAt(0)}</span>
+                </div>
+            );
+        }
+        if (isConsumable) {
+            return (
+                <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0">
+                    <span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span>
+                </div>
+            );
+        }
+        return (
+            <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0">
+                <span className="text-xs font-mono font-bold">MOD</span>
+            </div>
+        );
+    };
+
     const ShopBoneInspectionStrip = ({ dice, inspectBone, onPickBone, previewItem, onOpenFaceIntel }) => {
         if (!previewItem) return null;
         return (
         <div data-layout-key="shop-bone-inspection-strip" className="shop-bone-inspection-strip shrink-0">
-            <div className="font-mono text-[10px] tracking-[0.2em] text-amber-200/90 mb-2 px-1">
-                {previewItem?.label || previewItem?.name
-                    ? `INSPECT · ${previewItem.label || previewItem.name} — pick a bone`
-                    : 'BONE STRIP · tap a bone to inspect faces before you carve'}
+            <div className="font-mono text-[10px] tracking-[0.2em] text-amber-200/90 mb-2 px-1 flex items-center gap-2 flex-wrap">
+                {previewItem?.id && itemArtLookup(previewItem.id) ? (
+                    <ItemArtTile itemId={previewItem.id} variant="contraband" size="hud" label={previewItem.label || previewItem.name} />
+                ) : null}
+                <span>
+                    {previewItem?.label || previewItem?.name
+                        ? `INSPECT · ${previewItem.label || previewItem.name} — pick a bone`
+                        : 'BONE STRIP · tap a bone to inspect faces before you carve'}
+                </span>
             </div>
             <div className="shop-bone-row">
                 {dice.map((d, i) => (
@@ -10030,9 +10161,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex items-start justify-between gap-3 mb-3">
-                        <div>
-                            <div className="font-mono text-[10px] tracking-[.35em] text-[#0df]">{intel.kind || 'UPGRADE'}</div>
-                            <h2 id="upgrade-intel-title" className="font-marker text-2xl text-white mt-1">{intel.title}</h2>
+                        <div className="flex items-start gap-3 min-w-0">
+                            {intel.id && itemArtLookup(intel.id) ? (
+                                <ItemArtTile
+                                    itemId={intel.id}
+                                    variant={itemArtVariantFromKind(intel.kind)}
+                                    size="intel"
+                                    label={intel.title}
+                                />
+                            ) : null}
+                            <div className="min-w-0">
+                                <div className="font-mono text-[10px] tracking-[.35em] text-[#0df]">{intel.kind || 'UPGRADE'}</div>
+                                <h2 id="upgrade-intel-title" className="font-marker text-2xl text-white mt-1">{intel.title}</h2>
+                            </div>
                         </div>
                         <button type="button" data-layout-key="upgrade-intel-close" className="gb-tappable-label min-h-[var(--gb-min-tap)] min-w-[var(--gb-min-tap)] border border-gray-600 font-mono text-sm text-gray-200" onClick={onClose} aria-label="Close upgrade details">✕</button>
                     </div>
@@ -19505,9 +19646,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         ) : (
                                             <div className="space-y-2 max-h-28 overflow-y-auto pr-1">
                                                 {consumables.map((item, idx) => (
-                                                    <button key={item.instanceId || `${item.id}-${idx}`} onClick={() => useConsumable(idx)} disabled={rolling || phase !== 'PLAY'} className="w-full flex items-center justify-between gap-2 border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-left hover:bg-emerald-900/30 disabled:opacity-40">
-                                                        <span className="font-mono text-[10px] text-emerald-200 truncate">{item.icon || 'USE'} {item.name}</span>
-                                                        <span className="font-mono text-[10px] text-emerald-400">USE</span>
+                                                    <button key={item.instanceId || `${item.id}-${idx}`} onClick={() => useConsumable(idx)} disabled={rolling || phase !== 'PLAY'} className="w-full flex items-center justify-between gap-2 border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-left hover:bg-emerald-900/30 disabled:opacity-40" aria-label={`Use ${item.name}`}>
+                                                        <span className="flex items-center gap-2 min-w-0 font-mono text-[10px] text-emerald-200 truncate">
+                                                            {itemArtLookup(item.id) ? <ItemArtTile itemId={item.id} variant="consumable" size="hud" label={item.name} /> : <span className="shrink-0">{item.icon || 'USE'}</span>}
+                                                            <span className="truncate">{item.name}</span>
+                                                        </span>
+                                                        <span className="font-mono text-[10px] text-emerald-400 shrink-0">USE</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -19522,7 +19666,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         return (
                                             <div key={item.instanceId || `${item.id}-${hwIdx}`} className={`group p-2 border border-gray-800 bg-gray-900/50 rounded ${hardwareDisabled ? 'opacity-30 grayscale' : ''}`}>
                                                 <div className="flex items-start justify-between gap-2">
-                                                    <div className="text-sm font-bold text-white leading-none">{item.name}</div>
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        {itemArtLookup(item.id) ? <ItemArtTile itemId={item.id} variant="hardware" size="hud" label={item.name} /> : null}
+                                                        <div className="text-sm font-bold text-white leading-none truncate">{item.name}</div>
+                                                    </div>
                                                     {hwIntel && (
                                                         <button
                                                             type="button"
@@ -19688,7 +19835,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             </div>
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-3 mb-2">{isFace ? <div className={`w-10 h-10 flex items-center justify-center rounded border ${item.style} shrink-0`}><span className="text-xl font-marker">{item.label.charAt(0)}</span></div> : isConsumable ? <div className="w-10 h-10 flex items-center justify-center rounded border border-emerald-500 bg-emerald-950/40 text-emerald-300 shrink-0"><span className="text-xs font-mono font-bold">{item.icon || 'USE'}</span></div> : <div className="w-10 h-10 flex items-center justify-center rounded border border-gray-500 bg-gray-800 text-gray-400 shrink-0"><span className="text-xs font-mono font-bold">MOD</span></div>}<div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
+                                        <div className="flex items-start gap-3 mb-2"><ShopItemIconSlot item={item} isFace={isFace} isConsumable={isConsumable} /><div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
                                         <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50 mt-auto">{buyLabel}</button>
                                     </div>;
                                 })}</div>
@@ -19849,7 +19996,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         <div data-layout-key="carving-layout" className="carving-workbench flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-6xl h-full max-h-full relative z-10 min-h-0">
                             <div className="carving-shelf w-full md:w-1/3 shrink-0 bg-[#e8e6e1] text-gray-900 p-4 md:p-6 border-4 border-black shadow-2xl overflow-hidden">
                                 <h2 className="text-4xl font-marker border-b-4 border-black mb-6 pb-2">THE MOD</h2>
-                                <div className="flex items-center gap-4">{selectedItem && <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>}<div className="flex-1 min-w-0"><div className="flex items-start justify-between gap-2"><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div>{selectedItem && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(selectedItem.id) && <button type="button" data-layout-key="carve-intel-button" className="gb-tappable-label min-h-[var(--gb-min-tap)] px-3 border-2 border-black font-mono text-xs" onClick={() => openUpgradeIntel(selectedItem.id)}>DETAILS</button>}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
+                                <div className="flex items-center gap-4">{selectedItem && (itemArtLookup(selectedItem.id) ? (
+                                    <div className="shrink-0 animate-[keptBob_6s_ease-in-out_infinite] shadow-2xl">
+                                        <ItemArtTile itemId={selectedItem.id} variant="contraband" size="intel" label={selectedItem.label} />
+                                    </div>
+                                ) : (
+                                    <div className={`w-24 h-24 rounded-xl border-4 flex flex-col items-center justify-center shadow-2xl animate-[keptBob_6s_ease-in-out_infinite] ${selectedItem.style}`}><div className="text-5xl font-marker leading-none">{selectedItem.label.charAt(0)}</div><div className="text-[10px] uppercase mt-1 tracking-widest bg-black/50 px-2 rounded font-mono text-white">{selectedItem.type}</div></div>
+                                ))}<div className="flex-1 min-w-0"><div className="flex items-start justify-between gap-2"><div className="text-3xl font-bold uppercase">{selectedItem?.label}</div>{selectedItem && typeof GutterbonesIntel !== 'undefined' && GutterbonesIntel.hasUpgradeIntel(selectedItem.id) && <button type="button" data-layout-key="carve-intel-button" className="gb-tappable-label min-h-[var(--gb-min-tap)] px-3 border-2 border-black font-mono text-xs" onClick={() => openUpgradeIntel(selectedItem.id)}>DETAILS</button>}</div><div className="text-sm font-mono opacity-80 mt-2">{carvingDie === null ? 'Select a bone on the block.' : 'Select a face to overwrite.'}</div></div></div>
                                 {selectedItem?.id === 'GHOST_FACE' && <div className="text-red-600 font-mono text-xs mt-4 border border-red-600 bg-red-900/20 p-2 animate-pulse">WARNING: Ghost faces reduce available scoring bones.</div>}
                                 {selectedItem?.id === 'SHIV_FACE' && carvingDie === 4 && (
                                     <div className="text-red-700 font-mono text-xs mt-4 border-2 border-red-600 bg-red-100 p-2">WARNING: Slot 5 is the lane edge — Shiv destroys the right neighbor on roll. Neighbors are scarce here.</div>

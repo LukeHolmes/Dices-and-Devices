@@ -27,7 +27,16 @@ Outputs:
 | `assets/art/personas/*.webp` | 600×800, WebP quality 82, cover crop |
 | `assets/art/bosses/*.webp` | 600×800, WebP quality 82, cover crop |
 | `assets/art/scenes/*.webp` | width 1672, WebP quality 78, preserve aspect |
+| `assets/art/hardware\|consumables\|contraband/*.webp` | 128×128 + `@2x` 256×256, WebP quality 82, alpha preserved |
 | `assets/art/RUNTIME-PROVENANCE.json` | output path → master filename + master sha256 |
+
+Item icons (Stage 3 PR-3): unpack approved `hardware_*`, `consumable_*`, and `contraband_*` masters into `art-masters/`, then:
+
+```bash
+node scripts/art/build-art.mjs --items-only
+```
+
+The script verifies each item master against `manifest.csv` sha256 before deriving WebPs. **Brass Knuckles** has no approved master — runtime keeps the legacy letter tile.
 
 Legacy PNGs under `assets/personas/`, `assets/bosses/`, and `assets/scenes/` are kept as fallbacks; the game prefers WebP via `PORTRAIT_ART` and updated CSS / `SCENE_BACKDROP_URLS`.
 
