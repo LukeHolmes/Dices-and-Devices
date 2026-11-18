@@ -1,5 +1,5 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const wait = window.__GB_SIM_ADVANCE_TIME__ || ((ms) => new Promise((r) => setTimeout(r, ms)));
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
@@ -460,12 +460,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         window.__GB_E2E__?.dismissOverlays?.();
       }
       const locks = window.__GB_E2E__?.getPlayLocks?.();
-      if (locks?.rolling || locks?.rollLocked) {
+      if (locks?.rolling || locks?.rollLocked || locks?.payoutInputLock) {
         await wait(60);
         continue;
       }
       if (!window.__GB_E2E__?.getHasRolled?.()) {
         window.__GB_E2E__?.rollOnce?.();
+        await wait(50);
+        continue;
+      }
+      // While the seeded builder waits for its selected payout to render,
+      // retry the same policy instead of letting a DOM scan pick another move.
+      if (window.__GB_SIM_ADVANCE_TIME__ && simPolicyRev === "2026-11-12-wp3-shop-v1") {
+        window.__GB_E2E__?.autoPlayHand?.();
         await wait(50);
         continue;
       }

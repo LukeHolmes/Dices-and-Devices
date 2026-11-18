@@ -167,7 +167,13 @@ async function runOneGame(
   { rid, seed, strategy, viewport, maxSteps, stuckThreshold = 48, maxFallbacks = 36 },
 ) {
   page.setDefaultTimeout(120_000);
+  const seeded = process.env.SIM_SEED_GAME === "1";
+  if (seeded) {
+    await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+    await page.exposeFunction("__GB_SIM_ADVANCE_TIME__", ms => page.clock.runFor(ms));
+  }
   await bootPage(page, page.__baseUrl, viewport);
+  if (seeded) await page.clock.pauseAt(await page.evaluate(() => Date.now() + 3000));
   const linkObs = process.env.SIM_LINK_OBSERVER === "1";
   const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const result = await page.evaluate(
@@ -293,14 +299,13 @@ async function main() {
   let cursor = 0;
 
   async function worker() {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    page.setDefaultTimeout(120_000);
-    page.__baseUrl = baseUrl;
     while (true) {
       const job = jobs[cursor++];
       if (!job) break;
+      const context = await browser.newContext();
       try {
+        const page = await context.newPage();
+        page.__baseUrl = baseUrl;
         const r = await runOneGame(page, { ...job, maxSteps: args.maxSteps });
         results.push(r);
         process.stderr.write(
@@ -318,9 +323,10 @@ async function main() {
           steps: 0,
           maxRound: 0,
         });
+      } finally {
+        await context.close();
       }
     }
-    await context.close();
   }
 
   await Promise.all(Array.from({ length: parallel }, () => worker()));
