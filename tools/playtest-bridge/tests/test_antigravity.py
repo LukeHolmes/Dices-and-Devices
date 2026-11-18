@@ -1,6 +1,38 @@
-from gb_bridge.antigravity import QuotaState, antigravity_cli_version, run_antigravity
-from gb_bridge.config import settings
+import pytest
+
+from gb_bridge.antigravity import (
+    QuotaState,
+    antigravity_cli_version,
+    build_antigravity_argv,
+    assert_antigravity_args_safe,
+    run_antigravity,
+)
+from gb_bridge.config import BridgeSettings, settings
 from gb_bridge.jobs import run_investigate_defect
+
+
+def test_build_antigravity_argv_defaults():
+    argv = build_antigravity_argv("agy.exe", "hello")
+    assert argv[0] == "agy.exe"
+    assert "-p" in argv and "hello" in argv
+    assert "--output-format" in argv and argv[argv.index("--output-format") + 1] == "json"
+    assert "--mode" in argv and argv[argv.index("--mode") + 1] == "plan"
+    assert any(a.startswith("--print-timeout=") for a in argv)
+
+
+def test_rejects_dangerously_skip_permissions_in_extra_args():
+    with pytest.raises(RuntimeError, match="dangerously-skip-permissions"):
+        assert_antigravity_args_safe("--dangerously-skip-permissions")
+
+
+def test_validate_startup_rejects_dangerous_extra_args():
+    cfg = BridgeSettings(
+        n8n_header_value="secret",
+        antigravity_enabled=True,
+        antigravity_extra_args="--dangerously-skip-permissions",
+    )
+    with pytest.raises(RuntimeError, match="dangerously-skip-permissions"):
+        cfg.validate_startup()
 
 
 def test_blocked_exit_zero_treated_as_error(monkeypatch):
@@ -9,17 +41,21 @@ def test_blocked_exit_zero_treated_as_error(monkeypatch):
         stdout = '{"status":"RUNNING","response":""}'
         stderr = "tool approval denied in headless mode"
 
+    captured: dict[str, list[str]] = {}
+
     def fake_run(cmd, **kwargs):
         if "--version" in cmd:
             p = Proc()
             p.stdout = "agy version 1.5.11"
             p.stderr = ""
             return p
+        captured["cmd"] = list(cmd)
         return Proc()
 
     monkeypatch.setattr("gb_bridge.antigravity.subprocess.run", fake_run)
-    out = run_antigravity("agy", "test")
+    out = run_antigravity("agy", "test", mode="plan", output_format="json")
     assert out["ok"] is False
+    assert captured["cmd"][captured["cmd"].index("--mode") + 1] == "plan"
 
 
 def test_antigravity_cli_version(monkeypatch):

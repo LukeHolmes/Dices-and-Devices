@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import shlex
 import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
@@ -10,6 +12,62 @@ from pathlib import Path
 from typing import Any
 
 log = logging.getLogger("gb_bridge.antigravity")
+
+FORBIDDEN_ANTIGRAVITY_FLAGS = frozenset({"--dangerously-skip-permissions"})
+
+
+def assert_antigravity_args_safe(args: str | list[str]) -> None:
+    parts = shlex.split(args, posix=(os.name != "nt")) if isinstance(args, str) else list(args)
+    for token in parts:
+        flag = token.split("=", 1)[0].strip().lower()
+        if flag in FORBIDDEN_ANTIGRAVITY_FLAGS or "dangerously-skip-permissions" in flag:
+            raise RuntimeError(
+                "Antigravity flag --dangerously-skip-permissions is not allowed in the playtest bridge",
+            )
+
+
+def parse_antigravity_extra_args(raw: str) -> list[str]:
+    raw = (raw or "").strip()
+    if not raw:
+        return []
+    parts = shlex.split(raw, posix=(os.name != "nt"))
+    assert_antigravity_args_safe(parts)
+    return parts
+
+
+def build_antigravity_argv(
+    cli: str,
+    prompt: str,
+    *,
+    output_format: str = "json",
+    mode: str = "plan",
+    print_timeout_sec: int = 600,
+    model: str = "",
+    sandbox: str = "",
+    json_schema: str = "",
+    extra_args: list[str] | None = None,
+) -> list[str]:
+    extra = list(extra_args or [])
+    assert_antigravity_args_safe(extra)
+    argv: list[str] = [
+        cli,
+        "-p",
+        prompt,
+        "--output-format",
+        output_format,
+        f"--print-timeout={print_timeout_sec}s",
+        "--mode",
+        mode,
+    ]
+    if model.strip():
+        argv.extend(["--model", model.strip()])
+    if sandbox.strip():
+        argv.extend(["--sandbox", sandbox.strip()])
+    if json_schema.strip():
+        argv.extend(["--json-schema", json_schema.strip()])
+    argv.extend(extra)
+    assert_antigravity_args_safe(argv)
+    return argv
 
 
 def antigravity_cli_version(cli: str, timeout_sec: int = 30) -> str:
@@ -69,15 +127,41 @@ def record_quota(state: QuotaState) -> None:
 def run_antigravity(
     cli: str,
     prompt: str,
-    timeout_sec: int = 600,
+    timeout_sec: int | None = None,
+    *,
+    output_format: str = "json",
+    mode: str = "plan",
+    model: str = "",
+    sandbox: str = "",
+    json_schema: str = "",
+    extra_args: list[str] | None = None,
 ) -> dict[str, Any]:
+    print_timeout = int(timeout_sec if timeout_sec is not None else 600)
     version = antigravity_cli_version(cli)
-    log.info("antigravity_invoke cli=%s version=%s", cli, version)
+    argv = build_antigravity_argv(
+        cli,
+        prompt,
+        output_format=output_format,
+        mode=mode,
+        print_timeout_sec=print_timeout,
+        model=model,
+        sandbox=sandbox,
+        json_schema=json_schema,
+        extra_args=extra_args,
+    )
+    log.info(
+        "antigravity_invoke cli=%s version=%s mode=%s output_format=%s timeout_sec=%s",
+        cli,
+        version,
+        mode,
+        output_format,
+        print_timeout,
+    )
     proc = subprocess.run(
-        [cli, "-p", prompt, "--output-format", "json", f"--print-timeout={timeout_sec}s"],
+        argv,
         capture_output=True,
         text=True,
-        timeout=timeout_sec + 30,
+        timeout=print_timeout + 30,
         check=False,
     )
     stderr = proc.stderr or ""

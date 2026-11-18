@@ -42,7 +42,7 @@ py -3.13 -m gb_bridge.worker --once
 | `cancel_playtest` | n8n poll returns `cancel[]`; worker kills process tree (Windows `taskkill /T /F`) |
 | `investigate_defect` | Antigravity CLI when enabled; 3/day 10/week budget |
 
-Antigravity: default CLI path is `%LOCALAPPDATA%\agy\bin\agy.exe` (override `GB_BRIDGE_ANTIGRAVITY_CLI`). Each investigate call logs the CLI version. Daily/weekly counts use `GB_BRIDGE_ANTIGRAVITY_QUOTA_PATH` when set (shared ledger with other workers); otherwise `%USERPROFILE%\.gb-bridge\antigravity-quota.json`.
+Antigravity: default CLI path is `%LOCALAPPDATA%\agy\bin\agy.exe` (override `GB_BRIDGE_ANTIGRAVITY_CLI`). Each investigate call runs `agy -p … --output-format json --print-timeout=…s --mode plan` (read-only) by default; optional `GB_BRIDGE_ANTIGRAVITY_MODEL`, `_SANDBOX`, `_JSON_SCHEMA`, `_EXTRA_ARGS`. **`--dangerously-skip-permissions` is never allowed** (startup fails if present in extra args). Each call logs `agy --version`. Daily/weekly counts use `GB_BRIDGE_ANTIGRAVITY_QUOTA_PATH` when set (shared ledger with other workers); otherwise `%USERPROFILE%\.gb-bridge\antigravity-quota.json`.
 
 Startup refuses n8n configs that point at `/webhook/localai/*` — use `/webhook/playtest/*` only.
 

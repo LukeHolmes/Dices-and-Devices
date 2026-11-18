@@ -11,7 +11,13 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from gb_bridge.antigravity import QuotaState, check_quota, record_quota, run_antigravity
+from gb_bridge.antigravity import (
+    QuotaState,
+    check_quota,
+    parse_antigravity_extra_args,
+    record_quota,
+    run_antigravity,
+)
 from gb_bridge.config import settings
 from gb_bridge.holdout import assert_rids_allowed, parse_rid_spec
 from gb_bridge.store import JobRecord, JobStore
@@ -172,7 +178,17 @@ def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
         f"rid {payload.get('rid')}: {payload.get('defect_hypothesis')}. "
         "Read-only investigation; do not modify gameplay files."
     )
-    result = run_antigravity(settings.antigravity_cli, prompt)
+    result = run_antigravity(
+        settings.antigravity_cli,
+        prompt,
+        timeout_sec=settings.antigravity_print_timeout_sec,
+        output_format=settings.antigravity_output_format,
+        mode=settings.antigravity_mode,
+        model=settings.antigravity_model,
+        sandbox=settings.antigravity_sandbox,
+        json_schema=settings.antigravity_json_schema,
+        extra_args=parse_antigravity_extra_args(settings.antigravity_extra_args),
+    )
     if result.get("ok"):
         record_quota(state)
         state.save(quota_path)

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 def default_antigravity_cli() -> str:
     localappdata = os.environ.get("LOCALAPPDATA")
@@ -44,6 +44,13 @@ class BridgeSettings(BaseSettings):
     antigravity_weekly_limit: int = 10
     antigravity_cli: str = Field(default_factory=default_antigravity_cli)
     antigravity_quota_path: str = ""
+    antigravity_output_format: Literal["json", "stream-json"] = "json"
+    antigravity_mode: Literal["plan", "accept-edits", "auto"] = "plan"
+    antigravity_print_timeout_sec: int = 600
+    antigravity_model: str = ""
+    antigravity_sandbox: str = ""
+    antigravity_json_schema: str = ""
+    antigravity_extra_args: str = ""
 
     ollama_defer_enabled: bool = True
     ollama_ps_url: str = "http://127.0.0.1:11434/api/ps"
@@ -82,9 +89,18 @@ class BridgeSettings(BaseSettings):
         base = Path(self.state_dir or (Path.home() / ".gb-bridge"))
         return base / "antigravity-quota.json"
 
+    def assert_antigravity_config(self) -> None:
+        from gb_bridge.antigravity import assert_antigravity_args_safe
+
+        assert_antigravity_args_safe(self.antigravity_extra_args)
+        if self.antigravity_mode not in ("plan", "accept-edits", "auto"):
+            raise RuntimeError(f"Invalid GB_BRIDGE_ANTIGRAVITY_MODE: {self.antigravity_mode!r}")
+
     def validate_startup(self) -> None:
         self.require_n8n_auth()
         self.assert_playtest_webhook_config()
+        if self.antigravity_enabled:
+            self.assert_antigravity_config()
 
     def webhook_url(self, suffix: str) -> str:
         base = self.n8n_base_url.rstrip("/")
