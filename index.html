@@ -4097,6 +4097,27 @@
             font-size: max(10px, 0.62rem);
         }
     }
+    @media (min-width: 768px) and (max-width: 1023px) {
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .matchbook-compact-head {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .matchbook-compact-head h2,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .score-row-name,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-row-state,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .score-row--compact .payout-heat-pill,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-rule-tip {
+            font-size: 11px;
+        }
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact:not(.payout-tier-live):not(.payout-tier-best),
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .locked-payout-row-compact,
+        #root-gutterbones[data-ui-redesign="1"] .matchbook-compact-head [data-layout-key="payout-unlock-open"] {
+            font-size: 12px !important;
+            min-height: 32px !important;
+            max-height: none !important;
+        }
+    }
     /* Option C — dice-forward play layout (ui-redesign) */
     @media (max-width: 767px) {
         #root-gutterbones[data-ui-redesign="1"] {
@@ -4194,6 +4215,11 @@
     @media (min-width: 1920px) {
         #root-gutterbones[data-ui-redesign="1"] {
             --gb-die: clamp(6.85rem, 7.65vw, 8.85rem);
+        }
+    }
+    @media (min-width: 2560px) {
+        #root-gutterbones[data-ui-redesign="1"] {
+            --gb-die: clamp(6.85rem, 7.65vw, 9rem);
         }
     }
     #root-gutterbones[data-ui-redesign="1"] .play-score-hint-slot {
