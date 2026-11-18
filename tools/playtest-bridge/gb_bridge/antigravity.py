@@ -11,6 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from gb_bridge.antigravity_interpret import interpret_antigravity_payload, parse_antigravity_stdout
+from gb_bridge.antigravity_ledger import AntigravityLedger
+
 log = logging.getLogger("gb_bridge.antigravity")
 
 FORBIDDEN_ANTIGRAVITY_FLAGS = frozenset({"--dangerously-skip-permissions"})
@@ -124,6 +127,42 @@ def record_quota(state: QuotaState) -> None:
     state.weekly[_week_key()] += 1
 
 
+def check_antigravity_ledger(
+    ledger: AntigravityLedger,
+    *,
+    window_limit: int,
+    window_hours: float,
+    daily_limit: int,
+    weekly_limit: int,
+) -> None:
+    ledger.check_limits(
+        window_limit=window_limit,
+        window_hours=window_hours,
+        daily_limit=daily_limit,
+        weekly_limit=weekly_limit,
+    )
+
+
+def record_antigravity_ledger(
+    ledger: AntigravityLedger,
+    result: dict[str, Any],
+    *,
+    job_id: str = "",
+) -> None:
+    ledger.append_call(
+        {
+            "job_id": job_id,
+            "ok": bool(result.get("ok")),
+            "reason": result.get("reason"),
+            "conversation_id": result.get("conversation_id"),
+            "total_tokens": int(result.get("total_tokens") or 0),
+            "usage": result.get("usage") or {},
+            "duration_seconds": result.get("duration_seconds"),
+            "num_turns": result.get("num_turns"),
+        },
+    )
+
+
 def run_antigravity(
     cli: str,
     prompt: str,
@@ -165,18 +204,13 @@ def run_antigravity(
         check=False,
     )
     stderr = proc.stderr or ""
+    stdout = proc.stdout or ""
     if "approval" in stderr.lower() and "denied" in stderr.lower():
         return {"ok": False, "degraded": True, "reason": "tool_approval_denied", "stderr": stderr}
-    if proc.returncode != 0 and not proc.stdout.strip():
+    if proc.returncode != 0 and not stdout.strip():
         return {"ok": False, "reason": "nonzero_exit", "stderr": stderr, "code": proc.returncode}
     try:
-        payload = json.loads(proc.stdout)
+        payload = parse_antigravity_stdout(stdout)
     except json.JSONDecodeError:
-        return {"ok": False, "reason": "invalid_json", "stdout": proc.stdout, "stderr": stderr}
-    if payload.get("status") not in (None, "SUCCESS") and payload.get("error"):
-        return {"ok": False, "reason": "error_status", "payload": payload, "stderr": stderr}
-    if proc.returncode == 0 and payload.get("status") == "SUCCESS":
-        return {"ok": True, "payload": payload}
-    if proc.returncode == 0:
-        return {"ok": False, "reason": "blocked_action_exit_0", "payload": payload, "stderr": stderr}
-    return {"ok": False, "reason": "failed", "payload": payload, "stderr": stderr, "code": proc.returncode}
+        return {"ok": False, "reason": "invalid_json", "stdout": stdout, "stderr": stderr}
+    return interpret_antigravity_payload(payload, stderr=stderr, proc_returncode=proc.returncode)

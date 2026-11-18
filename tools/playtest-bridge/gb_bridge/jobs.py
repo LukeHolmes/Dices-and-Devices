@@ -12,12 +12,13 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from gb_bridge.antigravity import (
-    QuotaState,
-    check_quota,
+    AntigravityLedger,
+    check_antigravity_ledger,
     parse_antigravity_extra_args,
-    record_quota,
+    record_antigravity_ledger,
     run_antigravity,
 )
+from gb_bridge.antigravity_interpret import DEFAULT_DIRECT_ANSWER_PREAMBLE
 from gb_bridge.config import settings
 from gb_bridge.holdout import assert_rids_allowed, parse_rid_spec
 from gb_bridge.store import JobRecord, JobStore
@@ -167,17 +168,29 @@ class PlaytestExecutor:
             os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
 
 
-def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
-    if not settings.antigravity_enabled:
-        return {"ok": False, "reason": "antigravity_disabled"}
-    quota_path = settings.resolve_antigravity_quota_path()
-    state = QuotaState.load(quota_path)
-    check_quota(state, settings.antigravity_daily_limit, settings.antigravity_weekly_limit)
-    prompt = (
+def build_investigate_prompt(payload: dict[str, Any]) -> str:
+    preamble = (settings.antigravity_direct_answer_preamble or "").strip() or DEFAULT_DIRECT_ANSWER_PREAMBLE
+    body = (
         f"Investigate {payload.get('kind', 'measurement')} defect on job {payload.get('job_id')} "
         f"rid {payload.get('rid')}: {payload.get('defect_hypothesis')}. "
         "Read-only investigation; do not modify gameplay files."
     )
+    return f"{preamble}\n\n{body}"
+
+
+def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
+    if not settings.antigravity_enabled:
+        return {"ok": False, "reason": "antigravity_disabled"}
+    ledger_path = settings.resolve_antigravity_ledger_path()
+    ledger = AntigravityLedger(ledger_path)
+    check_antigravity_ledger(
+        ledger,
+        window_limit=settings.antigravity_window_limit,
+        window_hours=settings.antigravity_window_hours,
+        daily_limit=settings.antigravity_daily_limit,
+        weekly_limit=settings.antigravity_weekly_limit,
+    )
+    prompt = build_investigate_prompt(payload)
     result = run_antigravity(
         settings.antigravity_cli,
         prompt,
@@ -189,7 +202,5 @@ def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
         json_schema=settings.antigravity_json_schema,
         extra_args=parse_antigravity_extra_args(settings.antigravity_extra_args),
     )
-    if result.get("ok"):
-        record_quota(state)
-        state.save(quota_path)
+    record_antigravity_ledger(ledger, result, job_id=str(payload.get("job_id", "")))
     return result

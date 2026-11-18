@@ -32,14 +32,23 @@ def test_rejects_localai_in_base_url():
         cfg.assert_playtest_webhook_config()
 
 
-def test_shared_antigravity_quota_path(tmp_path, monkeypatch):
-    ledger = tmp_path / "shared-antigravity-quota.json"
+def test_shared_antigravity_ledger_path(tmp_path, monkeypatch):
+    ledger = tmp_path / "shared-antigravity-ledger.jsonl"
     cfg = BridgeSettings(
         n8n_header_value="x",
-        antigravity_quota_path=str(ledger),
+        antigravity_ledger_path=str(ledger),
         state_dir=str(tmp_path / "state"),
     )
+    assert cfg.resolve_antigravity_ledger_path() == ledger
     assert cfg.resolve_antigravity_quota_path() == ledger
+
+
+def test_default_antigravity_budget_limits():
+    cfg = BridgeSettings(n8n_header_value="x")
+    assert cfg.antigravity_window_limit == 5
+    assert cfg.antigravity_window_hours == 5.0
+    assert cfg.antigravity_daily_limit == 20
+    assert cfg.antigravity_weekly_limit == 80
 
 
 def test_validate_startup_ok():

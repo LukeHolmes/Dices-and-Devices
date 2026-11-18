@@ -40,9 +40,9 @@ py -3.13 -m gb_bridge.worker --once
 | `get_playtest_status` | SQLite + heartbeat posts to n8n |
 | `get_playtest_results` | Posted on completion |
 | `cancel_playtest` | n8n poll returns `cancel[]`; worker kills process tree (Windows `taskkill /T /F`) |
-| `investigate_defect` | Antigravity CLI when enabled; 3/day 10/week budget |
+| `investigate_defect` | Antigravity CLI when enabled; hard stop on shared call budget |
 
-Antigravity: default CLI path is `%LOCALAPPDATA%\agy\bin\agy.exe` (override `GB_BRIDGE_ANTIGRAVITY_CLI`). Each investigate call runs `agy -p … --output-format json --print-timeout=…s --mode plan` (read-only) by default; optional `GB_BRIDGE_ANTIGRAVITY_MODEL`, `_SANDBOX`, `_JSON_SCHEMA`, `_EXTRA_ARGS`. **`--dangerously-skip-permissions` is never allowed** (startup fails if present in extra args). Each call logs `agy --version`. Daily/weekly counts use `GB_BRIDGE_ANTIGRAVITY_QUOTA_PATH` when set (shared ledger with other workers); otherwise `%USERPROFILE%\.gb-bridge\antigravity-quota.json`.
+Antigravity: default CLI path is `%LOCALAPPDATA%\agy\bin\agy.exe` (override `GB_BRIDGE_ANTIGRAVITY_CLI`). Each investigate call runs `agy -p … --output-format json --print-timeout=…s --mode plan` (read-only) by default; optional `GB_BRIDGE_ANTIGRAVITY_MODEL`, `_SANDBOX`, `_JSON_SCHEMA`, `_EXTRA_ARGS`. **`--dangerously-skip-permissions` is never allowed** (startup fails if present in extra args). Each call logs `agy --version`. Budget defaults: **5 calls / 5 hours**, **20/day**, **80/week** (shared JSONL ledger — set `GB_BRIDGE_ANTIGRAVITY_LEDGER_PATH`, e.g. `/workspace/bot-lab/antigravity-ledger.jsonl` on holme). Each line records `usage.total_tokens` and investigation metadata; there is no credit purchase path — quotas are a hard stop. JSON stdout may include fenced ```json blocks; plan-mode non-answers (“created the implementation plan…”) and headless `command` permission failures (SUCCESS + empty response) are treated as errors. Configure `GB_BRIDGE_ANTIGRAVITY_DIRECT_ANSWER_PREAMBLE` to steer direct answers in the JSON `response` field.
 
 Startup refuses n8n configs that point at `/webhook/localai/*` — use `/webhook/playtest/*` only.
 

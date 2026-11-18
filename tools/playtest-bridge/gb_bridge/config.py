@@ -40,10 +40,14 @@ class BridgeSettings(BaseSettings):
     state_dir: str = ""
 
     antigravity_enabled: bool = False
-    antigravity_daily_limit: int = 3
-    antigravity_weekly_limit: int = 10
+    antigravity_window_limit: int = 5
+    antigravity_window_hours: float = 5.0
+    antigravity_daily_limit: int = 20
+    antigravity_weekly_limit: int = 80
     antigravity_cli: str = Field(default_factory=default_antigravity_cli)
+    antigravity_ledger_path: str = ""
     antigravity_quota_path: str = ""
+    antigravity_direct_answer_preamble: str = ""
     antigravity_output_format: Literal["json", "stream-json"] = "json"
     antigravity_mode: Literal["plan", "accept-edits", "auto"] = "plan"
     antigravity_print_timeout_sec: int = 600
@@ -83,11 +87,17 @@ class BridgeSettings(BaseSettings):
                 f"(got {self.n8n_base_url!r})",
             )
 
-    def resolve_antigravity_quota_path(self) -> Path:
+    def resolve_antigravity_ledger_path(self) -> Path:
+        if self.antigravity_ledger_path.strip():
+            return Path(self.antigravity_ledger_path).expanduser()
         if self.antigravity_quota_path.strip():
             return Path(self.antigravity_quota_path).expanduser()
         base = Path(self.state_dir or (Path.home() / ".gb-bridge"))
-        return base / "antigravity-quota.json"
+        return base / "antigravity-ledger.jsonl"
+
+    def resolve_antigravity_quota_path(self) -> Path:
+        """Legacy alias for the shared Antigravity call ledger (JSONL)."""
+        return self.resolve_antigravity_ledger_path()
 
     def assert_antigravity_config(self) -> None:
         from gb_bridge.antigravity import assert_antigravity_args_safe
