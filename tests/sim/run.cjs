@@ -185,10 +185,9 @@ async function runOneGame(
       }
       // eslint-disable-next-line no-eval
       const play = eval("(" + botSource + ")");
-      const originalRandom = Math.random;
       const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
       let draws = 0;
-      if (seedGame) Math.random = () => { draws++; return gameRandom(); };
+      if (seedGame) window.__GB_SIM_GAME_RANDOM__ = () => { draws++; return gameRandom(); };
       if (traceReplay) {
         const telem = window.__GB_SIM_TELEM__;
         telem.replayEvents = [];
@@ -203,7 +202,7 @@ async function runOneGame(
       try {
         return await play(opts);
       } finally {
-        Math.random = originalRandom;
+        if (seedGame) delete window.__GB_SIM_GAME_RANDOM__;
       }
     },
     {
