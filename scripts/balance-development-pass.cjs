@@ -31,9 +31,14 @@ function run(label, offset, count) {
     assert.ok(report.replayByRid[id]?.hands > 0, "missing hand records for " + id);
     assert.ok(report.linkObserverByRid[id]?.shadow.decisions > 0, "missing observer for " + id);
     let settled = false;
+    const starts = new Set();
     for (const event of report.replayEventsByRid[id]) {
       if (event.kind === "recordRoundEvent" && event.entry.kind === "round_cleared") settled = true;
-      if (event.kind === "recordRoundEvent" && event.entry.kind === "round_play_start") settled = false;
+      if (event.kind === "recordRoundEvent" && event.entry.kind === "round_play_start") {
+        assert.ok(!starts.has(event.entry.round), "duplicate round entry in run " + id);
+        starts.add(event.entry.round);
+        settled = false;
+      }
       assert.ok(!(settled && event.kind === "record"), "payout after round clear in run " + id);
     }
   }

@@ -366,10 +366,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     // A settled quota can leave the PLAY scene visible during cash-out.
     // Only dismiss its presentation until the game records the next round.
-    if (seededBuilder && ph === "PLAY") {
+    if (seededBuilder && (ph === "PLAY" || ph === "SHOP")) {
       const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast(e =>
         e.kind === "round_cleared" || e.kind === "round_play_start");
-      if (boundary?.kind === "round_cleared") {
+      if (ph === "SHOP" && boundary?.kind === "round_play_start" && boundary.round === st.round) {
+        await wait(90);
+        continue;
+      }
+      if (ph === "PLAY" && boundary?.kind === "round_cleared") {
         window.__GB_E2E__.dismissOverlays?.();
         window.__GB_E2E__.skipIntroOverlays?.();
         await wait(100);
