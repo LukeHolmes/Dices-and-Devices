@@ -364,8 +364,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       continue;
     }
 
-    // A settled quota can leave the PLAY scene visible during cash-out.
-    // Only dismiss its presentation until the game records the next round.
+    // A payout commits before its score overlay and round finalizer finish.
+    // During settlement or cash-out, acknowledge presentation only.
     if (seededBuilder && (ph === "PLAY" || ph === "SHOP")) {
       const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast(e =>
         e.kind === "round_cleared" || e.kind === "round_play_start");
@@ -373,7 +373,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         await wait(90);
         continue;
       }
-      if (ph === "PLAY" && boundary?.kind === "round_cleared") {
+      if (ph === "PLAY" && (boundary?.kind === "round_cleared" || window.__GB_E2E__.debugStuck().pendingFinalize)) {
         window.__GB_E2E__.dismissOverlays?.();
         window.__GB_E2E__.skipIntroOverlays?.();
         await wait(100);
