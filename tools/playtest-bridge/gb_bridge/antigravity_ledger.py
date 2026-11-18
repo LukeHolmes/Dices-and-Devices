@@ -83,14 +83,14 @@ class AntigravityLedger:
         *,
         window_limit: int,
         window_hours: float,
-        daily_limit: int,
+        daily_limit: int = 0,
         weekly_limit: int,
         now: datetime | None = None,
     ) -> None:
         counts = self.count_calls(window_hours=window_hours, now=now)
         if counts.window_calls >= window_limit:
             raise RuntimeError("antigravity_window_quota_exhausted")
-        if counts.daily_calls >= daily_limit:
+        if daily_limit > 0 and counts.daily_calls >= daily_limit:
             raise RuntimeError("antigravity_daily_quota_exhausted")
         if counts.weekly_calls >= weekly_limit:
             raise RuntimeError("antigravity_weekly_quota_exhausted")
