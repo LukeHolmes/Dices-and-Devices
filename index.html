@@ -2622,6 +2622,38 @@
     #root-gutterbones .item-art-tile--ink-halo .item-art-tile__img {
       filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 6px rgba(8, 12, 20, 0.65));
     }
+  #root-gutterbones .shop-item-card .item-art-tile--hardware { width: 3rem; height: 3rem; }
+  @media (min-width: 640px) {
+    #root-gutterbones .shop-item-card .item-art-tile--hardware { width: 3.35rem; height: 3.35rem; }
+  }
+  @media (min-width: 1200px) {
+    #root-gutterbones .shop-item-card .item-art-tile--hardware { width: 3.5rem; height: 3.5rem; }
+  }
+  #root-gutterbones .shop-item-card {
+    height: auto;
+    align-content: start;
+  }
+  #root-gutterbones .shop-item-card__title {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  #root-gutterbones .shop-item-card__effect,
+  #root-gutterbones .shop-item-card__syn {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    display: block;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  #root-gutterbones .stash-hardware-panel .leading-tight,
+  #root-gutterbones [data-layout-key="upgrade-intel-panel"] dd {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
     #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
     #root-gutterbones .impact-particle { position: absolute; width: 6px; height: 6px; border-radius: 999px; animation: impactParticle .34s ease-out forwards; box-shadow: 0 0 10px currentColor; pointer-events: none; }
@@ -19803,8 +19835,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     const listPrice = shopListPrice(item);
                                     const discounted = listPrice < item.cost;
                                     const buyLabel = gold >= listPrice ? `BUY $${listPrice}` : `LOAN $${listPrice} (debt)`;
-                                    const effectLine = isFace ? `${item.type} face` : isConsumable ? item.desc : (item.desc || '').split('.')[0];
-                                    return <div key={item.id} className={`shop-item-card bg-black/80 p-2 md:p-3 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative min-h-[7.5rem] md:min-h-[9.5rem] ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
+                                    const effectLine = isFace ? `${item.type} face` : (item.desc || '');
+                                    const inspectSelected = shopPreviewItem?.id === item.id;
+                                    return <div key={item.id} className={`shop-item-card bg-black/80 p-2 md:p-3 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative min-h-0 ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${inspectSelected ? 'shop-item-card--inspect' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
                                         <div className="flex justify-between items-start gap-2 mb-2">
                                             <div className="font-mono text-[11px] text-[#d6b85c] font-bold">{discounted ? <><span className="line-through opacity-50 mr-1">${item.cost}</span>${listPrice}</> : `$${listPrice}`}</div>
                                             <div className="flex items-center gap-1 shrink-0">
@@ -19835,7 +19868,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             </div>
                                         </div>
                                         {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
-                                        <div className="flex items-start gap-3 mb-2"><ShopItemIconSlot item={item} isFace={isFace} isConsumable={isConsumable} /><div className="min-w-0"><div className="font-bold text-base leading-tight text-white truncate">{isFace ? item.label : item.name}</div><div className="text-[10px] text-gray-300 mt-0.5 font-mono leading-snug line-clamp-2">{effectLine}</div><RiskBadges item={item} />{syn && <div className="text-[9px] font-mono text-cyan-300/90 mt-1 truncate">{syn}</div>}</div></div>
+                                        <div className="flex items-start gap-2 sm:gap-3 mb-2"><ShopItemIconSlot item={item} isFace={isFace} isConsumable={isConsumable} /><div className="min-w-0 flex-1"><div className="shop-item-card__title font-bold text-base leading-snug text-white">{isFace ? item.label : item.name}</div><div className="shop-item-card__effect text-[10px] text-gray-300 mt-0.5 font-mono leading-snug">{effectLine}</div><RiskBadges item={item} />{syn && <div className="shop-item-card__syn text-[9px] font-mono text-cyan-300/90 mt-1">{syn}</div>}</div></div>
                                         <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50 mt-auto">{buyLabel}</button>
                                     </div>;
                                 })}</div>
