@@ -1,0 +1,8 @@
+{
+  "id": "DEF-M-005",
+  "title": "Full-run reproducibility not yet 10/10 under harness (browser timing + residual Math.random)",
+  "kind": "measurement",
+  "status": "open",
+  "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
+  "notes": "2026-11-18 repro subset seeds 0-1 x2 replicates: 0/2 matched on outcome+max_round+steps+digest (R-main). Pill/face/SNIFF + SIM_SEED_GAME wired; shop generation still uses Math.random on non-daily runs."
+}

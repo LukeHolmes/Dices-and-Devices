@@ -1,5 +1,6 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const seededBuilder = strategy === "builder" && typeof window.__GB_SIM_GAME_RANDOM__ === "function";
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
@@ -280,7 +281,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   try {
     window.__GB_E2E__.goLineup();
-    if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
+    const forceStreetRat = window.__GB_SIM_STREET_RAT__ === true;
+    if (forceStreetRat && window.__GB_E2E__.selectPersonaByIndex) {
+      if (!window.__GB_E2E__.selectPersonaByIndex(0)) {
+        window.__GB_E2E__.selectFirstPersona();
+      }
+    } else if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
       if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
         window.__GB_E2E__.selectPersonaByIndex(1);
       }
@@ -330,6 +336,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     if (ph === "GAMBLE") {
       log._gambleTries = (log._gambleTries || 0) + 1;
+      if (seededBuilder) {
+        if (log._gambleTries === 1) window.__GB_E2E__.takeSafeCut?.();
+        await wait(160);
+        continue;
+      }
       if (log._gambleTries === 1 || log._gambleTries % 5 === 0) {
         window.__GB_E2E__.takeSafeCut?.();
         window.__GB_E2E__.abortGamble?.();
@@ -342,6 +353,21 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       continue;
     }
     log._gambleTries = 0;
+
+    if (seededBuilder && (ph === "PLAY" || ph === "SHOP")) {
+      const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast((e) =>
+        e.kind === "round_cleared" || e.kind === "round_play_start");
+      if (ph === "SHOP" && boundary?.kind === "round_play_start" && boundary.round === st.round) {
+        await wait(90);
+        continue;
+      }
+      if (ph === "PLAY" && (boundary?.kind === "round_cleared" || window.__GB_E2E__.debugStuck?.().pendingFinalize)) {
+        window.__GB_E2E__.dismissOverlays?.();
+        window.__GB_E2E__.skipIntroOverlays?.();
+        await wait(100);
+        continue;
+      }
+    }
 
     if (st?.roundClearVisible) {
       window.__GB_E2E__?.finishRoundClear?.();

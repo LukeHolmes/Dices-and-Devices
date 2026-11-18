@@ -1,0 +1,7 @@
+{
+  "id": "DEF-M-004",
+  "title": "Gameplay pill/face draws used Math.random on main",
+  "kind": "measurement",
+  "status": "fixed-on-branch",
+  "notes": "SIM_SEED_GAME routes pill/face/SNIFF/roll draws through seeded runRandomRef; cosmetic FX unchanged."
+}

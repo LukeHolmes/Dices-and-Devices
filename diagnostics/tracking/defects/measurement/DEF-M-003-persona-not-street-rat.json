@@ -1,0 +1,7 @@
+{
+  "id": "DEF-M-003",
+  "title": "Default sim builder persona index 4 (Grinder) not Street Rat",
+  "kind": "measurement",
+  "status": "mitigated",
+  "notes": "SIM_STREET_RAT_PROFILE=1 selects persona index 0 (STREET_RAT) in diagnostics harness."
+}

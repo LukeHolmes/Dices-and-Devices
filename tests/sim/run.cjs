@@ -86,6 +86,11 @@ function startServer(port, root) {
 async function bootPage(page, baseUrl, viewport) {
   page.setDefaultTimeout(120_000);
   const mobile = viewport.width < 700 || viewport.height < 500;
+  if (process.env.SIM_STREET_RAT_PROFILE === "1") {
+    await page.addInitScript(() => {
+      window.__GB_SIM_STREET_RAT__ = true;
+    });
+  }
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const observerQ = process.env.SIM_POLICY_OBSERVER === "1" ? "&balanceObserver=1" : "";
@@ -244,8 +249,10 @@ async function runOneGame(
   }
   const linkObs = process.env.SIM_LINK_OBSERVER === "1";
   const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
+  const seedGame = process.env.SIM_SEED_GAME === "1";
+  const traceReplay = process.env.SIM_TRACE_REPLAY === "1";
   const result = await page.evaluate(
-    async ({ botSource, opts, linkObs: linkObsFlag, policyRev }) => {
+    async ({ botSource, opts, linkObs: linkObsFlag, policyRev, seedGame: seedGameFlag, traceReplay: traceReplayFlag }) => {
       if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
         window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
           hands: [],
@@ -258,8 +265,45 @@ async function runOneGame(
         });
       }
       // eslint-disable-next-line no-eval
-      eval(botSource);
-      return await runBotSession(opts);
+      const play = eval("(" + botSource + ")");
+      if (seedGameFlag && typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
+        const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
+        let draws = 0;
+        window.__GB_SIM_GAME_RANDOM__ = () => {
+          draws += 1;
+          return gameRandom();
+        };
+      }
+      if (traceReplayFlag) {
+        window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
+          hands: [],
+          roundEvents: [],
+          shopPolicySteps: [],
+          record(entry) {
+            this.hands.push({ ...entry, at: this.hands.length });
+          },
+          recordRoundEvent(entry) {
+            this.roundEvents.push({ ...entry, at: this.roundEvents.length });
+          },
+          recordShopPolicyStep(entry) {
+            this.shopPolicySteps.push({ ...entry, at: this.shopPolicySteps.length });
+          },
+        };
+        const telem = window.__GB_SIM_TELEM__;
+        telem.replayEvents = [];
+        for (const kind of ["record", "recordRoundEvent", "recordShopPolicyStep"]) {
+          const record = telem[kind];
+          telem[kind] = function replayWrapped(entry) {
+            telem.replayEvents.push({ kind, entry });
+            return record.call(this, entry);
+          };
+        }
+      }
+      try {
+        return await play(opts);
+      } finally {
+        if (seedGameFlag) delete window.__GB_SIM_GAME_RANDOM__;
+      }
     },
     {
       botSource: BOT_FN,
@@ -272,6 +316,8 @@ async function runOneGame(
       },
       linkObs,
       policyRev: simPolicyRev,
+      seedGame,
+      traceReplay,
     },
   );
   const telem = await page.evaluate(() => {
@@ -331,7 +377,10 @@ async function main() {
   const results = [];
 
   const jobs = [];
-  for (let rid = 0; rid < args.games; rid++) {
+  const offset = Number(process.env.WP2_RID_OFFSET || 0);
+  if (!Number.isSafeInteger(offset) || offset < 0) throw new Error("Invalid WP2_RID_OFFSET");
+  for (let i = 0; i < args.games; i++) {
+    const rid = offset + i;
     jobs.push({
       rid,
       seed: rid * 7919,
