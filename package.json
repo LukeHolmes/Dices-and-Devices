@@ -28,6 +28,7 @@
     "check": "npm test && npm run test:layout && npm run audit:known-issues",
     "check:parity": "node tests/parity.cjs",
     "check:release": "npm run check",
-    "dump:save": "node scripts/dump-fixture-save.cjs"
+    "dump:save": "node scripts/dump-fixture-save.cjs",
+    "build:art": "node scripts/art/build-art.mjs"
   }
 }

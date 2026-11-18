@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-11-18T17:01:40.960Z",
+  "mastersDir": "/agent/repos/Dices-and-Devices/art-masters",
+  "portrait": {
+    "width": 600,
+    "height": 800,
+    "webpQuality": 82
+  },
+  "scene": {
+    "width": 1672,
+    "webpQuality": 78
+  },
+  "assets": [
+    {
+      "output": "assets/art/personas/street-rat.webp",
+      "master": "character_street-rat_v1_aed7.png",
+      "masterManifestName": "character_street-rat_v1.png",
+      "masterSha256": "70bb5c36a7076f5c32ba33b93769760079702987f3f6e2c6a060fcb2c75d3e21",
+      "outputSha256": "e44c63add9adb34a79a94fb6d85f92d2929444d8991081f25efe41af8abc93a8",
+      "bytes": 206560
+    },
+    {
+      "output": "assets/art/personas/hustler.webp",
+      "master": "character_hustler_v1_b4bc.png",
+      "masterManifestName": "character_hustler_v1.png",
+      "masterSha256": "93f20459e440e0472d1841ad9a5ce941a516eb87c5d4ac169de279d31f1fd0ec",
+      "outputSha256": "a0b3c8c90659247e4f5d9c5315eb79bcbc41238a01a7611fb222b26ff6184403",
+      "bytes": 212098
+    },
+    {
+      "output": "assets/art/personas/card-counter.webp",
+      "master": "character_counter_v1_92cc.png",
+      "masterManifestName": "character_counter_v1.png",
+      "masterSha256": "6ecf338d2da8855b80cf630c505c63b397a369bcb68db85180fac05cf40702dc",
+      "outputSha256": "2b591fd3fd2a82ad6686ad242449e15943c28600b25ab306406a2e81c3c9361c",
+      "bytes": 216242
+    },
+    {
+      "output": "assets/art/personas/enforcer.webp",
+      "master": "character_enforcer_v1_e6d1.png",
+      "masterManifestName": "character_enforcer_v1.png",
+      "masterSha256": "4681e5974cc0a7bcb3725a4ae4ccee87b6da1d4a86151abc0d7ca6c3507be784",
+      "outputSha256": "7fffc5524426a44f16d192dd9056e85d759af3271ca8769d4722322c1fd96ced",
+      "bytes": 216410
+    },
+    {
+      "output": "assets/art/personas/grinder.webp",
+      "master": "character_grinder_v1_ca02.png",
+      "masterManifestName": "character_grinder_v1.png",
+      "masterSha256": "8fbcdef1a78fb922f972f69906aed6cf082804fa258f9914546e96680e357e14",
+      "outputSha256": "8d4b07e86dcb166d0dfa81d2b6964b8b496c6e4637dee33d85bdc0ee4ff349f6",
+      "bytes": 214188
+    },
+    {
+      "output": "assets/art/bosses/bouncer.webp",
+      "master": "boss_the-bouncer_v1_c7b2.png",
+      "masterManifestName": "boss_the-bouncer_v1.png",
+      "masterSha256": "504ae7cf90a38b667f14ff7365a417a495df8998672177027d09b769f40234b5",
+      "outputSha256": "cdae8a8c2843e730965efc9fd8277c9f643b15fe84ea1bbb582ebd7b2995b08d",
+      "bytes": 215158
+    },
+    {
+      "output": "assets/art/bosses/loan-shark.webp",
+      "master": "boss_loan-shark_v1_7ca5.png",
+      "masterManifestName": "boss_loan-shark_v1.png",
+      "masterSha256": "6983fb38e3d206e7b4ea099c43fe593c715f161c38e40d19cb231093e41bc49b",
+      "outputSha256": "a678674fde217b106e689d0849205d922a89f8336839fbdd95d7ad1a60e278eb",
+      "bytes": 252590
+    },
+    {
+      "output": "assets/art/bosses/junkie.webp",
+      "master": "boss_junkie_v1_3aba.png",
+      "masterManifestName": "boss_junkie_v1.png",
+      "masterSha256": "878e9aaae4f75b996266aee772ed89df214a6881aceea366c1170a05171a1ee8",
+      "outputSha256": "630a50285afbb84859d4bdb3197b2aa4e66556e9039ff17ef90dadc582f1077c",
+      "bytes": 169568
+    },
+    {
+      "output": "assets/art/bosses/crooked-cop.webp",
+      "master": "boss_crooked-cop_v1_c31d.png",
+      "masterManifestName": "boss_crooked-cop_v1.png",
+      "masterSha256": "ed6d3e3e5e423ea165f4fa6d9df8b34d4b378321ce8684e9617f3ff358c4572f",
+      "outputSha256": "69e69e0e760fecee5217bca2808c2c02dd136bd8d419f9b921fd45927a68e87a",
+      "bytes": 149350
+    },
+    {
+      "output": "assets/art/bosses/informant.webp",
+      "master": "boss_informant_v1_63c8.png",
+      "masterManifestName": "boss_informant_v1.png",
+      "masterSha256": "b92c1c1c4999453bbd5a1cb59b33e8330e89b773e62102d39db4cd90dfd2a1e9",
+      "outputSha256": "f6997842389234be96f3d280deddf4ee8b7698f8efa89b2d33e978459d24ba6b",
+      "bytes": 166110
+    },
+    {
+      "output": "assets/art/bosses/the-raid.webp",
+      "master": "boss_the-raid_v1_3133.png",
+      "masterManifestName": "boss_the-raid_v1.png",
+      "masterSha256": "946a8a8a49f44f2a11d5089b2d4c1009d0f33147c16b233f38975e51590adee9",
+      "outputSha256": "0ce13683d507c38adfbabfb5c6799fac0c0be37ac98cdde6e69314fc3e4891e7",
+      "bytes": 144894
+    },
+    {
+      "output": "assets/art/scenes/alley-playfield.webp",
+      "master": "background_alley-playfield_v1_7e87.png",
+      "masterManifestName": "background_alley-playfield_v1.png",
+      "masterSha256": "53de66da0f1afd71dac781a6faf576f756ada15a82c6f0057795ab4f31fb5bb4",
+      "outputSha256": "d2de7e4ae686dc0003016482b55660a2b68ee662cb9d23338017142d46bf208a",
+      "bytes": 552316
+    },
+    {
+      "output": "assets/art/scenes/stairwell-descent.webp",
+      "master": "background_stairwell-descent_v1_44ff.png",
+      "masterManifestName": "background_stairwell-descent_v1.png",
+      "masterSha256": "39533a0ac1e7dbde592282d1e2ae5c09bb98de598717348f34ff90ab08e62af7",
+      "outputSha256": "99523c6ad218b82ad37583539da4c415b26d5ec1f797ddca3e6b95accaf3dcd2",
+      "bytes": 612054
+    },
+    {
+      "output": "assets/art/scenes/counting-cash.webp",
+      "master": "background_counting-cash_v1_d74e.png",
+      "masterManifestName": "background_counting-cash_v1.png",
+      "masterSha256": "66f6d1c65343c05c78fd96ccbaac2b46057959095ad84b83677e3840719c69e7",
+      "outputSha256": "fbc5c9e6bb7c59c040b665c4125e09959e12ceca647273a5b926a57f4cfc1e40",
+      "bytes": 563316
+    },
+    {
+      "output": "assets/art/scenes/the-mod-bench.webp",
+      "master": "background_the-mod-bench_v1_af0d.png",
+      "masterManifestName": "background_the-mod-bench_v1.png",
+      "masterSha256": "311e42e260385bbba64dabf44f6bc0a4f4df3208cdd62ff7b46e576d4704a19f",
+      "outputSha256": "9185a9ff5c65f4adcdcd395e687be4a2f87eba5ad5e2ec27f6ac0243eab66732",
+      "bytes": 585974
+    },
+    {
+      "output": "assets/art/scenes/gamble-double-or-nothing.webp",
+      "master": "background_gamble-double-or-nothing_v1_1c78.png",
+      "masterManifestName": "background_gamble-double-or-nothing_v1.png",
+      "masterSha256": "cabd346735be24196dae8184495ce8b18a741d705f7d230f329a23fe0d2132a3",
+      "outputSha256": "6748da7b40850ce040b26cd7f01ca371eb0b5f50223c44ae06be211c0f25b86b",
+      "bytes": 502860
+    },
+    {
+      "output": "assets/art/scenes/busted.webp",
+      "master": "background_busted_v1_ff9c.png",
+      "masterManifestName": "background_busted_v1.png",
+      "masterSha256": "710b06e2b876a45e7818c1f9163bb560e6269d88d324e80dbd460ae7f887b32b",
+      "outputSha256": "e3c4943ff51111406e4c3ef5ea3cbe1614ce096cbd50dfb846faf5b82c60cd7e",
+      "bytes": 600868
+    },
+    {
+      "output": "assets/art/scenes/the-escape.webp",
+      "master": "background_the-escape_v1_63e6.png",
+      "masterManifestName": "background_the-escape_v1.png",
+      "masterSha256": "0f807673ae9a30b2f43022e75c55a019b07d33017f0ec3cb9d419c36cb9db810",
+      "outputSha256": "bc3c21c76613dad531d8fa5d9581c37bf08a1eb8fbd42b5cb2b449418bde69dd",
+      "bytes": 573490
+    }
+  ]
+}
