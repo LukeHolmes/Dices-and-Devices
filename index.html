@@ -18411,7 +18411,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 rollControlDisplayed: () => !!document.querySelector('[data-layout-key="play-roll-btn"]'),
                 spentProgramCount: () => document.querySelectorAll('.stash-program--spent').length,
             };
-        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot, playStatusBreakdownOpen, bossWarrantOpen]);
+        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, kept, storyBeat, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot, playStatusBreakdownOpen, bossWarrantOpen]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
