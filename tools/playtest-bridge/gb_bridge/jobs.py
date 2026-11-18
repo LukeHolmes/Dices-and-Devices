@@ -164,7 +164,7 @@ class PlaytestExecutor:
 def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
     if not settings.antigravity_enabled:
         return {"ok": False, "reason": "antigravity_disabled"}
-    quota_path = Path.home() / ".gb-bridge" / "antigravity-quota.json"
+    quota_path = settings.resolve_antigravity_quota_path()
     state = QuotaState.load(quota_path)
     check_quota(state, settings.antigravity_daily_limit, settings.antigravity_weekly_limit)
     prompt = (

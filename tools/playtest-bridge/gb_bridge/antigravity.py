@@ -1,12 +1,27 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+log = logging.getLogger("gb_bridge.antigravity")
+
+
+def antigravity_cli_version(cli: str, timeout_sec: int = 30) -> str:
+    proc = subprocess.run(
+        [cli, "--version"],
+        capture_output=True,
+        text=True,
+        timeout=timeout_sec,
+        check=False,
+    )
+    text = (proc.stdout or proc.stderr or "").strip()
+    return text or "unknown"
 
 
 @dataclass
@@ -56,6 +71,8 @@ def run_antigravity(
     prompt: str,
     timeout_sec: int = 600,
 ) -> dict[str, Any]:
+    version = antigravity_cli_version(cli)
+    log.info("antigravity_invoke cli=%s version=%s", cli, version)
     proc = subprocess.run(
         [cli, "-p", prompt, "--output-format", "json", f"--print-timeout={timeout_sec}s"],
         capture_output=True,

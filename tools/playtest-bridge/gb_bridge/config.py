@@ -1,7 +1,17 @@
 from __future__ import annotations
 
-from pydantic import Field
+import os
+from pathlib import Path
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def default_antigravity_cli() -> str:
+    localappdata = os.environ.get("LOCALAPPDATA")
+    if localappdata:
+        return str(Path(localappdata) / "agy" / "bin" / "agy.exe")
+    return "agy"
 
 
 class BridgeSettings(BaseSettings):
@@ -32,13 +42,49 @@ class BridgeSettings(BaseSettings):
     antigravity_enabled: bool = False
     antigravity_daily_limit: int = 3
     antigravity_weekly_limit: int = 10
-    antigravity_cli: str = "agy"
+    antigravity_cli: str = Field(default_factory=default_antigravity_cli)
+    antigravity_quota_path: str = ""
+
+    ollama_defer_enabled: bool = True
+    ollama_ps_url: str = "http://127.0.0.1:11434/api/ps"
+    ollama_defer_backoff_sec: float = 60.0
+    ollama_defer_on_check_error: bool = False
 
     request_timeout_sec: float = 45.0
+
+    @field_validator("n8n_webhook_prefix")
+    @classmethod
+    def normalize_prefix(cls, value: str) -> str:
+        return value.strip() or "/webhook/playtest"
 
     def require_n8n_auth(self) -> None:
         if not self.n8n_header_value:
             raise RuntimeError("Configure GB_BRIDGE_N8N_HEADER_VALUE for outbound n8n polling")
+
+    def assert_playtest_webhook_config(self) -> None:
+        """Refuse configs that target the sibling LocalAI worker's n8n prefix."""
+        prefix_l = self.n8n_webhook_prefix.lower().replace("\\", "/")
+        base_l = self.n8n_base_url.lower().replace("\\", "/")
+        if "localai" in prefix_l:
+            raise RuntimeError(
+                "GB_BRIDGE_N8N_WEBHOOK_PREFIX must use /webhook/playtest/*, not localai "
+                f"(got {self.n8n_webhook_prefix!r})",
+            )
+        if "/webhook/localai" in base_l or base_l.rstrip("/").endswith("/localai"):
+            raise RuntimeError(
+                "GB_BRIDGE_N8N_BASE_URL must not point at /webhook/localai; use playtest webhooks only "
+                f"(got {self.n8n_base_url!r})",
+            )
+
+    def resolve_antigravity_quota_path(self) -> Path:
+        if self.antigravity_quota_path.strip():
+            return Path(self.antigravity_quota_path).expanduser()
+        base = Path(self.state_dir or (Path.home() / ".gb-bridge"))
+        return base / "antigravity-quota.json"
+
+    def validate_startup(self) -> None:
+        self.require_n8n_auth()
+        self.assert_playtest_webhook_config()
 
     def webhook_url(self, suffix: str) -> str:
         base = self.n8n_base_url.rstrip("/")

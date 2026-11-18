@@ -9,10 +9,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from gb_bridge.antigravity import antigravity_cli_version
 from gb_bridge.config import settings
 from gb_bridge.jobs import PlaytestExecutor, run_investigate_defect
 from gb_bridge.logging_util import setup_logging
 from gb_bridge.n8n_client import N8nClient
+from gb_bridge.ollama_gate import should_defer_playtest_claim
 from gb_bridge.store import JobRecord, JobStore
 
 
@@ -92,6 +94,17 @@ def handle_poll_message(
                 client.post_results(worker_id, remote_id, {"operation": operation, **result})
                 continue
 
+            defer, defer_reason = should_defer_playtest_claim(settings)
+            if defer:
+                log.info(
+                    "defer playtest claim remote_job=%s reason=%s backoff_sec=%s",
+                    remote_id,
+                    defer_reason,
+                    settings.ollama_defer_backoff_sec,
+                )
+                time.sleep(settings.ollama_defer_backoff_sec)
+                continue
+
             plan = executor.build_plan(payload)
             job = store.create(plan, total=len(plan["rids"]) * plan["replicate"], remote_job_id=remote_id, operation=operation)
             claim = client.claim(worker_id, remote_id, settings.lease_duration_sec)
@@ -165,12 +178,23 @@ def run_worker_once(store: JobStore, executor: PlaytestExecutor, client: N8nClie
 
 def run_worker_loop(poll_once: bool = False) -> int:
     log = setup_logging()
-    settings.require_n8n_auth()
+    settings.validate_startup()
     worker_id = default_worker_id()
     store = JobStore(state_db_path())
     executor = PlaytestExecutor(store)
     client = N8nClient()
-    log.info("worker_start id=%s n8n=%s", worker_id, settings.n8n_base_url)
+    agy_ver = antigravity_cli_version(settings.antigravity_cli) if settings.antigravity_enabled else "disabled"
+    log.info(
+        "worker_start id=%s n8n=%s webhook_prefix=%s antigravity_cli=%s antigravity_version=%s "
+        "antigravity_quota_path=%s ollama_defer=%s",
+        worker_id,
+        settings.n8n_base_url,
+        settings.n8n_webhook_prefix,
+        settings.antigravity_cli,
+        agy_ver,
+        settings.resolve_antigravity_quota_path(),
+        settings.ollama_defer_enabled,
+    )
     recover_stale_jobs(store, client, worker_id)
     try:
         while True:
