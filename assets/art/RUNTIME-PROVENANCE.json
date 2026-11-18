@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-18T19:42:02.736Z",
+  "generatedAt": "2026-11-18T21:04:56.429Z",
   "mastersDir": "/agent/repos/Dices-and-Devices/art-masters",
   "portrait": {
     "width": 600,
@@ -14,6 +14,11 @@
     "size1x": 128,
     "size2x": 256,
     "webpQuality": 82
+  },
+  "shopCard": {
+    "webpQuality": 86,
+    "nineSlicePx": 112,
+    "dividerTrim": true
   },
   "assets": [
     {
@@ -663,6 +668,86 @@
       "masterSha256": "ae7c034bf7abb899bb5c7517819bd2882f5e713304f5e068b51756138844e370",
       "outputSha256": "6da77afc28ac4ec8e87c4977cfcc0b2d2713c0de78f457940ee67f66f9210772",
       "bytes": 22078
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/standard-frame.webp",
+      "master": "shopcard_standard-frame_v1.png",
+      "masterManifestName": "shopcard_standard-frame_v1.png",
+      "masterSha256": "61d10a0cd8c80dbfcac4ebd00f8a18d2a3f6fc2d4297050b66f1ac716b15357e",
+      "outputSha256": "d08b128c169bfa68309741dcde25b9c2316536c4092bee160a913dc2149768e3",
+      "bytes": 36498,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/rare-frame.webp",
+      "master": "shopcard_rare-frame_v1.png",
+      "masterManifestName": "shopcard_rare-frame_v1.png",
+      "masterSha256": "f28c5252cd3716be3ca283bc33cb1f65ebe9d597d290c2b6f6b4ac6b60a31bda",
+      "outputSha256": "e0bae91a313a632afb25930b179a41ec47a660b31bd5856448e537deb81c093b",
+      "bytes": 35484,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/dangerous-frame.webp",
+      "master": "shopcard_dangerous-frame_v1.png",
+      "masterManifestName": "shopcard_dangerous-frame_v1.png",
+      "masterSha256": "624ddc238ce55c1248a7565838e5c46f34c8ad9cf716fcb5fcc010fee76c7390",
+      "outputSha256": "c863c84ec95ef7e63785a12986686de661c1e5b9dccb34ff07703381942db1ea",
+      "bytes": 33958,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/price-tag-blank.webp",
+      "master": "shopcard_price-tag-blank_v1.png",
+      "masterManifestName": "shopcard_price-tag-blank_v1.png",
+      "masterSha256": "e898ca57a7373b98123dce5f2265ac6dae8b22fbf5a04a9c17500430b245624f",
+      "outputSha256": "b9582b1e157eaf46672797d73a3c14b5661b542e96e51ad22fa10229f96d9141",
+      "bytes": 84900,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/selected-overlay.webp",
+      "master": "shopcard_selected-overlay_v1.png",
+      "masterManifestName": "shopcard_selected-overlay_v1.png",
+      "masterSha256": "f10ac9f57aeb70c0f1db74405813fb56fae8cc9abf4242d250e79c8693bd149f",
+      "outputSha256": "eb1f02dbd06a87b28f0bb0ef5a5341f6dc46621ebafebe97a4e3c74002b92971",
+      "bytes": 44948,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/sold-unavailable-overlay.webp",
+      "master": "shopcard_sold-unavailable-overlay_v1.png",
+      "masterManifestName": "shopcard_sold-unavailable-overlay_v1.png",
+      "masterSha256": "fb5b27e88bcf8744ba52c9dbc432d71ffe9949424b876b3138b8f33c18b4aa77",
+      "outputSha256": "efee1d750f6324435502df3720acea031c5492624a0403e454fd7c84575603b6",
+      "bytes": 56342,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/section-header-blank.webp",
+      "master": "ui-header_section-header-blank_v1.png",
+      "masterManifestName": "ui-header_section-header-blank_v1.png",
+      "masterSha256": "aec624cd6bc0df3290ee962f01136d1989131d335677d46531348eaf724c40a1",
+      "outputSha256": "64371b43d91bd338458cbe4ca8e6ff620d68c55f44c22c520c80005e3b6a2004",
+      "bytes": 56722,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/shop-divider-blank.webp",
+      "master": "ui-divider_shop-divider-blank_v1.png",
+      "masterManifestName": "ui-divider_shop-divider-blank_v1.png",
+      "masterSha256": "f541f0dd71d8d650430d69575201c5b7672aadfabe3123a8000168cc031c5d93",
+      "outputSha256": "bcce014807db71f9fa5b99e21b48cf0a3ce9df86565525519d07fb6143106666",
+      "bytes": 118852,
+      "trim": true
     }
   ]
 }

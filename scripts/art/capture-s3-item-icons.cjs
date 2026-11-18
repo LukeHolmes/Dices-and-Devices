@@ -10,7 +10,7 @@ const fs = require("node:fs");
 const { createGame, plain } = require("../../tests/helpers/game.cjs");
 const fixtures = require("../../tests/fixtures/runs.cjs");
 
-const ROOT = path.join(__dirname, "../..");
+const ROOT = process.env.S3_ITEM_ICON_ROOT || path.join(__dirname, "../..");
 const RUN_KEY = "gutterbones1977:run:v1";
 const label = process.argv[2] === "before" ? "before" : "after";
 const OUT = process.env.S3_ITEM_ICON_OUT || path.join("/opt/cursor/artifacts", `s3-item-icons-${label}`);
