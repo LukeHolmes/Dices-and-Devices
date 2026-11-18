@@ -171,7 +171,7 @@ async function runOneGame(
   const linkObs = process.env.SIM_LINK_OBSERVER === "1";
   const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const result = await page.evaluate(
-    async ({ botSource, opts, linkObs: linkObsFlag, policyRev, seedGame }) => {
+    async ({ botSource, opts, linkObs: linkObsFlag, policyRev, seedGame, traceReplay }) => {
       if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
         window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
           hands: [],
@@ -186,7 +186,20 @@ async function runOneGame(
       // eslint-disable-next-line no-eval
       const play = eval("(" + botSource + ")");
       const originalRandom = Math.random;
-      if (seedGame) Math.random = GutterbonesReplay.mulberry32(opts.seed);
+      const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
+      let draws = 0;
+      if (seedGame) Math.random = () => { draws++; return gameRandom(); };
+      if (traceReplay) {
+        const telem = window.__GB_SIM_TELEM__;
+        telem.replayEvents = [];
+        for (const kind of ["record", "recordRoundEvent", "recordShopPolicyStep"]) {
+          const record = telem[kind];
+          telem[kind] = function(entry) {
+            telem.replayEvents.push({ kind, draws, entry });
+            return record.call(this, entry);
+          };
+        }
+      }
       try {
         return await play(opts);
       } finally {
@@ -195,6 +208,7 @@ async function runOneGame(
     },
     {
       botSource: BOT_FN,
+      traceReplay: process.env.SIM_TRACE_REPLAY === "1",
       seedGame: process.env.SIM_SEED_GAME === "1",
       opts: {
         maxSteps,
@@ -214,6 +228,7 @@ async function runOneGame(
     const build = window.__GB_E2E__?.getBuildProfile?.() || null;
     return {
       hands,
+      replayEvents: window.__GB_SIM_TELEM__?.replayEvents,
       gold: st.gold,
       score: st.score,
       build,
@@ -457,6 +472,7 @@ async function main() {
       steps: g.steps,
     })),
     ...(shopPolicyExportPath ? { shopPolicyExportPath } : {}),
+    ...(process.env.SIM_TRACE_REPLAY === "1" ? { replayEventsByRid: Object.fromEntries(results.map(r => [r.rid, r.telem?.replayEvents])) } : {}),
     ...(process.env.SIM_REPLAY_DIGEST === "1" ? {
       replayByRid: Object.fromEntries(results.map((r) => [r.rid, {
         outcome: r.outcome, maxRound: r.maxRound, hands: r.telem?.hands?.length,
