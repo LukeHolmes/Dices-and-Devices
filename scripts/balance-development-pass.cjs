@@ -6,6 +6,10 @@ const assert = require("node:assert/strict");
 const { analyzePerRidLinks } = require("./rule-experiments-matrix.cjs");
 const arm = process.env.BALANCE_ARM || "control";
 assert.ok(["control", "e2"].includes(arm), "expected control or e2");
+const shard = Number(process.env.BALANCE_SHARD || 0);
+assert.ok(Number.isInteger(shard) && shard >= 0 && shard < 5, "expected a shard from 0 to 4");
+const firstId = shard * 10;
+const lastId = firstId + 9;
 const root = path.resolve(__dirname, "..");
 const dir = fs.mkdtempSync(path.resolve(process.env.RUNNER_TEMP || require("node:os").tmpdir(), "balance-pass-"));
 console.log("Balance evidence directory", dir);
@@ -26,12 +30,16 @@ function run(label, offset, count) {
   for (let id = offset; id < offset + count; id++) {
     assert.ok(report.replayByRid[id]?.hands > 0, "missing hand records for " + id);
     assert.ok(report.linkObserverByRid[id]?.shadow.decisions > 0, "missing observer for " + id);
+    let settled = false;
+    for (const event of report.replayEventsByRid[id]) {
+      if (event.kind === "recordRoundEvent" && event.entry.kind === "round_cleared") settled = true;
+      if (event.kind === "recordRoundEvent" && event.entry.kind === "round_play_start") settled = false;
+      assert.ok(!(settled && event.kind === "record"), "payout after round clear in run " + id);
+    }
   }
   return report;
 }
 
-const first = run("16-first", 16, 1);
-const repeat = run("16-repeat", 16, 1);
 function assertReplay(left, right, id) {
   const a = left.replayEventsByRid[id];
   const b = right.replayEventsByRid[id];
@@ -45,14 +53,16 @@ function assertReplay(left, right, id) {
   assert.deepEqual(left.replayByRid[id], right.replayByRid[id], "terminal replay diverged for " + id);
 }
 
-assertReplay(first, repeat, 16);
-const spotChecks = { 16: first };
-for (const id of [0, 7, 23]) spotChecks[id] = run("trace-" + id, id, 1);
-const probe = run("parallel-0-1", 0, 2);
-assertReplay(spotChecks[0], probe, 0);
-const baseline = run("development-0-49", 0, 50);
+const spotChecks = {};
+for (const id of [0, 7, 16, 23]) {
+  if (id < firstId || id > lastId) continue;
+  spotChecks[id] = run("trace-" + id, id, 1);
+  if (id === 16) assertReplay(spotChecks[id], run("16-repeat", id, 1), id);
+}
+const label = firstId + "-" + lastId;
+const baseline = run("development-" + label, firstId, 10);
 for (const [id, spot] of Object.entries(spotChecks)) assertReplay(baseline, spot, id);
-const replicate = run("replicate-0-49", 0, 50);
+const replicate = run("replicate-" + label, firstId, 10);
 for (const id of Object.keys(baseline.replayByRid)) assertReplay(baseline, replicate, id);
 console.log(JSON.stringify({ arm, wins: baseline.wins, busts: baseline.busts, avgMaxRound: baseline.avgMaxRound,
   ...analyzePerRidLinks(baseline), linkCounts: baseline.synergy.linkCounts }, null, 2));

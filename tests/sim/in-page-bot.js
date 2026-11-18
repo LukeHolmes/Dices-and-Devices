@@ -364,6 +364,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       continue;
     }
 
+    // A settled quota can leave the PLAY scene visible during cash-out.
+    // Only dismiss its presentation until the game records the next round.
+    if (seededBuilder && ph === "PLAY") {
+      const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast(e =>
+        e.kind === "round_cleared" || e.kind === "round_play_start");
+      if (boundary?.kind === "round_cleared") {
+        window.__GB_E2E__.dismissOverlays?.();
+        window.__GB_E2E__.skipIntroOverlays?.();
+        await wait(100);
+        continue;
+      }
+    }
+
     const shopBot = strategy === "builder" || strategy === "greedy";
     const simPolicyRev = window.__GB_SIM_POLICY__?.revision;
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "SHOP") {
