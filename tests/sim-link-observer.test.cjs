@@ -41,3 +41,30 @@ test("shadow permutations cover 120 orderings", () => {
   assert.equal(calls, 1 + 120 * 2);
   assert.equal(obs.shadow.decisions, 1);
 });
+
+test("a hidden carve does not count as a rolled or scored link", () => {
+  const s = loadBoth();
+  const p = s.GutterbonesSimBotPolicy;
+  const obs = s.GutterbonesSimLinkObserver.create({ enabled: true });
+  const dice = [1, 2, 3, 4, 6].map(value => ({ value, faceId: null, faces: [] }));
+  dice[0].faces.push({ id: "GHOST_FACE" });
+  dice[4].faces.push({ faceId: "ECHO_FACE" });
+  const inventory = [{ id: "BOOKENDS" }];
+  assert.equal(p.assessFullLinkKit(inventory, [], dice).fullKit, true);
+  const choose = () => p.selectKeptSlots({ revision: p.WP3_SHOP_REVISION, dice, inventory }).kept;
+  assert.deepEqual(Array.from(choose()), [false, false, false, false, false]);
+  obs.evaluateLaneMilestones(dice, inventory);
+  const family = "ghost_echo→bookends_retrigger";
+  assert.equal(obs.families[family].rolled_together, 0);
+  dice[0].faceId = "GHOST_FACE";
+  assert.deepEqual(Array.from(choose()), [true, false, false, false, false]);
+  const { analyzePerRidLinks } = require("../scripts/rule-experiments-matrix.cjs");
+  const summary = { linkObserverByRid: { 0: obs } };
+  obs.recordCarve("GHOST_FACE", 0, dice);
+  obs.recordCarve("ECHO_FACE", 4, dice);
+  assert.deepEqual(analyzePerRidLinks(summary), { runsWithLink: 0, runs2Families: 0 });
+  obs.recordScoredLinks([family, family]);
+  assert.deepEqual(analyzePerRidLinks(summary), { runsWithLink: 1, runs2Families: 0 });
+  obs.recordScoredLinks(["blood_ripple→fuse_spark"]);
+  assert.deepEqual(analyzePerRidLinks(summary), { runsWithLink: 1, runs2Families: 1 });
+});

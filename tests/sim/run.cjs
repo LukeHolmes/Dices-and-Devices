@@ -164,88 +164,14 @@ async function bootPage(page, baseUrl, viewport) {
 
 async function runOneGame(
   page,
-  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 48, maxFallbacks = 36 },
+  { rid, seed, strategy, viewport, maxSteps, stuckThreshold = 48, maxFallbacks = 36 },
 ) {
   page.setDefaultTimeout(120_000);
-  const booted = bootedRef || { value: false };
-  if (!booted.value) {
-    await bootPage(page, page.__baseUrl, viewport);
-    booted.value = true;
-  } else {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
-    const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
-    await page.goto(
-      `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${linkQ}`,
-      { waitUntil: "domcontentloaded", timeout: 90_000 },
-    );
-    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
-    await page.evaluate((rev) => {
-      window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
-    }, simPolicy);
-    await page.evaluate(() => {
-      localStorage.setItem(
-        "gutterbones1977:settings:v1",
-        JSON.stringify({
-          pacing: "fast",
-          reducedMotionPref: true,
-          tutorialCompleted: true,
-          skippedAlleyIntro: true,
-        }),
-      );
-      try {
-        localStorage.setItem(
-          "gutterbones1977:meta:v1",
-          JSON.stringify({
-          totalRuns: 12,
-          victories: 2,
-          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
-          unlockedFaceIds: [
-            "MULT_FACE",
-            "GOLD_FACE",
-            "BLOOD_6",
-            "WILD_FACE",
-            "ECHO_FACE",
-            "GHOST_FACE",
-            "SHIV_FACE",
-            "WIREBAG_FACE",
-            "MAGNET_FACE",
-            "MARK_FACE",
-            "FUSE_FACE",
-            "DOUBLE_DOWN_FACE",
-          ],
-          unlockedHardwareIds: [
-            "BOOKENDS",
-            "LOADED_DIE",
-            "BRASS_KNUCKLES",
-            "BLACK_BOOK",
-            "BURNER_PHONE",
-            "CROWBAR",
-            "ENGINE",
-            "FUSE_BOX",
-            "MIRROR_RIG",
-            "DEBT_COLLECTOR",
-            "HOT_STREAK_COIL",
-            "CENTERPIECE",
-          ],
-          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
-        }),
-        );
-      } catch (_) {
-        /* ignore */
-      }
-      localStorage.removeItem("gutterbones1977:run:v1");
-    });
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
-    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
-    await page.evaluate((rev) => {
-      window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
-    }, simPolicy);
-  }
+  await bootPage(page, page.__baseUrl, viewport);
   const linkObs = process.env.SIM_LINK_OBSERVER === "1";
   const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const result = await page.evaluate(
-    async ({ botSource, opts, linkObs: linkObsFlag, policyRev }) => {
+    async ({ botSource, opts, linkObs: linkObsFlag, policyRev, seedGame }) => {
       if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
         window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
           hands: [],
@@ -258,11 +184,18 @@ async function runOneGame(
         });
       }
       // eslint-disable-next-line no-eval
-      eval(botSource);
-      return await runBotSession(opts);
+      const play = eval("(" + botSource + ")");
+      const originalRandom = Math.random;
+      if (seedGame) Math.random = GutterbonesReplay.mulberry32(opts.seed);
+      try {
+        return await play(opts);
+      } finally {
+        Math.random = originalRandom;
+      }
     },
     {
       botSource: BOT_FN,
+      seedGame: process.env.SIM_SEED_GAME === "1",
       opts: {
         maxSteps,
         seed,
@@ -331,7 +264,9 @@ async function main() {
   const results = [];
 
   const jobs = [];
-  for (let rid = 0; rid < args.games; rid++) {
+  const offset = Number(process.env.WP2_RID_OFFSET || 0);
+  if (!Number.isSafeInteger(offset) || offset < 0) throw new Error("Invalid run ID offset");
+  for (let rid = offset; rid < offset + args.games; rid++) {
     jobs.push({
       rid,
       seed: rid * 7919,
@@ -348,12 +283,11 @@ async function main() {
     const page = await context.newPage();
     page.setDefaultTimeout(120_000);
     page.__baseUrl = baseUrl;
-    const booted = { value: false };
     while (true) {
       const job = jobs[cursor++];
       if (!job) break;
       try {
-        const r = await runOneGame(page, { ...job, maxSteps: args.maxSteps, booted });
+        const r = await runOneGame(page, { ...job, maxSteps: args.maxSteps });
         results.push(r);
         process.stderr.write(
           `sim ${results.length}/${args.games} rid=${r.rid} outcome=${r.outcome || r.reason} steps=${r.steps} maxRound=${r.maxRound}\n`,
@@ -523,6 +457,14 @@ async function main() {
       steps: g.steps,
     })),
     ...(shopPolicyExportPath ? { shopPolicyExportPath } : {}),
+    ...(process.env.SIM_REPLAY_DIGEST === "1" ? {
+      replayByRid: Object.fromEntries(results.map((r) => [r.rid, {
+        outcome: r.outcome, maxRound: r.maxRound, hands: r.telem?.hands?.length,
+        digest: require("node:crypto").createHash("sha256").update(JSON.stringify([
+          r.telem?.hands, r.telem?.roundEvents, r.telem?.shopPolicySteps, r.telem?.score, r.telem?.gold,
+        ])).digest("hex"),
+      }])),
+    } : {}),
     ...(linkObserverByRid ? { linkObserverByRid } : {}),
   };
 

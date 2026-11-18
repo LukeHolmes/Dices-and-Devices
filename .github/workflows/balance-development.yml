@@ -1,0 +1,26 @@
+name: Balance development pass
+on:
+  workflow_dispatch:
+  push:
+    branches: [balance/scored-links-and-holds]
+jobs:
+  replay-and-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: node --test tests/sim-link-observer.test.cjs tests/sim-bot-reroll-slots.test.cjs
+      - run: node scripts/balance-development-pass.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: balance-development
+          path: ${{ runner.temp }}/balance-pass-*/*.json

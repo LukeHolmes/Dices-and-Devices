@@ -14736,7 +14736,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const result = calculateScore(catId, diceForScore);
             if (linkObserverActive()) {
                 GutterbonesSimLinkObserver?.getObs?.()?.recordScoredLinks(result.chainLinks);
-                GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(diceForScore, inventory);
+                GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(diceForScore, inventory, GutterbonesRules, hardwareDisabled);
             }
             if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => {
@@ -16495,17 +16495,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         ? GutterbonesSimBotPolicy.LEGACY_REVISION
                         : '2026-11-11-phase-b-v1');
                 window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
-                if (
-                    params.get('linkObserver') === '1'
-                    && typeof GutterbonesSimLinkObserver !== 'undefined'
-                    && !window.__GB_SIM_TELEM__?.linkObserver
-                ) {
-                    window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {};
-                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
-                        enabled: true,
-                        policyRevision: simPolicyRev,
-                    });
-                }
                 window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
                     hands: [],
                     roundEvents: [],
@@ -16529,6 +16518,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         this.shopPolicySteps = [];
                     },
                 };
+                if (
+                    params.get('linkObserver') === '1'
+                    && typeof GutterbonesSimLinkObserver !== 'undefined'
+                    && !window.__GB_SIM_TELEM__?.linkObserver
+                ) {
+                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
+                        enabled: true,
+                        policyRevision: simPolicyRev,
+                    });
+                }
                 if (!window.__GB_E2E__) window.__GB_E2E__ = {};
                 Object.assign(window.__GB_E2E__, {
                     resumeSavedRun: () => {
@@ -17077,10 +17076,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             }
                             return false;
                         }
-                        const laneDicePre = window.__GB_E2E__.getDiceLaneForPolicy?.() || dice;
-                        if (linkObserverActive()) {
-                            GutterbonesSimLinkObserver?.getObs?.()?.evaluateLaneMilestones(laneDicePre, inventory);
-                        }
                         const best = window.__GB_E2E__.pickBestOpenCategory?.();
                         if (!best) return false;
                         const policyRev = window.__GB_SIM_POLICY__?.revision
@@ -17118,6 +17113,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         });
                         if (!mustScore && rerollPlan.reroll && discards > 0) {
                             if (rollBtn) {
+                                const hold = GutterbonesSimBotPolicy.selectKeptSlots({ revision: policyRev, dice: laneDice, inventory });
+                                if (hold.kept.some((value, i) => value !== kept[i])) {
+                                    window.__GB_E2E__.keepDiceForReroll();
+                                    return true;
+                                }
                                 if (GutterbonesSimBotPolicy?.isLanePlayRevision?.(policyRev) && window.__GB_SIM_TELEM__) {
                                     const telem = window.__GB_SIM_TELEM__;
                                     telem.laneSetup = telem.laneSetup || { attempts: 0, failures: 0, unfulfilled: {} };
@@ -17137,7 +17137,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     bestTotal: best.total,
                                     unfulfilled: rerollPlan.unfulfilled || rerollPlan.predicates?.unfulfilled,
                                 });
-                                window.__GB_E2E__.keepDiceForReroll?.();
                                 rollBones();
                                 return true;
                             }

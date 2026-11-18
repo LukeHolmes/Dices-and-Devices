@@ -35,12 +35,11 @@
 
     const inventoryIds = (inventory) => (inventory || []).map((i) => (typeof i === 'string' ? i : i?.id)).filter(Boolean);
 
-    const faceIdAt = (d) => (
-        d?.faceId
-        || d?.faces?.[d.showingFace ?? 0]?.faceId
-        || d?.faces?.[0]?.faceId
-        || null
-    );
+    const faceIdAt = (d) => {
+        if (d?.faceId !== undefined) return d.faceId;
+        const face = d?.faces?.[d.showingFace];
+        return face?.faceId ?? face?.id ?? null;
+    };
 
     const kitFaceIdsOnDice = (dice, showingOnly = false) => {
         const found = new Set();
@@ -93,15 +92,9 @@
         const ghost = [];
         const echo = [];
         (dice || []).forEach((d, i) => {
-            const onDie = new Set();
             const fid = faceIdAt(d);
-            if (fid) onDie.add(fid);
-            (d?.faces || []).forEach((f) => {
-                const id = f?.id || f?.faceId;
-                if (id) onDie.add(id);
-            });
-            if (onDie.has('GHOST_FACE') || d?.isGhost) ghost.push(i);
-            if (onDie.has('ECHO_FACE') || d?.isEchoed) echo.push(i);
+            if (fid === 'GHOST_FACE' || d?.isGhost) ghost.push(i);
+            if (fid === 'ECHO_FACE' || d?.isEchoed) echo.push(i);
         });
         return { ghost, echo };
     };
@@ -131,16 +124,17 @@
 
     const hasLinkKit = (inventory, dice) => {
         const ids = inventoryIds(inventory);
-        const { ghost, echo } = ghostEchoIndices(dice || []);
-        const bookendsFamily = ids.includes('BOOKENDS') && (ghost.length || echo.length);
-        const bloodFuse = ids.includes('FUSE_BOX') || ghost.length; // coarse: carved lane + fuse hardware families
+        const faces = kitFaceIdsOnDice(dice);
+        const hasGhost = faces.has('GHOST_FACE');
+        const hasEcho = faces.has('ECHO_FACE');
+        const bookendsFamily = ids.includes('BOOKENDS') && (hasGhost || hasEcho);
         const wireCrowbar = ids.includes('CROWBAR') || ids.includes('WIREBAG');
         return {
-            eligible: !!(bookendsFamily || (ids.includes('ENGINE') && ghost.length) || wireCrowbar),
+            eligible: !!(bookendsFamily || (ids.includes('ENGINE') && hasGhost) || wireCrowbar),
             bookendsFamily,
             inventory: ids,
-            hasGhost: ghost.length > 0,
-            hasEcho: echo.length > 0,
+            hasGhost,
+            hasEcho,
         };
     };
 
@@ -616,8 +610,21 @@
         ghost.forEach((i) => { kept[i] = true; });
         echo.forEach((i) => { kept[i] = true; });
         if (ids.includes('BOOKENDS')) {
-            kept[0] = true;
-            kept[4] = true;
+            const ends = [0, 4];
+            if (dice[0]?.value === dice[4]?.value) {
+                ends.forEach((i) => { kept[i] = true; });
+            } else {
+                // Prefer exposing a missing carved face. Otherwise preserve a visible
+                // component, then the higher pip as a useful ordinary scoring die.
+                const rank = (i) => {
+                    if (kept[i]) return 2;
+                    return kitFaceIdsOnDice([dice[i]]).size ? 0 : 1;
+                };
+                const anchor = ends.sort((a, b) => rank(b) - rank(a)
+                    || (Number(dice[b]?.value) || 0) - (Number(dice[a]?.value) || 0))[0];
+                ends.forEach((i) => { kept[i] = i === anchor && rank(i) > 0; });
+                return kept;
+            }
         }
         if (kept.some(Boolean)) return kept;
         return keepKeptWp2(dice);
