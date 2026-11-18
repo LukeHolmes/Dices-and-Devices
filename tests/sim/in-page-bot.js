@@ -1,6 +1,31 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const seededBuilder = strategy === "builder" && typeof window.__GB_SIM_GAME_RANDOM__ === "function";
+  const yieldTick = () => wait(0);
+  const spin = async (ticks) => {
+    for (let i = 0; i < ticks; i += 1) await yieldTick();
+  };
+  const pause = async (ms) => {
+    if (seededBuilder) {
+      const ticks = Math.max(4, Math.min(24, Math.round((ms || 16) / 14)));
+      return spin(ticks);
+    }
+    return wait(ms);
+  };
+  const spinUntil = async (pred, maxTicks = 240) => {
+    for (let i = 0; i < maxTicks; i += 1) {
+      if (pred()) return true;
+      await yieldTick();
+    }
+    return false;
+  };
+  const waitPlayUnlocked = async () => {
+    if (!seededBuilder) return;
+    await spinUntil(() => {
+      const locks = window.__GB_E2E__?.getPlayLocks?.();
+      return !locks?.rolling && !locks?.rollLocked;
+    }, 320);
+  };
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
@@ -8,6 +33,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   let maxRound = 1;
   let lastRound = 1;
   let started = false;
+  const effectiveStuckThreshold = seededBuilder ? 5000 : stuckThreshold;
+  const effectiveMaxFallbacks = seededBuilder ? 99999 : maxFallbacks;
 
   const mulberry32 = (a) => {
     return () => {
@@ -28,7 +55,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     const H = innerHeight;
     const out = [];
     let i = 0;
-    for (const b of document.querySelectorAll("button,[role=button]")) {
+    const candidates = [...document.querySelectorAll("button,[role=button]")].sort((a, b) => {
+      const ka = a.getAttribute("data-layout-key") || "";
+      const kb = b.getAttribute("data-layout-key") || "";
+      if (ka !== kb) return ka.localeCompare(kb);
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      return ra.top - rb.top || ra.left - rb.left || (a.innerText || "").localeCompare(b.innerText || "");
+    });
+    for (const b of candidates) {
       if (b.disabled || !b.getClientRects().length) continue;
       const cs = getComputedStyle(b);
       if (cs.visibility === "hidden" || cs.pointerEvents === "none" || +cs.opacity === 0) continue;
@@ -295,12 +330,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
     window.__GB_E2E__.startNewRun();
     window.__GB_E2E__.skipIntroOverlays?.();
-    await wait(120);
+    await pause(120);
     window.__GB_E2E__.skipIntroOverlays?.();
   } catch (e) {
     return { stuck: true, reason: "boot_failed", detail: String(e), seed, strategy, steps: 0, maxRound: 1 };
   }
-  await wait(400);
+  await pause(400);
 
   for (let step = 0; step < maxSteps; step++) {
     const { btn, st } = scan();
@@ -338,7 +373,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       log._gambleTries = (log._gambleTries || 0) + 1;
       if (seededBuilder) {
         if (log._gambleTries === 1) window.__GB_E2E__.takeSafeCut?.();
-        await wait(160);
+        await spinUntil(() => window.__GB_E2E__?.getState?.()?.phase !== "GAMBLE", 200);
         continue;
       }
       if (log._gambleTries === 1 || log._gambleTries % 5 === 0) {
@@ -349,7 +384,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         );
         if (safeBtn && !safeBtn.disabled) safeBtn.click();
       }
-      await wait(160);
+      await pause(160);
       continue;
     }
     log._gambleTries = 0;
@@ -358,20 +393,20 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast((e) =>
         e.kind === "round_cleared" || e.kind === "round_play_start");
       if (ph === "SHOP" && boundary?.kind === "round_play_start" && boundary.round === st.round) {
-        await wait(90);
+        await pause(90);
         continue;
       }
       if (ph === "PLAY" && (boundary?.kind === "round_cleared" || window.__GB_E2E__.debugStuck?.().pendingFinalize)) {
         window.__GB_E2E__.dismissOverlays?.();
         window.__GB_E2E__.skipIntroOverlays?.();
-        await wait(100);
+        await pause(100);
         continue;
       }
     }
 
     if (st?.roundClearVisible) {
       window.__GB_E2E__?.finishRoundClear?.();
-      await wait(120);
+      await pause(120);
       continue;
     }
 
@@ -379,14 +414,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     const simPolicyRev = window.__GB_SIM_POLICY__?.revision;
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "SHOP") {
       window.__GB_E2E__?.autoShopPolicyStep?.();
-      await wait(90);
+      await pause(90);
       continue;
     }
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "CARVING") {
       if (!window.__GB_E2E__?.autoCarvePolicyStep?.()) {
         window.__GB_E2E__?.exitCarvingToShop?.("carve_exit_sim_guard");
       }
-      await wait(90);
+      await pause(90);
       continue;
     }
     if (shopBot && ph === "SHOP") {
@@ -398,26 +433,26 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       ) {
         if (window.__GB_E2E__?.hitStreets?.()) {
           log._shopPasses = 0;
-          await wait(120);
+          await pause(120);
           continue;
         }
       }
       if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
-        await wait(90);
+        await pause(90);
         continue;
       }
       if (log._shopPasses <= 12 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
-        await wait(90);
+        await pause(90);
         continue;
       }
       if (!st?.selectedShopPathId && window.__GB_E2E__?.clickShopRouteCard?.()) {
-        await wait(80);
+        await pause(80);
         continue;
       }
     }
     if (shopBot && ph === "CARVING" && simPolicyRev !== "2026-11-12-wp3-shop-v1") {
       if (window.__GB_E2E__?.autoCarvePreferred?.()) {
-        await wait(90);
+        await pause(90);
         continue;
       }
     }
@@ -430,17 +465,17 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (started && ph === "PLAY" && st && st.hands === 0 && st.score >= st.target) {
       window.__GB_E2E__?.advanceRunPhase?.();
       window.__GB_E2E__?.dismissOverlays?.();
-      await wait(120);
+      await pause(120);
       continue;
     }
     if (started && ph === "PLAY" && st && st.hands === 0 && st.score < st.target) {
       window.__GB_E2E__.recoverLastHand?.();
       window.__GB_E2E__.dismissOverlays?.();
-      await wait(160);
+      await pause(160);
       continue;
     }
 
-    if (stuck >= stuckThreshold) {
+    if (stuck >= effectiveStuckThreshold) {
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") {
         window.__GB_E2E__.clickShopRouteCard?.();
@@ -457,7 +492,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       } else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;
-      if (fallbacks > maxFallbacks) {
+      if (fallbacks > effectiveMaxFallbacks) {
         return {
           stuck: true,
           reason: "softlock_no_progress",
@@ -470,7 +505,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         };
       }
       stuck = 0;
-      await wait(80);
+      await pause(80);
       continue;
     }
 
@@ -487,19 +522,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
       const locks = window.__GB_E2E__?.getPlayLocks?.();
       if (locks?.rolling || locks?.rollLocked) {
-        await wait(60);
+        await waitPlayUnlocked();
         continue;
       }
       if (!window.__GB_E2E__?.getHasRolled?.()) {
         window.__GB_E2E__?.rollOnce?.();
-        await wait(50);
+        await pause(50);
         continue;
       }
       if (
         (strategy === "builder" || strategy === "greedy")
         && window.__GB_E2E__?.autoPlayHand?.()
       ) {
-        await wait(50);
+        await pause(50);
         continue;
       }
       if (
@@ -507,21 +542,21 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         && window.__GB_E2E__?.getHasRolled?.()
         && window.__GB_E2E__?.scoreFirstPayoutRow?.()
       ) {
-        await wait(45);
+        await pause(45);
         continue;
       }
       if (st?.score >= st?.target && st?.hands > 0) {
         window.__GB_E2E__?.advanceRunPhase?.();
-        await wait(80);
+        await pause(80);
         continue;
       }
       if (st?.roundClearVisible) {
         window.__GB_E2E__?.finishRoundClear?.();
-        await wait(80);
+        await pause(80);
         continue;
       }
       if (bossIntroUp()) {
-        await wait(60);
+        await pause(60);
         continue;
       }
     }
@@ -529,16 +564,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     let pick = choose(btn, ph, st || {});
     if (pick == null && ph === "PLAY") {
       window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick(ph);
-    }
-    else if (pick != null) {
+    } else if (pick != null) {
       const b = document.querySelector('[data-pt="' + pick + '"]');
       if (b) b.click();
     }
-    await wait(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
+    await pause(seededBuilder ? 16 : strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
   }
 
   window.__GB_E2E__.forceForfeitRun?.();
-  await wait(600);
+  await pause(600);
   const afterForfeit = window.__GB_E2E__.getState();
   if (afterForfeit.phase === "RAP_SHEET" || afterForfeit.phase === "VICTORY") {
     return {

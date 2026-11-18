@@ -1,8 +1,8 @@
 {
   "id": "DEF-M-005",
-  "title": "Full-run reproducibility not yet 10/10 under harness (browser timing + residual Math.random)",
+  "title": "Full-run reproducibility under harness — outcome/max_round improved; steps/digest still drift",
   "kind": "measurement",
   "status": "open",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "notes": "2026-11-18 repro subset seeds 0-1 x2 replicates: 0/2 matched on outcome+max_round+steps+digest (R-main). Pill/face/SNIFF + SIM_SEED_GAME wired; shop generation still uses Math.random on non-daily runs."
+  "notes": "2026-11-18 (branch cursor/diagnostics-harness-tracking-1b3a): Routed remaining gameplay RNG through runRandomRef when SIM_SEED_GAME=1 (shop generateShop rng, gamble flips, path consumables, carve die ids, blueprint pick, consumable instanceIds). Bot: deterministic button scan sort, fixed-spin pauses under seeded builder, high stuck threshold, optional ms=0 scheduleTimeout flush when __GB_SIM_STEP_SYNC__. Subset repro seeds 0–1 ×2 R-main: often matches outcome+max_round but 0/2 on full tuple (steps+digest still diverge, e.g. rid 0 maxRound 2 both reps but steps 226 vs 858). Full 10×2×2 matrix not yet at 10/10 — residual Playwright/React scheduling vs bot loop index, not default-game balance. npm run test:fast 236/236 green."
 }

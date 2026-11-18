@@ -99,7 +99,7 @@ async function bootPage(page, baseUrl, viewport) {
   const ruleQ = ruleExp ? `&ruleExp=${encodeURIComponent(ruleExp)}` : "";
   await page.goto(
     `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}${ruleQ}`,
-    { waitUntil: "networkidle", timeout: 120_000 },
+    { waitUntil: "domcontentloaded", timeout: 120_000 },
   );
   await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
   await page.evaluate(() => {
@@ -267,6 +267,7 @@ async function runOneGame(
       // eslint-disable-next-line no-eval
       const play = eval("(" + botSource + ")");
       if (seedGameFlag && typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
+        window.__GB_SIM_STEP_SYNC__ = true;
         const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
         let draws = 0;
         window.__GB_SIM_GAME_RANDOM__ = () => {
@@ -302,7 +303,10 @@ async function runOneGame(
       try {
         return await play(opts);
       } finally {
-        if (seedGameFlag) delete window.__GB_SIM_GAME_RANDOM__;
+        if (seedGameFlag) {
+          delete window.__GB_SIM_GAME_RANDOM__;
+          delete window.__GB_SIM_STEP_SYNC__;
+        }
       }
     },
     {

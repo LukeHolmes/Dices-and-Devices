@@ -7245,9 +7245,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         FLOW_SAVE_ONCE: { id: 'FLOW_SAVE_ONCE', name: 'Flow Save', desc: 'First whiff each round does not reset FLOW.' }
     });
 
-    const pickRandomBlueprintId = (random = Math.random()) => {
+    const pickRandomBlueprintId = (random) => {
+        const draw = random !== undefined
+            ? random
+            : (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
+                ? window.__GB_SIM_GAME_RANDOM__()
+                : Math.random());
         const ids = Object.keys(BLUEPRINT_CATALOG);
-        return ids[Math.floor(Math.max(0, Math.min(0.999999, random)) * ids.length)] || ids[0];
+        return ids[Math.floor(Math.max(0, Math.min(0.999999, draw)) * ids.length)] || ids[0];
     };
 
     const PROGRAMS = [
@@ -7869,7 +7874,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }
         return {
             ...die,
-            id: Math.random(),
+            id: boneInstanceRng(),
             value: pipValue,
             faceId: face.id,
             faceLabel: face.label,
@@ -8378,7 +8383,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
     };
 
-    const makeBone = () => ({ id: Math.random(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
+    const boneInstanceRng = () => (
+        typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
+            ? window.__GB_SIM_GAME_RANDOM__()
+            : Math.random()
+    );
+    const makeBone = () => ({ id: boneInstanceRng(), value: 1, faces: standardFaces(), faceId: null, faceLabel: null, faceStyle: null, type: 'standard' });
     const rarityClass = r => r === 'rare' ? 'glow-rare' : r === 'danger' ? 'glow-danger' : '';
     const riskNotes = item => {
         if (!item) return [];
@@ -11781,6 +11791,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [lineupToast, setLineupToast] = useState(null);
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const runRandomRef = useRef(() => Math.random());
+        const simSeededGameplay = () =>
+            dailyRunActive || (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function');
+        const gameplayRandom = () => (simSeededGameplay() ? runRandomRef.current() : Math.random());
         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
@@ -12397,6 +12410,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, [scoreBreakdown?.id, scoreResolution?.id, bossIntro, roundClearCardActive, phase]);
 
         const scheduleTimeout = (fn, ms) => {
+            const simStepSync = typeof window !== 'undefined' && window.__GB_SIM_STEP_SYNC__;
+            if (simStepSync && ms <= 0) {
+                const depth = window.__GB_SIM_TIMEOUT_DEPTH__ || 0;
+                if (depth < 24) {
+                    window.__GB_SIM_TIMEOUT_DEPTH__ = depth + 1;
+                    try {
+                        fn();
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        window.__GB_SIM_TIMEOUT_DEPTH__ = depth;
+                    }
+                    return -1;
+                }
+            }
             const id = window.setTimeout(() => {
                 timeoutIdsRef.current.delete(id);
                 fn();
@@ -14527,7 +14555,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         faceLabel: isStandard ? null : face.label,
                         faceStyle: isStandard ? null : face.style,
                         type: isStandard ? 'standard' : face.type,
-                        id: Math.random()
+                        id: (dailyRunActive || typeof window.__GB_SIM_GAME_RANDOM__ === 'function')
+                            ? runRandomRef.current()
+                            : Math.random()
                     };
                     return next;
                 });
@@ -14613,7 +14643,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setStash(grant);
             const slot = tutorialActiveRef.current && GutterbonesTutorial
                 ? GutterbonesTutorial.TUNING.openingSniffSlot
-                : Math.floor(Math.random() * 5);
+                : Math.floor(gameplayRandom() * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
@@ -15235,8 +15265,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const outcome = GutterbonesGamble.resolveBlueprintFlip({
                 flowStreak,
                 gold,
-                random: Math.random(),
-                pickBlueprintId: () => pickRandomBlueprintId()
+                random: gameplayRandom(),
+                pickBlueprintId: () => pickRandomBlueprintId(gameplayRandom())
             });
             if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
@@ -15284,7 +15314,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     tierId,
                     flowStreak,
                     gold,
-                    random: Math.random()
+                    random: gameplayRandom()
                 });
                 if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
@@ -15519,7 +15549,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!preservePaths) setSelectedShopPathId(null);
             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
             setActiveShopTag(offerTag);
-            const rng = dailyRunActive ? runRandomRef.current : Math.random;
+            const rng = simSeededGameplay() ? runRandomRef.current : Math.random;
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
@@ -16055,7 +16085,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     spawnPaperStamp('+2 MAX PILLS', '#0f766e');
                     setFixerLine('Smelling salts — +2 max pills each round this run.');
                 } else {
-                    setConsumables(prev => [...prev, { ...item, instanceId: Math.random() }]);
+                    setConsumables(prev => [...prev, { ...item, instanceId: gameplayRandom() }]);
                 }
                 setShopItems(prev => prev.filter(i => i.id !== item.id));
             } else if (item.type) {
@@ -16357,9 +16387,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
             if (path.grantRandomConsumable) {
                 const pool = Object.values(CONSUMABLES);
-                const drop = pool[Math.floor(Math.random() * pool.length)];
+                const drop = pool[Math.floor(gameplayRandom() * pool.length)];
                 if (drop) {
-                    setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
+                    setConsumables(prev => [...prev, { ...drop, instanceId: gameplayRandom() }]);
                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
                 }
             }
