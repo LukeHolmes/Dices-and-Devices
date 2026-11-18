@@ -16542,6 +16542,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     getState: () => ({
                         phase,
+                        selectedPersonaId: PERSONAS[personaIdx]?.id,
                         round,
                         target,
                         score,
@@ -16634,10 +16635,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     },
                     noteSimKitAcquisition: () => {
                         if (!window.__GB_SIM_TELEM__) return;
-                        const diceFaceIds = dice.map((d) => (
-                            d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
-                        ));
-                        const kit = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, diceFaceIds);
+                        const kit = GutterbonesSimBotPolicy?.assessFullLinkKit?.(inventory, [], dice);
                         if (kit?.fullKit) {
                             window.__GB_SIM_TELEM__.kitAcquired = window.__GB_SIM_TELEM__.kitAcquired || {};
                             if (window.__GB_SIM_TELEM__.kitAcquired.round == null) {
@@ -16654,6 +16652,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         // The shop selects a default route in an effect. Wait for
                         // the same committed stock and route a player can act on.
                         if (!shopItems.length || !paths.some((p) => p.id === selectedShopPathId)) return false;
+                        window.__GB_E2E__.noteSimKitAcquisition();
                         const diceFaceIds = dice.map((d) => (
                             d.faceId || d.faces?.[d.showingFace ?? 0]?.faceId || d.faces?.[0]?.faceId || null
                         ));
@@ -17174,6 +17173,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             organicPairs: best.organicPairs ?? GutterbonesSimBotPolicy.organicPairCount(best.chainLinks),
                             bankClearForced: !!bankClear,
                         });
+                        if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') {
+                            // Use the same payout action as keyboard selection after the
+                            // legal category and presentation guards have cleared.
+                            if (rollLocked || payoutInputLock || bossIntro || storyBeat || lossExplanation
+                                || !scorablePayoutIds.includes(best.catId) || usedCats.includes(best.catId)) return false;
+                            executePayout(best.catId);
+                            return true;
+                        }
                         setPlayDock('payouts');
                         setShowMobileStash(false);
                         if (typeof window !== 'undefined' && window.innerWidth < 900) {
@@ -18420,7 +18427,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 rollControlDisplayed: () => !!document.querySelector('[data-layout-key="play-roll-btn"]'),
                 spentProgramCount: () => document.querySelectorAll('.stash-program--spent').length,
             };
-        }, [phase, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, shopItems, soldItems, shopRefreshes, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, kept, storyBeat, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot, playStatusBreakdownOpen, bossWarrantOpen]);
+        }, [phase, personaIdx, round, target, score, gold, hands, discards, hasRolled, rolling, rollLocked, payoutInputLock, lossExplanation, shopItems, soldItems, shopRefreshes, paths, selectedShopPathId, roundClearCardActive, roundClearCanContinue, bossIntro, scoreOverlayCanDismiss, scoreBreakdown?.id, scoreResolution?.id, kept, storyBeat, dice, inventory, consumables, runModifierIds, blueprints, synergyState, categoryMarkedThisRound, routeModifiers, runStats, debt, handLevels, flowStreak, activeBoss, blueprintRoundFlags, pillTrayArmed, pillAttachedSlot, playStatusBreakdownOpen, bossWarrantOpen]);
 
         return (
             <div className={`w-full h-[100dvh] max-h-[100dvh] bg-[#121113] text-[#d6b85c] overflow-hidden relative selection:bg-[#ff007f] selection:text-white touch-manipulation select-none ${bossKick ? 'boss-kick' : ''}`}>
