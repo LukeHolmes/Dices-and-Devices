@@ -70,6 +70,7 @@ const actionNames = [
 const actions = actionNames.map(actionSource).join("\n");
 const exportedNames = [
   ...actionNames,
+  "resolveDieAfterRoll",
   "PERSONAS",
   "FACE_DATABASE",
   "DEVISES",
