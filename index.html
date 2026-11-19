@@ -210,9 +210,12 @@
         scrollbar-width: thin;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
-        overflow: hidden;
-        overscroll-behavior: none;
-        scrollbar-width: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        grid-auto-rows: minmax(0, auto);
+        align-items: start;
     }
     @media (max-width: 430px) {
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
@@ -2632,8 +2635,21 @@
     #root-gutterbones .shop-item-card .item-art-tile--hardware { width: 3.5rem; height: 3.5rem; }
   }
   #root-gutterbones .shop-item-card {
+    box-sizing: border-box;
     height: auto;
-    align-content: start;
+    min-height: 0;
+    align-self: start;
+    justify-self: stretch;
+    isolation: isolate;
+  }
+  @media (min-width: 821px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+      min-height: 0 !important;
+      height: auto;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+      max-height: none;
+    }
   }
   #root-gutterbones .shop-item-card__title {
     word-break: break-word;
@@ -10805,6 +10821,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     delete shell.dataset.intelScaled;
                 }
                 if (isShopItems && typeof window !== 'undefined') {
+                    shell.style.overflowY = needsScale ? 'auto' : '';
+                    shell.style.overflowX = 'hidden';
+                    shell.style.maxHeight = needsScale ? `${Math.max(120, avail)}px` : '';
+                    if (needsScale) {
+                        body.style.marginBottom = '0';
+                    }
                     const vh = window.innerHeight;
                     for (let pass = 0; pass < 8; pass += 1) {
                         const buttons = shell.querySelectorAll('[data-layout-key="shop-buy-button"]');
@@ -10818,9 +10840,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         body.style.transformOrigin = 'top center';
                         body.style.transform = `scale(${scale})`;
                         body.style.width = '100%';
-                        body.style.marginBottom = `${-Math.ceil(need * (1 - scale))}px`;
+                        body.style.marginBottom = '0';
                         body.style.maxWidth = '100%';
-                        shell.style.height = `${Math.min(avail, Math.ceil(need * scale))}px`;
+                        const scaledH = Math.ceil(need * scale);
+                        shell.style.height = `${Math.min(avail, scaledH)}px`;
                         shell.dataset.intelScaled = String(Math.round(scale * 100));
                     }
                 }
