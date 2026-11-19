@@ -61,6 +61,11 @@ async function bootShop(page) {
   await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
   await page.waitForSelector('[data-layout-key="shop-layout"]', { timeout: 60_000 });
   await page.waitForTimeout(500);
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    const screen = document.querySelector("#root-gutterbones[data-phase=\"SHOP\"] .gb-screen");
+    if (screen instanceof HTMLElement) screen.scrollTop = 0;
+  });
 }
 
 for (const vp of VIEWPORTS) {

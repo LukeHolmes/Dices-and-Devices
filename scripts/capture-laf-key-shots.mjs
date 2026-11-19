@@ -125,6 +125,14 @@ async function bootShop(page, vp) {
 async function captureShop(vp, name, fullPage = false) {
   const page = await openPage();
   await bootShop(page, vp);
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    const screen = document.querySelector('#root-gutterbones[data-phase="SHOP"] .gb-screen');
+    if (screen instanceof HTMLElement) screen.scrollTop = 0;
+    const layout = document.scrollingElement;
+    if (layout) layout.scrollTop = 0;
+  });
+  await page.waitForTimeout(150);
   await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`), fullPage });
   await page.close();
 }
