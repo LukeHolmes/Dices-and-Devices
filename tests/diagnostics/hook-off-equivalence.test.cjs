@@ -46,9 +46,13 @@ test("R78-i gameplayRandom matches pin when hook absent and e2e not seeded", () 
 
 test("gbSimGameplayRandom matches Math.random when hook absent", () => {
   const window = {};
-  const gbSimGameplayRandom = () => (
-    typeof window.__GB_SIM_GAME_RANDOM__ === "function" ? window.__GB_SIM_GAME_RANDOM__() : Math.random()
-  );
+  const gbSimGameplayRandom = (caller = "moduleDefault") => {
+    if (typeof window.__GB_SIM_DRAW_GAME__ === "function") {
+      return window.__GB_SIM_DRAW_GAME__(caller, window.__GB_SIM_ROUND__ != null ? window.__GB_SIM_ROUND__ : 1);
+    }
+    if (typeof window.__GB_SIM_GAME_RANDOM__ === "function") return window.__GB_SIM_GAME_RANDOM__();
+    return Math.random();
+  };
   const pinPick = (random) => {
     const roll = random !== undefined && random !== null ? random : Math.random();
     return roll;

@@ -91,8 +91,8 @@
   };
 
   const BOOT_DRAW = 0.375;
-  let gameDraw = null;
   let cosmeticDraw = null;
+  const substreamBuckets = new Map();
 
   window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
   window.__GB_SIM_COSMETIC_DRAW_COUNT__ = 0;
@@ -100,38 +100,45 @@
   window.__GB_SIM_LAST_GAME_DRAW_SITE__ = null;
   window.__GB_SIM_GAME_DRAW_LOG__ = [];
 
-  const captureGameCallSite = () => {
-    try {
-      const stack = String(new Error().stack || "").split("\n");
-      for (let i = 2; i < stack.length; i += 1) {
-        const line = stack[i].trim();
-        if (!line) continue;
-        if (line.includes("harness-determinism-shim")) continue;
-        if (line.includes("__GB_SIM_GAME_RANDOM__")) continue;
-        if (line.includes("taggedGameRandom")) continue;
-        return line.length > 140 ? `${line.slice(0, 137)}...` : line;
-      }
-    } catch (_) {
-      /* ignore */
-    }
-    return "(unknown)";
-  };
+  const clearSubstreams = () => substreamBuckets.clear();
 
-  const pushGameDrawRecord = (n, site, value) => {
+  const pushGameDrawRecord = (entry) => {
     const log = window.__GB_SIM_GAME_DRAW_LOG__;
     if (log.length >= 25000) return;
-    log.push({ n, site, v: value });
+    log.push(entry);
+  };
+
+  window.__GB_SIM_DRAW_GAME__ = function drawGameSubstream(caller, roundId) {
+    if (window.__GB_SIM_RNG_BOOT_LOCKED__) return BOOT_DRAW;
+    const base = window.__GB_SIM_GAME_SEED__;
+    if (base == null) return BOOT_DRAW;
+    const round = Math.max(0, Math.floor(Number(roundId) || 0));
+    const name = String(caller || "default");
+    const key = `${round}\0${name}`;
+    let bucket = substreamBuckets.get(key);
+    if (!bucket) {
+      const subSeed = deriveSeed32(deriveSeed32(base, `game-round-${round}`), name);
+      bucket = { next: mulberry32(subSeed), counter: 0 };
+      substreamBuckets.set(key, bucket);
+    }
+    bucket.counter += 1;
+    const n = (window.__GB_SIM_RNG_DRAW_COUNT__ = (window.__GB_SIM_RNG_DRAW_COUNT__ || 0) + 1);
+    window.__GB_SIM_LAST_GAME_DRAW_SITE__ = name;
+    const value = bucket.next();
+    pushGameDrawRecord({
+      n,
+      site: name,
+      caller: name,
+      round,
+      subCounter: bucket.counter,
+      v: value,
+    });
+    return value;
   };
 
   const taggedGameRandom = () => {
-    if (window.__GB_SIM_RNG_BOOT_LOCKED__) return BOOT_DRAW;
-    if (!gameDraw) return BOOT_DRAW;
-    const n = (window.__GB_SIM_RNG_DRAW_COUNT__ = (window.__GB_SIM_RNG_DRAW_COUNT__ || 0) + 1);
-    const site = captureGameCallSite();
-    window.__GB_SIM_LAST_GAME_DRAW_SITE__ = site;
-    const value = gameDraw();
-    pushGameDrawRecord(n, site, value);
-    return value;
+    const round = window.__GB_SIM_ROUND__ != null ? window.__GB_SIM_ROUND__ : 1;
+    return window.__GB_SIM_DRAW_GAME__("legacyGameRandom", round);
   };
 
   const cosmeticRandom = () => {
@@ -144,10 +151,9 @@
   window.__GB_SIM_INSTALL_GAME_SEED__ = function installGameSeed(seed) {
     const seedU32 = (Number(seed) || 1) >>> 0;
     window.__GB_SIM_GAME_SEED__ = seedU32;
-    const gameSeed = deriveSeed32(seedU32, "game");
     const cosmeticSeed = deriveSeed32(seedU32, "cosmetic");
-    gameDraw = mulberry32(gameSeed);
     cosmeticDraw = mulberry32(cosmeticSeed);
+    clearSubstreams();
     window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
     window.__GB_SIM_COSMETIC_DRAW_COUNT__ = 0;
     window.__GB_SIM_GAME_DRAW_LOG__ = [];
@@ -177,5 +183,5 @@
   window.__GB_SIM_GAME_RANDOM__ = taggedGameRandom;
   window.__GB_SIM_STEP_SYNC__ = true;
 
-  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v4b";
+  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v5";
 })();

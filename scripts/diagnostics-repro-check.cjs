@@ -319,7 +319,7 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const instrumentedGate = baselines.some((b) => String(b).endsWith("-i"));
   const batchId = instrumentedGate
-    ? `REPRO-DEFM005-${stamp}-instrumented-v4c`
+    ? "REPRO-DEFM005-20261119-instrumented-v5"
     : `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
@@ -333,7 +333,7 @@ async function main() {
     TRACKING_DIR,
     "defects/measurement",
     instrumentedGate
-      ? `DEF-M-005-gate-${stamp}-instrumented-v4c.json`
+      ? `DEF-M-005-gate-20261119-instrumented-v5.json`
       : `DEF-M-005-gate-${stamp}-vclock-boot.json`,
   );
   const totals = Object.values(report.baselines).reduce(
@@ -370,7 +370,7 @@ async function main() {
         id: "DEF-M-005",
         gate_batch_id: batchId,
         harness_mode: "node_paced_playwright_clock_boot",
-        harness_shim_rev: "2026-11-19-harness-clock-v4b",
+        harness_shim_rev: "2026-11-19-harness-clock-v5",
         prior_gate_records: instrumentedGate
           ? [
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
@@ -380,6 +380,7 @@ async function main() {
               { batch: "REPRO-DEFM005-20261119-instrumented-v4", note: "interim af8ef9a", matched: 15, total: 20 },
               { batch: "REPRO-DEFM005-20261119-instrumented-v4", note: "f0f79cf", matched: 14, total: 20 },
               { batch: "REPRO-DEFM005-20261119-instrumented-v4b", note: "19de179 opening sniff sync", matched: 12, total: 20 },
+              { batch: "REPRO-DEFM005-20261119-instrumented-v4c", note: "81ec337", matched: 14, total: 20 },
             ]
           : [
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
