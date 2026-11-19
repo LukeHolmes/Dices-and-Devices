@@ -12871,7 +12871,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             enabled: phase === 'SHOP' && typeof window !== 'undefined'
                 && (
                     ((window.innerWidth < 768 || window.innerHeight < 700) && (shopItems?.length || 0) > 4)
-                    || (window.innerWidth >= 768 && window.innerWidth <= 1100 && window.innerHeight <= 820 && (shopItems?.length || 0) > 0)
+                    || (window.innerWidth >= 768 && window.innerWidth <= 1366 && window.innerHeight <= 820 && (shopItems?.length || 0) > 0)
                 ),
             minScale: (() => {
                 if (typeof window === 'undefined') return 0.5;
@@ -12880,7 +12880,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (h <= 390) return 0.3;
                 if (h <= 640) return 0.36;
                 if (w < 768 && h >= 700) return 0.38;
-                if (w >= 768 && w <= 1100 && h <= 820) return 0.52;
+                if (w >= 768 && w <= 1366 && h <= 820) return 0.52;
                 if (h < 520) return 0.42;
                 return 0.48;
             })()
@@ -12930,7 +12930,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 else if (w < 768 || h < 700) setShopItemsPerPage(Math.max(minPerPage, Math.min(4, count)));
                 else if (h < 820) {
                     let cap = 4;
-                    if (w >= 768 && w <= 1100) cap = h <= 768 ? 2 : 3;
+                    if (w >= 768 && w <= 1366) cap = h <= 768 ? 2 : 3;
                     setShopItemsPerPage(Math.max(minPerPage, Math.min(cap, count)));
                 }
                 else setShopItemsPerPage(count);
