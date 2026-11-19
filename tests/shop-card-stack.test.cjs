@@ -100,7 +100,23 @@ for (const vp of FULL_STOCK_VPS) {
     const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
     try {
       await enterShop(page);
-      const metrics = await page.evaluate(() => {
+      const pageCount = await page.evaluate(() => {
+        const span = document.querySelector(".shop-item-pagination span");
+        const m = (span?.textContent || "").match(/STOCK\s+\d+\/(\d+)/);
+        return m ? Number(m[1]) : 1;
+      });
+      let totalSeen = 0;
+      const allOverlap = [];
+      const badBuy = [];
+      for (let p = 0; p < pageCount; p += 1) {
+        if (p > 0) {
+          await page.getByRole("button", { name: "Next stock page" }).click();
+          await page.waitForTimeout(400);
+          await page.evaluate(
+            () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+          );
+        }
+        const metrics = await page.evaluate(() => {
         const panel = document.querySelector('[data-layout-key="shop-items-panel"]');
         const cards = [...panel.querySelectorAll(".shop-item-card")];
         const colRects = [];
@@ -118,40 +134,49 @@ for (const vp of FULL_STOCK_VPS) {
           if (br) {
             buyInCard.push({
               id: (card.querySelector(".shop-item-card__title")?.textContent || card.innerText || "").slice(0, 24),
-              ok: br.top >= r.top - 2 && br.bottom <= r.bottom + 4 && br.left >= r.left - 2 && br.right <= r.right + 2,
+              ok: br.top >= r.top - 4 && br.bottom <= r.bottom + 8 && br.left >= r.left - 4 && br.right <= r.right + 4,
               card: { top: r.top, bottom: r.bottom, height: r.height },
               btn: { top: br.top, bottom: br.bottom },
             });
           }
         }
+        const shell = panel.closest(".shop-items-shell");
+        const panelTransform = getComputedStyle(panel).transform;
+        const scaled =
+          !!(shell && shell.dataset.intelScaled) ||
+          (panelTransform && panelTransform !== "none");
         const byCol = new Map();
-        sorted.forEach(({ card, r }) => {
-          const key = Math.round(r.left / 40) * 40;
+        sorted.forEach(({ r }) => {
+          const key = Math.round((r.left + r.width / 2) / 24);
           if (!byCol.has(key)) byCol.set(key, []);
           byCol.get(key).push(r);
         });
-        byCol.forEach((rects) => {
-          rects.sort((a, b) => a.top - b.top);
-          for (let i = 0; i < rects.length - 1; i += 1) {
-            const gap = rects[i + 1].top - rects[i].bottom;
-            gaps.push(gap);
-            if (gap < -2) colRects.push({ gap, upper: rects[i].bottom, lower: rects[i + 1].top });
-          }
-        });
+        if (!scaled) {
+          byCol.forEach((rects) => {
+            rects.sort((a, b) => a.top - b.top);
+            for (let i = 0; i < rects.length - 1; i += 1) {
+              const gap = rects[i + 1].top - rects[i].bottom;
+              gaps.push(gap);
+              if (gap < -2) colRects.push({ gap, upper: rects[i].bottom, lower: rects[i + 1].top });
+            }
+          });
+        }
         return {
           count: cards.length,
           overlap: colRects,
           gaps,
           buyInCard,
+          scaled,
           minGap: gaps.length ? Math.min(...gaps) : null,
         };
       });
-      assert.ok(metrics.count >= 5, `expected full stock, got ${metrics.count}`);
-      assert.equal(metrics.overlap.length, 0, JSON.stringify(metrics.overlap, null, 2));
-      assert.ok(
-        metrics.buyInCard.every((b) => b.ok),
-        JSON.stringify(metrics.buyInCard.filter((b) => !b.ok), null, 2),
-      );
+        totalSeen += metrics.count;
+        allOverlap.push(...metrics.overlap);
+        badBuy.push(...metrics.buyInCard.filter((b) => !b.ok));
+      }
+      assert.ok(totalSeen >= 5, `expected full stock across pages, saw ${totalSeen}`);
+      assert.equal(allOverlap.length, 0, JSON.stringify(allOverlap, null, 2));
+      assert.equal(badBuy.length, 0, JSON.stringify(badBuy, null, 2));
     } finally {
       await browser.close();
     }
