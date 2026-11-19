@@ -46,14 +46,14 @@ const BASELINES = {
   "R-main-i": {
     label: "R-main-i",
     branch: "baseline/r-main-instrumented",
-    rulesCommit: "81ec337885350491377fa7fbfb222cb87a0d633b",
+    rulesCommit: "28fb8d1108a9d69429b6b64f3b140bd059497150",
     ref: "baseline/r-main-instrumented",
     instrumentedFrom: "7d649ef894dda8c3dbad77760e5fd3ecc943b4ba",
   },
   "R78-i": {
     label: "R78-i",
     branch: "baseline/r78-instrumented",
-    rulesCommit: "0dffccf7e7d864ab1c9de24d576d3c3c9f0bfd39",
+    rulesCommit: "580ac14f3df19c03b0be763c6fdb2e086a88b836",
     ref: "baseline/r78-instrumented",
     instrumentedFrom: "59e11dcf92db3fccba1e44f9ac57f801710577d0",
   },
