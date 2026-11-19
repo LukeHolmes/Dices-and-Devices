@@ -194,6 +194,10 @@ test("Phase 6c safehouse and favicon polish", () => {
   assert.match(storySource, /PANEL_ART_AVAILABLE/);
   assert.match(appSource, /PORTRAIT_ART/);
   assert.match(appSource, /assets\/art\/personas\/card-counter\.webp/);
+  assert.match(appSource, /FACE_SYMBOL_ART/);
+  assert.match(appSource, /ITEM_ART/);
+  assert.match(appSource, /assets\/art\/hardware\/loaded-die\.webp/);
+  assert.match(appSource, /assets\/art\/contraband\/gold-face\.webp/);
 });
 
 test("Pro polish roll and transition hooks", () => {
