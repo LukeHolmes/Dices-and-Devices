@@ -5256,6 +5256,116 @@
             font-weight: 800 !important;
         }
     }
+
+    /* —— Look-and-feel pass (wireframe-faithful composition; CSS-only HUD strip) —— */
+    #root-gutterbones[data-look-and-feel="1"] .street-ledger-top--unified {
+        border-radius: 4px;
+        background: linear-gradient(180deg, #1a1412 0%, #0e0c0b 100%);
+        border: 1px solid rgba(74, 53, 32, 0.55);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 2px 6px rgba(0, 0, 0, 0.35);
+        padding: 0.2rem 0.35rem;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-bar {
+        border-radius: 3px !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        gap: 0 !important;
+        padding: 0.12rem 0 !important;
+        flex-wrap: nowrap !important;
+        overflow: hidden;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 1.75rem;
+        padding: 0.14rem 0.45rem !important;
+        border-right: 1px solid rgba(214, 184, 92, 0.12);
+        background: transparent !important;
+        color: #e8e6e1 !important;
+        font-weight: 700;
+        text-shadow: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment:last-child {
+        border-right: 0;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment--round {
+        flex: 0 0 auto;
+        color: #f4f1e8 !important;
+        letter-spacing: 0.06em;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment--quota {
+        flex: 1 1 6rem;
+        background: linear-gradient(180deg, rgba(24, 18, 16, 0.65), rgba(14, 11, 10, 0.85)) !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-quota-track {
+        border: 1px solid rgba(110, 29, 36, 0.55);
+        background: rgba(9, 7, 6, 0.9);
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-quota-fill {
+        background: linear-gradient(90deg, #6e1d24, #b91c1c, #f59e0b) !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-quota-nums {
+        color: #e8e6e1 !important;
+        font-weight: 700;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment--cash,
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment--debt,
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment--pill {
+        background: transparent !important;
+        color: #d6b85c !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-status-segment--debt-clear {
+        opacity: 0.55;
+    }
+    #root-gutterbones[data-look-and-feel="1"] [data-layout-key="play-alley"]::before,
+    #root-gutterbones[data-look-and-feel="1"] [data-layout-key="play-alley"]::after {
+        content: "";
+        position: absolute;
+        top: 8%;
+        bottom: 12%;
+        width: 12%;
+        max-width: 88px;
+        pointer-events: none;
+        z-index: 6;
+        opacity: 0.35;
+        background: linear-gradient(90deg, rgba(18, 17, 19, 0.85), transparent);
+    }
+    #root-gutterbones[data-look-and-feel="1"] [data-layout-key="play-alley"]::before {
+        left: 0;
+    }
+    #root-gutterbones[data-look-and-feel="1"] [data-layout-key="play-alley"]::after {
+        right: 0;
+        transform: scaleX(-1);
+    }
+    #root-gutterbones[data-look-and-feel="1"] .play-dice-lane::before {
+        content: "";
+        position: absolute;
+        left: 4%;
+        right: 4%;
+        top: 58%;
+        bottom: -6%;
+        z-index: -1;
+        pointer-events: none;
+        border-radius: clamp(10px, 2vw, 22px);
+        background-color: #6e1d24;
+        background-image:
+            radial-gradient(#140b0c55 0.8px, transparent 1px),
+            radial-gradient(#bd746320 0.7px, transparent 1.2px);
+        background-size: 7px 7px, 11px 11px;
+        box-shadow:
+            inset 0 0 0 3px #9b642c,
+            inset 0 0 0 6px #21140f,
+            inset 0 0 22px #1a080c,
+            0 6px 14px rgba(0, 0, 0, 0.45);
+        opacity: 0.92;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .felt-smoke-wisp {
+        display: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-prop {
+        opacity: 0.88;
+    }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
@@ -13725,6 +13835,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!rootEl) return;
             rootEl.dataset.uiRedesign = '1';
             rootEl.dataset.batch52Art = '1';
+            rootEl.dataset.lookAndFeel = '1';
         }, []);
 
         useEffect(() => {
