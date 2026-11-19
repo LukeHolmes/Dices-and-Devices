@@ -49,6 +49,10 @@ console.log("\n=== check:fast — matchbook payout row labels (8 viewports) ===\
 code = run("node", ["--test", "--test-timeout=600000", "tests/matchbook-payout-labels.test.cjs"]);
 if (code !== 0) process.exit(code);
 
+console.log("\n=== check:fast — shop plate / NEXT JOB labels (768 / 1024 / 1920) ===\n");
+code = run("node", ["--test", "--test-timeout=300000", "tests/shop-plate-labels.test.cjs"]);
+if (code !== 0) process.exit(code);
+
 const fullLayout = process.env.FULL_LAYOUT_REPLAY === "1";
 if (fullLayout) {
   console.log("\n=== check:fast (blocking) — test:layout (FULL_LAYOUT_REPLAY=1) ===\n");

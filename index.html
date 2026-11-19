@@ -420,6 +420,15 @@
         height: 0;
         display: none;
     }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-routes-scroll::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+        display: block;
+    }
     @media (max-height: 420px) {
         #root-gutterbones [data-layout-key="run-intel-floating"] {
             top: 0.35rem;
@@ -1141,7 +1150,7 @@
             min-height: 0;
             max-height: 48dvh;
         }
-        @media (min-width: 640px) {
+        @media (min-width: 1024px) {
             #root-gutterbones [data-layout-key="shop-layout"] {
                 flex-direction: row !important;
                 align-items: stretch;
@@ -1156,6 +1165,49 @@
                 width: auto !important;
                 max-width: 55%;
                 max-height: 100%;
+            }
+        }
+        @media (max-width: 1023px) {
+            #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+                flex-direction: column !important;
+                gap: 0.65rem !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] [data-tutorial="shop-panel"] {
+                flex: 0 1 auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                max-height: min(52dvh, calc(100dvh - 22rem)) !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+                flex: 1 1 auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                max-height: min(50dvh, calc(100dvh - 16.5rem)) !important;
+                overflow: hidden !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+                transform: none !important;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                max-height: 100% !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
+            #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+                transform: none !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-next-job-header {
+                font-size: clamp(1rem, 2.8vw, 1.25rem) !important;
+            }
+            #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-route-pagination {
+                font-size: 11px;
+            }
+            #root-gutterbones[data-phase="SHOP"] .shop-options-fence,
+            #root-gutterbones[data-phase="SHOP"] .shop-options-fence .space-y-2 {
+                max-height: none !important;
             }
         }
         #root-gutterbones [data-layout-key="shop-stash-panel"],
@@ -1192,7 +1244,7 @@
             padding-bottom: 0.15rem;
         }
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-next-job-header {
-            font-size: 0.75rem !important;
+            font-size: clamp(11px, 0.95rem, 1.15rem) !important;
         }
         @media (min-width: 768px) and (max-height: 520px) {
             #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence {
@@ -2132,6 +2184,21 @@
             line-height: 1.15;
         }
     }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(198, 139, 22, 0.55) rgba(0, 0, 0, 0.45);
+        mask-image: linear-gradient(to bottom, #000 0%, #000 calc(100% - 2.25rem), rgba(0, 0, 0, 0.45) 100%);
+        -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 calc(100% - 2.25rem), rgba(0, 0, 0, 0.45) 100%);
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll::-webkit-scrollbar {
+        width: 9px;
+        display: block;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll::-webkit-scrollbar-thumb {
+        background: rgba(198, 139, 22, 0.5);
+        border-radius: 6px;
+        border: 2px solid rgba(0, 0, 0, 0.35);
+    }
     @media (min-width: 1024px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             display: flex !important;
@@ -2948,26 +3015,32 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    max-width: 100%;
     min-height: 2rem;
-    padding: 0.25rem 1.35rem;
+    min-width: min(100%, 12rem);
+    padding: 0.35rem 1.75rem;
     margin-bottom: 0.5rem;
-    border: 10px solid transparent;
+    border: 12px solid transparent;
     border-image-source: url('assets/art/shop/section-header-blank.webp');
     border-image-slice: 48 80 fill;
-    border-image-width: 10px 18px;
+    border-image-width: 12px 28px;
     border-image-repeat: stretch;
     background-color: #121113;
     box-sizing: border-box;
-    overflow: visible;
+    overflow: hidden;
   }
   #root-gutterbones .shop-section-header__label {
     position: relative;
     z-index: 1;
     color: #f5ecd6;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
+    font-size: clamp(10px, 2.4vw, 12px);
     text-align: center;
-    line-height: 1.15;
+    line-height: 1.2;
+    max-width: 100%;
+    white-space: nowrap;
     text-shadow:
       0 1px 0 rgba(255, 255, 255, 0.28),
       0 0 1px #1a1204,
@@ -5785,6 +5858,13 @@
     #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .alley-critter-rat-webp,
     #root-gutterbones[data-look-and-feel="1"][data-ambient-pause="1"] .alley-critter-rat-webp {
         animation-play-state: paused !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .batch52-ashtray-visual {
+        filter: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .laf-ashtray-ember,
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .laf-ashtray-smoke {
+        opacity: 0.25;
     }
     #root-gutterbones[data-look-and-feel="1"] .laf-ambient-bulb {
         left: 42%;
@@ -14234,17 +14314,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             round,
             shopRefreshCost
         ], {
-            enabled: phase === 'SHOP' && typeof window !== 'undefined'
-                && window.innerWidth >= 768 && window.innerWidth < 1024
-                && window.innerHeight >= 820,
-            minScale: (() => {
-                if (typeof window === 'undefined') return 0.62;
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                if (h < 450) return w < 420 ? 0.6 : 0.62;
-                if (h <= 820) return 0.62;
-                return 0.72;
-            })()
+            enabled: false
         });
 
         usePanelScaleToFit(shopItemsShellRef, shopItemsBodyRef, [
@@ -20040,6 +20110,91 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         panel: { left: pr.left, top: pr.top, right: pr.right, bottom: pr.bottom }
                     };
                 },
+                auditShopPlateLabels: ({ minFontPx = 11 } = {}) => {
+                    const root = document.getElementById('root-gutterbones');
+                    if (!root || root.getAttribute('data-phase') !== 'SHOP') {
+                        return { ok: true, skipped: true, reason: 'not-shop' };
+                    }
+                    const panel = document.querySelector('[data-layout-key="shop-routes-panel"]');
+                    if (!panel) return { ok: false, reason: 'no-routes-panel' };
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const bad = [];
+                    const scroll = panel.querySelector('.shop-routes-scroll');
+                    if (scroll instanceof HTMLElement) {
+                        const st = window.getComputedStyle(scroll);
+                        const tr = st.transform;
+                        if (tr && tr !== 'none') {
+                            bad.push({ kind: 'routes-scaled', transform: tr, dataset: scroll.dataset.intelScaled || null });
+                        }
+                        const scaleVar = scroll.style.getPropertyValue('--shop-route-scale');
+                        if (scaleVar && scaleVar !== '1') {
+                            bad.push({ kind: 'route-scale-var', value: scaleVar });
+                        }
+                    }
+                    panel.querySelectorAll('.shop-section-header__label').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden') return;
+                        const header = el.closest('.shop-section-header');
+                        const text = (el.textContent || '').trim();
+                        if (!text || !header) return;
+                        const hr = header.getBoundingClientRect();
+                        const lr = el.getBoundingClientRect();
+                        if (lr.width < 2 || lr.height < 2 || hr.width < 2 || hr.height < 2) return;
+                        const pad = 10;
+                        if (lr.left < hr.left + pad - 0.5 || lr.right > hr.right - pad + 0.5) {
+                            bad.push({
+                                kind: 'plate-overflow',
+                                text: text.slice(0, 40),
+                                label: { left: lr.left, right: lr.right },
+                                plate: { left: hr.left, right: hr.right }
+                            });
+                        }
+                        if (el.scrollWidth > el.clientWidth + 1) {
+                            bad.push({
+                                kind: 'label-clip',
+                                text: text.slice(0, 40),
+                                scrollWidth: el.scrollWidth,
+                                clientWidth: el.clientWidth
+                            });
+                        }
+                        const fs = parseFloat(style.fontSize);
+                        if (Number.isFinite(fs) && fs + 0.25 < minFontPx) {
+                            bad.push({ kind: 'font-small', text: text.slice(0, 32), fontSize: fs });
+                        }
+                    });
+                    panel.querySelectorAll('.shop-route-pagination, [data-layout-key="shop-next-job-header"]').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden') return;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2) return;
+                        const pr = panel.getBoundingClientRect();
+                        if (r.left < pr.left + 2 - 0.5 || r.right > pr.right - 2 + 0.5) {
+                            bad.push({
+                                kind: 'panel-edge',
+                                key: el.getAttribute('data-layout-key') || el.className,
+                                left: r.left,
+                                right: r.right,
+                                panelRight: pr.right
+                            });
+                        }
+                        if (el.scrollWidth > el.clientWidth + 1) {
+                            bad.push({
+                                kind: 'label-clip',
+                                text: (el.textContent || '').trim().slice(0, 48),
+                                scrollWidth: el.scrollWidth,
+                                clientWidth: el.clientWidth
+                            });
+                        }
+                        const fs = parseFloat(style.fontSize);
+                        if (Number.isFinite(fs) && fs + 0.25 < minFontPx) {
+                            bad.push({ kind: 'font-small', label: (el.textContent || '').trim().slice(0, 24), fontSize: fs });
+                        }
+                    });
+                    return { ok: bad.length === 0, bad: bad.slice(0, 20), count: bad.length, vw, vh, minFontPx };
+                },
                 auditPhoneTapTargets: (minPx = 32) => {
                     const vw = window.innerWidth;
                     if (vw > 430) return { ok: true, skipped: true, vw };
@@ -20107,9 +20262,29 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (r.bottom <= 0 || r.top >= vh || r.right <= 0 || r.left >= vw) return;
                         const inView = r.top >= -0.5 && r.left >= -0.5 && r.bottom <= vh + 0.5 && r.right <= vw + 0.5;
                         if (!inView) {
+                            const layoutKey = el.getAttribute('data-layout-key');
+                            const scrollHost = el.closest('.shop-routes-scroll');
+                            if (
+                                layoutKey === 'shop-route-card'
+                                && root.getAttribute('data-phase') === 'SHOP'
+                                && scrollHost instanceof HTMLElement
+                            ) {
+                                const hostStyle = window.getComputedStyle(scrollHost);
+                                const overflowY = hostStyle.overflowY;
+                                if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay')
+                                    && scrollHost.scrollHeight > scrollHost.clientHeight + 1) {
+                                    const hostR = scrollHost.getBoundingClientRect();
+                                    if (hostR.top >= -2 && hostR.left >= -2 && hostR.width > 32 && hostR.height > 48) {
+                                        const bottomInHost = el.offsetTop + el.offsetHeight;
+                                        if (el.offsetTop >= -2 && bottomInHost <= scrollHost.scrollHeight + 4) {
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
                             interBad.push({
                                 kind: 'oob',
-                                key: el.getAttribute('data-layout-key'),
+                                key: layoutKey,
                                 tag: el.tagName,
                                 top: r.top,
                                 bottom: r.bottom,
@@ -21399,7 +21574,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 {phase === 'SHOP' && (
                     <div className="gb-screen p-[var(--gb-pad)] z-[300] relative">
                         <div className="shop-counting-cash-backdrop scene-backdrop-fade" aria-hidden></div>
-                        <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col md:flex-row gap-3 md:gap-6 relative z-10 min-h-0">
+                        <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col lg:flex-row gap-3 lg:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 ? <span className="block text-sm text-red-300 font-normal">IOU ${debt}</span> : null}</div></div></div>
                                 <p className="text-xs font-mono text-amber-200/85 mb-2 leading-snug line-clamp-2 md:line-clamp-none">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
@@ -21490,7 +21665,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 />
                                 </div>
                             </div>
-                            <div data-layout-key="shop-routes-panel" className="w-full md:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 md:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                            <div data-layout-key="shop-routes-panel" className="w-full lg:w-1/3 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 p-3 lg:p-5 rounded-xl shadow-2xl flex flex-col overflow-hidden">
                                 <div ref={shopRoutesShellRef} className="shop-routes-scroll overscroll-contain pr-0.5">
                                 <div className="shop-routes-unscaled shrink-0">
                                 <div className="mb-3 border-b border-red-900 pb-2">

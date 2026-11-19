@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { chromium } from 'playwright';
-import { spawn } from 'node:child_process';
+import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -15,17 +15,27 @@ const OUT = '/opt/cursor/artifacts';
 fs.mkdirSync(OUT, { recursive: true });
 
 const PORT = 8824 + Math.floor(Math.random() * 50);
-const server = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1'], {
-  cwd: ROOT,
-  stdio: 'ignore',
+const server = http.createServer((req, res) => {
+  const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+  const rel = urlPath === '/' ? '/index.html' : urlPath;
+  const filePath = path.join(ROOT, rel.replace(/^\//, ''));
+  if (!filePath.startsWith(ROOT) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    res.statusCode = 404;
+    res.end('Not found');
+    return;
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  fs.createReadStream(filePath).pipe(res);
 });
-await new Promise((r) => setTimeout(r, 400));
+await new Promise((resolve, reject) => {
+  server.listen(PORT, '127.0.0.1', (err) => (err ? reject(err) : resolve()));
+});
 const base = `http://127.0.0.1:${PORT}`;
 
 async function bootPlay(page, vp) {
   await page.setViewportSize(vp);
-  await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+  await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 180_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 180_000 });
   const payload = plain(
     createGame(fixtures.snapshot()).api.normalizeSavedRun(
       fixtures.run({
@@ -59,9 +69,16 @@ async function bootPlay(page, vp) {
 }
 
 const browser = await chromium.launch({ headless: true });
+const defaultTimeoutMs = 180_000;
+async function openPage() {
+  const page = await browser.newPage();
+  page.setDefaultTimeout(defaultTimeoutMs);
+  page.setDefaultNavigationTimeout(defaultTimeoutMs);
+  return page;
+}
 
 async function capture1920() {
-  const page = await browser.newPage();
+  const page = await openPage();
   await bootPlay(page, { width: 1920, height: 1080 });
   await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_ready.png`) });
   await page.click('[data-tutorial="roll-btn"]');
@@ -75,7 +92,7 @@ async function capture1920() {
 }
 
 async function captureViewport(vp, name) {
-  const page = await browser.newPage();
+  const page = await openPage();
   await bootPlay(page, vp);
   await page.screenshot({ path: path.join(OUT, `${label}_${name}_ready.png`) });
   await page.close();
@@ -83,8 +100,8 @@ async function captureViewport(vp, name) {
 
 async function bootShop(page, vp) {
   await page.setViewportSize(vp);
-  await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+  await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 180_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 180_000 });
   const payload = plain(
     createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.shopBusy()),
   );
@@ -106,14 +123,14 @@ async function bootShop(page, vp) {
 }
 
 async function captureShop(vp, name) {
-  const page = await browser.newPage();
+  const page = await openPage();
   await bootShop(page, vp);
   await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`) });
   await page.close();
 }
 
 async function capture390Drawer() {
-  const page = await browser.newPage();
+  const page = await openPage();
   await bootPlay(page, { width: 390, height: 844 });
   const openBtn = page.locator('[data-layout-key="mobile-score-sheet-open"]');
   if (await openBtn.count()) {
@@ -129,11 +146,13 @@ await capture1920();
 await captureShop({ width: 1920, height: 1080 }, '1920x1080');
 await captureViewport({ width: 1366, height: 768 }, '1366x768');
 if (label === 'after') {
+  await captureShop({ width: 1024, height: 768 }, '1024x768');
   await captureViewport({ width: 768, height: 1024 }, '768x1024');
   await captureShop({ width: 768, height: 1024 }, '768x1024');
   await captureViewport({ width: 390, height: 844 }, '390x844');
+  await captureShop({ width: 390, height: 844 }, '390x844');
   await capture390Drawer();
 }
 await browser.close();
-server.kill();
+await new Promise((resolve) => server.close(resolve));
 console.log('done', label, ROOT);
