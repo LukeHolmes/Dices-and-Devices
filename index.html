@@ -1774,12 +1774,29 @@
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             flex: 0 1 auto !important;
-            max-height: min(42dvh, calc(100dvh - 18rem)) !important;
+            max-height: min(46dvh, calc(100dvh - 16.5rem)) !important;
             min-height: 0 !important;
             overflow-y: auto !important;
             position: relative;
             z-index: 8;
             pointer-events: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+            margin-bottom: 0.5rem !important;
+            padding: 0.45rem 0.55rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
+            max-height: 3.5rem;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence .space-y-2 {
+            max-height: 2.65rem;
+            overflow-y: auto;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-route-pagination {
+            margin-top: 0.15rem;
+            margin-bottom: 0.1rem;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] button,
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] [data-layout-key="shop-route-card"],
