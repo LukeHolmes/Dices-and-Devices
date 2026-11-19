@@ -20,7 +20,7 @@ Cause table artifact: `/opt/cursor/artifacts/v7-mismatch-cause-table.json`.
 ## Harness follow-ups (not pilot)
 
 - Phase-align quiescence + canonical merge for bot decisions (committed after r2).
-- R-main **hook-off** parity vs pin still fails at rid 0 on `807d884` (module `gbSimGameplayRandom` call sites); test skips R-main until next instrumented bump. R78 pair remains asserted.
+- **Hook-off** (no `SIM_SEED_GAME`): both R-main-i (`807d884`) and R78-i (`abf7cb8`) diverge from pin at rid 0 — module `gbSimGameplayRandom` call sites. Parity tests are skipped pending the next instrumented bump (no rules/balance changes on this branch).
 
 ## Pilot / 10–19
 
