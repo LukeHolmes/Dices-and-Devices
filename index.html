@@ -1885,7 +1885,13 @@
                 scrollbar-gutter: stable;
             }
             #root-gutterbones[data-phase="SHOP"] .shop-item-card {
-                min-height: 5.5rem !important;
+                min-height: min-content !important;
+                height: max-content;
+            }
+        }
+        @media (max-width: 430px) {
+            #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+                grid-template-columns: minmax(0, 1fr) !important;
             }
         }
         @media (max-width: 430px) {
@@ -2661,8 +2667,8 @@
   }
   @media (min-width: 821px) {
     #root-gutterbones[data-phase="SHOP"] .shop-item-card {
-      min-height: 0 !important;
-      height: auto;
+      min-height: min-content !important;
+      height: max-content;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
       max-height: none;
