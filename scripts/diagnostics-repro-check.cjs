@@ -272,7 +272,10 @@ async function main() {
   }
 
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const batchId = `REPRO-DEFM005-${stamp}-vclock-boot`;
+  const instrumentedGate = baselines.some((b) => String(b).endsWith("-i"));
+  const batchId = instrumentedGate
+    ? `REPRO-DEFM005-${stamp}-instrumented`
+    : `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   fs.mkdirSync(RUNS_DIR, { recursive: true });
@@ -284,7 +287,9 @@ async function main() {
   const gateSummaryPath = path.join(
     TRACKING_DIR,
     "defects/measurement",
-    `DEF-M-005-gate-${stamp}-vclock-boot.json`,
+    instrumentedGate
+      ? `DEF-M-005-gate-${stamp}-instrumented.json`
+      : `DEF-M-005-gate-${stamp}-vclock-boot.json`,
   );
   const totals = Object.values(report.baselines).reduce(
     (acc, b) => ({
@@ -320,10 +325,17 @@ async function main() {
         gate_batch_id: batchId,
         harness_mode: "node_paced_playwright_clock_boot",
         harness_shim_rev: "2026-11-19-harness-clock-v3",
-        prior_gate_records: [
-          { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
-          { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },
-        ],
+        prior_gate_records: instrumentedGate
+          ? [
+              { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
+              { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },
+              { batch: "REPRO-DEFM005-20261119-vclock-boot", matched: 2, total: 20, baselines: "R-main,R78" },
+            ]
+          : [
+              { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
+              { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },
+              { batch: "REPRO-DEFM005-20261119-vclock-boot", matched: 2, total: 20 },
+            ],
         generatedAt: report.generatedAt,
         denominators: totals,
         perBaseline: Object.fromEntries(

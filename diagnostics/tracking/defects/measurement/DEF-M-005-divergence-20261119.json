@@ -1,49 +1,49 @@
 {
   "catalog": [
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "0",
       "causeCategory": "RNG",
       "firstDivergingStep": {
-        "index": 2,
+        "index": 4,
         "a": {
-          "step": 2,
+          "step": 4,
           "phase": "PLAY",
           "round": 1,
-          "score": 60,
-          "gold": 23,
-          "hands": 3,
+          "score": 91,
+          "gold": 49,
+          "hands": 2,
           "target": 75,
-          "rngDraws": 90983
+          "rngDraws": 91284
         },
         "b": {
-          "step": 2,
+          "step": 4,
           "phase": "PLAY",
           "round": 1,
-          "score": 60,
-          "gold": 23,
-          "hands": 3,
+          "score": 91,
+          "gold": 49,
+          "hands": 2,
           "target": 75,
-          "rngDraws": 90984
+          "rngDraws": 91295
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 49,
-          "digest": "994416fc9d0ddfeda15a5f21f38042268f45842d75b4247a77d9d127b9a9ca31"
+          "maxRound": 8,
+          "steps": 80,
+          "digest": "731ac637e6278ef8e8deca3f902a0202d1d8295e677677be8f1d19a94aa7bf5e"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 83,
-          "digest": "d1a7a71170fbd2c82622d45f433a8dde139e37f67ac96e9544b44501d2345701"
+          "maxRound": 9,
+          "steps": 92,
+          "digest": "f4314ac163c0dc6266948f7eb7dfc6ee4b8d297aa060b9e4e03f87c1774792d6"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "1",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -56,7 +56,7 @@
           "gold": 23,
           "hands": 3,
           "target": 75,
-          "rngDraws": 90940
+          "rngDraws": 90950
         },
         "b": {
           "step": 2,
@@ -66,69 +66,27 @@
           "gold": 23,
           "hands": 3,
           "target": 75,
-          "rngDraws": 90950
+          "rngDraws": 90951
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 2,
-          "steps": 22,
-          "digest": "86d753ed1566b04f75abfb480308aa8a73fb96332d583743b33f16b53c80c2c6"
+          "maxRound": 4,
+          "steps": 36,
+          "digest": "4f3813d5f93fc69ba3ab1e4e201acda308ad7383e0d221a748cc0fbae00d4444"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 5,
-          "steps": 56,
-          "digest": "202d9119d52349ecc6dacb62381ca5df5a53df67426dddb5d9eea3c7f22f0473"
+          "steps": 51,
+          "digest": "3614d26fe2ee03ec672843f92ea45a6f1cb24f98cce385aa4cab97bb109fcb58"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "2",
-      "causeCategory": "RNG",
-      "firstDivergingStep": {
-        "index": 0,
-        "a": {
-          "step": 0,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
-          "target": 75,
-          "rngDraws": 90876
-        },
-        "b": {
-          "step": 0,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
-          "target": 75,
-          "rngDraws": 90877
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 49,
-          "digest": "cb52a2932a9ddf80e1aafb207b17e6a55651af467bdf1d9f9ea1cad9ec46c760"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 9,
-          "steps": 96,
-          "digest": "83a9250bc5f1f0b1f76afe1e09ac680b33fdf3172005db173a3f74e6abc5ea17"
-        }
-      }
-    },
-    {
-      "baseline": "R-main",
-      "rid": "3",
       "causeCategory": "RNG",
       "firstDivergingStep": {
         "index": 0,
@@ -150,7 +108,49 @@
           "gold": 22,
           "hands": 4,
           "target": 75,
-          "rngDraws": 90876
+          "rngDraws": 90877
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 6,
+          "steps": 65,
+          "digest": "9e61c1e87b976432189da27a4c8935e2d08ba3e380fb4a6d7f7a5b88c6252fc3"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 8,
+          "steps": 78,
+          "digest": "02d0b679601709fa0c89dc70021e15fc2dace41cde4705d992e5227a5b1ded09"
+        }
+      }
+    },
+    {
+      "baseline": "R-main-i",
+      "rid": "3",
+      "causeCategory": "RNG",
+      "firstDivergingStep": {
+        "index": 2,
+        "a": {
+          "step": 2,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 26,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "rngDraws": 91097
+        },
+        "b": {
+          "step": 2,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 26,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "rngDraws": 91099
         }
       },
       "tuple": {
@@ -158,102 +158,102 @@
           "outcome": "BUST",
           "maxRound": 1,
           "steps": 13,
-          "digest": "e4461131cc087e4c0b13238cf81aa6ba7b80ab49e243a9310502cc88ef78a9f0"
+          "digest": "09491ba6e1f331cd05100e0a65aab168a8449b0eeb39ef46e7682f8861f98d70"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 79,
-          "digest": "083ebf7b8f288f019c608a408ea7e6a0f1613ff6e5c86b8b2d6e470fdb731e35"
+          "maxRound": 8,
+          "steps": 73,
+          "digest": "2b6d7786d2fe076d6cc25c518317473d69757797062e523a37c522309a1def77"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "4",
       "causeCategory": "RNG",
       "firstDivergingStep": {
-        "index": 0,
+        "index": 6,
         "a": {
-          "step": 0,
+          "step": 6,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 53,
+          "gold": 24,
+          "hands": 2,
           "target": 75,
-          "rngDraws": 90730
+          "rngDraws": 91140
         },
         "b": {
-          "step": 0,
+          "step": 6,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 53,
+          "gold": 24,
+          "hands": 2,
           "target": 75,
-          "rngDraws": 90719
+          "rngDraws": 91150
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 17,
-          "digest": "20cb3421fd29302ab24b7613e651540a21af7b7dd198f4724eb1f96597b711b6"
+          "maxRound": 6,
+          "steps": 84,
+          "digest": "4f30bb0e34f2b9540ee74e5cda158d73075e6da6de4fe2a1581eac8fb0efadc3"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 91,
-          "digest": "edc2a2dbec8b2e03a45d2c0582204fb2e52fb337da357222bec2d05265bd39a9"
+          "maxRound": 8,
+          "steps": 122,
+          "digest": "78bacfbe7088a2c910ee1be94a9b15c18392f0dd3babd38701d1e094b6c2c025"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "5",
       "causeCategory": "RNG",
       "firstDivergingStep": {
-        "index": 0,
+        "index": 5,
         "a": {
-          "step": 0,
+          "step": 5,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 40,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
-          "rngDraws": 90730
+          "rngDraws": 91072
         },
         "b": {
-          "step": 0,
+          "step": 5,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 40,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
-          "rngDraws": 90719
+          "rngDraws": 91060
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 109,
-          "digest": "2478708937cc6001c5c02d7db6a50b5590e141a5365cae3be2ece602b8254630"
+          "maxRound": 7,
+          "steps": 92,
+          "digest": "f5b13ed260053a77e87b49a0e089fbc5fd68dc0ac83919ef78ef1fe7301d736a"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 17,
-          "digest": "19887def39da50a6a3c79d04b1f46ffe942bd942c9b176a8fd59e17457b41f66"
+          "maxRound": 8,
+          "steps": 99,
+          "digest": "71d6276fd5d0f9183c0d9f262c558474605d1717f0d431aeb824b5ed249be350"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "6",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -266,7 +266,7 @@
           "gold": 23,
           "hands": 3,
           "target": 75,
-          "rngDraws": 90951
+          "rngDraws": 90953
         },
         "b": {
           "step": 3,
@@ -276,26 +276,26 @@
           "gold": 23,
           "hands": 3,
           "target": 75,
-          "rngDraws": 90953
+          "rngDraws": 90951
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 71,
-          "digest": "17c8018e1622d60bf2264f19deb232145ef9ec0ad8f590dea1bf217ffdc5245f"
+          "maxRound": 8,
+          "steps": 102,
+          "digest": "3a8adc81147ab092052667779470c22332642a8a49b751be2ee88a76e89437d4"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 17,
-          "digest": "5cbef386e5a23fd871361940b5230a4b96f764ec30693303bf2f4eab004202e4"
+          "maxRound": 7,
+          "steps": 102,
+          "digest": "7e22850101cead15d7fbf84c857d91658fe38f92fc7bfdc6bf3973d73e062a75"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "7",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -304,82 +304,82 @@
           "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 34,
+          "score": 40,
           "gold": 23,
           "hands": 3,
           "target": 75,
-          "rngDraws": 90968
+          "rngDraws": 90969
         },
         "b": {
           "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 34,
+          "score": 40,
           "gold": 23,
           "hands": 3,
           "target": 75,
-          "rngDraws": 90980
+          "rngDraws": 90967
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 2,
-          "steps": 27,
-          "digest": "33189f9abd5b766642e25f80ff724f38165221e29f9c6d2fbf54a254ff582f1a"
+          "maxRound": 6,
+          "steps": 68,
+          "digest": "9184930b689661fe7fa5189f3e2d84bda759937e96f4c6725e66b243e2b44fb2"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 73,
-          "digest": "64c3b68c9af0c835185262dccf5d14ddd3e108d5376af679e4be6e4ebe3fb181"
+          "maxRound": 3,
+          "steps": 36,
+          "digest": "a1c3e1443cdf19872750a2b6f1e7e36a620ba6d132344a5065f16bca72ef553b"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "8",
       "causeCategory": "RNG",
       "firstDivergingStep": {
-        "index": 3,
+        "index": 0,
         "a": {
-          "step": 3,
+          "step": 0,
           "phase": "PLAY",
           "round": 1,
-          "score": 40,
-          "gold": 23,
-          "hands": 3,
+          "score": 0,
+          "gold": 22,
+          "hands": 4,
           "target": 75,
-          "rngDraws": 90980
+          "rngDraws": 90719
         },
         "b": {
-          "step": 3,
+          "step": 0,
           "phase": "PLAY",
           "round": 1,
-          "score": 40,
-          "gold": 23,
-          "hands": 3,
+          "score": 0,
+          "gold": 22,
+          "hands": 4,
           "target": 75,
-          "rngDraws": 90990
+          "rngDraws": 90730
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 62,
-          "digest": "3ee98bb62bb4dd0c3d1d05b964a513bcaca477ad59011ba92fc3aa79cc8b3a09"
+          "maxRound": 6,
+          "steps": 75,
+          "digest": "7f66e586f8284e5a765d90213248813a61b24b4b00f6ce4b4cf5fa4955a31406"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 103,
-          "digest": "abfea20386f4d25c7cecb2f2335f641d8b67ed45123fedf0775e59509f5f56ba"
+          "maxRound": 5,
+          "steps": 65,
+          "digest": "cb31bc9df88251efe13f6b2a2432c087d3d6e7d239e8ec2e43d251513909d5ca"
         }
       }
     },
     {
-      "baseline": "R-main",
+      "baseline": "R-main-i",
       "rid": "9",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -408,20 +408,20 @@
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 65,
-          "digest": "4ecd938ededa0e300132ab8cb95007d007754e6e190ea71f40659327fd701d7a"
+          "maxRound": 6,
+          "steps": 69,
+          "digest": "015b1391bce848b61ab2942aa2a047638494d659be31b98c2b7eedd4d97130e0"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 6,
-          "steps": 70,
-          "digest": "3f0fc456fa83a48867fc93c9468aee5b0f81bdbda0db6bc9e56d435a905a5a22"
+          "steps": 72,
+          "digest": "b6639484cf61bde3fb3453321802f055693ae71b7ed8aed6c506300685185b90"
         }
       }
     },
     {
-      "baseline": "R78",
+      "baseline": "R78-i",
       "rid": "0",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -434,7 +434,7 @@
           "gold": 22,
           "hands": 4,
           "target": 75,
-          "rngDraws": 90759
+          "rngDraws": 90749
         },
         "b": {
           "step": 0,
@@ -444,7 +444,7 @@
           "gold": 22,
           "hands": 4,
           "target": 75,
-          "rngDraws": 90748
+          "rngDraws": 90760
         }
       },
       "tuple": {
@@ -452,18 +452,18 @@
           "outcome": "BUST",
           "maxRound": 1,
           "steps": 8000,
-          "digest": "c05328f26d541e797b677a3968697f1d7a574b9a8736081f55352e8c6116ebab"
+          "digest": "d33a3259c65147837f1c0ac4ea94110f76e585ad3f9a8d72495b524b0a788747"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 1,
           "steps": 8000,
-          "digest": "41e929db20f2bd49bc3f4ffa5a59507e03810e9d59666f51019bf4153c2c8d2f"
+          "digest": "c05328f26d541e797b677a3968697f1d7a574b9a8736081f55352e8c6116ebab"
         }
       }
     },
     {
-      "baseline": "R78",
+      "baseline": "R78-i",
       "rid": "1",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -476,133 +476,7 @@
           "gold": 22,
           "hands": 4,
           "target": 75,
-          "rngDraws": 90760
-        },
-        "b": {
-          "step": 0,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
-          "target": 75,
           "rngDraws": 90749
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "d9feb1937f389a1b52f26cddd5fa338bfc646fec0eed13dee0a15d6d6a384a3c"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "e0008ecd55be7022c876b53c7842cf0f26f6f622acdcb0526517b2f94a49a685"
-        }
-      }
-    },
-    {
-      "baseline": "R78",
-      "rid": "2",
-      "causeCategory": "RNG",
-      "firstDivergingStep": {
-        "index": 0,
-        "a": {
-          "step": 0,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
-          "target": 75,
-          "rngDraws": 90906
-        },
-        "b": {
-          "step": 0,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
-          "target": 75,
-          "rngDraws": 90895
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 13,
-          "digest": "4a1be4d77834c75261cc436a21f8e4cf316e1f7b47d6d8077a20b2342d909235"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "ab87aceb62a3d4a95f1a5ecf30184f2e8648b815bf80bee749c5bd84a9cd267c"
-        }
-      }
-    },
-    {
-      "baseline": "R78",
-      "rid": "3",
-      "causeCategory": "RNG",
-      "firstDivergingStep": {
-        "index": 4,
-        "a": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 27,
-          "gold": 24,
-          "hands": 2,
-          "target": 75,
-          "rngDraws": 91287
-        },
-        "b": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 27,
-          "gold": 24,
-          "hands": 2,
-          "target": 75,
-          "rngDraws": 91286
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "3ebda9c242a698d3abcb2ed5cbd52aaba37fdcb09ea538b80c4150cd280e7574"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "8fbb9ad0cb4842ff5c44f643713b27a9205cb02f53be01b56078d955b850363c"
-        }
-      }
-    },
-    {
-      "baseline": "R78",
-      "rid": "4",
-      "causeCategory": "RNG",
-      "firstDivergingStep": {
-        "index": 0,
-        "a": {
-          "step": 0,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
-          "target": 75,
-          "rngDraws": 90759
         },
         "b": {
           "step": 0,
@@ -619,19 +493,103 @@
         "a": {
           "outcome": "BUST",
           "maxRound": 1,
-          "steps": 8000,
-          "digest": "c352bd9073eec2efefabd6bf06333cbc5240df719a624ac122aac4c79e74c3ec"
+          "steps": 13,
+          "digest": "94db767f0ba77168002f74412aa0de379a55a5cc7c1b4708e39d94615dd0bc1b"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 1,
           "steps": 8000,
-          "digest": "6070e7d9085efac421e0e448b80b9e2363561ffe73b28a5bf1088732252b3860"
+          "digest": "a08c33ff8bfe4fa6ba3392aebb9f3eb7bdf8cf2fbfc51dd6ccc53f2ab56e3db5"
         }
       }
     },
     {
-      "baseline": "R78",
+      "baseline": "R78-i",
+      "rid": "2",
+      "causeCategory": "RNG",
+      "firstDivergingStep": {
+        "index": 4,
+        "a": {
+          "step": 4,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 51,
+          "gold": 24,
+          "hands": 2,
+          "target": 75,
+          "rngDraws": 91303
+        },
+        "b": {
+          "step": 4,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 51,
+          "gold": 24,
+          "hands": 2,
+          "target": 75,
+          "rngDraws": 91294
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 1,
+          "steps": 13,
+          "digest": "046804f239f7075a01663d98a42cb90bcffc8efa21905cc491a23e08053632bd"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 1,
+          "steps": 13,
+          "digest": "4a1be4d77834c75261cc436a21f8e4cf316e1f7b47d6d8077a20b2342d909235"
+        }
+      }
+    },
+    {
+      "baseline": "R78-i",
+      "rid": "3",
+      "causeCategory": "RNG",
+      "firstDivergingStep": {
+        "index": 0,
+        "a": {
+          "step": 0,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 0,
+          "gold": 22,
+          "hands": 4,
+          "target": 75,
+          "rngDraws": 90895
+        },
+        "b": {
+          "step": 0,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 0,
+          "gold": 22,
+          "hands": 4,
+          "target": 75,
+          "rngDraws": 90906
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 1,
+          "steps": 8000,
+          "digest": "82ed31d0b6df06fb773ba95f299f90804353b0c1220f4b26e45f78b9cc9704e7"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 1,
+          "steps": 13,
+          "digest": "ed0424003a7a8541cf01457fb59e7b5d8a65338eb99449ced3d8eadb677114e7"
+        }
+      }
+    },
+    {
+      "baseline": "R78-i",
       "rid": "5",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -661,8 +619,8 @@
         "a": {
           "outcome": "BUST",
           "maxRound": 1,
-          "steps": 17,
-          "digest": "2f9a8f5378396a24bff197cf2aaa808f64d8a3ec9d245b298696e1a2e72c49c9"
+          "steps": 8000,
+          "digest": "a4019f2f4413c3ea30591f8eec3ee0aca0bd3102d1675b7b31f737ade421589c"
         },
         "b": {
           "outcome": "BUST",
@@ -673,7 +631,49 @@
       }
     },
     {
-      "baseline": "R78",
+      "baseline": "R78-i",
+      "rid": "6",
+      "causeCategory": "RNG",
+      "firstDivergingStep": {
+        "index": 3,
+        "a": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 40,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "rngDraws": 91008
+        },
+        "b": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 40,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "rngDraws": 91019
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 1,
+          "steps": 8000,
+          "digest": "bb55a3c838f821806d3847ce7de5f78e4994884153300b956d125591ac4793ae"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 1,
+          "steps": 8000,
+          "digest": "cbd2fcd787049af47d8fceb581ff3614460781bb7bd4d433537155d835e95a83"
+        }
+      }
+    },
+    {
+      "baseline": "R78-i",
       "rid": "7",
       "causeCategory": "RNG",
       "firstDivergingStep": {
@@ -704,55 +704,13 @@
           "outcome": "BUST",
           "maxRound": 1,
           "steps": 8000,
-          "digest": "077a730b9f501984a50bfe9b2c008e014c5dac09a8030bfc28b7802ee67bd252"
+          "digest": "0d1072c78ad1b6fb00de582c8b6e42c58bdc8b2d86a3d1748ba27d15f492892c"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 1,
           "steps": 8000,
-          "digest": "3c6018455d1da5d18a1c9f4f793a096dac9b49810bd4c866ad6da061c507c35a"
-        }
-      }
-    },
-    {
-      "baseline": "R78",
-      "rid": "8",
-      "causeCategory": "RNG",
-      "firstDivergingStep": {
-        "index": 3,
-        "a": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 24,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "rngDraws": 90992
-        },
-        "b": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 24,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "rngDraws": 90981
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "e180938350ecaeb17bd941a97a3489e7ecd6476dbb87d443ef5f7229783acf9e"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 1,
-          "steps": 8000,
-          "digest": "af4c002b856b55cf23e7517f0667200b1c9fdfaf0acb3ddb9f402a242c7c109a"
+          "digest": "bb24b99aba0fac5869ea1e64218582e48dc6227ee3632d76c0784084362c14e0"
         }
       }
     }

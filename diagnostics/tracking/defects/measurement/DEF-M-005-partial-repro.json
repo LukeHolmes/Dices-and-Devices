@@ -1,8 +1,8 @@
 {
   "id": "DEF-M-005",
-  "title": "Full-run reproducibility — harness clock boot pass blocked on pinned rules RNG wiring",
+  "title": "Full-run reproducibility — pair mismatch persists on instrumented baselines",
   "kind": "measurement",
   "status": "open",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "notes": "2026-11-19 boot-paced gate REPRO-DEFM005-20261119-vclock-boot: 2/20 (R-main 0/10, R78 2/10). Harness v3: clock pumped boot/E2E waitFor, boot RNG lock + unlock at startNewRun, armed-only clock pump, font route block, divergence catalog with causeCategory. All 18 failing pairs: first trace divergence is RNG (rngDraws skew 1–12 at identical score/phase). Pinned R-main/R78 lack beginContract branch assigning runRandomRef to __GB_SIM_GAME_RANDOM__ (present on current main). Smallest rules fix: add that else-if in beginContract + route non-daily roll paths through gameplayRandom(). Prior gates preserved: 0/20 wall-clock, 3/20 vclock. LLM calls: 0."
+  "notes": "2026-11-19 instrumented gate REPRO-DEFM005-20261119-instrumented: 3/20 (R-main-i 0/10, R78-i 3/10). Rules: baseline/r-main-instrumented (af8ef9a from 7d649ef) and baseline/r78-instrumented (0dffccf from 59e11dc) with __GB_SIM_GAME_RANDOM__ in beginContract + gameplayRandom() on bare roll paths. Harness: node-paced Playwright clock boot, shim v3. 17 failing pairs still RNG-skew at identical visible state (rngDraws delta 1–12+). Hook-off proof: tests/diagnostics/hook-off-equivalence.test.cjs (stubbed Math.random / e2eRef cases). Prior gates preserved: 0/20 wall-clock, 3/20 vclock, 2/20 vclock-boot on unpinned R-main/R78. LLM calls: 0."
 }

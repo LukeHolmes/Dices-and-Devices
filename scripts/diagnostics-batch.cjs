@@ -43,6 +43,20 @@ const BASELINES = {
     rulesCommit: "59e11dcf92db3fccba1e44f9ac57f801710577d0",
     ref: "59e11dcf92db3fccba1e44f9ac57f801710577d0",
   },
+  "R-main-i": {
+    label: "R-main-i",
+    branch: "baseline/r-main-instrumented",
+    rulesCommit: "af8ef9a15dc35b28d1794aa1de9380f04f4eb11e",
+    ref: "baseline/r-main-instrumented",
+    instrumentedFrom: "7d649ef894dda8c3dbad77760e5fd3ecc943b4ba",
+  },
+  "R78-i": {
+    label: "R78-i",
+    branch: "baseline/r78-instrumented",
+    rulesCommit: "0dffccf7e7d864ab1c9de24d576d3c3c9f0bfd39",
+    ref: "baseline/r78-instrumented",
+    instrumentedFrom: "59e11dcf92db3fccba1e44f9ac57f801710577d0",
+  },
 };
 
 const FIXED_POLICY_REVISION = "2026-11-11-phase-b-v1";

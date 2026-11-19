@@ -1,0 +1,102 @@
+diff --git a/index.html b/index.html
+index 9c349a7..87b882a 100644
+--- a/index.html
++++ b/index.html
+@@ -11781,6 +11781,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+         const [lineupToast, setLineupToast] = useState(null);
+         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
+         const runRandomRef = useRef(() => Math.random());
++        const simSeededGameplay = () =>
++            dailyRunActive || (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function');
++        const gameplayRandom = () => (simSeededGameplay() ? runRandomRef.current() : Math.random());
+         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
+         const sacrificePlayPenaltyRef = useRef(0);
+         const sacrificeBonusRef = useRef(0);
+@@ -14010,7 +14013,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 runRandomRef.current = cfg.rng;
+             } else if (GutterbonesReplay?.personaStartModifiers?.(p.id)?.length) {
+                 setRunModifierIds(GutterbonesReplay.personaStartModifiers(p.id));
+-                runRandomRef.current = () => Math.random();
++                runRandomRef.current = typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
++                    ? window.__GB_SIM_GAME_RANDOM__
++                    : () => Math.random();
++            } else if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') {
++                setRunModifierIds([]);
++                runRandomRef.current = window.__GB_SIM_GAME_RANDOM__;
+             } else {
+                 setRunModifierIds([]);
+                 runRandomRef.current = () => Math.random();
+@@ -14019,7 +14027,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setTutorialStepIndex(0);
+             tutorialPayoutCountRef.current = 0;
+             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
+-            const arcPickRng = daily ? runRandomRef.current() : Math.random();
++            const arcPickRng = (daily || typeof window.__GB_SIM_GAME_RANDOM__ === 'function')
++                ? runRandomRef.current()
++                : Math.random();
+             const runArcId = tutorial
+                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
+                 : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
+@@ -14394,7 +14404,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 return;
+             }
+             const junkieBoss = activeBoss?.id === 'JUNKIE';
+-            const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
++            const runRandomFn = () => gameplayRandom();
+             const e2eFastDice = typeof window !== 'undefined'
+                 && typeof window.__GB_E2E_QUERY__ === 'function'
+                 && window.__GB_E2E_QUERY__();
+@@ -14501,7 +14511,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                     const next = [...prev];
+                     const die = next[idx];
+                     if (!die) return prev;
+-                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
++                    const face = die.faces[Math.floor(gameplayRandom() * die.faces.length)];
+                     const isStandard = face.type === 'standard';
+                     const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+                     let value = isStandard
+@@ -14515,7 +14525,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                         faceLabel: isStandard ? null : face.label,
+                         faceStyle: isStandard ? null : face.style,
+                         type: isStandard ? 'standard' : face.type,
+-                        id: Math.random()
++                        id: gameplayRandom()
+                     };
+                     return next;
+                 });
+@@ -15223,7 +15233,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             const outcome = GutterbonesGamble.resolveBlueprintFlip({
+                 flowStreak,
+                 gold,
+-                random: Math.random(),
++                random: gameplayRandom(),
+                 pickBlueprintId: () => pickRandomBlueprintId()
+             });
+             if (balanceObserverActive()) {
+@@ -15272,7 +15282,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                     tierId,
+                     flowStreak,
+                     gold,
+-                    random: Math.random()
++                    random: gameplayRandom()
+                 });
+                 if (balanceObserverActive()) {
+                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+@@ -15427,7 +15437,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setStash(s => s - p.cost);
+             if (p.id === 'SNIFF') {
+                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
+-                rerollBoneSlot(free[Math.floor(Math.random() * free.length)], { consumePill: false, silent: true });
++                rerollBoneSlot(free[Math.floor(gameplayRandom() * free.length)], { consumePill: false, silent: true });
+             }
+             if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
+             if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
+@@ -15504,7 +15514,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             if (!preservePaths) setSelectedShopPathId(null);
+             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
+             setActiveShopTag(offerTag);
+-            const rng = dailyRunActive ? runRandomRef.current : Math.random;
++            const rng = simSeededGameplay() ? runRandomRef.current : Math.random;
+             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
+             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
+             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
