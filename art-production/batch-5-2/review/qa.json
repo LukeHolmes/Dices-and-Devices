@@ -1,0 +1,18 @@
+{
+  "status": "ART_EXPORT_QA_ONLY",
+  "checks": {
+    "candidate_count": 11,
+    "total_image_count": 14,
+    "candidate_alpha_correct": true,
+    "candidate_borders_clear": true
+  },
+  "notes": [
+    "All new assets remain unapproved.",
+    "9 individual HUD crops have transparent outer edges.",
+    "Brass Knuckles and ashtray have 24px transparent buffer without source-art scaling.",
+    "Original HUD atlas is a SOURCE/REFERENCE sheet, not an isolated production sprite.",
+    "Ashtray includes illustrative smoke: suppress separate animation over that prop or retouch after approval.",
+    "Concepts include fabricated gameplay data and are never runtime backgrounds.",
+    "No live browser, CSS scaling, save/RNG, or visual effect collision QA performed."
+  ]
+}
