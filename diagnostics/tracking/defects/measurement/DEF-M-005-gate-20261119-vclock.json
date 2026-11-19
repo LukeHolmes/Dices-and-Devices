@@ -1,0 +1,28 @@
+{
+  "id": "DEF-M-005",
+  "gate_batch_id": "REPRO-DEFM005-20261119-vclock",
+  "harness_mode": "node_paced_playwright_clock",
+  "harness_shim_rev": "2026-11-19-harness-clock-v1",
+  "prior_gate_record": {
+    "batch": "REPRO-DEFM005-20261119",
+    "matched": 0,
+    "total": 20
+  },
+  "generatedAt": "2026-11-19T04:33:20.872Z",
+  "denominators": {
+    "matched": 3,
+    "total": 20
+  },
+  "perBaseline": {
+    "R-main": {
+      "matched": 0,
+      "total": 10
+    },
+    "R78": {
+      "matched": 3,
+      "total": 10
+    }
+  },
+  "tracking_csv": "/agent/repos/Dices-and-Devices/diagnostics/tracking/runs/REPRO-DEFM005-20261119-vclock.csv",
+  "artifact": "/opt/cursor/artifacts/diagnostics-repro-report.json"
+}

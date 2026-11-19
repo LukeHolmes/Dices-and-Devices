@@ -1,0 +1,50 @@
+{
+  "name": "Gutterbones playtest queue (EXAMPLE — import manually)",
+  "meta": {
+    "description": "Skeletal n8n 2.47 workflow. NOT deployed from this repo. Shows webhook paths expected by gb_bridge.worker."
+  },
+  "nodes": [
+    {
+      "id": "webhook-poll",
+      "name": "Webhook Poll",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "path": "playtest/poll",
+        "httpMethod": "POST",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "id": "queue-read",
+      "name": "Read queued jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0],
+      "parameters": {
+        "jsCode": "// Replace with Data Store / Redis / SQLite on the Pi.\nreturn [{ json: { jobs: [], cancel: [] } }];"
+      }
+    },
+    {
+      "id": "mcp-trigger",
+      "name": "MCP Server Trigger",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [0, 260],
+      "parameters": {
+        "authentication": "bearerAuth"
+      },
+      "notes": "Expose start_playtest etc. Tools enqueue jobs; worker polls /webhook/playtest/poll"
+    }
+  ],
+  "connections": {
+    "Webhook Poll": {
+      "main": [[{ "node": "Read queued jobs", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

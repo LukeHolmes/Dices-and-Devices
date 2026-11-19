@@ -1,5 +1,69 @@
-async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
+async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks, traceSteps }) {
+  const awaitClock = Boolean(window.__GB_SIM_AWAIT_CLOCK__);
+  const stepTrace = window.__GB_SIM_STEP_TRACE__ || (window.__GB_SIM_STEP_TRACE__ = []);
+  const tracingSteps = Boolean(traceSteps) || Array.isArray(window.__GB_SIM_STEP_TRACE__);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const yieldClock = async (ms) => {
+    if (awaitClock) {
+      await new Promise((resolve) => {
+        window.__GB_SIM_PENDING_CLOCK_MS__ = Math.max(0, Number(ms) || 0);
+        window.__GB_SIM_CLOCK_RESOLVE__ = resolve;
+      });
+      return;
+    }
+    await wait(ms);
+  };
+  const seededBuilder = strategy === "builder" && typeof window.__GB_SIM_GAME_RANDOM__ === "function";
+  const yieldTick = () => (awaitClock ? yieldClock(0) : wait(0));
+  const spin = async (ticks) => {
+    for (let i = 0; i < ticks; i += 1) await yieldTick();
+  };
+  const pause = async (ms) => {
+    if (awaitClock) {
+      return yieldClock(ms || 16);
+    }
+    if (seededBuilder) {
+      const ticks = Math.max(4, Math.min(24, Math.round((ms || 16) / 14)));
+      return spin(ticks);
+    }
+    return wait(ms);
+  };
+  const spinUntil = async (pred, maxTicks = 240) => {
+    for (let i = 0; i < maxTicks; i += 1) {
+      if (pred()) return true;
+      await yieldTick();
+    }
+    return false;
+  };
+  const waitPlayUnlocked = async () => {
+    if (!seededBuilder) return;
+    await spinUntil(() => {
+      const locks = window.__GB_E2E__?.getPlayLocks?.();
+      return !locks?.rolling && !locks?.rollLocked;
+    }, 320);
+  };
+  const harnessQuiescent = () => {
+    if (window.__GB_SIM_CLOCK_RESOLVE__) return false;
+    const locks = window.__GB_E2E__?.getPlayLocks?.();
+    if (locks?.rolling || locks?.rollLocked) return false;
+    return true;
+  };
+  const awaitHarnessQuiescence = async () => {
+    if (!awaitClock) return;
+    await spinUntil(harnessQuiescent, 240);
+    await spinUntil(() => {
+      const c = canonicalState();
+      const s = window.__GB_E2E__?.getState?.();
+      if (!c?.phase || !s?.phase) return true;
+      return c.phase === s.phase;
+    }, 96);
+    await yieldClock(16);
+  };
+
+  const mergeSimState = (raw, canonical) => {
+    if (!canonical || typeof canonical !== "object") return raw;
+    return { ...(raw || {}), ...canonical };
+  };
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
@@ -7,6 +71,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   let maxRound = 1;
   let lastRound = 1;
   let started = false;
+  const effectiveStuckThreshold = seededBuilder ? 5000 : stuckThreshold;
+  const effectiveMaxFallbacks = seededBuilder ? 99999 : maxFallbacks;
 
   const mulberry32 = (a) => {
     return () => {
@@ -19,7 +85,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   };
   const rng = mulberry32((Number(seed) || 1) >>> 0);
 
-  localStorage.removeItem("gutterbones1977:run:v1");
+  if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+    window.__GB_SIM_APPLY_BASE_STORAGE__();
+  } else {
+    localStorage.removeItem("gutterbones1977:run:v1");
+  }
 
   const scan = () => {
     document.querySelectorAll("[data-pt]").forEach((e) => e.removeAttribute("data-pt"));
@@ -27,7 +97,15 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     const H = innerHeight;
     const out = [];
     let i = 0;
-    for (const b of document.querySelectorAll("button,[role=button]")) {
+    const candidates = [...document.querySelectorAll("button,[role=button]")].sort((a, b) => {
+      const ka = a.getAttribute("data-layout-key") || "";
+      const kb = b.getAttribute("data-layout-key") || "";
+      if (ka !== kb) return ka.localeCompare(kb);
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      return ra.top - rb.top || ra.left - rb.left || (a.innerText || "").localeCompare(b.innerText || "");
+    });
+    for (const b of candidates) {
       if (b.disabled || !b.getClientRects().length) continue;
       const cs = getComputedStyle(b);
       if (cs.visibility === "hidden" || cs.pointerEvents === "none" || +cs.opacity === 0) continue;
@@ -45,6 +123,61 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
     const st = window.__GB_E2E__ ? window.__GB_E2E__.getState() : null;
     return { btn: out, st };
+  };
+
+  const canonicalState = () => {
+    const e2e = window.__GB_E2E__;
+    if (typeof e2e?.getSimCanonicalState === "function") return e2e.getSimCanonicalState();
+    return e2e?.getState?.() || {};
+  };
+
+  const stableStringify = (value) => {
+    if (value == null || typeof value !== "object") return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map((v) => stableStringify(v)).join(",")}]`;
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(",")}}`;
+  };
+
+  const hashCanonical = (state) => {
+    const s = stableStringify(state);
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i += 1) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16).padStart(8, "0");
+  };
+
+  const takeSnapshot = () => {
+    const canonical = canonicalState();
+    const { btn, st } = scan();
+    return Object.freeze({ btn, st: st || canonical, canonical });
+  };
+
+  let traceEntry = null;
+  const openStepTrace = (snap, step) => {
+    if (!tracingSteps) return;
+    traceEntry = {
+      step,
+      stateHash: hashCanonical(snap.canonical),
+      action: "pending",
+      phase: snap.canonical?.phase ?? snap.st?.phase,
+      round: snap.canonical?.round ?? snap.st?.round,
+      score: snap.canonical?.score ?? snap.st?.score,
+      gold: snap.canonical?.gold ?? snap.st?.gold,
+      hands: snap.canonical?.hands ?? snap.st?.hands,
+      target: snap.canonical?.target ?? snap.st?.target,
+      gameRngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
+      rngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
+      cosmeticRngDraws: window.__GB_SIM_COSMETIC_DRAW_COUNT__ || 0,
+      lastGameDrawSite: window.__GB_SIM_LAST_GAME_DRAW_SITE__ || null,
+    };
+    stepTrace.push(traceEntry);
+  };
+
+  const closeStepTrace = (action) => {
+    if (traceEntry) traceEntry.action = action || traceEntry.action || "noop";
+    traceEntry = null;
   };
 
   const num = (t) => {
@@ -280,7 +413,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   try {
     window.__GB_E2E__.goLineup();
-    if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
+    const forceStreetRat = window.__GB_SIM_STREET_RAT__ === true;
+    if (forceStreetRat && window.__GB_E2E__.selectPersonaByIndex) {
+      if (!window.__GB_E2E__.selectPersonaByIndex(0)) {
+        window.__GB_E2E__.selectFirstPersona();
+      }
+    } else if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
       if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
         window.__GB_E2E__.selectPersonaByIndex(1);
       }
@@ -289,16 +427,40 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
     window.__GB_E2E__.startNewRun();
     window.__GB_E2E__.skipIntroOverlays?.();
-    await wait(120);
+    await pause(120);
     window.__GB_E2E__.skipIntroOverlays?.();
   } catch (e) {
     return { stuck: true, reason: "boot_failed", detail: String(e), seed, strategy, steps: 0, maxRound: 1 };
   }
-  await wait(400);
+  if (awaitClock) {
+    if (typeof window.__GB_SIM_RESET_COSMETIC_STREAM__ === "function") {
+      window.__GB_SIM_RESET_COSMETIC_STREAM__();
+    }
+    await yieldClock(480);
+  } else {
+    await pause(400);
+  }
 
+  let lastPhaseForClock = null;
   for (let step = 0; step < maxSteps; step++) {
-    const { btn, st } = scan();
-    const ph = (st && st.phase) || "?";
+    await awaitHarnessQuiescence();
+    const snap = takeSnapshot();
+    const st = mergeSimState(snap.st, snap.canonical);
+    const btn = snap.btn;
+    const ph = (st && st.phase) || snap.canonical?.phase || "?";
+    const syncRound = snap.canonical?.round ?? st?.round;
+    if (ph && ph !== "?") window.__GB_SIM_PHASE__ = ph;
+    if (syncRound != null) window.__GB_SIM_ROUND__ = syncRound;
+    openStepTrace(snap, step);
+    let stepAction = "pending";
+    const tagStep = (label) => {
+      stepAction = label;
+    };
+    try {
+    if (awaitClock && ph !== lastPhaseForClock) {
+      await yieldClock(48);
+      lastPhaseForClock = ph;
+    }
     if (ph === "PLAY") started = true;
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
       maxRound = st.round;
@@ -330,6 +492,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     if (ph === "GAMBLE") {
       log._gambleTries = (log._gambleTries || 0) + 1;
+      if (seededBuilder) {
+        if (log._gambleTries === 1) window.__GB_E2E__.takeSafeCut?.();
+        tagStep(log._gambleTries === 1 ? "e2e:takeSafeCut" : "e2e:gamble_wait");
+        await spinUntil(() => window.__GB_E2E__?.getState?.()?.phase !== "GAMBLE", 200);
+        continue;
+      }
       if (log._gambleTries === 1 || log._gambleTries % 5 === 0) {
         window.__GB_E2E__.takeSafeCut?.();
         window.__GB_E2E__.abortGamble?.();
@@ -338,29 +506,44 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         );
         if (safeBtn && !safeBtn.disabled) safeBtn.click();
       }
-      await wait(160);
+      await pause(160);
       continue;
     }
     log._gambleTries = 0;
 
     if (st?.roundClearVisible) {
       window.__GB_E2E__?.finishRoundClear?.();
-      await wait(120);
+      await pause(120);
       continue;
+    }
+
+    if (seededBuilder && (ph === "PLAY" || ph === "SHOP")) {
+      const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast((e) =>
+        e.kind === "round_cleared" || e.kind === "round_play_start");
+      if (ph === "SHOP" && boundary?.kind === "round_play_start" && boundary.round === st.round) {
+        await pause(90);
+        continue;
+      }
+      if (ph === "PLAY" && (boundary?.kind === "round_cleared" || window.__GB_E2E__.debugStuck?.().pendingFinalize)) {
+        window.__GB_E2E__.dismissOverlays?.();
+        window.__GB_E2E__.skipIntroOverlays?.();
+        await pause(100);
+        continue;
+      }
     }
 
     const shopBot = strategy === "builder" || strategy === "greedy";
     const simPolicyRev = window.__GB_SIM_POLICY__?.revision;
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "SHOP") {
       window.__GB_E2E__?.autoShopPolicyStep?.();
-      await wait(90);
+      await pause(90);
       continue;
     }
     if (simPolicyRev === "2026-11-12-wp3-shop-v1" && ph === "CARVING") {
       if (!window.__GB_E2E__?.autoCarvePolicyStep?.()) {
         window.__GB_E2E__?.exitCarvingToShop?.("carve_exit_sim_guard");
       }
-      await wait(90);
+      await pause(90);
       continue;
     }
     if (shopBot && ph === "SHOP") {
@@ -372,26 +555,26 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       ) {
         if (window.__GB_E2E__?.hitStreets?.()) {
           log._shopPasses = 0;
-          await wait(120);
+          await pause(120);
           continue;
         }
       }
       if (log._shopPasses <= 4 && window.__GB_E2E__?.refreshShopIfDry?.()) {
-        await wait(90);
+        await pause(90);
         continue;
       }
       if (log._shopPasses <= 12 && window.__GB_E2E__?.buyPreferredShopItem?.()) {
-        await wait(90);
+        await pause(90);
         continue;
       }
       if (!st?.selectedShopPathId && window.__GB_E2E__?.clickShopRouteCard?.()) {
-        await wait(80);
+        await pause(80);
         continue;
       }
     }
     if (shopBot && ph === "CARVING" && simPolicyRev !== "2026-11-12-wp3-shop-v1") {
       if (window.__GB_E2E__?.autoCarvePreferred?.()) {
-        await wait(90);
+        await pause(90);
         continue;
       }
     }
@@ -404,17 +587,17 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     if (started && ph === "PLAY" && st && st.hands === 0 && st.score >= st.target) {
       window.__GB_E2E__?.advanceRunPhase?.();
       window.__GB_E2E__?.dismissOverlays?.();
-      await wait(120);
+      await pause(120);
       continue;
     }
     if (started && ph === "PLAY" && st && st.hands === 0 && st.score < st.target) {
       window.__GB_E2E__.recoverLastHand?.();
       window.__GB_E2E__.dismissOverlays?.();
-      await wait(160);
+      await pause(160);
       continue;
     }
 
-    if (stuck >= stuckThreshold) {
+    if (stuck >= effectiveStuckThreshold) {
       const s = window.__GB_E2E__.getState();
       if (s.phase === "SHOP") {
         window.__GB_E2E__.clickShopRouteCard?.();
@@ -431,7 +614,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       } else if (s.roundClearVisible) window.__GB_E2E__.finishRoundClear();
       else if (!e2eUnstick(ph)) window.__GB_E2E__.dismissOverlays();
       fallbacks++;
-      if (fallbacks > maxFallbacks) {
+      if (fallbacks > effectiveMaxFallbacks) {
         return {
           stuck: true,
           reason: "softlock_no_progress",
@@ -444,7 +627,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         };
       }
       stuck = 0;
-      await wait(80);
+      await pause(80);
       continue;
     }
 
@@ -461,19 +644,21 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
       const locks = window.__GB_E2E__?.getPlayLocks?.();
       if (locks?.rolling || locks?.rollLocked) {
-        await wait(60);
+        await waitPlayUnlocked();
         continue;
       }
       if (!window.__GB_E2E__?.getHasRolled?.()) {
         window.__GB_E2E__?.rollOnce?.();
-        await wait(50);
+        tagStep("e2e:rollOnce");
+        await pause(50);
         continue;
       }
       if (
         (strategy === "builder" || strategy === "greedy")
         && window.__GB_E2E__?.autoPlayHand?.()
       ) {
-        await wait(50);
+        tagStep("e2e:autoPlayHand");
+        await pause(50);
         continue;
       }
       if (
@@ -481,21 +666,24 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         && window.__GB_E2E__?.getHasRolled?.()
         && window.__GB_E2E__?.scoreFirstPayoutRow?.()
       ) {
-        await wait(45);
+        tagStep("e2e:scoreFirstPayoutRow");
+        await pause(45);
         continue;
       }
       if (st?.score >= st?.target && st?.hands > 0) {
         window.__GB_E2E__?.advanceRunPhase?.();
-        await wait(80);
+        tagStep("e2e:advanceRunPhase");
+        await pause(80);
         continue;
       }
       if (st?.roundClearVisible) {
         window.__GB_E2E__?.finishRoundClear?.();
-        await wait(80);
+        tagStep("e2e:finishRoundClear");
+        await pause(80);
         continue;
       }
       if (bossIntroUp()) {
-        await wait(60);
+        await pause(60);
         continue;
       }
     }
@@ -503,40 +691,67 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     let pick = choose(btn, ph, st || {});
     if (pick == null && ph === "PLAY") {
       window.__GB_E2E__.scoreFirstPayoutRow?.() || e2eUnstick(ph);
-    }
-    else if (pick != null) {
+    } else if (pick != null) {
       const b = document.querySelector('[data-pt="' + pick + '"]');
       if (b) b.click();
     }
-    await wait(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
+    if (pick != null) tagStep(`click:${btn[pick]?.lk || pick}:${btn[pick]?.t || ""}`);
+    else tagStep(ph === "PLAY" ? "e2e:play_fallback" : "noop");
+    if (seededBuilder) await spin(16);
+    else await pause(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
+    } finally {
+      if (stepAction === "pending") stepAction = "step_tick";
+      closeStepTrace(stepAction);
+    }
   }
 
+  const preForfeit = window.__GB_E2E__.getState();
   window.__GB_E2E__.forceForfeitRun?.();
-  await wait(600);
+  await pause(600);
   const afterForfeit = window.__GB_E2E__.getState();
-  if (afterForfeit.phase === "RAP_SHEET" || afterForfeit.phase === "VICTORY") {
+  if (afterForfeit.phase === "VICTORY") {
     return {
-      stuck: false,
-      outcome: afterForfeit.phase === "VICTORY" ? "WIN" : "BUST",
+      stuck: true,
+      reason: "budget_exhausted",
+      terminalReason: "budget_exhausted",
+      outcome: "INCOMPLETE:BUDGET",
       maxRound,
       phase: afterForfeit.phase,
       seed,
       strategy,
       steps: maxSteps,
-      detail: "sim_forfeit_escape",
+      detail: "budget_cap_forfeit_victory_escape",
+      preForfeitPhase: preForfeit?.phase,
+    };
+  }
+  if (afterForfeit.phase === "RAP_SHEET") {
+    return {
+      stuck: true,
+      reason: "budget_exhausted",
+      terminalReason: "budget_exhausted",
+      outcome: "INCOMPLETE:BUDGET",
+      maxRound,
+      phase: afterForfeit.phase,
+      seed,
+      strategy,
+      steps: maxSteps,
+      detail: "budget_cap_forfeit_rap_sheet",
+      preForfeitPhase: preForfeit?.phase,
     };
   }
 
   const final = window.__GB_E2E__.getState();
   return {
     stuck: true,
-    reason: "incomplete",
+    reason: "budget_exhausted",
+    terminalReason: "budget_exhausted",
     detail: "max_steps:" + maxSteps + ",phase:" + final.phase,
-    outcome: "INCOMPLETE:" + final.phase,
+    outcome: "INCOMPLETE:BUDGET",
     maxRound,
     phase: final.phase,
     seed,
     strategy,
     steps: maxSteps,
+    preForfeitPhase: preForfeit?.phase,
   };
 }

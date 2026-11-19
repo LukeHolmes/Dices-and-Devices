@@ -1,0 +1,26 @@
+{
+  "gate_batch_id": "REPRO-DEFM005-20261119-instrumented-v4c",
+  "harness_mode": "node_paced_playwright_clock_boot",
+  "harness_shim_rev": "2026-11-19-harness-clock-v4b",
+  "denominators": { "matched": 14, "total": 20 },
+  "perBaseline": {
+    "R-main-i": { "matched": 4, "total": 10 },
+    "R78-i": { "matched": 10, "total": 10 }
+  },
+  "prior_gate_records": [
+    { "batch": "REPRO-DEFM005-20261119", "matched": 0, "total": 20 },
+    { "batch": "REPRO-DEFM005-20261119-vclock", "matched": 3, "total": 20 },
+    { "batch": "REPRO-DEFM005-20261119-vclock-boot", "matched": 2, "total": 20, "baselines": "R-main,R78" },
+    { "batch": "REPRO-DEFM005-20261119-instrumented", "matched": 3, "total": 20 },
+    { "batch": "REPRO-DEFM005-20261119-instrumented-v4", "matched": 15, "total": 20, "note": "af8ef9a" },
+    { "batch": "REPRO-DEFM005-20261119-instrumented-v4", "matched": 14, "total": 20, "note": "f0f79cf" },
+    { "batch": "REPRO-DEFM005-20261119-instrumented-v4b", "matched": 12, "total": 20, "note": "19de179 sync sniff" }
+  ],
+  "f0f79cf_verdict": "regressed R-main-i vs af8ef9a (5/10→4/10); path consumable kept; opening-sniff-in-effect restored",
+  "named_call_site_swap": "weightedSortJitter (generateShop shop-offer jitter) vs second generateShop entry (refreshShop / leaveGambleForShop)",
+  "remaining_rmain_seeds_failed": [0, 1, 4, 6, 8, 9],
+  "status": "parked",
+  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-instrumented-v7.json",
+  "decision": "diagnostics/tracking/decisions/DECISION-20261119-park-def-m-005.md",
+  "natural_repro_best": { "batch": "REPRO-DEFM005-20261119-instrumented-v6", "matched": 9, "total": 20 }
+}

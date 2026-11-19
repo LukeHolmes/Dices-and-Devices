@@ -9,6 +9,17 @@ const path = require("node:path");
 
 const ROOT = path.join(__dirname, "../..");
 const BOT_FN = fs.readFileSync(path.join(__dirname, "in-page-bot.js"), "utf8");
+const HARNESS_SHIM = fs.readFileSync(path.join(__dirname, "harness-determinism-shim.js"), "utf8");
+const {
+  clockModeActive,
+  ensurePlaywrightClock,
+  installDeterministicNetwork,
+  runBotEvaluateWithClock,
+  prepareSimRunStart,
+  gotoWithClock,
+  reloadWithClock,
+  waitForPredicateWithClock,
+} = require("./run-paced-bot.cjs");
 const VIEWPORTS_ALL = [
   { name: "360x640", width: 360, height: 640 },
   { name: "390x844", width: 390, height: 844 },
@@ -57,6 +68,28 @@ function pickViewports(mode) {
   return VIEWPORTS_BLOCKING;
 }
 
+async function ensureHarnessDeterminism(page) {
+  if (process.env.SIM_SEED_GAME !== "1") return;
+  if (page.__gbHarnessShimInstalled) return;
+  await page.addInitScript(HARNESS_SHIM);
+  await page.addInitScript(() => {
+    if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+      window.__GB_SIM_APPLY_BASE_STORAGE__();
+    }
+    const runVisual = () => {
+      if (typeof window.__GB_SIM_INSTALL_VISUAL_DETERMINISM__ === "function") {
+        window.__GB_SIM_INSTALL_VISUAL_DETERMINISM__();
+      }
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", runVisual, { once: true });
+    } else {
+      runVisual();
+    }
+  });
+  page.__gbHarnessShimInstalled = true;
+}
+
 function startServer(port, root) {
   const absRoot = path.resolve(root);
   return new Promise((resolve) => {
@@ -86,103 +119,32 @@ function startServer(port, root) {
 async function bootPage(page, baseUrl, viewport) {
   page.setDefaultTimeout(120_000);
   const mobile = viewport.width < 700 || viewport.height < 500;
+  if (process.env.SIM_STREET_RAT_PROFILE === "1") {
+    await page.addInitScript(() => {
+      window.__GB_SIM_STREET_RAT__ = true;
+    });
+  }
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
   const observerQ = process.env.SIM_POLICY_OBSERVER === "1" ? "&balanceObserver=1" : "";
   const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
   const ruleExp = process.env.SIM_RULE_EXPERIMENTS || "";
   const ruleQ = ruleExp ? `&ruleExp=${encodeURIComponent(ruleExp)}` : "";
-  await page.goto(
-    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}${ruleQ}`,
-    { waitUntil: "networkidle", timeout: 120_000 },
-  );
-  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
-  await page.evaluate(() => {
-    localStorage.setItem(
-      "gutterbones1977:settings:v1",
-      JSON.stringify({
-        pacing: "fast",
-        reducedMotionPref: true,
-        tutorialCompleted: true,
-        skippedAlleyIntro: true,
-      }),
-    );
-    try {
-      localStorage.setItem(
-        "gutterbones1977:meta:v1",
-        JSON.stringify({
-          totalRuns: 12,
-          victories: 2,
-          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
-          unlockedFaceIds: [
-            "MULT_FACE",
-            "GOLD_FACE",
-            "BLOOD_6",
-            "WILD_FACE",
-            "ECHO_FACE",
-            "GHOST_FACE",
-            "SHIV_FACE",
-            "WIREBAG_FACE",
-            "MAGNET_FACE",
-            "MARK_FACE",
-            "FUSE_FACE",
-            "DOUBLE_DOWN_FACE",
-          ],
-          unlockedHardwareIds: [
-            "BOOKENDS",
-            "LOADED_DIE",
-            "BRASS_KNUCKLES",
-            "BLACK_BOOK",
-            "BURNER_PHONE",
-            "CROWBAR",
-            "ENGINE",
-            "FUSE_BOX",
-            "MIRROR_RIG",
-            "DEBT_COLLECTOR",
-            "HOT_STREAK_COIL",
-            "CENTERPIECE",
-          ],
-          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
-        }),
-      );
-    } catch (_) {
-      /* ignore */
-    }
-    localStorage.removeItem("gutterbones1977:run:v1");
-  });
-  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
-  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
-  await page.evaluate((rev) => {
-    window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
-  }, simPolicy);
-  if (mobile) {
-    await page.context().addInitScript(() => {
-      Object.defineProperty(navigator, "maxTouchPoints", { value: 1 });
+  const navOpts = { waitUntil: "domcontentloaded", timeout: 120_000 };
+  const entryUrl = `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}${ruleQ}`;
+  if (clockModeActive()) {
+    await gotoWithClock(page, entryUrl, navOpts);
+    await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 120_000 });
+    await page.evaluate(() => {
+      if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+        window.__GB_SIM_APPLY_BASE_STORAGE__();
+      }
     });
-  }
-}
-
-async function runOneGame(
-  page,
-  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 48, maxFallbacks = 36 },
-) {
-  page.setDefaultTimeout(120_000);
-  const booted = bootedRef || { value: false };
-  if (!booted.value) {
-    await bootPage(page, page.__baseUrl, viewport);
-    booted.value = true;
+    await reloadWithClock(page, navOpts);
+    await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 90_000 });
   } else {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
-    const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
-    await page.goto(
-      `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${linkQ}`,
-      { waitUntil: "domcontentloaded", timeout: 90_000 },
-    );
-    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
-    await page.evaluate((rev) => {
-      window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
-    }, simPolicy);
+    await page.goto(entryUrl, navOpts);
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
     await page.evaluate(() => {
       localStorage.setItem(
         "gutterbones1977:settings:v1",
@@ -197,39 +159,39 @@ async function runOneGame(
         localStorage.setItem(
           "gutterbones1977:meta:v1",
           JSON.stringify({
-          totalRuns: 12,
-          victories: 2,
-          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
-          unlockedFaceIds: [
-            "MULT_FACE",
-            "GOLD_FACE",
-            "BLOOD_6",
-            "WILD_FACE",
-            "ECHO_FACE",
-            "GHOST_FACE",
-            "SHIV_FACE",
-            "WIREBAG_FACE",
-            "MAGNET_FACE",
-            "MARK_FACE",
-            "FUSE_FACE",
-            "DOUBLE_DOWN_FACE",
-          ],
-          unlockedHardwareIds: [
-            "BOOKENDS",
-            "LOADED_DIE",
-            "BRASS_KNUCKLES",
-            "BLACK_BOOK",
-            "BURNER_PHONE",
-            "CROWBAR",
-            "ENGINE",
-            "FUSE_BOX",
-            "MIRROR_RIG",
-            "DEBT_COLLECTOR",
-            "HOT_STREAK_COIL",
-            "CENTERPIECE",
-          ],
-          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
-        }),
+            totalRuns: 12,
+            victories: 2,
+            unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
+            unlockedFaceIds: [
+              "MULT_FACE",
+              "GOLD_FACE",
+              "BLOOD_6",
+              "WILD_FACE",
+              "ECHO_FACE",
+              "GHOST_FACE",
+              "SHIV_FACE",
+              "WIREBAG_FACE",
+              "MAGNET_FACE",
+              "MARK_FACE",
+              "FUSE_FACE",
+              "DOUBLE_DOWN_FACE",
+            ],
+            unlockedHardwareIds: [
+              "BOOKENDS",
+              "LOADED_DIE",
+              "BRASS_KNUCKLES",
+              "BLACK_BOOK",
+              "BURNER_PHONE",
+              "CROWBAR",
+              "ENGINE",
+              "FUSE_BOX",
+              "MIRROR_RIG",
+              "DEBT_COLLECTOR",
+              "HOT_STREAK_COIL",
+              "CENTERPIECE",
+            ],
+            purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+          }),
         );
       } catch (_) {
         /* ignore */
@@ -238,42 +200,220 @@ async function runOneGame(
     });
     await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
     await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+  }
+  await page.evaluate((rev) => {
+    window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
+  }, simPolicy);
+  if (mobile) {
+    await page.context().addInitScript(() => {
+      Object.defineProperty(navigator, "maxTouchPoints", { value: 1 });
+    });
+  }
+}
+
+async function installGameSeedBeforeNav(page, seed) {
+  if (process.env.SIM_SEED_GAME !== "1") return;
+  await ensureHarnessDeterminism(page);
+  await page.addInitScript((gameSeed) => {
+    if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
+      window.__GB_SIM_INSTALL_GAME_SEED__(gameSeed);
+    }
+  }, seed);
+}
+
+async function runOneGame(
+  page,
+  { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 48, maxFallbacks = 36 },
+) {
+  page.setDefaultTimeout(120_000);
+  await installGameSeedBeforeNav(page, seed);
+  await ensurePlaywrightClock(page.context());
+  const booted = bootedRef || { value: false };
+  if (!booted.value) {
+    await bootPage(page, page.__baseUrl, viewport);
+    booted.value = true;
+  } else {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
+    const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
+    const reentryUrl = `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${linkQ}`;
+    const reNav = { waitUntil: "domcontentloaded", timeout: 90_000 };
+    if (clockModeActive()) {
+      await gotoWithClock(page, reentryUrl, reNav);
+      await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 60_000 });
+    } else {
+      await page.goto(reentryUrl, reNav);
+      await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    }
+    await page.evaluate((rev) => {
+      window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
+    }, simPolicy);
+    if (clockModeActive()) {
+      await page.evaluate(() => {
+        if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+          window.__GB_SIM_APPLY_BASE_STORAGE__();
+        }
+      });
+      await reloadWithClock(page, reNav);
+      await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 60_000 });
+    } else {
+      await page.evaluate(() => {
+        localStorage.setItem(
+          "gutterbones1977:settings:v1",
+          JSON.stringify({
+            pacing: "fast",
+            reducedMotionPref: true,
+            tutorialCompleted: true,
+            skippedAlleyIntro: true,
+          }),
+        );
+        try {
+          localStorage.setItem(
+            "gutterbones1977:meta:v1",
+            JSON.stringify({
+              totalRuns: 12,
+              victories: 2,
+              unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
+              unlockedFaceIds: [
+                "MULT_FACE",
+                "GOLD_FACE",
+                "BLOOD_6",
+                "WILD_FACE",
+                "ECHO_FACE",
+                "GHOST_FACE",
+                "SHIV_FACE",
+                "WIREBAG_FACE",
+                "MAGNET_FACE",
+                "MARK_FACE",
+                "FUSE_FACE",
+                "DOUBLE_DOWN_FACE",
+              ],
+              unlockedHardwareIds: [
+                "BOOKENDS",
+                "LOADED_DIE",
+                "BRASS_KNUCKLES",
+                "BLACK_BOOK",
+                "BURNER_PHONE",
+                "CROWBAR",
+                "ENGINE",
+                "FUSE_BOX",
+                "MIRROR_RIG",
+                "DEBT_COLLECTOR",
+                "HOT_STREAK_COIL",
+                "CENTERPIECE",
+              ],
+              purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+            }),
+          );
+        } catch (_) {
+          /* ignore */
+        }
+        localStorage.removeItem("gutterbones1977:run:v1");
+      });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+      await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    }
     await page.evaluate((rev) => {
       window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
     }, simPolicy);
   }
   const linkObs = process.env.SIM_LINK_OBSERVER === "1";
   const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
-  const result = await page.evaluate(
-    async ({ botSource, opts, linkObs: linkObsFlag, policyRev }) => {
-      if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
-        window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
-          hands: [],
-          roundEvents: [],
-          shopPolicySteps: [],
-        };
-        window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
-          enabled: true,
-          policyRevision: policyRev,
-        });
-      }
-      // eslint-disable-next-line no-eval
-      eval(botSource);
-      return await runBotSession(opts);
+  const traceReplay = process.env.SIM_TRACE_REPLAY === "1";
+  const seedGame = process.env.SIM_SEED_GAME === "1";
+  const evaluatePayload = {
+    botSource: BOT_FN,
+    opts: {
+      maxSteps,
+      seed,
+      strategy,
+      stuckThreshold,
+      maxFallbacks,
     },
-    {
-      botSource: BOT_FN,
-      opts: {
-        maxSteps,
-        seed,
-        strategy,
-        stuckThreshold,
-        maxFallbacks,
-      },
-      linkObs,
-      policyRev: simPolicyRev,
-    },
-  );
+    linkObs,
+    policyRev: simPolicyRev,
+    seedGame,
+    traceReplay,
+  };
+  await prepareSimRunStart(page, seed);
+  const useClock = clockModeActive();
+  const result = useClock
+    ? await runBotEvaluateWithClock(page, evaluatePayload)
+    : await page.evaluate(
+        async ({
+          botSource,
+          opts,
+          linkObs: linkObsFlag,
+          policyRev,
+          seedGame: seedGameFlag,
+          traceReplay: traceReplayFlag,
+        }) => {
+          if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
+            window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
+              hands: [],
+              roundEvents: [],
+              shopPolicySteps: [],
+            };
+            window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
+              enabled: true,
+              policyRevision: policyRev,
+            });
+          }
+          // eslint-disable-next-line no-eval
+          const play = eval("(" + botSource + ")");
+          if (seedGameFlag) {
+            if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
+              window.__GB_SIM_INSTALL_GAME_SEED__(opts.seed);
+            } else if (typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
+              window.__GB_SIM_STEP_SYNC__ = true;
+              const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
+              const cosmetic = GutterbonesReplay.mulberry32(opts.seed + 1);
+              window.__GB_SIM_GAME_RANDOM__ = () => gameRandom();
+              Math.random = () => cosmetic();
+            }
+          }
+          if (traceReplayFlag) {
+            window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
+              hands: [],
+              roundEvents: [],
+              shopPolicySteps: [],
+              record(entry) {
+                this.hands.push({ ...entry, at: this.hands.length });
+              },
+              recordRoundEvent(entry) {
+                this.roundEvents.push({ ...entry, at: this.roundEvents.length });
+              },
+              recordShopPolicyStep(entry) {
+                this.shopPolicySteps.push({ ...entry, at: this.shopPolicySteps.length });
+              },
+            };
+            const telem = window.__GB_SIM_TELEM__;
+            telem.replayEvents = [];
+            for (const kind of ["record", "recordRoundEvent", "recordShopPolicyStep"]) {
+              const record = telem[kind];
+              telem[kind] = function replayWrapped(entry) {
+                telem.replayEvents.push({ kind, entry });
+                return record.call(this, entry);
+              };
+            }
+          }
+          try {
+            return await play(opts);
+          } finally {
+            if (seedGameFlag) {
+              delete window.__GB_SIM_GAME_RANDOM__;
+              delete window.__GB_SIM_STEP_SYNC__;
+            }
+          }
+        },
+        evaluatePayload,
+      );
+  const stepTrace = useClock
+    ? await page.evaluate(() => window.__GB_SIM_STEP_TRACE__ || [])
+    : [];
+  const gameDrawLog = useClock
+    ? await page.evaluate(() => (window.__GB_SIM_GAME_DRAW_LOG__ || []).slice())
+    : [];
   const telem = await page.evaluate(() => {
     const st = window.__GB_E2E__?.getState?.() || {};
     const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
@@ -292,7 +432,7 @@ async function runOneGame(
       linkObserver: window.__GB_SIM_TELEM__?.linkObserver?.summarize?.() || null,
     };
   });
-  return { rid, viewport: viewport.name, ...result, telem };
+  return { rid, viewport: viewport.name, ...result, telem, stepTrace, gameDrawLog };
 }
 
 function classifyFailures(results, maxSteps) {
@@ -331,7 +471,10 @@ async function main() {
   const results = [];
 
   const jobs = [];
-  for (let rid = 0; rid < args.games; rid++) {
+  const offset = Number(process.env.WP2_RID_OFFSET || 0);
+  if (!Number.isSafeInteger(offset) || offset < 0) throw new Error("Invalid WP2_RID_OFFSET");
+  for (let i = 0; i < args.games; i++) {
+    const rid = offset + i;
     jobs.push({
       rid,
       seed: rid * 7919,
