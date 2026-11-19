@@ -214,11 +214,14 @@
         overflow-y: auto;
         overscroll-behavior: contain;
         scrollbar-width: thin;
-        grid-auto-rows: minmax(0, auto);
+        grid-auto-rows: auto;
         align-items: start;
+        row-gap: 0.85rem;
+        column-gap: 1rem;
     }
     @media (max-width: 430px) {
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            grid-template-columns: minmax(0, 1fr) !important;
             overflow-y: auto;
             max-height: min(42vh, 16rem);
             scrollbar-width: none;
@@ -870,7 +873,8 @@
             -webkit-overflow-scrolling: touch;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-item-card {
-            min-height: 4.85rem !important;
+            min-height: min-content !important;
+            height: max-content;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             max-height: min(38dvh, calc(100dvh - 20rem)) !important;
@@ -1160,7 +1164,8 @@
             display: none;
         }
         #root-gutterbones .shop-item-card {
-            min-height: 6.25rem !important;
+            min-height: min-content !important;
+            height: max-content;
         }
         #root-gutterbones [data-tutorial="shop-panel"] > .flex.justify-between.items-end.mb-4 {
             margin-bottom: 0.35rem !important;
@@ -1822,8 +1827,14 @@
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 0.35rem !important;
         }
+        @media (max-width: 430px) {
+            #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+                grid-template-columns: minmax(0, 1fr) !important;
+            }
+        }
         #root-gutterbones[data-phase="SHOP"] .shop-item-card {
-            min-height: 5.25rem !important;
+            min-height: min-content !important;
+            height: max-content;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-item-card__inner {
             padding: 0.35rem 0.45rem !important;
@@ -1875,6 +1886,11 @@
             }
             #root-gutterbones[data-phase="SHOP"] .shop-item-card {
                 min-height: 5.5rem !important;
+            }
+        }
+        @media (max-width: 430px) {
+            #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+                grid-template-columns: minmax(0, 1fr) !important;
             }
         }
     }
@@ -2637,10 +2653,11 @@
   #root-gutterbones .shop-item-card {
     box-sizing: border-box;
     height: auto;
-    min-height: 0;
+    min-height: min-content;
     align-self: start;
     justify-self: stretch;
     isolation: isolate;
+    margin-block-end: 6px;
   }
   @media (min-width: 821px) {
     #root-gutterbones[data-phase="SHOP"] .shop-item-card {
@@ -2717,6 +2734,7 @@
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
+    padding-bottom: 0.15rem;
   }
   #root-gutterbones .shop-item-card__overlay {
     pointer-events: none;
@@ -20057,7 +20075,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     const buyLabel = gold >= listPrice ? `BUY $${listPrice}` : `LOAN $${listPrice} (debt)`;
                                     const effectLine = isFace ? `${item.type} face` : (item.desc || '');
                                     const inspectSelected = shopPreviewItem?.id === item.id;
-                                    return <div key={item.id} className={`shop-item-card transition-all group relative min-h-0 ${rarityClass(item.rarity)} ${sold ? 'sold-collapse shop-item-card--sold pointer-events-none' : ''} ${inspectSelected ? 'shop-item-card--inspect' : ''} ${fits && !sold ? 'shop-item-card--build-fit ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
+                                    return <div key={item.id} className={`shop-item-card transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse shop-item-card--sold pointer-events-none' : ''} ${inspectSelected ? 'shop-item-card--inspect' : ''} ${fits && !sold ? 'shop-item-card--build-fit ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
                                         {!sold && <div className="shop-item-card__overlay shop-item-card__overlay--select" aria-hidden="true" />}
                                         {sold && <div className="shop-item-card__overlay shop-item-card__overlay--sold" aria-hidden="true" />}
                                         <div className="shop-item-card__inner p-2 md:p-3">
