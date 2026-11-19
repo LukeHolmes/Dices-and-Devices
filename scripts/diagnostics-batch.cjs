@@ -437,4 +437,5 @@ module.exports = {
   buildRidWindows,
   harnessCommit,
   policyCommit,
+  runRidWindow,
 };
