@@ -51,7 +51,18 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   const awaitHarnessQuiescence = async () => {
     if (!awaitClock) return;
     await spinUntil(harnessQuiescent, 240);
+    await spinUntil(() => {
+      const c = canonicalState();
+      const s = window.__GB_E2E__?.getState?.();
+      if (!c?.phase || !s?.phase) return true;
+      return c.phase === s.phase;
+    }, 96);
     await yieldClock(16);
+  };
+
+  const mergeSimState = (raw, canonical) => {
+    if (!canonical || typeof canonical !== "object") return raw;
+    return { ...(raw || {}), ...canonical };
   };
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
@@ -434,7 +445,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   for (let step = 0; step < maxSteps; step++) {
     await awaitHarnessQuiescence();
     const snap = takeSnapshot();
-    const st = snap.st;
+    const st = mergeSimState(snap.st, snap.canonical);
     const btn = snap.btn;
     const ph = (st && st.phase) || snap.canonical?.phase || "?";
     const syncRound = snap.canonical?.round ?? st?.round;

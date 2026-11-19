@@ -466,6 +466,18 @@ async function main() {
         harness_shim_rev: "2026-11-19-harness-clock-v7",
         prior_gate_records: instrumentedGate
           ? [
+              {
+                batch: "REPRO-DEFM005-20261119-instrumented-v7",
+                matched: 4,
+                total: 20,
+                note: "natural-only; pre phase-sync restore",
+              },
+              {
+                batch: "REPRO-DEFM005-20261119-instrumented-v7",
+                matched: 5,
+                total: 20,
+                note: "natural-only; phase/round harness sync (r2)",
+              },
               { batch: "REPRO-DEFM005-20261119-instrumented-v6", matched: 9, total: 20, note: "natural-only" },
               { batch: "REPRO-DEFM005-20261119-instrumented-v5b", matched: 6, total: 20, note: "natural-only" },
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
