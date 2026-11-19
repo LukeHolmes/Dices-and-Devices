@@ -2041,6 +2041,47 @@
             }
         }
     }
+    @media (max-height: 820px) and (min-width: 768px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 1 auto;
+            min-height: 0;
+            max-height: min(48vh, 22rem);
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            flex: 1 1 auto !important;
+            min-height: 5.5rem !important;
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: 100%;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+            overflow: hidden;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"].shop-route-card--compact .line-clamp-2 {
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer {
+            flex-shrink: 0 !important;
+            position: relative;
+            z-index: 24;
+            background: #1a1a1a;
+            isolation: isolate;
+        }
+    }
     @media (max-width: 1023px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
             position: relative !important;
@@ -20432,16 +20473,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 && root.getAttribute('data-phase') === 'SHOP'
                                 && scrollHost instanceof HTMLElement
                             ) {
-                                const hostStyle = window.getComputedStyle(scrollHost);
-                                const overflowY = hostStyle.overflowY;
-                                if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay')
-                                    && scrollHost.scrollHeight > scrollHost.clientHeight + 1) {
-                                    const hostR = scrollHost.getBoundingClientRect();
-                                    if (hostR.top >= -2 && hostR.left >= -2 && hostR.width > 32 && hostR.height > 48) {
-                                        const bottomInHost = el.offsetTop + el.offsetHeight;
-                                        if (el.offsetTop >= -2 && bottomInHost <= scrollHost.scrollHeight + 4) {
-                                            return;
-                                        }
+                                const hostR = scrollHost.getBoundingClientRect();
+                                if (hostR.width > 32 && hostR.height > 40 && hostR.top < vh && hostR.bottom > 0) {
+                                    const bottomInHost = el.offsetTop + el.offsetHeight;
+                                    if (el.offsetTop >= -2 && bottomInHost <= scrollHost.scrollHeight + 4) {
+                                        return;
                                     }
                                 }
                             }
