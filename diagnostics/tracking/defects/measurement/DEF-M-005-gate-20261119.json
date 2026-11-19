@@ -1,22 +1,26 @@
 {
   "id": "DEF-M-005",
   "gate_batch_id": "REPRO-DEFM005-20261119",
-  "generatedAt": "2026-11-19T00:37:49.565Z",
+  "generatedAt": "2026-11-19T04:12:00.000Z",
   "status": "open",
   "harness_rev": "2026-11-18-harness-seed-v1",
   "denominators": {
-    "full_tuple_match": "0/2",
-    "scope_note": "Seed 0 only ×2 replicates; both R-main and R78 — full 0–9 matrix may still be running"
+    "full_tuple_match": "0/20",
+    "per_baseline": {
+      "R-main": "0/10",
+      "R78": "0/10"
+    }
   },
   "perBaseline": {
-    "R-main": { "matched": 0, "total": 1, "seeds": [0] },
-    "R78": { "matched": 0, "total": 1, "seeds": [0] }
+    "R-main": { "matched": 0, "total": 10, "seeds": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    "R78": { "matched": 0, "total": 10, "seeds": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] }
   },
   "remaining_drift": [
-    "Pinned rules HTML has no in-page ms=0 timeout flush; harness sets __GB_SIM_STEP_SYNC__ via inject only",
-    "Playwright bot still awaits real wall-clock (wait/spin) while game schedules ms>0 setTimeouts → different step paths between replicates",
-    "Telemetry (hands/roundEvents) diverges when step paths diverge even if outcome/maxRound sometimes align"
+    "Pinned rules (7d649ef, 59e11dc) lack in-page synchronous timeout flush for sim; harness injects seed only",
+    "Bot loop step count and telemetry diverge between replicates despite shared mulberry32 stream",
+    "Outcome/max_round sometimes align but steps and replay_digest do not"
   ],
+  "tracking_csv": "diagnostics/tracking/runs/REPRO-DEFM005-20261119.csv",
   "artifact": "/opt/cursor/artifacts/diagnostics-repro-report.json",
   "llm_calls": 0
 }
