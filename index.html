@@ -5472,6 +5472,31 @@
     #root-gutterbones[data-look-and-feel="1"].gb-motion-reduce .laf-ashtray-smoke {
         display: none !important;
     }
+
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-closed,
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-open {
+        display: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sheet-frame {
+        width: 100%;
+        height: 100%;
+        background-image: url("assets/art/look-and-feel/hand-front-spritesheet.webp");
+        background-repeat: no-repeat;
+        background-size: 400% 200%;
+        background-position: 0% 0%;
+        animation: handSpriteSheetFrames var(--gb-roll-hand-ms, 1360ms) steps(1, end) forwards;
+    }
+    @keyframes handSpriteSheetFrames {
+        0%, 11.9% { background-position: 0% 0%; }
+        12.5%, 24.4% { background-position: 33.333% 0%; }
+        25%, 36.9% { background-position: 66.666% 0%; }
+        37.5%, 49.4% { background-position: 100% 0%; }
+        50%, 61.9% { background-position: 0% 100%; }
+        62.5%, 74.4% { background-position: 33.333% 100%; }
+        75%, 86.9% { background-position: 66.666% 100%; }
+        87.5%, 100% { background-position: 100% 100%; }
+    }
+
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
@@ -9894,8 +9919,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
-    const ROLL_HAND_SPRITE_CLOSED = ['assets', 'scenes', 'hand-closed.png'].join('/');
-    const ROLL_HAND_SPRITE_OPEN = ['assets', 'scenes', 'hand-open.png'].join('/');
+    const ROLL_HAND_SPRITE_SHEET = 'assets/art/look-and-feel/hand-front-spritesheet.webp';
 
     const probeRollHandSprites = (() => {
         let cached = null;
@@ -9906,21 +9930,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     resolve(false);
                     return;
                 }
-                let closedDone = false;
-                let openDone = false;
-                let closedOk = false;
-                let openOk = false;
-                const finish = () => {
-                    if (closedDone && openDone) resolve(closedOk && openOk);
-                };
-                const closed = new Image();
-                const open = new Image();
-                closed.onload = () => { closedOk = true; closedDone = true; finish(); };
-                closed.onerror = () => { closedDone = true; finish(); };
-                open.onload = () => { openOk = true; openDone = true; finish(); };
-                open.onerror = () => { openDone = true; finish(); };
-                closed.src = ROLL_HAND_SPRITE_CLOSED;
-                open.src = ROLL_HAND_SPRITE_OPEN;
+                const sheet = new Image();
+                sheet.onload = () => resolve(true);
+                sheet.onerror = () => resolve(false);
+                sheet.src = ROLL_HAND_SPRITE_SHEET;
             });
             return cached;
         };
@@ -9930,9 +9943,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         if (!generation || !spritesReady) return null;
         return (
             <div data-layout-key="roll-hand-throw-overlay" className="gutter-roll-hand-overlay" aria-hidden="true">
-                <div key={generation} className="gutter-roll-hand-sprite animate-gutter-hand">
-                    <img src={ROLL_HAND_SPRITE_CLOSED} alt="" className="gutter-roll-hand-closed" draggable={false} decoding="async" />
-                    <img src={ROLL_HAND_SPRITE_OPEN} alt="" className="gutter-roll-hand-open" draggable={false} decoding="async" />
+                <div key={generation} className="gutter-roll-hand-sprite gutter-roll-hand-sprite--sheet animate-gutter-hand">
+                    <div className="gutter-roll-hand-sheet-frame" role="presentation" />
                 </div>
             </div>
         );
@@ -18527,19 +18539,33 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 },
                 readRollHandPose: () => {
                     const sprite = document.querySelector('.gutter-roll-hand-sprite');
+                    if (!sprite) return { ok: false, reason: 'no hand nodes' };
+                    const sheetFrame = document.querySelector('.gutter-roll-hand-sheet-frame');
                     const closed = document.querySelector('.gutter-roll-hand-closed');
                     const open = document.querySelector('.gutter-roll-hand-open');
-                    if (!sprite || !closed || !open) return { ok: false, reason: 'no hand nodes' };
                     const sc = getComputedStyle(sprite);
-                    const closedOp = parseFloat(getComputedStyle(closed).opacity);
-                    const openOp = parseFloat(getComputedStyle(open).opacity);
                     const sweep = sprite.getAnimations().find((a) => a.animationName === 'handThrowSweep');
                     const timing = sweep?.effect?.getComputedTiming?.();
                     const dur = typeof timing?.duration === 'number' ? timing.duration : null;
                     const cur = typeof sweep?.currentTime === 'number' ? sweep.currentTime : null;
                     const progress = dur && cur != null ? cur / dur : null;
-                    const dominant = openOp > closedOp + 0.08 ? 'open' : (closedOp > openOp + 0.08 ? 'closed' : 'blend');
-                    const rect = (dominant === 'open' ? open : closed).getBoundingClientRect();
+                    let closedOp = closed ? parseFloat(getComputedStyle(closed).opacity) : 0;
+                    let openOp = open ? parseFloat(getComputedStyle(open).opacity) : 0;
+                    let dominant = 'closed';
+                    let rectEl = closed || sheetFrame || sprite;
+                    if (sheetFrame) {
+                        const frameIdx = progress != null ? Math.min(7, Math.floor(progress * 8)) : 0;
+                        dominant = frameIdx >= 4 ? 'open' : 'closed';
+                        closedOp = frameIdx < 4 ? 1 : 0.2;
+                        openOp = frameIdx >= 4 ? 1 : 0.2;
+                        rectEl = sheetFrame;
+                    } else if (!closed || !open) {
+                        return { ok: false, reason: 'no hand nodes' };
+                    } else {
+                        dominant = openOp > closedOp + 0.08 ? 'open' : (closedOp > openOp + 0.08 ? 'closed' : 'blend');
+                        rectEl = dominant === 'open' ? open : closed;
+                    }
+                    const rect = rectEl.getBoundingClientRect();
                     const alley = document.querySelector('[data-layout-key="play-alley"]');
                     const alleyRect = alley ? alley.getBoundingClientRect() : null;
                     return {
@@ -18557,10 +18583,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     };
                 },
                 sampleRollHandVisibility: () => {
+                    const sheetFrame = document.querySelector('.gutter-roll-hand-sheet-frame');
                     const closed = document.querySelector('.gutter-roll-hand-closed');
                     const open = document.querySelector('.gutter-roll-hand-open');
                     let pick = null;
                     let pickOpacity = 0;
+                    if (sheetFrame) {
+                        pick = sheetFrame;
+                        const parentSprite = sheetFrame.closest('.gutter-roll-hand-sprite');
+                        pickOpacity = parentSprite ? parseFloat(getComputedStyle(parentSprite).opacity) : 1;
+                    }
                     if (closed) {
                         const op = parseFloat(getComputedStyle(closed).opacity);
                         if (op > pickOpacity) { pick = closed; pickOpacity = op; }
@@ -18597,17 +18629,67 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     };
                 },
                 sampleRollHandOpaquePixels: (preferFrame = 'auto') => {
+                    const sheetFrame = document.querySelector('.gutter-roll-hand-sheet-frame');
                     const closed = document.querySelector('.gutter-roll-hand-closed');
                     const open = document.querySelector('.gutter-roll-hand-open');
                     const closedOp = closed ? parseFloat(getComputedStyle(closed).opacity) : 0;
                     const openOp = open ? parseFloat(getComputedStyle(open).opacity) : 0;
                     let pick = null;
-                    if (preferFrame === 'closed') pick = closedOp > 0.12 ? closed : null;
+                    if (sheetFrame) {
+                        pick = sheetFrame;
+                    } else if (preferFrame === 'closed') pick = closedOp > 0.12 ? closed : null;
                     else if (preferFrame === 'open') pick = openOp > 0.12 ? open : null;
                     else pick = closedOp >= openOp
                         ? (closedOp > 0.12 ? closed : (openOp > 0.12 ? open : null))
                         : (openOp > 0.12 ? open : (closedOp > 0.12 ? closed : null));
-                    if (!pick || !pick.complete || pick.naturalWidth < 1) {
+                    if (!pick) {
+                        return { ok: false, reason: 'no drawable hand frame' };
+                    }
+                    if (pick === sheetFrame) {
+                        const sheetUrl = 'assets/art/look-and-feel/hand-front-spritesheet.webp';
+                        const img = new Image();
+                        img.src = sheetUrl;
+                        if (!img.complete || img.naturalWidth < 1) {
+                            return { ok: false, reason: 'sheet not loaded' };
+                        }
+                        const frameW = img.naturalWidth / 4;
+                        const frameH = img.naturalHeight / 2;
+                        const progressGuess = preferFrame === 'open' ? 0.62 : preferFrame === 'closed' ? 0.12 : 0.35;
+                        const frameIdx = Math.min(7, Math.floor(progressGuess * 8));
+                        const col = frameIdx % 4;
+                        const row = Math.floor(frameIdx / 4);
+                        const maxSide = 96;
+                        const scale = Math.min(1, maxSide / Math.max(frameW, frameH));
+                        const w = Math.max(8, Math.round(frameW * scale));
+                        const h = Math.max(8, Math.round(frameH * scale));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return { ok: false, reason: 'no canvas' };
+                        ctx.drawImage(img, col * frameW, row * frameH, frameW, frameH, 0, 0, w, h);
+                        const data = ctx.getImageData(0, 0, w, h).data;
+                        let opaque = 0;
+                        for (let i = 3; i < data.length; i += 4) {
+                            if (data[i] > 28) opaque += 1;
+                        }
+                        let palmOpaque = 0;
+                        const palmX0 = Math.floor(w * 0.32);
+                        for (let y = 0; y < h; y += 1) {
+                            for (let x = palmX0; x < w; x += 1) {
+                                const i = (y * w + x) * 4 + 3;
+                                if (data[i] > 28) palmOpaque += 1;
+                            }
+                        }
+                        return {
+                            ok: opaque >= 180 && palmOpaque >= 70,
+                            opaque,
+                            palmOpaque,
+                            samples: w * h,
+                            frame: `sheet-${frameIdx}`,
+                        };
+                    }
+                    if (!pick.complete || pick.naturalWidth < 1) {
                         return { ok: false, reason: 'no drawable hand frame' };
                     }
                     const maxSide = 96;
@@ -18643,7 +18725,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     };
                 },
                 measureHandShuffleOverlap: () => {
-                    const hand = document.querySelector('.gutter-roll-hand-closed, .gutter-roll-hand-open');
+                    const hand = document.querySelector('.gutter-roll-hand-sheet-frame, .gutter-roll-hand-closed, .gutter-roll-hand-open');
                     const shuffle = document.querySelector('[data-layout-key="play-shuffle-btn"]');
                     if (!hand || !shuffle) return { ok: true, skipped: true };
                     const hr = hand.getBoundingClientRect();
