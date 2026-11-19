@@ -1,8 +1,19 @@
 {
   "id": "DEF-M-005",
+  "status": "parked",
+  "parkedAt": "2026-11-19T14:58:00Z",
+  "decision": "diagnostics/tracking/decisions/DECISION-20261119-park-def-m-005.md",
   "gate_batch_id": "REPRO-DEFM005-20261119-instrumented-v7",
   "harness_mode": "node_paced_playwright_clock_boot",
   "harness_shim_rev": "2026-11-19-harness-clock-v7",
+  "r3_partial_abort": {
+    "batch": "REPRO-DEFM005-20261119-instrumented-v7-r3",
+    "pairs_scored": 0,
+    "pairs_total": 20,
+    "individual_runs_logged": 11,
+    "individual_runs_total": 40,
+    "note": "Stopped by park decision; R-main-i rep0 rid0-9 + rep1 rid0 only; no R78-i; CSV partial with blank metrics"
+  },
   "prior_gate_records": [
     {
       "batch": "REPRO-DEFM005-20261119-instrumented-v6",

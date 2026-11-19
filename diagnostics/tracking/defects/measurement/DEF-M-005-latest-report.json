@@ -19,6 +19,8 @@
   "f0f79cf_verdict": "regressed R-main-i vs af8ef9a (5/10→4/10); path consumable kept; opening-sniff-in-effect restored",
   "named_call_site_swap": "weightedSortJitter (generateShop shop-offer jitter) vs second generateShop entry (refreshShop / leaveGambleForShop)",
   "remaining_rmain_seeds_failed": [0, 1, 4, 6, 8, 9],
-  "status": "open",
-  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-instrumented-v4c.json"
+  "status": "parked",
+  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-instrumented-v7.json",
+  "decision": "diagnostics/tracking/decisions/DECISION-20261119-park-def-m-005.md",
+  "natural_repro_best": { "batch": "REPRO-DEFM005-20261119-instrumented-v6", "matched": 9, "total": 20 }
 }

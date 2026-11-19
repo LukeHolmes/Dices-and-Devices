@@ -2,7 +2,9 @@
   "id": "DEF-M-005",
   "title": "R78-i closed on v4; R-main-i 6/10 fail on shop draw ordering",
   "kind": "measurement",
-  "status": "open",
+  "status": "parked",
+  "parkedAt": "2026-11-19",
+  "decision": "diagnostics/tracking/decisions/DECISION-20261119-park-def-m-005.md",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
   "notes": "2026-11-19 REPRO-DEFM005-20261119-instrumented-v4c: 14/20 (R-main-i 4/10, R78-i 10/10). Harness v4b: cosmetic reset at startNewRun + pre-bot yieldClock(480) after cosmetic reset; dual RNG streams; gameplay draw site log. R-main-i 81ec337: reverted harmful f0f79cf/19de179 opening-sniff sync; kept path consumable + gbSimGameplayRandom on pickRandomArcId/Blueprint/resolveFlip + weightedSortJitter naming. f0f79cf route regression confirmed (5→4/10). Named swap: weightedSortJitter vs duplicate generateShop passes (finalizeRound vs refreshShop). Opening sniff openingStashEffect remains effect-ordered. Best R-main v4: 5/10 (af8ef9a). LLM: 0."
 }
