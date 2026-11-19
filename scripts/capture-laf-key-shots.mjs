@@ -122,18 +122,55 @@ async function bootShop(page, vp) {
   await page.waitForTimeout(800);
 }
 
-async function captureShop(vp, name, fullPage = false) {
+async function captureShop(vp, name) {
   const page = await openPage();
   await bootShop(page, vp);
   await page.evaluate(() => {
     window.scrollTo(0, 0);
     const screen = document.querySelector('#root-gutterbones[data-phase="SHOP"] .gb-screen');
     if (screen instanceof HTMLElement) screen.scrollTop = 0;
-    const layout = document.scrollingElement;
-    if (layout) layout.scrollTop = 0;
   });
   await page.waitForTimeout(150);
-  await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`), fullPage });
+  await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`) });
+  await page.close();
+}
+
+async function captureShopTall(vp, name) {
+  const page = await openPage();
+  await bootShop(page, vp);
+  const shotHeight = await page.evaluate(() => {
+    document.getElementById('__gb_capture_unscroll')?.remove();
+    const tag = document.createElement('style');
+    tag.id = '__gb_capture_unscroll';
+    tag.textContent = `
+      html, body { height: auto !important; max-height: none !important; overflow: visible !important; }
+      #root-gutterbones[data-phase="SHOP"] .gb-screen {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+      }
+    `;
+    document.head.appendChild(tag);
+    window.scrollTo(0, 0);
+    const screen = document.querySelector('#root-gutterbones[data-phase="SHOP"] .gb-screen');
+    if (screen instanceof HTMLElement) screen.scrollTop = 0;
+    const hit = document.querySelector('[data-layout-key="shop-hit-streets"]');
+    const layout = document.querySelector('[data-layout-key="shop-layout"]');
+    const anchorTop = screen instanceof HTMLElement ? screen.getBoundingClientRect().top : 0;
+    const anchorBottom = hit
+      ? hit.getBoundingClientRect().bottom
+      : (layout?.getBoundingClientRect().bottom ?? anchorTop + 2400);
+    const pad = 28;
+    return Math.min(16000, Math.max(window.innerHeight, Math.ceil(anchorBottom - anchorTop + pad)));
+  });
+  await page.setViewportSize({ width: vp.width, height: shotHeight });
+  await page.waitForTimeout(200);
+  await page.screenshot({
+    path: path.join(OUT, `${label}_${name}_shop.png`),
+    fullPage: false,
+  });
+  await page.evaluate(() => document.getElementById('__gb_capture_unscroll')?.remove());
   await page.close();
 }
 
@@ -150,14 +187,20 @@ async function capture390Drawer() {
   await page.close();
 }
 
-await capture1920();
-await captureShop({ width: 1920, height: 1080 }, '1920x1080');
-await captureViewport({ width: 1366, height: 768 }, '1366x768');
-if (label === 'after') {
-  await captureShop({ width: 390, height: 844 }, '390x844', true);
-  await captureShop({ width: 768, height: 1024 }, '768x1024', true);
+if (process.env.CAPTURE_SHOP_ONLY === '1') {
+  await captureShopTall({ width: 390, height: 844 }, '390x844');
+  await captureShopTall({ width: 768, height: 1024 }, '768x1024');
   await captureShop({ width: 1024, height: 768 }, '1024x768');
-  await capture390Drawer();
+} else {
+  await capture1920();
+  await captureShop({ width: 1920, height: 1080 }, '1920x1080');
+  await captureViewport({ width: 1366, height: 768 }, '1366x768');
+  if (label === 'after') {
+    await captureShopTall({ width: 390, height: 844 }, '390x844');
+    await captureShopTall({ width: 768, height: 1024 }, '768x1024');
+    await captureShop({ width: 1024, height: 768 }, '1024x768');
+    await capture390Drawer();
+  }
 }
 await browser.close();
 await new Promise((resolve) => server.close(resolve));
