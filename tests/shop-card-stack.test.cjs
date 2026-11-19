@@ -133,7 +133,7 @@ for (const vp of VIEWPORTS) {
           );
         }
 
-        const pageMetrics = await page.evaluate(() => {
+        const pageMetrics = await page.evaluate((vpName) => {
           const panel = document.querySelector('[data-layout-key="shop-items-panel"]');
           const shopPanel = document.querySelector('[data-tutorial="shop-panel"]');
           const vw = window.innerWidth;
@@ -194,6 +194,63 @@ for (const vp of VIEWPORTS) {
               /FENCE HARDWARE/i.test(el.textContent || ""),
             ) || /FENCE HARDWARE/i.test(document.querySelector(".shop-options-fence")?.textContent || "");
 
+          const shell = document.querySelector(".shop-items-shell");
+          const pag = document.querySelector('[data-layout-key="shop-item-pagination"]');
+          const pagBottom = pag?.getBoundingClientRect().bottom ?? 0;
+          const viewport = panel?.getBoundingClientRect();
+          const clipBad = [];
+          const buyViewportBad = [];
+          const canScroll = panel && panel.scrollHeight > panel.clientHeight + 2;
+          if (viewport) {
+            const maxScrollTop = panel ? Math.max(0, panel.scrollHeight - panel.clientHeight) : 0;
+            for (const card of panel.querySelectorAll(".shop-item-card")) {
+              const r = card.getBoundingClientRect();
+              const fullyVisible =
+                r.top >= viewport.top - 2
+                && r.bottom <= viewport.bottom + 2
+                && r.left >= viewport.left - 2
+                && r.right <= viewport.right + 2;
+              const topInPanel = card.offsetTop;
+              const bottomInPanel = topInPanel + card.offsetHeight;
+              const scrollToReveal = Math.max(0, bottomInPanel - panel.clientHeight);
+              const revealable = canScroll && scrollToReveal <= maxScrollTop + 3;
+              if (!fullyVisible && !revealable) {
+                clipBad.push({
+                  title: card.querySelector(".shop-item-card__title")?.textContent?.slice(0, 16),
+                  bottom: r.bottom,
+                  viewportBottom: viewport.bottom,
+                  canScroll,
+                  bottomInPanel,
+                  panelClientH: panel.clientHeight,
+                });
+              }
+              const tag = card.querySelector(".shop-item-card__price-tag-wrap");
+              if (tag && pagBottom > 0) {
+                const tr = tag.getBoundingClientRect();
+                if (tr.top < pagBottom - 1) {
+                  clipBad.push({
+                    title: "tag-under-pager",
+                    gap: pagBottom - tr.top,
+                  });
+                }
+              }
+              const bbtn = card.querySelector('[data-layout-key="shop-buy-button"]');
+              const br = bbtn?.getBoundingClientRect();
+              if (br && (vpName === "1024x768" || vpName === "1366x768")) {
+                const buyVisible = br.top >= viewport.top - 2 && br.bottom <= viewport.bottom + 2;
+                if (!buyVisible) {
+                  buyViewportBad.push({
+                    title: card.querySelector(".shop-item-card__title")?.textContent?.slice(0, 16),
+                    btnBottom: br.bottom,
+                    viewportBottom: viewport.bottom,
+                  });
+                }
+              }
+            }
+          }
+          const shopColumnH = shell?.closest('[data-tutorial="shop-panel"]')?.getBoundingClientRect().height || 0;
+          const routesColumnH = document.querySelector('[data-layout-key="shop-routes-panel"]')?.getBoundingClientRect().height || 0;
+
           return {
             count: cards.length,
             intersects,
@@ -204,17 +261,36 @@ for (const vp of VIEWPORTS) {
             scaled,
             fenceSell,
             fenceHeader,
+            clipBad,
+            buyViewportBad,
+            shopColumnH,
+            routesColumnH,
+            canScroll,
           };
-        });
+        }, vp.name);
 
         totalSeen += pageMetrics.count;
         intersections.push(...pageMetrics.intersects);
         badBuy.push(...pageMetrics.buyInCard);
         badSold.push(...pageMetrics.soldBad);
 
+        const landscapeTablet = (vp.width === 1024 || vp.width === 1366) && vp.height === 768;
+        if (landscapeTablet) {
+          assert.equal(pageMetrics.clipBad.length, 0, JSON.stringify(pageMetrics.clipBad, null, 2));
+        }
         if (vp.width === 1024 && vp.height === 768) {
           assert.ok(pageMetrics.panelRatio >= 0.44, `stock panel width ratio ${pageMetrics.panelRatio}`);
           assert.ok(pageMetrics.minCardW >= 218, `min card width ${pageMetrics.minCardW}`);
+          assert.ok(
+            pageMetrics.shopColumnH >= pageMetrics.routesColumnH * 0.88,
+            `shop column shorter than routes (${pageMetrics.shopColumnH} vs ${pageMetrics.routesColumnH})`,
+          );
+        }
+        if (vp.width === 1366 && vp.height === 768) {
+          assert.equal(pageMetrics.buyViewportBad.length, 0, JSON.stringify(pageMetrics.buyViewportBad, null, 2));
+        }
+        if (vp.width === 1024 && vp.height === 768) {
+          assert.equal(pageMetrics.buyViewportBad.length, 0, JSON.stringify(pageMetrics.buyViewportBad, null, 2));
         }
       }
 
