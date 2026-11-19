@@ -17,7 +17,7 @@ const OUT = process.env.S4_SHOP_CARD_OUT || path.join("/opt/cursor/artifacts", `
 
 const VIEWPORTS = [
   { tag: "1440x900", width: 1440, height: 900 },
-  { tag: "768x1024", width: 768, height: 1024 },
+  { tag: "1024x768", width: 1024, height: 768 },
   { tag: "390x844", width: 390, height: 844 },
 ];
 
@@ -25,7 +25,7 @@ const S4_DEMO_IDS = [
   "CROWBAR",
   "CENTERPIECE",
   "BLOOD_PACT",
-  "LOADED_DIE",
+  "ENGINE",
   "GOLD_FACE",
   "SHIV_FACE",
 ];
@@ -36,6 +36,7 @@ function s4DemoShopRun() {
     round: 4,
     gold: 200,
     target: 161,
+    inventory: [{ id: "LOADED_DIE", instanceId: "hw-fence-demo" }],
     shopItems: S4_DEMO_IDS.map((id) => ({ id })),
     routeModifiers: { shopDiscount: 0.12 },
     paths: fixtures.shop()?.paths || [],
@@ -103,6 +104,37 @@ async function main() {
     if (await blood.count()) await blood.hover();
 
     await page.screenshot({ path: path.join(OUT, `shop-states-${vp.tag}.png`) });
+
+    const priceTag = page.locator(".shop-item-card__price-tag-wrap").first();
+    if (await priceTag.count()) {
+      const box = await priceTag.boundingBox();
+      if (box) {
+        await page.screenshot({
+          path: path.join(OUT, `price-tag-closeup-${vp.tag}.png`),
+          clip: {
+            x: Math.max(0, box.x - 12),
+            y: Math.max(0, box.y - 8),
+            width: Math.min(box.width + 24, vp.width),
+            height: Math.min(box.height + 16, vp.height),
+          },
+        });
+      }
+    }
+    const sectionHeader = page.locator(".shop-section-header").first();
+    if (await sectionHeader.count()) {
+      const box = await sectionHeader.boundingBox();
+      if (box) {
+        await page.screenshot({
+          path: path.join(OUT, `section-header-closeup-${vp.tag}.png`),
+          clip: {
+            x: Math.max(0, box.x - 8),
+            y: Math.max(0, box.y - 6),
+            width: Math.min(box.width + 16, vp.width),
+            height: Math.min(box.height + 12, vp.height),
+          },
+        });
+      }
+    }
 
     const rareCard = page.locator(".shop-item-card.glow-rare").first();
     if (await rareCard.count()) {

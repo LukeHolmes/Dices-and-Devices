@@ -16,14 +16,12 @@ const label = process.argv[2] === "before" ? "before" : "after";
 const OUT = process.env.S3_ITEM_ICON_OUT || path.join("/opt/cursor/artifacts", `s3-item-icons-${label}`);
 
 const DEMO_SHOP_IDS = [
-  "CENTERPIECE", "LOADED_DIE", "CROWBAR", "BRASS_KNUCKLES",
-  "SECOND_WIND", "SMELLING_SALTS", "DIRTY_WAD",
-  "GOLD_FACE", "GHOST_FACE", "FUSE_FACE", "SHIV_FACE", "MARK_FACE", "WIREBAG_FACE", "MULT_FACE", "BLOOD_6",
+  "CENTERPIECE", "CROWBAR", "BLOOD_PACT", "ENGINE", "SHIV_FACE", "GOLD_FACE",
 ];
 
 const VIEWPORTS = [
   { tag: "1440x900", width: 1440, height: 900 },
-  { tag: "768x1024", width: 768, height: 1024 },
+  { tag: "1024x768", width: 1024, height: 768 },
   { tag: "390x844", width: 390, height: 844 },
 ];
 
