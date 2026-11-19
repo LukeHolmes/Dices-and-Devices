@@ -14,6 +14,7 @@ const VIEWPORTS = [
   { name: "390x844", width: 390, height: 844 },
   { name: "768x1024", width: 768, height: 1024 },
   { name: "1024x768", width: 1024, height: 768 },
+  { name: "1920x1080", width: 1920, height: 1080 },
 ];
 
 let server;

@@ -122,10 +122,10 @@ async function bootShop(page, vp) {
   await page.waitForTimeout(800);
 }
 
-async function captureShop(vp, name) {
+async function captureShop(vp, name, fullPage = false) {
   const page = await openPage();
   await bootShop(page, vp);
-  await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`) });
+  await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`), fullPage });
   await page.close();
 }
 
@@ -146,11 +146,9 @@ await capture1920();
 await captureShop({ width: 1920, height: 1080 }, '1920x1080');
 await captureViewport({ width: 1366, height: 768 }, '1366x768');
 if (label === 'after') {
+  await captureShop({ width: 390, height: 844 }, '390x844', true);
+  await captureShop({ width: 768, height: 1024 }, '768x1024', true);
   await captureShop({ width: 1024, height: 768 }, '1024x768');
-  await captureViewport({ width: 768, height: 1024 }, '768x1024');
-  await captureShop({ width: 768, height: 1024 }, '768x1024');
-  await captureViewport({ width: 390, height: 844 }, '390x844');
-  await captureShop({ width: 390, height: 844 }, '390x844');
   await capture390Drawer();
 }
 await browser.close();

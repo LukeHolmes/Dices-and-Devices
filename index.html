@@ -289,6 +289,13 @@
         padding-right: 0.25rem;
         scrollbar-width: none;
     }
+    #root-gutterbones .shop-route-pagination-row {
+        position: relative;
+        z-index: 32;
+        isolation: isolate;
+        margin-top: 0.15rem;
+        margin-bottom: 0.35rem;
+    }
     #root-gutterbones .shop-route-pagination {
         display: flex;
         align-items: center;
@@ -1173,26 +1180,26 @@
                 gap: 0.65rem !important;
             }
             #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] [data-tutorial="shop-panel"] {
-                flex: 0 1 auto !important;
+                flex: 0 0 auto !important;
                 width: 100% !important;
                 min-width: 0 !important;
                 max-width: 100% !important;
-                max-height: min(52dvh, calc(100dvh - 22rem)) !important;
+                max-height: none !important;
             }
             #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-                flex: 1 1 auto !important;
+                flex: 0 0 auto !important;
                 width: 100% !important;
                 min-width: 0 !important;
                 max-width: 100% !important;
-                max-height: min(50dvh, calc(100dvh - 16.5rem)) !important;
-                overflow: hidden !important;
+                max-height: none !important;
+                overflow: visible !important;
             }
             #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
                 transform: none !important;
-                flex: 1 1 auto !important;
+                flex: 0 0 auto !important;
                 min-height: 0 !important;
-                max-height: 100% !important;
-                overflow-y: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
                 overflow-x: hidden !important;
             }
             #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
@@ -2001,11 +2008,12 @@
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
             position: relative;
-            z-index: 22;
+            z-index: 1;
             pointer-events: auto;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-route-pagination button {
-            z-index: 22;
+            position: relative;
+            z-index: 2;
         }
         @media (min-height: 880px) {
             #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
@@ -2041,34 +2049,30 @@
             }
         }
     }
-    @media (max-height: 820px) and (min-width: 768px) {
+    @media (max-height: 820px) and (min-width: 1024px) {
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
             display: flex !important;
             flex-direction: column !important;
             overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-            flex: 0 1 auto;
-            min-height: 0;
-            max-height: min(48vh, 22rem);
-            overflow-x: hidden;
-            overflow-y: auto;
-            overscroll-behavior: contain;
+            flex: 0 0 auto;
+            max-height: none;
+            overflow: visible;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-route-pagination-row {
+            flex: 0 0 auto;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 1 1 auto !important;
-            min-height: 5.5rem !important;
-            overflow: hidden !important;
+            flex: 0 0 auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
-            flex: 1 1 auto;
+            flex: 0 0 auto;
             min-height: 0;
-            max-height: 100%;
-            overflow-y: auto !important;
-            overscroll-behavior: contain;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
-            overflow: hidden;
+            max-height: none;
+            overflow: visible !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"].shop-route-card--compact .line-clamp-2 {
             -webkit-line-clamp: 1;
@@ -2083,6 +2087,29 @@
         }
     }
     @media (max-width: 1023px) {
+        #root-gutterbones[data-phase="SHOP"] .gb-screen {
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            height: auto !important;
+            min-height: 100dvh;
+            max-height: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            flex: 0 0 auto !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            flex: 0 0 auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
             position: relative !important;
             left: auto !important;
@@ -2090,7 +2117,7 @@
             bottom: auto !important;
             width: 100% !important;
             z-index: 12 !important;
-            margin-top: auto !important;
+            margin-top: 0.5rem !important;
             pointer-events: auto !important;
             box-shadow: none !important;
             background: #1a1a1a !important;
@@ -2099,24 +2126,34 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             display: flex !important;
             flex-direction: column !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             min-height: 0 !important;
+            max-height: none !important;
+            flex: 0 0 auto !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            flex: 1 1 auto !important;
+            flex: 0 0 auto !important;
             min-height: 0 !important;
-            overflow-x: hidden !important;
-            overflow-y: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 1 1 auto !important;
-            min-height: 0 !important;
-            overflow: hidden !important;
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 0 auto !important;
+            overflow: visible !important;
         }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
-            min-height: 0;
-            overflow-y: auto;
-            overscroll-behavior: contain;
+            flex: 0 0 auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+            flex-shrink: 0;
+            height: auto;
+            min-height: 44px;
         }
     }
     /* Polish step 4: short landscape — shop/gamble fit */
@@ -2258,11 +2295,25 @@
         min-height: 0;
         overflow: hidden;
     }
-    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
-        flex: 1 1 auto;
-        min-height: 0;
-        max-height: 100%;
-        overflow: hidden;
+    @media (max-width: 1023px) {
+        #root-gutterbones[data-phase="SHOP"] .gb-screen {
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            flex: 0 0 auto;
+            max-height: none;
+            overflow: visible;
+        }
+    }
+    @media (min-width: 1024px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: 100%;
+            overflow: hidden;
+        }
     }
     @media (min-width: 768px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
@@ -20397,7 +20448,87 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                     const vw = window.innerWidth;
                     const vh = window.innerHeight;
-                    return { ok: bad.length === 0, bad: bad.slice(0, 16), count: bad.length, vw, vh, footer: { top: fr.top, bottom: fr.bottom, h: fr.height } };
+                    const hitTest = (el) => {
+                        const est = window.getComputedStyle(el);
+                        if (est.display === 'none' || est.visibility === 'hidden' || parseFloat(est.opacity) === 0) return;
+                        if (el.disabled) return;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2 || r.height < 2) return;
+                        if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) return;
+                        const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2));
+                        const cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
+                        let node = document.elementFromPoint(cx, cy);
+                        let target = el;
+                        if (target instanceof SVGElement && target.ownerSVGElement) target = target.ownerSVGElement;
+                        let hitOk = false;
+                        while (node) {
+                            if (node === target || target.contains(node)) {
+                                hitOk = true;
+                                break;
+                            }
+                            node = node.parentElement;
+                        }
+                        if (!hitOk) {
+                            bad.push({
+                                kind: 'covered-button',
+                                key: el.getAttribute('data-layout-key'),
+                                label: (el.textContent || '').trim().slice(0, 40),
+                                hit: node && (node.getAttribute?.('data-layout-key') || node.className || node.tagName),
+                                cx,
+                                cy,
+                            });
+                        }
+                    };
+                    panel.querySelectorAll('button, [role="button"]').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        if (footer.contains(el)) return;
+                        const key = el.getAttribute('data-layout-key');
+                        if (key === 'shop-route-card') return;
+                        hitTest(el);
+                    });
+                    const routeCard = panel.querySelector('[data-layout-key="shop-route-card"]')
+                        || root.querySelector('[data-layout-key="shop-route-card"]');
+                    let routeVisibleRatio = null;
+                    if (routeCard instanceof HTMLElement) {
+                        const cardStyle = window.getComputedStyle(routeCard);
+                        if (cardStyle.display !== 'none' && cardStyle.visibility !== 'hidden') {
+                            routeCard.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+                            const cr = routeCard.getBoundingClientRect();
+                            if (cr.height > 2) {
+                                const visTop = Math.max(0, cr.top);
+                                const visBottom = Math.min(vh, cr.bottom);
+                                const visibleH = Math.max(0, visBottom - visTop);
+                                routeVisibleRatio = visibleH / cr.height;
+                                const minRatio = 0.8;
+                                if (routeVisibleRatio + 0.001 < minRatio) {
+                                    bad.push({
+                                        kind: 'route-card-low-visibility',
+                                        ratio: Math.round(routeVisibleRatio * 1000) / 1000,
+                                        minRatio,
+                                        top: cr.top,
+                                        bottom: cr.bottom,
+                                        height: cr.height,
+                                        vh,
+                                    });
+                                }
+                            } else {
+                                bad.push({ kind: 'route-card-missing-size' });
+                            }
+                        } else {
+                            bad.push({ kind: 'route-card-hidden' });
+                        }
+                    } else {
+                        bad.push({ kind: 'route-card-missing' });
+                    }
+                    return {
+                        ok: bad.length === 0,
+                        bad: bad.slice(0, 20),
+                        count: bad.length,
+                        vw,
+                        vh,
+                        footer: { top: fr.top, bottom: fr.bottom, h: fr.height },
+                        routeVisibleRatio,
+                    };
                 },
                 auditPhoneTapTargets: (minPx = 32) => {
                     const vw = window.innerWidth;
@@ -21913,13 +22044,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </div>
                                 </div>
                                 {debt > 0 && <div className="shop-debt-warning bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
+                                </div>
                                 {(() => {
                                     const perPage = Math.max(1, shopRoutesPerPage || 1);
                                     const pageCount = Math.max(1, Math.ceil((paths?.length || 0) / perPage));
                                     const safePage = Math.min(shopRoutePage, pageCount - 1);
                                     if (pageCount <= 1) return null;
                                     return (
-                                        <div className="shop-route-pagination" data-layout-key="shop-route-pagination">
+                                        <div className="shop-route-pagination shop-route-pagination-row shrink-0" data-layout-key="shop-route-pagination">
                                             <button
                                                 type="button"
                                                 aria-label="Previous route page"
@@ -21944,7 +22076,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         </div>
                                     );
                                 })()}
-                                </div>
                                 <div ref={shopRoutesBodyRef} className="shop-routes-body min-h-0 flex-1 flex flex-col">
                                 {(() => {
                                     const perPage = Math.max(1, shopRoutesPerPage || 1);
