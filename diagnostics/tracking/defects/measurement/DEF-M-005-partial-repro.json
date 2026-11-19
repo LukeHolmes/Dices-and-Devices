@@ -1,8 +1,8 @@
 {
   "id": "DEF-M-005",
-  "title": "Full-run reproducibility under harness — outcome/max_round improved; steps/digest still drift",
+  "title": "Full-run reproducibility under harness — steps/digest still drift after harness seed shim",
   "kind": "measurement",
   "status": "open",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "notes": "2026-11-18 (branch cursor/diagnostics-harness-tracking-1b3a): Routed remaining gameplay RNG through runRandomRef when SIM_SEED_GAME=1 (shop generateShop rng, gamble flips, path consumables, carve die ids, blueprint pick, consumable instanceIds). Bot: deterministic button scan sort, fixed-spin pauses under seeded builder, high stuck threshold, optional ms=0 scheduleTimeout flush when __GB_SIM_STEP_SYNC__. Subset repro seeds 0–1 ×2 R-main: often matches outcome+max_round but 0/2 on full tuple (steps+digest still diverge, e.g. rid 0 maxRound 2 both reps but steps 226 vs 858). Full 10×2×2 matrix not yet at 10/10 — residual Playwright/React scheduling vs bot loop index, not default-game balance. npm run test:fast 236/236 green."
+  "notes": "2026-11-19 (cursor/diagnostics-harness-tracking-1b3a): Added harness-only determinism shim (pre-navigation Math.random seeding + __GB_SIM_STEP_SYNC__ flag), per-run isolated Chromium, fixed bot spin cadence, repro gate CSV/JSON tracking. Smoke seed 0 ×2 on R-main and R78 after shim: 0/2 full tuples matched (R-main: BUST@928 vs INCOMPLETE@8000; R78: both BUST@8000 maxRound 1 but different digests). Pinned rules worktrees (7d649ef, 59e11dc) do not ship __GB_SIM_STEP_SYNC__ in index.html; residual drift is bot loop step count vs React real setTimeout(ms>0) on rules pins, not balance. Full 0–9×2×2 gate recorded when REPRO-DEFM005 batch completes. Prior 2026-11-18 notes retained historically in git."
 }

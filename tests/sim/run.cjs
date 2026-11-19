@@ -9,6 +9,7 @@ const path = require("node:path");
 
 const ROOT = path.join(__dirname, "../..");
 const BOT_FN = fs.readFileSync(path.join(__dirname, "in-page-bot.js"), "utf8");
+const HARNESS_SHIM = fs.readFileSync(path.join(__dirname, "harness-determinism-shim.js"), "utf8");
 const VIEWPORTS_ALL = [
   { name: "360x640", width: 360, height: 640 },
   { name: "390x844", width: 390, height: 844 },
@@ -55,6 +56,13 @@ function parseArgs(argv) {
 function pickViewports(mode) {
   if (mode === "all") return VIEWPORTS_ALL;
   return VIEWPORTS_BLOCKING;
+}
+
+async function ensureHarnessDeterminism(page) {
+  if (process.env.SIM_SEED_GAME !== "1") return;
+  if (page.__gbHarnessShimInstalled) return;
+  await page.addInitScript(HARNESS_SHIM);
+  page.__gbHarnessShimInstalled = true;
 }
 
 function startServer(port, root) {
@@ -167,11 +175,22 @@ async function bootPage(page, baseUrl, viewport) {
   }
 }
 
+async function installGameSeedBeforeNav(page, seed) {
+  if (process.env.SIM_SEED_GAME !== "1") return;
+  await ensureHarnessDeterminism(page);
+  await page.addInitScript((gameSeed) => {
+    if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
+      window.__GB_SIM_INSTALL_GAME_SEED__(gameSeed);
+    }
+  }, seed);
+}
+
 async function runOneGame(
   page,
   { rid, seed, strategy, viewport, maxSteps, booted: bootedRef, stuckThreshold = 48, maxFallbacks = 36 },
 ) {
   page.setDefaultTimeout(120_000);
+  await installGameSeedBeforeNav(page, seed);
   const booted = bootedRef || { value: false };
   if (!booted.value) {
     await bootPage(page, page.__baseUrl, viewport);
@@ -249,8 +268,22 @@ async function runOneGame(
   }
   const linkObs = process.env.SIM_LINK_OBSERVER === "1";
   const simPolicyRev = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
-  const seedGame = process.env.SIM_SEED_GAME === "1";
   const traceReplay = process.env.SIM_TRACE_REPLAY === "1";
+  const seedGame = process.env.SIM_SEED_GAME === "1";
+  const evaluatePayload = {
+    botSource: BOT_FN,
+    opts: {
+      maxSteps,
+      seed,
+      strategy,
+      stuckThreshold,
+      maxFallbacks,
+    },
+    linkObs,
+    policyRev: simPolicyRev,
+    seedGame,
+    traceReplay,
+  };
   const result = await page.evaluate(
     async ({ botSource, opts, linkObs: linkObsFlag, policyRev, seedGame: seedGameFlag, traceReplay: traceReplayFlag }) => {
       if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
@@ -266,14 +299,15 @@ async function runOneGame(
       }
       // eslint-disable-next-line no-eval
       const play = eval("(" + botSource + ")");
-      if (seedGameFlag && typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
-        window.__GB_SIM_STEP_SYNC__ = true;
-        const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
-        let draws = 0;
-        window.__GB_SIM_GAME_RANDOM__ = () => {
-          draws += 1;
-          return gameRandom();
-        };
+      if (seedGameFlag) {
+        if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
+          window.__GB_SIM_INSTALL_GAME_SEED__(opts.seed);
+        } else if (typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
+          window.__GB_SIM_STEP_SYNC__ = true;
+          const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
+          window.__GB_SIM_GAME_RANDOM__ = () => gameRandom();
+          Math.random = () => gameRandom();
+        }
       }
       if (traceReplayFlag) {
         window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
@@ -309,20 +343,7 @@ async function runOneGame(
         }
       }
     },
-    {
-      botSource: BOT_FN,
-      opts: {
-        maxSteps,
-        seed,
-        strategy,
-        stuckThreshold,
-        maxFallbacks,
-      },
-      linkObs,
-      policyRev: simPolicyRev,
-      seedGame,
-      traceReplay,
-    },
+    evaluatePayload,
   );
   const telem = await page.evaluate(() => {
     const st = window.__GB_E2E__?.getState?.() || {};

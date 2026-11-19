@@ -568,7 +568,8 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const b = document.querySelector('[data-pt="' + pick + '"]');
       if (b) b.click();
     }
-    await pause(seededBuilder ? 16 : strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
+    if (seededBuilder) await spin(16);
+    else await pause(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
   }
 
   window.__GB_E2E__.forceForfeitRun?.();

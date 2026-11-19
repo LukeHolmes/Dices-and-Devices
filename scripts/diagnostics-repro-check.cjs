@@ -10,9 +10,15 @@ const fs = require("node:fs");
 
 const ROOT = path.join(__dirname, "..");
 const ARTIFACTS = process.env.DIAG_REPRO_ARTIFACT_DIR || "/opt/cursor/artifacts";
+const TRACKING_DIR = path.join(ROOT, "diagnostics/tracking");
+const RUNS_DIR = path.join(TRACKING_DIR, "runs");
 
 const { parseRidSpec } = require(path.join(ROOT, "tests/helpers/holdout-guard.cjs"));
-const { digestRunResult } = require(path.join(ROOT, "tests/helpers/run-results-csv.cjs"));
+const {
+  appendRunRows,
+  blankMetricsRow,
+  digestRunResult,
+} = require(path.join(ROOT, "tests/helpers/run-results-csv.cjs"));
 
 async function runPair({ baseline, rids, maxSteps, parallel }) {
   const batch = require(path.join(ROOT, "scripts/diagnostics-batch.cjs"));
@@ -35,12 +41,14 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
 
   async function runRep(repIndex) {
     for (const rid of rids) {
-      const context = await browser.newContext();
+      const isoBrowser = await chromium.launch({ headless: true });
+      const context = await isoBrowser.newContext();
       const page = await context.newPage();
       page.__baseUrl = baseUrl;
       const booted = { value: false };
       const viewport = viewportsList[(rid >> 2) % viewportsList.length];
       const seed = rid * 7919;
+      process.stderr.write(`repro baseline=${baseline} rep=${repIndex} rid=${rid}\n`);
       const r = await runOneGame(page, {
         rid,
         seed,
@@ -50,6 +58,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
         booted,
       });
       await context.close();
+      await isoBrowser.close();
       const key = String(rid);
       byRid[key] = byRid[key] || [];
       byRid[key].push({
@@ -109,6 +118,68 @@ function parseArgs(argv) {
   return out;
 }
 
+function writeTrackingCsv({ report, batchId, maxSteps }) {
+  const batch = require(path.join(ROOT, "scripts/diagnostics-batch.cjs"));
+  const harnessSha = batch.harnessCommit();
+  const policySha = batch.policyCommit();
+  const csvPath = path.join(RUNS_DIR, `${batchId}.csv`);
+  const rows = [];
+  for (const [baseline, data] of Object.entries(report.baselines)) {
+    const meta = batch.BASELINES[baseline] || {};
+    for (const [rid, reps] of Object.entries(data.byRid || {})) {
+      for (const rep of reps) {
+        rows.push(
+          blankMetricsRow({
+            run_id: `${batchId}-${baseline}-rid${rid}-r${rep.replicateIndex}`,
+            batch_id: batchId,
+            experiment_id: "DEF-M-005",
+            baseline_label: baseline,
+            branch: meta.branch || "",
+            rules_commit: meta.rulesCommit || "",
+            policy_commit: policySha,
+            policy_revision: batch.FIXED_POLICY_REVISION,
+            harness_commit: harnessSha,
+            scenario: "repro-gate-seeds-0-9-x2",
+            profile: "street-rat-safe-cut",
+            strategy: "builder",
+            rid,
+            seed: Number(rid) * 7919,
+            budget_max_steps: maxSteps,
+            replicate_index: rep.replicateIndex,
+            holdout_flag: 0,
+            outcome: rep.outcome,
+            max_round: rep.maxRound,
+            steps: rep.steps,
+            replay_digest: rep.digest,
+            replay_match: rep.replicateIndex === 0 ? "" : rep.matchPair === true ? 1 : 0,
+            measurement_valid: rep.matchPair === true ? 1 : 0,
+            measurement_notes: rep.matchPair === true ? "repro_pair_match" : "repro_pair_mismatch",
+            evidence_path: path.join(ARTIFACTS, "diagnostics-repro-report.json"),
+            llm_calls: 0,
+          }),
+        );
+      }
+    }
+  }
+  if (rows.length) appendRunRows(csvPath, rows);
+  return csvPath;
+}
+
+function annotatePairMatches(byRid) {
+  for (const reps of Object.values(byRid)) {
+    if (reps.length < 2) continue;
+    const a = reps[0];
+    const b = reps[1];
+    const ok =
+      a.outcome === b.outcome
+      && a.maxRound === b.maxRound
+      && a.steps === b.steps
+      && a.digest === b.digest;
+    a.matchPair = ok;
+    b.matchPair = ok;
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -121,13 +192,51 @@ async function main() {
 
   for (const baseline of baselines) {
     const byRid = await runPair({ baseline, rids, maxSteps: args.maxSteps, parallel: args.parallel });
+    annotatePairMatches(byRid);
     const cmp = comparePairs(byRid);
     report.baselines[baseline] = { ...cmp, byRid };
   }
 
+  const batchId = `REPRO-DEFM005-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
+  report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
+  fs.mkdirSync(RUNS_DIR, { recursive: true });
   const outPath = path.join(ARTIFACTS, "diagnostics-repro-report.json");
   fs.writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  const trackingCsv = writeTrackingCsv({ report, batchId, maxSteps: args.maxSteps });
+  report.trackingCsv = trackingCsv;
+  fs.writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  const gateSummaryPath = path.join(
+    TRACKING_DIR,
+    "defects/measurement",
+    `DEF-M-005-gate-${new Date().toISOString().slice(0, 10)}.json`,
+  );
+  const totals = Object.values(report.baselines).reduce(
+    (acc, b) => ({
+      matched: acc.matched + b.matched,
+      total: acc.total + b.total,
+    }),
+    { matched: 0, total: 0 },
+  );
+  fs.writeFileSync(
+    gateSummaryPath,
+    `${JSON.stringify(
+      {
+        id: "DEF-M-005",
+        gate_batch_id: batchId,
+        generatedAt: report.generatedAt,
+        denominators: totals,
+        perBaseline: Object.fromEntries(
+          Object.entries(report.baselines).map(([k, v]) => [k, { matched: v.matched, total: v.total }]),
+        ),
+        tracking_csv: trackingCsv,
+        artifact: outPath,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
   console.log(JSON.stringify({
     artifact: outPath,
     results: Object.fromEntries(

@@ -407,4 +407,6 @@ module.exports = {
   parseArgs,
   ensureRulesRoot,
   buildRidWindows,
+  harnessCommit,
+  policyCommit,
 };
