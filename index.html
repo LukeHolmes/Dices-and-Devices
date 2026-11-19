@@ -5953,7 +5953,7 @@ const GutterbonesStory = (() => {
     const pickRandomArcId = (random) => {
         const roll = random !== undefined && random !== null
             ? random
-            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom('pickRandomArcId') : Math.random());
         const r = Math.max(0, Math.min(0.999999, Number(roll) || 0));
         return ARC_IDS[Math.floor(r * ARC_IDS.length)] || DEFAULT_ARC_ID;
     };
@@ -6521,7 +6521,7 @@ const GutterbonesGamble = (() => {
     const resolveFlip = ({ tierId = 'FAIR', flowStreak = 0, gold = 0, random } = {}) => {
         const roll = random !== undefined && random !== null
             ? random
-            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom('resolveFlip') : Math.random());
         const tier = tierById(tierId);
         const stake = stakeForTier(gold, tier.id);
         const pWin = winProbability(tier.id, flowStreak);
@@ -6546,7 +6546,7 @@ const GutterbonesGamble = (() => {
     const resolveBlueprintFlip = ({ flowStreak = 0, gold = 0, random, pickBlueprintId } = {}) => {
         const roll = random !== undefined && random !== null
             ? random
-            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom('resolveBlueprintFlip') : Math.random());
         const outcome = resolveFlip({ tierId: 'FAIR', flowStreak, gold, random: roll });
         const blueprintId = outcome.won && typeof pickBlueprintId === 'function' ? pickBlueprintId(roll) : null;
         return { ...outcome, blueprintId };
@@ -7146,9 +7146,14 @@ const GutterbonesHardening = (() => {
 })();
 if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHardening;
 if (typeof window !== 'undefined') {
-    window.gbSimGameplayRandom = () => (
-        typeof window.__GB_SIM_GAME_RANDOM__ === 'function' ? window.__GB_SIM_GAME_RANDOM__() : Math.random()
-    );
+    window.gbSimGameplayRandom = (caller = 'moduleDefault', round) => {
+        if (typeof window.__GB_SIM_DRAW_GAME__ === 'function') {
+            const r = round != null ? round : (window.__GB_SIM_ROUND__ != null ? window.__GB_SIM_ROUND__ : 1);
+            return window.__GB_SIM_DRAW_GAME__(caller, r);
+        }
+        if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') return window.__GB_SIM_GAME_RANDOM__();
+        return Math.random();
+    };
 }
 </script>
 
@@ -7262,7 +7267,7 @@ if (typeof window !== 'undefined') {
     const pickRandomBlueprintId = (random) => {
         const roll = random !== undefined && random !== null
             ? random
-            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom('pickRandomBlueprintId') : Math.random());
         const ids = Object.keys(BLUEPRINT_CATALOG);
         return ids[Math.floor(Math.max(0, Math.min(0.999999, roll)) * ids.length)] || ids[0];
     };
@@ -11799,8 +11804,18 @@ if (typeof window !== 'undefined') {
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const runRandomRef = useRef(() => Math.random());
         const simSeededGameplay = () =>
-            dailyRunActive || (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function');
-        const gameplayRandom = () => (simSeededGameplay() ? runRandomRef.current() : Math.random());
+            dailyRunActive
+            || (typeof window !== 'undefined' && (
+                typeof window.__GB_SIM_DRAW_GAME__ === 'function'
+                || typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
+            ));
+        const gameplayRandom = (caller = 'gameplay') => {
+            if (!simSeededGameplay()) return Math.random();
+            if (typeof window.__GB_SIM_DRAW_GAME__ === 'function') {
+                return window.__GB_SIM_DRAW_GAME__(caller, round);
+            }
+            return runRandomRef.current();
+        };
         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
@@ -14007,6 +14022,12 @@ if (typeof window !== 'undefined') {
             persistRun(phase);
         }, [phase, runClosed, arcId, persona.id, personaIdx, round, score, target, hands, discards, pillRunBonus, gold, debt, stash, insaneContract, inventory, consumables, dice, kept, hasRolled, usedCats, handLevels, flowStreak, shopItems, shopRefreshes, gambleStake, activeWager, currentRouteEffect, nextShopTag, activeShopTag, routeModifiers, synergyState, categoryMarkedThisRound, blueprints, paths, activeBoss, selectedItem, carvingDie, swapMode, swapIdx, history, runStats, runModifierIds, runExclusiveShopIds, selectedShopPathId, dailyRunActive]);
 
+        useEffect(() => {
+            if (typeof window === 'undefined') return;
+            if (typeof window.__GB_SIM_DRAW_GAME__ !== 'function') return;
+            window.__GB_SIM_ROUND__ = round;
+        }, [round]);
+
         const beginContract = ({ tutorial = false, daily = false } = {}) => {
             const p = PERSONAS[personaIdx];
             if (!meta.unlockedPersonaIds.includes(p.id)) return;
@@ -14032,10 +14053,17 @@ if (typeof window !== 'undefined') {
                 setRunModifierIds(GutterbonesReplay.personaStartModifiers(p.id));
                 runRandomRef.current = typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
                     ? window.__GB_SIM_GAME_RANDOM__
-                    : () => Math.random();
-            } else if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') {
+                    : (typeof window.__GB_SIM_DRAW_GAME__ === 'function'
+                        ? () => window.__GB_SIM_DRAW_GAME__('legacyGameRandom', 1)
+                        : () => Math.random());
+            } else if (
+                typeof window.__GB_SIM_DRAW_GAME__ === 'function'
+                || typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
+            ) {
                 setRunModifierIds([]);
-                runRandomRef.current = window.__GB_SIM_GAME_RANDOM__;
+                runRandomRef.current = typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
+                    ? window.__GB_SIM_GAME_RANDOM__
+                    : () => window.__GB_SIM_DRAW_GAME__('legacyGameRandom', 1);
             } else {
                 setRunModifierIds([]);
                 runRandomRef.current = () => Math.random();
@@ -14044,9 +14072,11 @@ if (typeof window !== 'undefined') {
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
-            const arcPickRng = (daily || typeof window.__GB_SIM_GAME_RANDOM__ === 'function')
+            const arcPickRng = daily
                 ? runRandomRef.current()
-                : Math.random();
+                : (typeof window.__GB_SIM_DRAW_GAME__ === 'function'
+                    ? window.__GB_SIM_DRAW_GAME__('pickRandomArcId', 1)
+                    : (typeof window.__GB_SIM_GAME_RANDOM__ === 'function' ? runRandomRef.current() : Math.random()));
             const runArcId = tutorial
                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
                 : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
@@ -14628,7 +14658,7 @@ if (typeof window !== 'undefined') {
             setStash(grant);
             const slot = tutorialActiveRef.current && GutterbonesTutorial
                 ? GutterbonesTutorial.TUNING.openingSniffSlot
-                : Math.floor(gameplayRandom() * 5);
+                : Math.floor(gameplayRandom('openingSniff') * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
@@ -15250,7 +15280,7 @@ if (typeof window !== 'undefined') {
             const outcome = GutterbonesGamble.resolveBlueprintFlip({
                 flowStreak,
                 gold,
-                random: gameplayRandom(),
+                random: gameplayRandom('resolveBlueprintFlip'),
                 pickBlueprintId: () => pickRandomBlueprintId()
             });
             if (balanceObserverActive()) {
@@ -15299,7 +15329,7 @@ if (typeof window !== 'undefined') {
                     tierId,
                     flowStreak,
                     gold,
-                    random: gameplayRandom()
+                    random: gameplayRandom('resolveFlip')
                 });
                 if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
@@ -15531,7 +15561,14 @@ if (typeof window !== 'undefined') {
             if (!preservePaths) setSelectedShopPathId(null);
             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
             setActiveShopTag(offerTag);
-            const rng = simSeededGameplay() ? runRandomRef.current : Math.random;
+            const shopRng = (caller) => {
+                if (!simSeededGameplay()) return Math.random();
+                if (typeof window.__GB_SIM_DRAW_GAME__ === 'function') {
+                    return window.__GB_SIM_DRAW_GAME__(caller, round);
+                }
+                return runRandomRef.current();
+            };
+            const rng = (caller = 'generateShop') => shopRng(caller);
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
@@ -15585,7 +15622,7 @@ if (typeof window !== 'undefined') {
                 return weight;
             };
             const weightedSortJitter = (item, extraWeightFn) =>
-                baseWeight(item) + extraWeightFn(item) + (rng() * 0.35);
+                baseWeight(item) + extraWeightFn(item) + (shopRng('weightedSortJitter') * 0.35);
             const weightedSort = (items, extraWeight = () => 0) => items
                 .map((item) => ({ item, weight: weightedSortJitter(item, extraWeight) }))
                 .sort((a, b) => b.weight - a.weight)
@@ -15645,7 +15682,7 @@ if (typeof window !== 'undefined') {
                 }
             }
 
-            const modOffers = GutterbonesReplay?.modifierShopOffers(meta, rng) || [];
+            const modOffers = GutterbonesReplay?.modifierShopOffers(meta, () => shopRng('modifierShopOffers')) || [];
             modOffers.forEach((offer) => {
                 if (picks.length < 4 && !picks.some((p) => p.id === offer.id)) picks.unshift(offer);
             });
@@ -16371,7 +16408,7 @@ if (typeof window !== 'undefined') {
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
             if (path.grantRandomConsumable) {
                 const pool = Object.values(CONSUMABLES);
-                const drop = pool[Math.floor(gameplayRandom() * pool.length)];
+                const drop = pool[Math.floor(gameplayRandom('grantRandomConsumable') * pool.length)];
                 if (drop) {
                     setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
