@@ -25,6 +25,9 @@ try {
 const args = new Set(process.argv.slice(2));
 const scopeItemsOnly = args.has('--items-only');
 const scopeSkipItems = args.has('--skip-items');
+const scopeShopOnly = args.has('--shop-only');
+const scopeSkipShop = args.has('--skip-shop');
+const scopeAnyOnly = scopeItemsOnly || scopeShopOnly;
 
 const PORTRAIT_Q = 82;
 const SCENE_Q = 78;
@@ -89,6 +92,18 @@ const ITEM_ICON_RULES = [
   { master: 'consumable_17-dirty-wad_v1.png', subdir: 'consumables', base: 'dirty-wad', expectedSha256: 'ae7c034bf7abb899bb5c7517819bd2882f5e713304f5e068b51756138844e370' }
 ];
 
+/** Approved shop UI masters (1024×512 frames / overlays; divider trimmed). */
+const SHOP_CARD_RULES = [
+  { master: 'shopcard_standard-frame_v1.png', subdir: 'shop', out: 'standard-frame.webp', trim: false, expectedSha256: '61d10a0cd8c80dbfcac4ebd00f8a18d2a3f6fc2d4297050b66f1ac716b15357e' },
+  { master: 'shopcard_rare-frame_v1.png', subdir: 'shop', out: 'rare-frame.webp', trim: false, expectedSha256: 'f28c5252cd3716be3ca283bc33cb1f65ebe9d597d290c2b6f6b4ac6b60a31bda' },
+  { master: 'shopcard_dangerous-frame_v1.png', subdir: 'shop', out: 'dangerous-frame.webp', trim: false, expectedSha256: '624ddc238ce55c1248a7565838e5c46f34c8ad9cf716fcb5fcc010fee76c7390' },
+  { master: 'shopcard_price-tag-blank_v1.png', subdir: 'shop', out: 'price-tag-blank.webp', trim: false, expectedSha256: 'e898ca57a7373b98123dce5f2265ac6dae8b22fbf5a04a9c17500430b245624f' },
+  { master: 'shopcard_selected-overlay_v1.png', subdir: 'shop', out: 'selected-overlay.webp', trim: false, expectedSha256: 'f10ac9f57aeb70c0f1db74405813fb56fae8cc9abf4242d250e79c8693bd149f' },
+  { master: 'shopcard_sold-unavailable-overlay_v1.png', subdir: 'shop', out: 'sold-unavailable-overlay.webp', trim: false, expectedSha256: 'fb5b27e88bcf8744ba52c9dbc432d71ffe9949424b876b3138b8f33c18b4aa77' },
+  { master: 'ui-header_section-header-blank_v1.png', subdir: 'shop', out: 'section-header-blank.webp', trim: false, expectedSha256: 'aec624cd6bc0df3290ee962f01136d1989131d335677d46531348eaf724c40a1' },
+  { master: 'ui-divider_shop-divider-blank_v1.png', subdir: 'shop', out: 'shop-divider-blank.webp', trim: true, expectedSha256: 'f541f0dd71d8d650430d69575201c5b7672aadfabe3123a8000168cc031c5d93' }
+];
+
 async function sha256File(filePath) {
   const buf = await readFile(filePath);
   return createHash('sha256').update(buf).digest('hex');
@@ -125,9 +140,16 @@ async function deriveIconSquare(masterPath, outPath, size) {
     .toFile(outPath);
 }
 
+const SHOP_Q = 86;
+async function deriveShopAsset(masterPath, outPath, { trim = false } = {}) {
+  let pipe = sharp(masterPath);
+  if (trim) pipe = pipe.trim({ threshold: 12 });
+  await pipe.webp({ quality: SHOP_Q, alphaQuality: 100 }).toFile(outPath);
+}
+
 let priorProvenance = null;
 const provPath = path.join(OUT_ROOT, 'RUNTIME-PROVENANCE.json');
-if (scopeItemsOnly) {
+if (scopeAnyOnly) {
   try {
     priorProvenance = JSON.parse(await readFile(provPath, 'utf8'));
   } catch {
@@ -141,18 +163,25 @@ const provenance = {
   portrait: { width: PORTRAIT_W, height: PORTRAIT_H, webpQuality: PORTRAIT_Q },
   scene: { width: SCENE_W, webpQuality: SCENE_Q },
   itemIcon: { size1x: ICON_1X, size2x: ICON_2X, webpQuality: ICON_Q },
+  shopCard: { webpQuality: SHOP_Q, nineSlicePx: 112, dividerTrim: true },
   assets: []
 };
 
 let itemIconBytesTotal = 0;
+let shopCardBytesTotal = 0;
 
 async function recordAsset(entry) {
   provenance.assets.push(entry);
   if (entry.kind === 'itemIcon') itemIconBytesTotal += entry.bytes || 0;
+  if (entry.kind === 'shopCard') shopCardBytesTotal += entry.bytes || 0;
   console.log(`${entry.output} (${entry.bytes} B) ← ${entry.masterManifestName || entry.master}`);
 }
 
-if (!scopeItemsOnly) {
+const runPortraits = !scopeAnyOnly;
+const runItems = !scopeSkipItems && (!scopeShopOnly || scopeItemsOnly);
+const runShop = !scopeSkipShop && (!scopeItemsOnly || scopeShopOnly);
+
+if (runPortraits) {
   for (const rule of PORTRAIT_SCENE_RULES) {
     const masterPath = await resolveMasterPath(rule.master);
     const outDir = path.join(OUT_ROOT, rule.subdir);
@@ -176,7 +205,7 @@ if (!scopeItemsOnly) {
   }
 }
 
-if (!scopeSkipItems) {
+if (runItems) {
   for (const rule of ITEM_ICON_RULES) {
     const masterPath = await resolveMasterPath(rule.master);
     const masterSha = await sha256File(masterPath);
@@ -206,12 +235,43 @@ if (!scopeSkipItems) {
   console.log(`Item icon WebP total: ${itemIconBytesTotal} bytes (${ITEM_ICON_RULES.length} masters × 2 sizes)`);
 }
 
-if (scopeItemsOnly && priorProvenance?.assets?.length) {
-  const itemOutputs = new Set(provenance.assets.map((a) => a.output));
-  const kept = priorProvenance.assets.filter((a) => !itemOutputs.has(a.output) && a.kind !== 'itemIcon');
+if (runShop) {
+  for (const rule of SHOP_CARD_RULES) {
+    const masterPath = await resolveMasterPath(rule.master);
+    const masterSha = await sha256File(masterPath);
+    if (rule.expectedSha256 && masterSha !== rule.expectedSha256) {
+      throw new Error(`SHA256 mismatch for ${rule.master}: got ${masterSha}, expected ${rule.expectedSha256}`);
+    }
+    const outDir = path.join(OUT_ROOT, rule.subdir);
+    const outPath = path.join(outDir, rule.out);
+    await mkdir(outDir, { recursive: true });
+    await deriveShopAsset(masterPath, outPath, { trim: !!rule.trim });
+    const outSha = await sha256File(outPath);
+    const relOut = path.relative(REPO_ROOT, outPath).replace(/\\/g, '/');
+    await recordAsset({
+      kind: 'shopCard',
+      output: relOut,
+      master: path.basename(masterPath),
+      masterManifestName: rule.master,
+      masterSha256: masterSha,
+      outputSha256: outSha,
+      bytes: (await readFile(outPath)).length,
+      trim: !!rule.trim
+    });
+  }
+  console.log(`Shop card WebP total: ${shopCardBytesTotal} bytes (${SHOP_CARD_RULES.length} assets)`);
+}
+
+if (scopeAnyOnly && priorProvenance?.assets?.length) {
+  const freshOutputs = new Set(provenance.assets.map((a) => a.output));
+  const dropKinds = new Set();
+  if (scopeItemsOnly) dropKinds.add('itemIcon');
+  if (scopeShopOnly) dropKinds.add('shopCard');
+  const kept = priorProvenance.assets.filter((a) => !freshOutputs.has(a.output) && !dropKinds.has(a.kind));
   provenance.assets = [...kept, ...provenance.assets];
   if (priorProvenance.portrait) provenance.portrait = priorProvenance.portrait;
   if (priorProvenance.scene) provenance.scene = priorProvenance.scene;
+  if (priorProvenance.itemIcon) provenance.itemIcon = priorProvenance.itemIcon;
 }
 
 await writeFile(provPath, `${JSON.stringify(provenance, null, 2)}\n`);

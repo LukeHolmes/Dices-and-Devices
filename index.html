@@ -1888,6 +1888,8 @@
         #root-gutterbones[data-phase="SHOP"] .shop-item-card {
             min-height: min-content !important;
             height: max-content;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-item-card__inner {
             padding: 0.35rem 0.45rem !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-item-pagination {
@@ -1938,6 +1940,11 @@
             #root-gutterbones[data-phase="SHOP"] .shop-item-card {
                 min-height: min-content !important;
                 height: max-content;
+            }
+        }
+        @media (max-width: 430px) {
+            #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+                grid-template-columns: minmax(0, 1fr) !important;
             }
         }
         @media (max-width: 430px) {
@@ -2754,6 +2761,22 @@
     word-break: break-word;
     overflow-wrap: anywhere;
   }
+  #root-gutterbones .shop-item-card {
+    --shop-card-slice: 112;
+    --shop-card-border: clamp(10px, 2.5vw, 14px);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    border: var(--shop-card-border) solid transparent;
+    border-image-slice: var(--shop-card-slice) fill;
+    border-image-width: var(--shop-card-border);
+    border-image-repeat: stretch;
+    border-image-source: url('assets/art/shop/standard-frame.webp');
+    background-color: #121113;
+    background-clip: padding-box;
+    overflow: visible;
+  }
   #root-gutterbones .shop-item-card.shop-item-card--sold {
     overflow: hidden;
   }
@@ -2761,6 +2784,158 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  #root-gutterbones .shop-item-card.glow-rare {
+    border-image-source: url('assets/art/shop/rare-frame.webp');
+    border-color: transparent !important;
+    box-shadow: 0 0 18px rgba(0, 221, 255, 0.45);
+  }
+  #root-gutterbones .shop-item-card.glow-danger {
+    border-image-source: url('assets/art/shop/dangerous-frame.webp');
+    border-color: transparent !important;
+    box-shadow: 0 0 18px rgba(255, 0, 127, 0.45);
+  }
+  #root-gutterbones .shop-item-card.shop-item-card--build-fit:not(.shop-item-card--sold) {
+    box-shadow: 0 0 14px rgba(0, 221, 255, 0.14), 0 0 22px rgba(0, 221, 255, 0.28);
+  }
+  #root-gutterbones .shop-item-card.glow-rare.shop-item-card--build-fit:not(.shop-item-card--sold) {
+    box-shadow: 0 0 18px rgba(0, 221, 255, 0.45), 0 0 16px rgba(0, 221, 255, 0.22);
+  }
+  #root-gutterbones .shop-item-card.glow-danger.shop-item-card--build-fit:not(.shop-item-card--sold) {
+    box-shadow: 0 0 18px rgba(255, 0, 127, 0.45), 0 0 16px rgba(0, 221, 255, 0.18);
+  }
+  #root-gutterbones .shop-item-card__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding-bottom: 0.15rem;
+  }
+  #root-gutterbones .shop-item-card__overlay {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: var(--shop-card-border) solid transparent;
+    border-image-slice: var(--shop-card-slice) fill;
+    border-image-width: var(--shop-card-border);
+    border-image-repeat: stretch;
+  }
+  #root-gutterbones .shop-item-card__overlay--select {
+    border-image-source: url('assets/art/shop/selected-overlay.webp');
+    opacity: 0;
+    transition: opacity 0.12s ease-out;
+  }
+  #root-gutterbones .shop-item-card:hover .shop-item-card__overlay--select,
+  #root-gutterbones .shop-item-card:focus-within .shop-item-card__overlay--select,
+  #root-gutterbones .shop-item-card.shop-item-card--inspect .shop-item-card__overlay--select {
+    opacity: 1;
+  }
+  #root-gutterbones .shop-item-card__overlay--sold {
+    border-image-source: url('assets/art/shop/sold-unavailable-overlay.webp');
+    opacity: 1;
+    z-index: 3;
+  }
+  #root-gutterbones .shop-item-card__price-tag-wrap {
+    position: relative;
+    display: inline-block;
+    padding: 0.15rem 0.55rem 0.1rem;
+    color: #1a1204;
+    text-shadow: none;
+    z-index: 2;
+  }
+  #root-gutterbones .shop-item-card__price-was {
+    color: #4a3420;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  #root-gutterbones .shop-item-card__price-now {
+    color: #1a1204;
+    position: relative;
+    z-index: 1;
+    font-weight: 700;
+  }
+  #root-gutterbones .shop-item-card__price-tag-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -3px -10px;
+    z-index: -1;
+    background: url('assets/art/shop/price-tag-blank.webp') center/100% 100% no-repeat;
+    opacity: 0.94;
+    pointer-events: none;
+  }
+  #root-gutterbones .shop-section-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.25rem 1.35rem;
+    margin-bottom: 0.5rem;
+    border: 10px solid transparent;
+    border-image-source: url('assets/art/shop/section-header-blank.webp');
+    border-image-slice: 48 80 fill;
+    border-image-width: 10px 18px;
+    border-image-repeat: stretch;
+    background-color: #121113;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+  #root-gutterbones .shop-section-header__label {
+    position: relative;
+    z-index: 1;
+    color: #f5ecd6;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-align: center;
+    line-height: 1.15;
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.28),
+      0 0 1px #1a1204,
+      0 1px 3px rgba(26, 18, 4, 0.85);
+  }
+  #root-gutterbones .shop-panel-divider {
+    height: 0.85rem;
+    margin: 0.65rem 0;
+    background: url('assets/art/shop/shop-divider-blank.webp') center/contain no-repeat;
+    border: 0;
+  }
+  @media (min-width: 768px) and (max-height: 820px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+      --shop-card-border: clamp(7px, 1.6vw, 10px);
+    }
+    #root-gutterbones .shop-item-card .item-art-tile--hardware {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+    #root-gutterbones .shop-section-header {
+      min-height: 1.75rem;
+      padding: 0.2rem 0.6rem;
+      margin-bottom: 0.35rem;
+    }
+    #root-gutterbones .shop-panel-divider {
+      margin: 0.35rem 0;
+    }
+    #root-gutterbones[data-phase="SHOP"] .gb-btn-shop,
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-intel-button"],
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-inspect-offer"] {
+      min-height: 2.85rem;
+      min-width: 2.85rem;
+      padding-top: 0.55rem;
+      padding-bottom: 0.55rem;
+    }
+  }
+  @supports not (border-image-source: url('x')) {
+    #root-gutterbones .shop-item-card {
+      border: 2px solid #3d3a41;
+      border-radius: 0.35rem;
+      background: rgba(0, 0, 0, 0.82);
+    }
   }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
     #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
@@ -8552,6 +8727,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         if (k.includes('consumable')) return 'consumable';
         return 'hardware';
     };
+    const SHOP_CARD_ART = Object.freeze({
+        frameStandard: 'assets/art/shop/standard-frame.webp',
+        frameRare: 'assets/art/shop/rare-frame.webp',
+        frameDanger: 'assets/art/shop/dangerous-frame.webp',
+        priceTag: 'assets/art/shop/price-tag-blank.webp',
+        overlaySelected: 'assets/art/shop/selected-overlay.webp',
+        overlaySold: 'assets/art/shop/sold-unavailable-overlay.webp',
+        sectionHeader: 'assets/art/shop/section-header-blank.webp',
+        divider: 'assets/art/shop/shop-divider-blank.webp'
+    });
     const DICE_ROLL_SETTLE_MS = 680;
     const DICE_LAND_STAGGER_MS = 78;
     const PAYOUT_INPUT_LOCK_MS = 90;
@@ -9178,6 +9363,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             </div>
         );
     };
+
+    const ShopPanelDivider = () => <div className="shop-panel-divider" role="presentation" aria-hidden="true" />;
+    const ShopSectionHeader = ({ children }) => (
+        <div className="shop-section-header font-mono text-xs tracking-wider">
+            <span className="shop-section-header__label">{children}</span>
+        </div>
+    );
 
     const ShopItemIconSlot = ({ item, isFace, isConsumable }) => {
         const rendered = item?.id && itemArtLookup(item.id)
@@ -19961,9 +20153,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     const buyLabel = gold >= listPrice ? `BUY $${listPrice}` : `LOAN $${listPrice} (debt)`;
                                     const effectLine = isFace ? `${item.type} face` : (item.desc || '');
                                     const inspectSelected = shopPreviewItem?.id === item.id;
-                                    return <div key={item.id} className={`shop-item-card bg-black/80 p-2 md:p-3 border-2 border-gray-700 rounded flex flex-col justify-between hover:border-[#ff007f] transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse pointer-events-none' : ''} ${inspectSelected ? 'shop-item-card--inspect' : ''} ${fits && !sold ? 'ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
-                                        <div className="flex justify-between items-start gap-2 mb-2">
-                                            <div className="font-mono text-[11px] text-[#d6b85c] font-bold">{discounted ? <><span className="line-through opacity-50 mr-1">${item.cost}</span>${listPrice}</> : `$${listPrice}`}</div>
+                                    return <div key={item.id} className={`shop-item-card transition-all group relative ${rarityClass(item.rarity)} ${sold ? 'sold-collapse shop-item-card--sold pointer-events-none' : ''} ${inspectSelected ? 'shop-item-card--inspect' : ''} ${fits && !sold ? 'shop-item-card--build-fit ring-1 ring-cyan-400/20 shadow-[0_0_14px_rgba(0,221,255,0.07)]' : ''}`}>
+                                        {!sold && <div className="shop-item-card__overlay shop-item-card__overlay--select" aria-hidden="true" />}
+                                        {sold && <div className="shop-item-card__overlay shop-item-card__overlay--sold" aria-hidden="true" />}
+                                        <div className="shop-item-card__inner p-2 md:p-3">
+                                        <div className="flex justify-between items-start gap-2 mb-2 relative z-[4]">
+                                            <div className="shop-item-card__price-tag-wrap font-mono text-[11px] font-bold">{discounted ? <><span className="shop-item-card__price-was mr-1">${item.cost}</span><span className="shop-item-card__price-now">${listPrice}</span></> : <span className="shop-item-card__price-now">${listPrice}</span>}</div>
                                             <div className="flex items-center gap-1 shrink-0">
                                                 {!sold && intelAvailable && (
                                                     <button
@@ -19993,6 +20188,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         </div>
                                         <div className="flex items-start gap-2 sm:gap-3 mb-2"><ShopItemIconSlot item={item} isFace={isFace} isConsumable={isConsumable} /><div className="min-w-0 flex-1"><div className="shop-item-card__title font-bold text-base leading-snug text-white">{isFace ? item.label : item.name}</div><div className="shop-item-card__effect text-[10px] text-gray-300 mt-0.5 font-mono leading-snug">{effectLine}</div><RiskBadges item={item} />{syn && <div className="shop-item-card__syn text-[9px] font-mono text-cyan-300/90 mt-1">{syn}</div>}</div></div>
                                         <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50 mt-auto">{buyLabel}</button>
+                                        </div>
                                     </div>;
                                 })}</div>
                                         </>
@@ -20019,18 +20215,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 </div>
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
-                                    <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
+                                    <ShopSectionHeader>SHOP OPTIONS</ShopSectionHeader>
                                     <button type="button" data-layout-key="shop-refresh-stock" onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-3 px-3 min-h-[44px] border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
                                         <span>REFRESH STOCK</span>
                                         <span>${shopRefreshCost}</span>
                                     </button>
                                     <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
-                                    <div className="mt-3 border-t border-gray-800 pt-3 shop-options-fence max-h-[5.5rem] overflow-hidden">
-                                        <div className="font-mono text-[10px] text-gray-400 mb-2">FENCE HARDWARE</div>
+                                    <ShopPanelDivider />
+                                    <div className="shop-options-fence max-h-[10rem] overflow-y-auto overscroll-contain pr-0.5">
+                                        <ShopSectionHeader>FENCE HARDWARE</ShopSectionHeader>
                                         {inventory.length === 0 ? (
                                             <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
                                         ) : (
-                                            <div className="space-y-2 max-h-36 overflow-hidden pr-1">
+                                            <div className="space-y-2 max-h-[6.5rem] overflow-y-auto pr-1">
                                                 {inventory.map(item => (
                                                     <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
                                                         <span className="font-mono text-[10px] text-gray-200 min-w-0 break-words leading-snug">{item.name}</span>
@@ -20042,8 +20239,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mt-3 border-t border-gray-800 pt-3 shop-options-debt">
-                                        <div className="font-mono text-[10px] text-red-300 mb-2">DEBT CONTROL</div>
+                                    <ShopPanelDivider />
+                                    <div className="shop-options-debt">
+                                        <ShopSectionHeader>DEBT CONTROL</ShopSectionHeader>
                                         <div className="grid grid-cols-2 gap-2">
                                             <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
                                                 PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
