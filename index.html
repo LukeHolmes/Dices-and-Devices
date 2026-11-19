@@ -4786,6 +4786,356 @@
             display: none !important;
         }
     }
+
+    /* —— Batch 5.2 approved production art (visual only) —— */
+  #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+        position: absolute;
+        left: 0.35rem;
+        bottom: 5.15rem;
+        width: min(22%, 132px);
+        height: auto;
+        z-index: 18;
+        pointer-events: none;
+        filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.55));
+    }
+    #root-gutterbones[data-batch52-art="1"] .felt-smoke-wisp--batch52-ember {
+        left: 14% !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: 14% !important;
+        width: 32%;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet {
+        position: relative;
+        background-color: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        color: #1a1208 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger::before,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet::before {
+        content: "";
+        position: absolute;
+        inset: -4px -3px -6px -3px;
+        background: url("assets/art/batch-5-2/ui/matchbook-blank-ledger.webp") center / 100% 100% no-repeat;
+        pointer-events: none;
+        z-index: 0;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger > *,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet > * {
+        position: relative;
+        z-index: 1;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger {
+        padding: 1.1rem 0.85rem 1.15rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-body {
+        background: transparent !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-compact-head,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-handle,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-collapsed-inner,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-open {
+        background: transparent !important;
+        border-color: rgba(80, 50, 20, 0.35) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-compact-head {
+        background-image: url("assets/art/batch-5-2/hud/label-backing-paper.webp") !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-size: 100% 100% !important;
+        border: 0 !important;
+        min-height: 2.45rem;
+        padding: 0.55rem 0.65rem 0.4rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-compact-head h2 {
+        color: #1a1208 !important;
+        text-shadow: none !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .score-row--compact .payout-row-state,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet .score-row-name {
+        color: #1a1208 !important;
+        font-weight: 700;
+    }
+    #root-gutterbones[data-batch52-art="1"] .score-row--compact .payout-heat-pill {
+        color: #3f2a12 !important;
+        border-color: rgba(60, 40, 16, 0.55) !important;
+        background: rgba(248, 236, 210, 0.55) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .street-ledger-top--unified,
+    #root-gutterbones[data-batch52-art="1"] .street-ledger-top {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-bar {
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        gap: 0.25rem 0.35rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+        background: url("assets/art/batch-5-2/hud/status-chip-paper.webp") center / 100% 100% no-repeat !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        color: #1a1208 !important;
+        font-weight: 700;
+        text-shadow: none !important;
+        min-height: 1.85rem;
+        padding: 0.16rem 0.55rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
+        background: url("assets/art/batch-5-2/hud/status-gauge-split.webp") center / 100% 100% no-repeat !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        min-width: 8.8rem;
+        min-height: 2.1rem;
+        padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
+        display: grid !important;
+        grid-template-columns: 24% 1fr;
+        align-items: center;
+        gap: 0 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums {
+        color: #1a1208 !important;
+        font-weight: 700;
+        grid-column: 1;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-track {
+        grid-column: 2;
+        height: 0.5rem !important;
+        margin: 0 0.45rem 0 0.12rem;
+        background: rgba(10, 8, 6, 0.82) !important;
+        border: 1px solid rgba(212, 180, 110, 0.35) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-rolls-pips {
+        position: relative !important;
+        display: block !important;
+        width: min(72%, 320px) !important;
+        max-width: 320px !important;
+        aspect-ratio: 779 / 182;
+        height: auto !important;
+        margin: 0.18rem auto 0.22rem !important;
+        padding: 0 !important;
+        background: url("assets/art/batch-5-2/hud/plays-counter-six-slot.webp") center / 100% 100% no-repeat !important;
+        z-index: 31;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-rolls-pips::before {
+        content: attr(data-plays-label);
+        position: absolute;
+        left: 5%;
+        top: 22%;
+        width: 36%;
+        height: 56%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a1208;
+        font: 700 0.58rem/1.05 "Courier New", monospace;
+        letter-spacing: 0.04em;
+        text-align: center;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip {
+        position: absolute !important;
+        width: 7.2% !important;
+        height: 31% !important;
+        top: 30.1% !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip:nth-child(1) { left: 40.0% !important; }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip:nth-child(2) { left: 48.5% !important; }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip:nth-child(3) { left: 56.7% !important; }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip:nth-child(4) { left: 64.3% !important; }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip:nth-child(5) { left: 72.7% !important; }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip:nth-child(6) { left: 81.9% !important; }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip--on {
+        background: #f4ebd0 !important;
+        border: 1px solid #d6b85c !important;
+        box-shadow: 0 0 6px rgba(244, 235, 208, 0.55) !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-roll-pip--spent {
+        background: #1a1208 !important;
+        border: 1px solid #3a2a12 !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail {
+        background: transparent !important;
+        border-bottom-color: transparent !important;
+        backdrop-filter: none !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket {
+        width: 3.15rem !important;
+        height: 3.15rem !important;
+        border: 0 !important;
+        background: url("assets/art/batch-5-2/hud/socket-square-ink.webp") center / 100% 100% no-repeat !important;
+        background-color: transparent !important;
+        color: #f3e2b8 !important;
+        opacity: 1 !important;
+        overflow: visible;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding-bottom: 0.12rem;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket--empty {
+        background-image: url("assets/art/batch-5-2/hud/socket-ring-brass.webp") !important;
+        opacity: 1 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket:not(.hardware-rail-socket--empty)::before {
+        content: "";
+        position: absolute;
+        left: -6%;
+        right: -6%;
+        top: -28%;
+        height: 62%;
+        background: url("assets/art/batch-5-2/hud/socket-arch-brass.webp") center / 100% 100% no-repeat;
+        pointer-events: none;
+        z-index: 1;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket-label {
+        position: relative;
+        z-index: 4;
+        font-size: 7px !important;
+        line-height: 1.05 !important;
+        max-height: 2.1em;
+        white-space: normal !important;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        text-shadow: 0 1px 2px #000;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket-art {
+        position: absolute;
+        inset: 14% 14% 32% 14%;
+        z-index: 3;
+        width: auto;
+        height: auto;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket-art .item-art-tile__img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="play-roll-btn"],
+    #root-gutterbones[data-batch52-art="1"] .play-control-roll {
+        background-color: transparent !important;
+        background-image: url("assets/art/batch-5-2/hud/control-face-red-enamel.webp") !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-size: 100% 100% !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        color: #f7ead0 !important;
+        text-shadow: 0 1px 0 #4a0024, 0 2px 2px #1a000c;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="play-roll-btn"] .roll-ready-pulse-inner {
+        opacity: 0.35;
+    }
+    @media (max-width: 1024px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            width: min(26%, 110px);
+            bottom: 5.35rem;
+        }
+    }
+    @media (max-width: 500px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            width: 68px;
+            left: 0.12rem;
+            bottom: 5.55rem;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+            min-height: 1.5rem;
+            padding: 0.1rem 0.34rem !important;
+            font-size: 9px !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
+            min-width: 6.2rem;
+            min-height: 1.65rem;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-rolls-pips {
+            width: min(92%, 280px) !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket {
+            width: 2.55rem !important;
+            height: 2.55rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .hardware-rail-socket-label {
+            font-size: 6px !important;
+            letter-spacing: 0.01em;
+        }
+        #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-handle {
+            padding-top: 1.35rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .street-ledger-top--unified {
+            flex-wrap: wrap;
+            gap: 0.18rem;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-hud-row--meta {
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+        #root-gutterbones[data-batch52-art="1"] .street-ledger-cluster--actions {
+            flex: 0 0 auto;
+            gap: 0.18rem !important;
+        }
+    }
+    @media (max-width: 360px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            width: 52px;
+            bottom: 5.25rem;
+            opacity: 0.92;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact {
+            min-height: 1.35rem !important;
+            max-height: 1.45rem !important;
+            padding-top: 0.08rem !important;
+            padding-bottom: 0.08rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .score-row-name,
+        #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet .score-row--compact .score-row-name {
+            font-size: 9px !important;
+            line-height: 1.05 !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .payout-heat-pill,
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .payout-row-state {
+            font-size: 8px !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact {
+            padding-top: 0.65rem !important;
+            padding-bottom: 0.55rem !important;
+        }
+    }
+    @media (max-width: 400px), (max-height: 580px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            display: none;
+        }
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .score-row-name {
+            font-size: 11px !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+            line-height: 1.1 !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row-name-block {
+            min-width: 0;
+            flex: 1 1 52%;
+        }
+    }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
@@ -8698,7 +9048,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             FUSE_BOX: 'assets/art/hardware/fuse-box.webp',
             MIRROR_RIG: 'assets/art/hardware/mirror-rig.webp',
             DEBT_COLLECTOR: 'assets/art/hardware/debt-collector.webp',
-            HOT_STREAK_COIL: 'assets/art/hardware/hot-streak-coil.webp'
+            HOT_STREAK_COIL: 'assets/art/hardware/hot-streak-coil.webp',
+            BRASS_KNUCKLES: 'assets/art/batch-5-2/hardware/brass-knuckles.webp'
         },
         consumables: {
             SECOND_WIND: 'assets/art/consumables/second-wind.webp',
@@ -11494,7 +11845,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     const RollsRemainingPips = ({ hands, maxHands }) => {
         const total = Math.max(1, maxHands || hands);
         return (
-            <div data-layout-key="play-rolls-pips" className="play-rolls-pips" role="status" aria-label={`${hands} roll${hands === 1 ? '' : 's'} remaining`}>
+            <div data-layout-key="play-rolls-pips" className="play-rolls-pips" data-plays-label={`${hands} ROLL${hands === 1 ? '' : 'S'}`} role="status" aria-label={`${hands} roll${hands === 1 ? '' : 's'} remaining`}>
                 {Array.from({ length: total }, (_, i) => (
                     <span key={i} className={`play-roll-pip ${i < hands ? 'play-roll-pip--on' : 'play-roll-pip--spent'}`} aria-hidden="true" />
                 ))}
@@ -11647,6 +11998,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             aria-label={item ? `Hardware slot ${idx + 1}: ${item.name}. ${item.desc}` : `Hardware slot ${idx + 1}: empty`}
                             title={item ? item.name : 'Empty slot'}
                         >
+                            {item && itemArtLookup(item.id) ? (
+                                <ItemArtTile itemId={item.id} variant="hardware" size="hud" label={item.name} className="hardware-rail-socket-art" />
+                            ) : null}
                             {item ? <span className="leading-tight line-clamp-2 hardware-rail-socket-label">{hardwareRailShortLabel(item.name)}</span> : <span className="opacity-40" aria-hidden>—</span>}
                             {tipOpen && (
                                 <span className="hardware-rail-tip" role="tooltip">
@@ -13250,6 +13604,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const rootEl = document.getElementById('root-gutterbones');
             if (!rootEl) return;
             rootEl.dataset.uiRedesign = '1';
+            rootEl.dataset.batch52Art = '1';
         }, []);
 
         useEffect(() => {
@@ -19664,8 +20019,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 <div className="felt-smoke">
                                     <div className="felt-smoke-wisp left-[-8%] top-[12%]" style={{ '--sx': '52px', '--sy': '-20px', '--dur': '52s' }}></div>
                                     <div className="felt-smoke-wisp right-[-12%] top-[46%]" style={{ '--sx': '-62px', '--sy': '-36px', '--dur': '44s' }}></div>
-                                    <div className="felt-smoke-wisp left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
+                                    <div className="felt-smoke-wisp felt-smoke-wisp--batch52-ember left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
                                 </div>
+                                <img
+                                    className="batch52-ashtray-prop"
+                                    src="assets/art/batch-5-2/ambient/cigarette-ashtray.webp"
+                                    alt=""
+                                    aria-hidden="true"
+                                    loading="lazy"
+                                    decoding="async"
+                                    width="280"
+                                    height="220"
+                                />
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 {swapMode && (
