@@ -40,10 +40,10 @@ class BridgeSettings(BaseSettings):
     state_dir: str = ""
 
     antigravity_enabled: bool = False
-    antigravity_window_limit: int = 5
+    antigravity_window_limit: int = 0
     antigravity_window_hours: float = 5.0
     antigravity_daily_limit: int = 0
-    antigravity_weekly_limit: int = 80
+    antigravity_weekly_limit: int = 0
     antigravity_cli: str = Field(default_factory=default_antigravity_cli)
     antigravity_ledger_path: str = ""
     antigravity_quota_path: str = ""

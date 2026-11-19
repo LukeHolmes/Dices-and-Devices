@@ -11,7 +11,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from gb_bridge.antigravity_interpret import interpret_antigravity_payload, parse_antigravity_stdout
+from gb_bridge.antigravity_interpret import (
+    interpret_antigravity_payload,
+    parse_antigravity_stdout,
+    try_quota_wait_result,
+)
 from gb_bridge.antigravity_ledger import AntigravityLedger
 
 log = logging.getLogger("gb_bridge.antigravity")
@@ -123,9 +127,9 @@ def _week_key() -> str:
 def check_quota(state: QuotaState, daily_limit: int, weekly_limit: int) -> None:
     d = state.daily[_day_key()]
     w = state.weekly[_week_key()]
-    if d >= daily_limit:
+    if daily_limit > 0 and d >= daily_limit:
         raise RuntimeError("antigravity_daily_quota_exhausted")
-    if w >= weekly_limit:
+    if weekly_limit > 0 and w >= weekly_limit:
         raise RuntimeError("antigravity_weekly_quota_exhausted")
 
 
@@ -217,6 +221,9 @@ def run_antigravity(
     proc = subprocess.run(argv, **run_kwargs)
     stderr = proc.stderr or ""
     stdout = proc.stdout or ""
+    quota_wait = try_quota_wait_result(stderr=stderr, stdout=stdout, proc_returncode=proc.returncode)
+    if quota_wait is not None:
+        return quota_wait
     if "approval" in stderr.lower() and "denied" in stderr.lower():
         return {"ok": False, "degraded": True, "reason": "tool_approval_denied", "stderr": stderr}
     if proc.returncode != 0 and not stdout.strip():

@@ -60,10 +60,10 @@ def test_antigravity_settings_and_cwd_env():
 
 def test_default_antigravity_budget_limits():
     cfg = BridgeSettings(n8n_header_value="x")
-    assert cfg.antigravity_window_limit == 5
+    assert cfg.antigravity_window_limit == 0
     assert cfg.antigravity_window_hours == 5.0
     assert cfg.antigravity_daily_limit == 0
-    assert cfg.antigravity_weekly_limit == 80
+    assert cfg.antigravity_weekly_limit == 0
 
 
 def test_validate_startup_ok():

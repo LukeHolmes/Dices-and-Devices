@@ -8,6 +8,7 @@ from gb_bridge.antigravity_interpret import (
     is_plan_artifact_non_answer,
     parse_antigravity_stdout,
     strip_markdown_json_fences,
+    try_quota_wait_result,
 )
 
 
@@ -98,3 +99,40 @@ def test_run_antigravity_parses_fenced_stdout(monkeypatch):
     out = run_antigravity("agy", "x")
     assert out["ok"] is True
     assert out["total_tokens"] == 1
+
+
+def test_agy_quota_wait_from_stderr():
+    out = try_quota_wait_result(stderr="Error: 5-hour limit reached for this account", proc_returncode=1)
+    assert out is not None
+    assert out["reason"] == "quota_wait"
+    assert out["retryable"] is True
+    assert "retried" in out["message"].lower()
+
+
+def test_agy_quota_wait_in_payload():
+    out = interpret_antigravity_payload(
+        {"status": "ERROR", "error": "quota exceeded", "response": ""},
+        proc_returncode=1,
+    )
+    assert out["reason"] == "quota_wait"
+    assert out.get("retryable") is True
+
+
+def test_run_antigravity_quota_wait(monkeypatch):
+    class Proc:
+        returncode = 1
+        stdout = ""
+        stderr = "quota exhausted — try again after the 5 hour window resets"
+
+    def fake_run(cmd, **kwargs):
+        if "--version" in cmd:
+            p = Proc()
+            p.stdout = "agy 1.5.11"
+            p.stderr = ""
+            return p
+        return Proc()
+
+    monkeypatch.setattr("gb_bridge.antigravity.subprocess.run", fake_run)
+    out = run_antigravity("agy", "x")
+    assert out["reason"] == "quota_wait"
+    assert out["retryable"] is True

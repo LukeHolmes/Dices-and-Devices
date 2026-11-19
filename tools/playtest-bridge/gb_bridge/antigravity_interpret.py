@@ -19,6 +19,51 @@ _PLAN_NON_ANSWER_RE = re.compile(
     re.IGNORECASE,
 )
 
+_AGY_QUOTA_RE = re.compile(
+    r"(?:5\s*[- ]?h(?:our)?\s+limit|quota\s+(?:exhausted|exceeded|limit|reached)"
+    r"|usage\s+limit|rate\s+limit\s+exceeded|out\s+of\s+credits"
+    r"|exceeded\s+(?:your\s+)?(?:quota|limit))",
+    re.IGNORECASE,
+)
+
+QUOTA_WAIT_USER_MESSAGE = (
+    "Antigravity reported a quota or rolling usage limit (for example the 5-hour cap). "
+    "This job can be retried later. The bridge does not purchase credits or enable overages."
+)
+
+
+def is_agy_quota_limit_message(text: str) -> bool:
+    if not (text or "").strip():
+        return False
+    return bool(_AGY_QUOTA_RE.search(text))
+
+
+def try_quota_wait_result(
+    *,
+    stderr: str = "",
+    stdout: str = "",
+    proc_returncode: int = 0,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    blob = "\n".join(
+        [
+            stderr or "",
+            stdout or "",
+            str((payload or {}).get("error") or ""),
+            str((payload or {}).get("message") or ""),
+        ],
+    )
+    if not is_agy_quota_limit_message(blob):
+        return None
+    return {
+        "ok": False,
+        "retryable": True,
+        "reason": "quota_wait",
+        "message": QUOTA_WAIT_USER_MESSAGE,
+        "stderr": stderr,
+        "code": proc_returncode,
+    }
+
 
 def strip_markdown_json_fences(text: str) -> str:
     t = (text or "").strip()
@@ -88,6 +133,14 @@ def interpret_antigravity_payload(
     stderr: str = "",
     proc_returncode: int = 0,
 ) -> dict[str, Any]:
+    quota_wait = try_quota_wait_result(
+        stderr=stderr,
+        stdout="",
+        proc_returncode=proc_returncode,
+        payload=payload,
+    )
+    if quota_wait is not None:
+        return quota_wait
     response_text = _response_text(payload)
     usage = extract_usage(payload)
     denied_actions = extract_denied_actions(payload)

@@ -30,6 +30,15 @@ def test_daily_limit_optional_when_zero(tmp_path):
     ledger.check_limits(window_limit=100, window_hours=5, daily_limit=0, weekly_limit=80, now=day)
 
 
+def test_optional_limits_disabled(tmp_path):
+    path = tmp_path / "ledger.jsonl"
+    ledger = AntigravityLedger(path)
+    day = datetime(2026, 11, 18, 20, 0, tzinfo=timezone.utc)
+    for i in range(200):
+        _append(ledger, day - timedelta(minutes=5 * i))
+    ledger.check_limits(window_limit=0, window_hours=5, daily_limit=0, weekly_limit=0, now=day)
+
+
 def test_daily_limit(tmp_path):
     path = tmp_path / "ledger.jsonl"
     ledger = AntigravityLedger(path)
