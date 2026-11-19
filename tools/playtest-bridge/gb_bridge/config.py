@@ -52,7 +52,9 @@ class BridgeSettings(BaseSettings):
     antigravity_mode: Literal["plan", "accept-edits", "auto"] = "plan"
     antigravity_print_timeout_sec: int = 600
     antigravity_model: str = ""
-    antigravity_sandbox: str = ""
+    antigravity_sandbox: str = "on"
+    antigravity_settings_file: str = ""
+    antigravity_cwd: str = ""
     antigravity_json_schema: str = ""
     antigravity_extra_args: str = ""
 

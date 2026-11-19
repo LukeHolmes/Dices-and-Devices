@@ -191,6 +191,7 @@ def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
         weekly_limit=settings.antigravity_weekly_limit,
     )
     prompt = build_investigate_prompt(payload)
+    cwd = settings.antigravity_cwd.strip() or None
     result = run_antigravity(
         settings.antigravity_cli,
         prompt,
@@ -199,6 +200,8 @@ def run_investigate_defect(payload: dict[str, Any]) -> dict[str, Any]:
         mode=settings.antigravity_mode,
         model=settings.antigravity_model,
         sandbox=settings.antigravity_sandbox,
+        settings_file=settings.antigravity_settings_file,
+        cwd=cwd,
         json_schema=settings.antigravity_json_schema,
         extra_args=parse_antigravity_extra_args(settings.antigravity_extra_args),
     )

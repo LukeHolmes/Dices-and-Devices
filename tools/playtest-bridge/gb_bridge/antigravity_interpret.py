@@ -6,6 +6,9 @@ from typing import Any
 
 DEFAULT_DIRECT_ANSWER_PREAMBLE = (
     "You are invoked by an automated playtest bridge for read-only defect investigation. "
+    "Use only your built-in workspace tools (view_file, grep_search, list_dir, find_by_name). "
+    "Never invoke shell commands or terminal tools (rg, bash, powershell, etc.); plan-mode sandboxes "
+    "deny shell and the turn ends with an empty response. "
     "Answer directly in the JSON response field. Do NOT write plan artifacts under "
     "%USERPROFILE%\\.gemini\\antigravity-cli\\brain or say you created an implementation plan. "
     "Summarize findings in this response only."
@@ -51,6 +54,18 @@ def is_headless_command_permission_denied(stderr: str, response: str) -> bool:
     return False
 
 
+def extract_denied_actions(payload: dict[str, Any]) -> list[Any]:
+    denied = payload.get("denied_actions")
+    if isinstance(denied, list):
+        return denied
+    result_event = payload.get("result")
+    if isinstance(result_event, dict):
+        nested = result_event.get("denied_actions")
+        if isinstance(nested, list):
+            return nested
+    return []
+
+
 def extract_usage(payload: dict[str, Any]) -> dict[str, Any]:
     usage = payload.get("usage")
     if isinstance(usage, dict):
@@ -75,6 +90,7 @@ def interpret_antigravity_payload(
 ) -> dict[str, Any]:
     response_text = _response_text(payload)
     usage = extract_usage(payload)
+    denied_actions = extract_denied_actions(payload)
     total_tokens = int(usage.get("total_tokens") or 0)
     base: dict[str, Any] = {
         "conversation_id": payload.get("conversation_id"),
@@ -83,8 +99,18 @@ def interpret_antigravity_payload(
         "num_turns": payload.get("num_turns"),
         "usage": usage,
         "total_tokens": total_tokens,
+        "denied_actions": denied_actions,
         "response_excerpt": response_text[:500] if response_text else "",
     }
+
+    if denied_actions:
+        return {
+            **base,
+            "ok": False,
+            "reason": "denied_actions",
+            "stderr": stderr,
+            "payload": payload,
+        }
 
     if is_headless_command_permission_denied(stderr, response_text):
         return {

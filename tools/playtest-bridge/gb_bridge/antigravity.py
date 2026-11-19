@@ -46,26 +46,33 @@ def build_antigravity_argv(
     mode: str = "plan",
     print_timeout_sec: int = 600,
     model: str = "",
-    sandbox: str = "",
+    sandbox: str = "on",
+    settings_file: str = "",
     json_schema: str = "",
     extra_args: list[str] | None = None,
 ) -> list[str]:
     extra = list(extra_args or [])
     assert_antigravity_args_safe(extra)
-    argv: list[str] = [
-        cli,
-        "-p",
-        prompt,
-        "--output-format",
-        output_format,
-        f"--print-timeout={print_timeout_sec}s",
-        "--mode",
-        mode,
-    ]
+    argv: list[str] = [cli]
+    if output_format == "stream-json":
+        argv.extend(["-p", ""])
+    argv.extend(
+        [
+            "-p",
+            prompt,
+            "--output-format",
+            output_format,
+            f"--print-timeout={print_timeout_sec}s",
+            "--mode",
+            mode,
+        ],
+    )
     if model.strip():
         argv.extend(["--model", model.strip()])
     if sandbox.strip():
         argv.extend(["--sandbox", sandbox.strip()])
+    if settings_file.strip():
+        argv.extend(["--settings", settings_file.strip()])
     if json_schema.strip():
         argv.extend(["--json-schema", json_schema.strip()])
     argv.extend(extra)
@@ -171,7 +178,9 @@ def run_antigravity(
     output_format: str = "json",
     mode: str = "plan",
     model: str = "",
-    sandbox: str = "",
+    sandbox: str = "on",
+    settings_file: str = "",
+    cwd: str | None = None,
     json_schema: str = "",
     extra_args: list[str] | None = None,
 ) -> dict[str, Any]:
@@ -185,6 +194,7 @@ def run_antigravity(
         print_timeout_sec=print_timeout,
         model=model,
         sandbox=sandbox,
+        settings_file=settings_file,
         json_schema=json_schema,
         extra_args=extra_args,
     )
@@ -196,13 +206,15 @@ def run_antigravity(
         output_format,
         print_timeout,
     )
-    proc = subprocess.run(
-        argv,
-        capture_output=True,
-        text=True,
-        timeout=print_timeout + 30,
-        check=False,
-    )
+    run_kwargs: dict[str, Any] = {
+        "capture_output": True,
+        "text": True,
+        "timeout": print_timeout + 30,
+        "check": False,
+    }
+    if cwd and str(cwd).strip():
+        run_kwargs["cwd"] = str(cwd).strip()
+    proc = subprocess.run(argv, **run_kwargs)
     stderr = proc.stderr or ""
     stdout = proc.stdout or ""
     if "approval" in stderr.lower() and "denied" in stderr.lower():

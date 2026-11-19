@@ -13,10 +13,29 @@ from gb_bridge.jobs import build_investigate_prompt, run_investigate_defect
 def test_build_antigravity_argv_defaults():
     argv = build_antigravity_argv("agy.exe", "hello")
     assert argv[0] == "agy.exe"
-    assert "-p" in argv and "hello" in argv
+    assert argv[1:3] == ["-p", "hello"]
     assert "--output-format" in argv and argv[argv.index("--output-format") + 1] == "json"
     assert "--mode" in argv and argv[argv.index("--mode") + 1] == "plan"
+    assert "--sandbox" in argv and argv[argv.index("--sandbox") + 1] == "on"
     assert any(a.startswith("--print-timeout=") for a in argv)
+
+
+def test_stream_json_leading_empty_prompt_flag():
+    argv = build_antigravity_argv("agy", "hello", output_format="stream-json")
+    assert argv[1:4] == ["-p", "", "-p"]
+    assert argv[4] == "hello"
+    assert argv[argv.index("--output-format") + 1] == "stream-json"
+
+
+def test_settings_file_and_sandbox_override():
+    argv = build_antigravity_argv(
+        "agy",
+        "p",
+        settings_file=r"C:\cfg\readonly.json",
+        sandbox="off",
+    )
+    assert ["--settings", r"C:\cfg\readonly.json"] in [argv[i : i + 2] for i in range(len(argv) - 1)]
+    assert argv[argv.index("--sandbox") + 1] == "off"
 
 
 def test_rejects_dangerously_skip_permissions_in_extra_args():
@@ -92,6 +111,8 @@ def test_investigate_uses_shared_ledger_and_preamble(tmp_path, monkeypatch):
     assert len(lines) == 1
     assert "antigravity-cli" in captured["prompt"].lower()
     assert "implementation plan" in captured["prompt"].lower()
+    assert "view_file" in captured["prompt"].lower()
+    assert "shell" in captured["prompt"].lower()
 
 
 def test_build_argv_includes_json_schema():

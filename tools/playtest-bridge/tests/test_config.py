@@ -43,6 +43,21 @@ def test_shared_antigravity_ledger_path(tmp_path, monkeypatch):
     assert cfg.resolve_antigravity_quota_path() == ledger
 
 
+def test_default_antigravity_sandbox_on():
+    cfg = BridgeSettings(n8n_header_value="x")
+    assert cfg.antigravity_sandbox == "on"
+
+
+def test_antigravity_settings_and_cwd_env():
+    cfg = BridgeSettings(
+        n8n_header_value="x",
+        antigravity_settings_file=r"C:\Users\holme\agy-jobs\_config\readonly-repos.settings.json",
+        antigravity_cwd=r"C:\Users\holme\agy-repos\Dices-and-Devices",
+    )
+    assert cfg.antigravity_settings_file.endswith("readonly-repos.settings.json")
+    assert cfg.antigravity_cwd.endswith("Dices-and-Devices")
+
+
 def test_default_antigravity_budget_limits():
     cfg = BridgeSettings(n8n_header_value="x")
     assert cfg.antigravity_window_limit == 5

@@ -36,6 +36,19 @@ def test_headless_command_permission_empty_success():
     assert out["reason"] == "headless_command_permission_denied"
 
 
+def test_denied_actions_reported():
+    payload = {
+        "status": "SUCCESS",
+        "response": "",
+        "denied_actions": [{"tool": "run_shell_command", "reason": "policy"}],
+        "usage": {"total_tokens": 42},
+    }
+    out = interpret_antigravity_payload(payload, proc_returncode=0)
+    assert out["ok"] is False
+    assert out["reason"] == "denied_actions"
+    assert out["denied_actions"][0]["tool"] == "run_shell_command"
+
+
 def test_empty_response_success_is_error():
     out = interpret_antigravity_payload(
         {"status": "SUCCESS", "response": ""},
