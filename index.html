@@ -14134,36 +14134,10 @@ if (typeof window !== 'undefined') {
             setShowHelpOverlay(false);
             setShowFirstRunOverlay(false);
             openingSniffPendingRef.current = tut ? tut.openingStash > 0 : !!(EARLY_GAME_TUNING.openingStashGrant);
-            const applyOpeningSniffSync = () => {
-                const e2eSniffOff = typeof window !== 'undefined'
-                    && typeof window.__GB_E2E_QUERY__ === 'function'
-                    && window.__GB_E2E_QUERY__();
-                if (e2eSniffOff) {
-                    openingSniffPendingRef.current = false;
-                    return;
-                }
-                if (!openingSniffPendingRef.current) return;
-                openingSniffPendingRef.current = false;
-                const tutGrant = tutorialActiveRef.current && GutterbonesTutorial
-                    ? GutterbonesTutorial.TUNING.openingStash
-                    : 0;
-                const grant = tutGrant || EARLY_GAME_TUNING.openingStashGrant || 0;
-                if (grant <= 0) return;
-                setStash(grant);
-                const slot = tutorialActiveRef.current && GutterbonesTutorial
-                    ? GutterbonesTutorial.TUNING.openingSniffSlot
-                    : Math.floor(gameplayRandom() * 5);
-                rerollBoneSlot(slot, { consumePill: false, silent: true });
-                setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
-                spawnPaperStamp('FREE SNIFF', '#0f766e');
-                scheduleTimeout(() => setOpeningSniffBanner(null), reducedMotion ? 5200 : 6800);
-                if (tutorialActiveRef.current) setTutorialStepIndex(0);
-            };
             const enterPlay = () => {
                 if (meta.purchasedUpgradeIds.includes('fixer-network')) {
                     grantBlueprint(pickRandomBlueprintId());
                 }
-                applyOpeningSniffSync();
                 setPhase('PLAY');
                 const e2eMode = typeof window !== 'undefined'
                     && new URLSearchParams(window.location.search).get('e2e') === '1';
@@ -14640,8 +14614,27 @@ if (typeof window !== 'undefined') {
             const e2eSniffOff = typeof window !== 'undefined'
                 && typeof window.__GB_E2E_QUERY__ === 'function'
                 && window.__GB_E2E_QUERY__();
-            if (e2eSniffOff) openingSniffPendingRef.current = false;
-        }, [phase]);
+            if (e2eSniffOff) {
+                openingSniffPendingRef.current = false;
+                return;
+            }
+            if (phase !== 'PLAY' || storyBeat || !openingSniffPendingRef.current || dice.length !== 5) return;
+            openingSniffPendingRef.current = false;
+            const tutGrant = tutorialActiveRef.current && GutterbonesTutorial
+                ? GutterbonesTutorial.TUNING.openingStash
+                : 0;
+            const grant = tutGrant || EARLY_GAME_TUNING.openingStashGrant || 0;
+            if (grant <= 0) return;
+            setStash(grant);
+            const slot = tutorialActiveRef.current && GutterbonesTutorial
+                ? GutterbonesTutorial.TUNING.openingSniffSlot
+                : Math.floor(gameplayRandom() * 5);
+            rerollBoneSlot(slot, { consumePill: false, silent: true });
+            setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
+            spawnPaperStamp('FREE SNIFF', '#0f766e');
+            scheduleTimeout(() => setOpeningSniffBanner(null), reducedMotion ? 5200 : 6800);
+            if (tutorialActiveRef.current) setTutorialStepIndex(0);
+        }, [phase, storyBeat, dice.length, reducedMotion]);
 
         const executePayout = (catId) => {
             const quotaTargetAtPlay = (typeof runTargetRef !== 'undefined' && runTargetRef)
