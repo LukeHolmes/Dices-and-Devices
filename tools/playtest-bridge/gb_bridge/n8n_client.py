@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any, Optional
 
 import httpx
@@ -23,11 +24,33 @@ class N8nClient:
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         url = settings.webhook_url(path)
-        resp = self._client.post(url, json=payload)
-        resp.raise_for_status()
-        if not resp.content:
-            return {}
-        return resp.json()
+        delays = (0.0, 0.75, 2.0, 4.0)
+        last_exc: Exception | None = None
+        for attempt, delay in enumerate(delays):
+            if delay:
+                time.sleep(delay)
+            try:
+                resp = self._client.post(url, json=payload)
+                if resp.status_code == 400:
+                    raise httpx.HTTPStatusError(
+                        "n8n webhook HTTP 400 (often HA nginx truncation)",
+                        request=resp.request,
+                        response=resp,
+                    )
+                resp.raise_for_status()
+                if not resp.content:
+                    raise ValueError("empty webhook response body")
+                try:
+                    return resp.json()
+                except json.JSONDecodeError as exc:
+                    raise ValueError(f"invalid JSON webhook body: {exc}") from exc
+            except (httpx.HTTPStatusError, httpx.TransportError, ValueError) as exc:
+                last_exc = exc
+                if attempt >= len(delays) - 1:
+                    raise
+        if last_exc:
+            raise last_exc
+        return {}
 
     def poll(self, worker_id: str) -> dict[str, Any]:
         return self._post(

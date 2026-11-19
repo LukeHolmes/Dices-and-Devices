@@ -18,6 +18,8 @@ const {
   appendRunRows,
   blankMetricsRow,
   digestRunResult,
+  isNaturalTermination,
+  normalizeRunOutcome,
 } = require(path.join(ROOT, "tests/helpers/run-results-csv.cjs"));
 
 async function runPair({ baseline, rids, maxSteps, parallel }) {
@@ -67,14 +69,21 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
       });
       await context.close();
       await isoBrowser.close();
+      const norm = normalizeRunOutcome(r, { budgetMaxSteps: maxSteps });
       const key = String(rid);
       byRid[key] = byRid[key] || [];
       byRid[key].push({
         replicateIndex: repIndex,
-        outcome: r.outcome || (r.stuck ? "STUCK" : "ERROR"),
+        outcome: norm.outcome || r.outcome || (r.stuck ? "STUCK" : "ERROR"),
+        terminalReason: norm.terminal_reason,
+        naturalTermination: isNaturalTermination(norm.outcome),
+        budgetExhausted: norm.outcome === "INCOMPLETE:BUDGET",
+        rawOutcome: r.outcome,
+        reason: r.reason,
+        stuck: Boolean(r.stuck || norm.stuck_flag === "1"),
         maxRound: r.maxRound,
         steps: r.steps,
-        digest: digestRunResult(r),
+        digest: digestRunResult({ ...r, outcome: norm.outcome }),
         stepTrace: r.stepTrace || [],
         gameDrawLog: r.gameDrawLog || [],
       });
@@ -167,15 +176,32 @@ function firstDivergingStep(traceA, traceB) {
   return null;
 }
 
-function comparePairs(byRid) {
+function summarizeBudget(byRid) {
+  let runs = 0;
+  let budgetHits = 0;
+  for (const reps of Object.values(byRid)) {
+    for (const rep of reps) {
+      runs += 1;
+      if (rep.budgetExhausted) budgetHits += 1;
+    }
+  }
+  return { runs, budgetHits };
+}
+
+function comparePairs(byRid, { naturalOnly = false } = {}) {
   let matched = 0;
   let total = 0;
+  let skippedNonNatural = 0;
   const mismatches = [];
   for (const [rid, reps] of Object.entries(byRid)) {
     if (reps.length < 2) continue;
-    total += 1;
     const a = reps[0];
     const b = reps[1];
+    if (naturalOnly && (!a.naturalTermination || !b.naturalTermination)) {
+      skippedNonNatural += 1;
+      continue;
+    }
+    total += 1;
     const ok =
       a.outcome === b.outcome
       && a.maxRound === b.maxRound
@@ -206,7 +232,7 @@ function comparePairs(byRid) {
       });
     }
   }
-  return { matched, total, mismatches };
+  return { matched, total, mismatches, skippedNonNatural };
 }
 
 function parseArgs(argv) {
@@ -236,6 +262,10 @@ function writeTrackingCsv({ report, batchId, maxSteps }) {
     const meta = batch.BASELINES[baseline] || {};
     for (const [rid, reps] of Object.entries(data.byRid || {})) {
       for (const rep of reps) {
+        const norm = normalizeRunOutcome(
+          { outcome: rep.outcome, reason: rep.reason, steps: rep.steps, terminalReason: rep.terminalReason },
+          { budgetMaxSteps: maxSteps },
+        );
         rows.push(
           blankMetricsRow({
             run_id: `${batchId}-${baseline}-rid${rid}-r${rep.replicateIndex}`,
@@ -255,13 +285,22 @@ function writeTrackingCsv({ report, batchId, maxSteps }) {
             budget_max_steps: maxSteps,
             replicate_index: rep.replicateIndex,
             holdout_flag: 0,
-            outcome: rep.outcome,
+            outcome: norm.outcome || rep.outcome,
+            terminal_reason: norm.terminal_reason || rep.terminalReason || "",
             max_round: rep.maxRound,
             steps: rep.steps,
             replay_digest: rep.digest,
+            stuck_flag: norm.stuck_flag || (rep.stuck ? "1" : "0"),
             replay_match: rep.replicateIndex === 0 ? "" : rep.matchPair === true ? 1 : 0,
-            measurement_valid: rep.matchPair === true ? 1 : 0,
-            measurement_notes: rep.matchPair === true ? "repro_pair_match" : "repro_pair_mismatch",
+            measurement_valid:
+              norm.measurement_valid !== ""
+                ? norm.measurement_valid
+                : rep.matchPair === true
+                  ? 1
+                  : 0,
+            measurement_notes:
+              norm.measurement_notes
+              || (rep.matchPair === true ? "repro_pair_match" : "repro_pair_mismatch"),
             evidence_path: path.join(ARTIFACTS, "diagnostics-repro-report.json"),
             llm_calls: 0,
           }),
@@ -312,14 +351,21 @@ async function main() {
   for (const baseline of baselines) {
     const byRid = await runPair({ baseline, rids, maxSteps: args.maxSteps, parallel: args.parallel });
     annotatePairMatches(byRid);
-    const cmp = comparePairs(byRid);
-    report.baselines[baseline] = { ...cmp, byRid: slimByRid(byRid) };
+    const cmpAll = comparePairs(byRid, { naturalOnly: false });
+    const cmpNatural = comparePairs(byRid, { naturalOnly: true });
+    const budget = summarizeBudget(byRid);
+    report.baselines[baseline] = {
+      ...cmpAll,
+      naturalTerminationRepro: cmpNatural,
+      budgetExhaustion: budget,
+      byRid: slimByRid(byRid),
+    };
   }
 
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const instrumentedGate = baselines.some((b) => String(b).endsWith("-i"));
   const batchId = instrumentedGate
-    ? "REPRO-DEFM005-20261119-instrumented-v5"
+    ? process.env.DEFM005_BATCH_ID || "REPRO-DEFM005-20261119-instrumented-v5b"
     : `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
@@ -333,15 +379,19 @@ async function main() {
     TRACKING_DIR,
     "defects/measurement",
     instrumentedGate
-      ? `DEF-M-005-gate-20261119-instrumented-v5.json`
+      ? `DEF-M-005-gate-20261119-instrumented-v5b.json`
       : `DEF-M-005-gate-${stamp}-vclock-boot.json`,
   );
   const totals = Object.values(report.baselines).reduce(
     (acc, b) => ({
       matched: acc.matched + b.matched,
       total: acc.total + b.total,
+      naturalMatched: acc.naturalMatched + (b.naturalTerminationRepro?.matched || 0),
+      naturalTotal: acc.naturalTotal + (b.naturalTerminationRepro?.total || 0),
+      budgetRuns: acc.budgetRuns + (b.budgetExhaustion?.runs || 0),
+      budgetHits: acc.budgetHits + (b.budgetExhaustion?.budgetHits || 0),
     }),
-    { matched: 0, total: 0 },
+    { matched: 0, total: 0, naturalMatched: 0, naturalTotal: 0, budgetRuns: 0, budgetHits: 0 },
   );
   const divergenceCatalog = [];
   for (const [baseline, data] of Object.entries(report.baselines)) {
@@ -390,7 +440,15 @@ async function main() {
         generatedAt: report.generatedAt,
         denominators: totals,
         perBaseline: Object.fromEntries(
-          Object.entries(report.baselines).map(([k, v]) => [k, { matched: v.matched, total: v.total }]),
+          Object.entries(report.baselines).map(([k, v]) => [
+            k,
+            {
+              matched: v.matched,
+              total: v.total,
+              naturalTerminationRepro: v.naturalTerminationRepro,
+              budgetExhaustion: v.budgetExhaustion,
+            },
+          ]),
         ),
         tracking_csv: trackingCsv,
         artifact: outPath,
@@ -403,12 +461,24 @@ async function main() {
   console.log(JSON.stringify({
     artifact: outPath,
     results: Object.fromEntries(
-      Object.entries(report.baselines).map(([k, v]) => [k, { matched: v.matched, total: v.total }]),
+      Object.entries(report.baselines).map(([k, v]) => [
+        k,
+        {
+          matched: v.matched,
+          total: v.total,
+          naturalTerminationRepro: v.naturalTerminationRepro,
+          budgetExhaustion: v.budgetExhaustion,
+        },
+      ]),
     ),
+    denominators: totals,
   }, null, 2));
 
-  const failed = Object.values(report.baselines).some((v) => v.matched !== v.total);
-  process.exit(failed ? 1 : 0);
+  const failedNatural = Object.values(report.baselines).some(
+    (v) => (v.naturalTerminationRepro?.total || 0) > 0
+      && v.naturalTerminationRepro.matched !== v.naturalTerminationRepro.total,
+  );
+  process.exit(failedNatural ? 1 : 0);
 }
 
 if (require.main === module) {

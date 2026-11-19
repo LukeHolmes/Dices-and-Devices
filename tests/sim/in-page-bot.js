@@ -381,6 +381,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         gold: st?.gold,
         hands: st?.hands,
         target: st?.target,
+        roundClear: Boolean(st?.roundClearVisible),
+        selectedShopPathId: st?.selectedShopPathId || null,
+        buttons: btn.slice(0, 10).map((b) => ({ t: b.t, lk: b.lk })),
         rngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
         gameRngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
         cosmeticRngDraws: window.__GB_SIM_COSMETIC_DRAW_COUNT__ || 0,
@@ -436,6 +439,12 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     }
     log._gambleTries = 0;
 
+    if (st?.roundClearVisible) {
+      window.__GB_E2E__?.finishRoundClear?.();
+      await pause(120);
+      continue;
+    }
+
     if (seededBuilder && (ph === "PLAY" || ph === "SHOP")) {
       const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast((e) =>
         e.kind === "round_cleared" || e.kind === "round_play_start");
@@ -449,12 +458,6 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         await pause(100);
         continue;
       }
-    }
-
-    if (st?.roundClearVisible) {
-      window.__GB_E2E__?.finishRoundClear?.();
-      await pause(120);
-      continue;
     }
 
     const shopBot = strategy === "builder" || strategy === "greedy";
@@ -619,32 +622,53 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     else await pause(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
   }
 
+  const preForfeit = window.__GB_E2E__.getState();
   window.__GB_E2E__.forceForfeitRun?.();
   await pause(600);
   const afterForfeit = window.__GB_E2E__.getState();
-  if (afterForfeit.phase === "RAP_SHEET" || afterForfeit.phase === "VICTORY") {
+  if (afterForfeit.phase === "VICTORY") {
     return {
-      stuck: false,
-      outcome: afterForfeit.phase === "VICTORY" ? "WIN" : "BUST",
+      stuck: true,
+      reason: "budget_exhausted",
+      terminalReason: "budget_exhausted",
+      outcome: "INCOMPLETE:BUDGET",
       maxRound,
       phase: afterForfeit.phase,
       seed,
       strategy,
       steps: maxSteps,
-      detail: "sim_forfeit_escape",
+      detail: "budget_cap_forfeit_victory_escape",
+      preForfeitPhase: preForfeit?.phase,
+    };
+  }
+  if (afterForfeit.phase === "RAP_SHEET") {
+    return {
+      stuck: true,
+      reason: "budget_exhausted",
+      terminalReason: "budget_exhausted",
+      outcome: "INCOMPLETE:BUDGET",
+      maxRound,
+      phase: afterForfeit.phase,
+      seed,
+      strategy,
+      steps: maxSteps,
+      detail: "budget_cap_forfeit_rap_sheet",
+      preForfeitPhase: preForfeit?.phase,
     };
   }
 
   const final = window.__GB_E2E__.getState();
   return {
     stuck: true,
-    reason: "incomplete",
+    reason: "budget_exhausted",
+    terminalReason: "budget_exhausted",
     detail: "max_steps:" + maxSteps + ",phase:" + final.phase,
-    outcome: "INCOMPLETE:" + final.phase,
+    outcome: "INCOMPLETE:BUDGET",
     maxRound,
     phase: final.phase,
     seed,
     strategy,
     steps: maxSteps,
+    preForfeitPhase: preForfeit?.phase,
   };
 }

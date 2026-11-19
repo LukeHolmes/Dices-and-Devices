@@ -1,0 +1,14 @@
+{
+  "id": "DEF-M-007",
+  "kind": "measurement",
+  "title": "Seeded builder skipped round-clear CONTINUE (post-quota stall)",
+  "status": "fixed",
+  "evidence": [
+    "/opt/cursor/artifacts/stall-probe-rid0.json",
+    "/opt/cursor/artifacts/stall-probe-rid1.json"
+  ],
+  "root_cause": "in-page-bot seededBuilder boundary handler ran before roundClearVisible and only called dismissOverlays on round_cleared, leaving round-clear-continue visible for ~12k steps",
+  "fix": "tests/sim/in-page-bot.js — handle roundClearVisible (finishRoundClear) before seededBuilder boundary branch",
+  "gameplay_defect": false,
+  "verified_after_fix": "/opt/cursor/artifacts/stall-probe-rid0-fixed.json (rid0: BUST max_round=6 steps=78)"
+}

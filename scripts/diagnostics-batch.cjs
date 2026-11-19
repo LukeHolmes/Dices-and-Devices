@@ -28,6 +28,7 @@ const {
   appendRunRows,
   blankMetricsRow,
   digestRunResult,
+  normalizeRunOutcome,
 } = require(path.join(ROOT, "tests/helpers/run-results-csv.cjs"));
 
 const BASELINES = {
@@ -144,11 +145,23 @@ function ensureRulesRoot(baseline, explicitRoot, worktreeAuto) {
   const meta = BASELINES[baseline];
   if (!meta) throw new Error(`Unknown baseline ${baseline}`);
   const wtDir = path.join(ROOT, ".worktrees", baseline.replace(/[^a-zA-Z0-9_-]/g, "_"));
-  if (!fs.existsSync(path.join(wtDir, "index.html"))) {
+  const wantHtml = path.join(wtDir, "index.html");
+  if (!fs.existsSync(wantHtml)) {
     fs.mkdirSync(path.dirname(wtDir), { recursive: true });
-    const add = git(["worktree", "add", "--detach", wtDir, meta.ref]);
+    const branchRef = meta.branch || meta.ref;
+    const fetch = git(["fetch", "origin", branchRef]);
+    if (fetch.status !== 0) {
+      throw new Error(
+        `git fetch origin ${branchRef} failed before worktree add: ${fetch.stderr || fetch.stdout}. `
+        + "Ensure the baseline branch exists on origin (e.g. baseline/r78-instrumented).",
+      );
+    }
+    const add = git(["worktree", "add", "--detach", wtDir, `origin/${branchRef}`]);
     if (add.status !== 0) {
-      throw new Error(`git worktree add failed: ${add.stderr || add.stdout}`);
+      const fallback = git(["worktree", "add", "--detach", wtDir, meta.ref]);
+      if (fallback.status !== 0) {
+        throw new Error(`git worktree add failed: ${add.stderr || add.stdout}`);
+      }
     }
   }
   return wtDir;
@@ -245,8 +258,9 @@ function rowsFromResults({
 }) {
   const diagnosticsSha = harnessSha;
   return results.map((r) => {
-    const outcome = r.outcome || (r.stuck ? "STUCK" : "ERROR");
-    const digest = digestRunResult(r);
+    const norm = normalizeRunOutcome(r, { budgetMaxSteps: args.maxSteps });
+    const outcome = norm.outcome || r.outcome || (r.stuck ? "STUCK" : "ERROR");
+    const digest = digestRunResult({ ...r, outcome });
     const linkObs = r.telem?.linkObserver;
     return blankMetricsRow({
       run_id: `${batchId}-${r.rid}-r${r.replicateIndex ?? 0}`,
@@ -276,18 +290,18 @@ function rowsFromResults({
       ended_at: new Date().toISOString(),
       wall_ms: r.wallMs ?? "",
       outcome,
-      terminal_reason: r.reason || "",
+      terminal_reason: norm.terminal_reason,
       max_round: r.maxRound ?? "",
       steps: r.steps ?? "",
       final_score: r.telem?.score ?? "",
       final_gold: r.telem?.gold ?? "",
       wins_flag: outcome === "WIN" ? "1" : "0",
-      stuck_flag: r.stuck ? "1" : "0",
+      stuck_flag: norm.stuck_flag || (r.stuck ? "1" : "0"),
+      measurement_valid: norm.measurement_valid,
+      measurement_notes: norm.measurement_notes || "",
       organic_link_count: linkObs?.organicLinkCount ?? "",
       chain_depth_peak: linkObs?.chainDepthPeak ?? "",
       replay_digest: digest,
-      measurement_valid: "",
-      measurement_notes: "",
       evidence_path: rulesRoot,
       runner_host: os.hostname(),
       os: `${os.platform()}-${os.release()}`,
