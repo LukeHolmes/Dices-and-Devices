@@ -214,10 +214,15 @@
         overflow-y: auto;
         overscroll-behavior: contain;
         scrollbar-width: thin;
-        grid-auto-rows: auto;
+        grid-auto-rows: max-content;
         align-items: start;
         row-gap: 0.85rem;
         column-gap: 1rem;
+    }
+    @media (orientation: portrait) and (min-width: 640px) and (max-width: 900px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
     }
     @media (max-width: 430px) {
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
@@ -881,7 +886,6 @@
         }
     }
     @media (max-width: 420px) and (max-height: 680px) {
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-fence,
         #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-debt,
         #root-gutterbones[data-phase="SHOP"] .shop-fixter-line,
         #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
@@ -892,9 +896,11 @@
         #root-gutterbones[data-phase="SHOP"] .stash-program-grid {
             display: none !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-fence,
         #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
             display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
+            max-height: 5.5rem;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             flex: 0 1 auto !important;
@@ -907,6 +913,11 @@
             min-width: 44px !important;
             min-height: 44px !important;
             padding: 0.5rem 0.85rem !important;
+        }
+    }
+    @media (min-width: 768px) and (max-width: 1120px) and (max-height: 820px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+            grid-template-columns: minmax(0, 1fr) !important;
         }
     }
     @media (min-width: 821px) and (max-height: 820px) {
@@ -927,7 +938,13 @@
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
-            flex: 1 1 42% !important;
+            flex: 1 1 50% !important;
+            width: auto !important;
+            max-width: 55% !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            flex: 1 1 50% !important;
+            min-width: 45% !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] button {
             position: relative;
@@ -1021,7 +1038,6 @@
     @media (min-width: 640px) and (max-height: 780px) {
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-fixter-line,
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-debt-warning,
-        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence,
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-debt,
         #root-gutterbones [data-layout-key="shop-stash-panel"] .stash-program-grid {
             display: none !important;
@@ -1112,11 +1128,14 @@
                 align-items: stretch;
             }
             #root-gutterbones [data-layout-key="shop-layout"] [data-tutorial="shop-panel"] {
-                flex: 1 1 52%;
+                flex: 1 1 50%;
+                min-width: 45%;
                 max-height: 100%;
             }
             #root-gutterbones [data-layout-key="shop-routes-panel"] {
-                flex: 1 1 48%;
+                flex: 1 1 50%;
+                width: auto !important;
+                max-width: 55%;
                 max-height: 100%;
             }
         }
@@ -1137,7 +1156,6 @@
             }
         }
         @media (min-width: 768px) and (max-height: 820px) {
-            #root-gutterbones[data-phase="SHOP"] .shop-options-fence,
             #root-gutterbones[data-phase="SHOP"] .shop-options-debt,
             #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
                 display: none !important;
@@ -1157,8 +1175,10 @@
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-next-job-header {
             font-size: 0.75rem !important;
         }
-        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence {
-            display: none;
+        @media (min-width: 768px) and (max-height: 520px) {
+            #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence {
+                display: none;
+            }
         }
         #root-gutterbones [data-tutorial="shop-panel"] > p.text-xs {
             display: none;
@@ -1722,7 +1742,6 @@
         #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
             display: none !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-fence,
         #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-debt {
             display: none !important;
         }
@@ -2687,6 +2706,14 @@
   #root-gutterbones [data-layout-key="upgrade-intel-panel"] dd {
     word-break: break-word;
     overflow-wrap: anywhere;
+  }
+  #root-gutterbones .shop-item-card.shop-item-card--sold {
+    overflow: hidden;
+  }
+  #root-gutterbones .shop-item-card.shop-item-card--sold.sold-collapse {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
     #root-gutterbones .bone-verdict-glow { animation: verdictBloom .42s ease-out forwards; background: radial-gradient(circle, var(--verdict-color) 0%, transparent 62%); }
     #root-gutterbones .bone-settle-jolt { animation: settleJolt .15s cubic-bezier(.2,.9,.3,1); }
@@ -10650,10 +10677,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 let needsScale = scale < 0.999 || (isShopRoutes && need > routesAvail + 1);
                 if (isShopItems && need > avail + 2) {
-                    scale = Math.min(1, Math.max(minScale, avail / need));
-                    needsScale = true;
+                    needsScale = false;
                 }
-                if (needsScale) {
+                if (needsScale && !isShopItems) {
                     body.style.transformOrigin = (isInlineIntel || isShopRoutes || isShopItems) ? 'top center' : 'top right';
                     body.style.transform = `scale(${scale})`;
                     body.style.width = isInlineIntel ? `${100 / scale}%` : ((isShopRoutes || isShopItems) ? '100%' : '');
@@ -10681,35 +10707,15 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     }
                     delete shell.dataset.intelScaled;
                 }
-                if (isShopItems && typeof window !== 'undefined') {
-                    shell.style.overflowY = needsScale ? 'auto' : '';
+                if (isShopItems) {
+                    body.style.transform = 'none';
+                    body.style.width = '';
+                    body.style.marginBottom = '0';
+                    shell.style.overflowY = need > avail + 2 ? 'auto' : '';
                     shell.style.overflowX = 'hidden';
-                    shell.style.maxHeight = needsScale ? `${Math.max(120, avail)}px` : '';
-                    if (needsScale) {
-                        body.style.marginBottom = '0';
-                    }
-                    const vh = window.innerHeight;
-                    const stashBar = shell.closest('[data-tutorial="shop-panel"]')?.querySelector('[data-layout-key="shop-stash-panel"]');
-                    const stashTop = stashBar?.getBoundingClientRect().top;
-                    const vhBudget = stashTop && stashTop > 0 && stashTop < vh ? Math.max(96, stashTop - 6) : vh - 6;
-                    for (let pass = 0; pass < 12; pass += 1) {
-                        const buttons = shell.querySelectorAll('[data-layout-key="shop-buy-button"]');
-                        if (!buttons.length) break;
-                        let maxBottom = 0;
-                        buttons.forEach((el) => {
-                            maxBottom = Math.max(maxBottom, el.getBoundingClientRect().bottom);
-                        });
-                        if (maxBottom <= vhBudget + 1) break;
-                        scale = Math.max(minScale, scale * (vhBudget / maxBottom));
-                        body.style.transformOrigin = 'top center';
-                        body.style.transform = `scale(${scale})`;
-                        body.style.width = '100%';
-                        body.style.marginBottom = '0';
-                        body.style.maxWidth = '100%';
-                        const scaledH = Math.ceil(need * scale);
-                        shell.style.height = `${Math.min(avail, scaledH)}px`;
-                        shell.dataset.intelScaled = String(Math.round(scale * 100));
-                    }
+                    shell.style.maxHeight = need > avail + 2 ? `${Math.max(120, avail)}px` : '';
+                    shell.style.height = need > 0 ? `${Math.min(avail, need)}px` : '';
+                    delete shell.dataset.intelScaled;
                 }
             };
             fit();
@@ -12868,22 +12874,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             round,
             activeShopTag
         ], {
-            enabled: phase === 'SHOP' && typeof window !== 'undefined'
-                && (
-                    ((window.innerWidth < 768 || window.innerHeight < 700) && (shopItems?.length || 0) > 4)
-                    || (window.innerWidth >= 768 && window.innerWidth <= 1366 && window.innerHeight <= 820 && (shopItems?.length || 0) > 0)
-                ),
-            minScale: (() => {
-                if (typeof window === 'undefined') return 0.5;
-                const h = window.innerHeight;
-                const w = window.innerWidth;
-                if (h <= 390) return 0.3;
-                if (h <= 640) return 0.36;
-                if (w < 768 && h >= 700) return 0.38;
-                if (w >= 768 && w <= 1366 && h <= 820) return 0.52;
-                if (h < 520) return 0.42;
-                return 0.48;
-            })()
+            enabled: phase === 'SHOP' && typeof window !== 'undefined' && (shopItems?.length || 0) > 0,
+            minScale: 1
         });
 
         useEffect(() => {
@@ -16259,7 +16251,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setSoldItems(prev => [...prev, item.id]);
             setFixerLine(gold >= price ? `Bought ${item.name || item.label}.` : `Loan on ${item.name || item.label}. Watch that debt.`);
             AudioSystem.playTone(item.rarity === 'danger' ? 180 : 1200, 'square', 0.15);
-            spawnPaperStamp('SOLD');
             setGold(g => {
                 if (g >= price) return g - price;
                 const shortage = price - g;
@@ -19918,7 +19909,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                                 {fits && !sold && <span className="text-[8px] font-mono tracking-[0.15em] text-cyan-200/90 border border-cyan-500/35 px-1 py-0.5 rounded bg-black/60 shrink-0">FIT</span>}
                                             </div>
                                         </div>
-                                        {sold && <div className="absolute inset-0 flex items-center justify-center"><span className="paid-stamp text-2xl border-[3px] px-2">SOLD</span></div>}
                                         <div className="flex items-start gap-2 sm:gap-3 mb-2"><ShopItemIconSlot item={item} isFace={isFace} isConsumable={isConsumable} /><div className="min-w-0 flex-1"><div className="shop-item-card__title font-bold text-base leading-snug text-white">{isFace ? item.label : item.name}</div><div className="shop-item-card__effect text-[10px] text-gray-300 mt-0.5 font-mono leading-snug">{effectLine}</div><RiskBadges item={item} />{syn && <div className="shop-item-card__syn text-[9px] font-mono text-cyan-300/90 mt-1">{syn}</div>}</div></div>
                                         <button type="button" data-layout-key="shop-buy-button" title={item.desc || item.label || item.name} onClick={() => handlePurchase(item)} disabled={sold} className="gb-btn-shop gb-tappable-label relative z-[5] w-full py-3 min-h-[var(--gb-min-tap)] bg-[#c78b16] text-black font-bold rounded shadow-[0_4px_0_#5c4305] active:translate-y-1 active:shadow-none group-hover:bg-yellow-500 font-mono tracking-wide disabled:opacity-50 mt-auto">{buyLabel}</button>
                                     </div>;
