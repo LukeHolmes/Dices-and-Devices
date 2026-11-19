@@ -1,21 +1,24 @@
 {
-  "gate_batch_id": "REPRO-DEFM005-20261119-vclock",
-  "harness_mode": "node_paced_playwright_clock",
-  "harness_shim_rev": "2026-11-19-harness-clock-v1",
-  "denominators": { "matched": 3, "total": 20 },
+  "gate_batch_id": "REPRO-DEFM005-20261119-vclock-boot",
+  "harness_mode": "node_paced_playwright_clock_boot",
+  "harness_shim_rev": "2026-11-19-harness-clock-v3",
+  "denominators": { "matched": 2, "total": 20 },
   "perBaseline": {
     "R-main": { "matched": 0, "total": 10 },
-    "R78": { "matched": 3, "total": 10 }
+    "R78": { "matched": 2, "total": 10 }
   },
-  "prior_gate_record": { "batch": "REPRO-DEFM005-20261119", "matched": 0, "total": 20 },
+  "prior_gate_records": [
+    { "batch": "REPRO-DEFM005-20261119", "matched": 0, "total": 20 },
+    { "batch": "REPRO-DEFM005-20261119-vclock", "matched": 3, "total": 20 }
+  ],
   "status": "open",
-  "generatedAt": "2026-11-19T04:33:20.872Z",
-  "sample_first_divergence": {
-    "R-main_rid0": { "index": 4, "field": "score", "a": 84, "b": 91, "phase": "PLAY", "round": 1 },
-    "R-main_rid1": { "index": 9, "field": "gold", "a": 28, "b": 20, "phase": "SHOP", "round": 2 },
-    "R78_rid0": { "index": 4, "field": "score", "a": 92, "b": 120, "phase": "PLAY", "round": 1 }
+  "rules_blocker": {
+    "summary": "Pinned rules never bind runRandomRef to harness seed; async gameplay draws Math.random between bot steps.",
+    "smallest_change": "In beginContract (persona start), add: else if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') { setRunModifierIds([]); runRandomRef.current = window.__GB_SIM_GAME_RANDOM__; } — mirror index.html on current main (~line 14042). Optional: gameplayRandom() for dailyRunActive ? runRandomRef : __GB_SIM_GAME_RANDOM__ to stop bare Math.random in roll paths.",
+    "pins": { "R-main": "7d649ef", "R78": "59e11dc" }
   },
-  "artifact": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "tracking_csv": "diagnostics/tracking/runs/REPRO-DEFM005-20261119-vclock.csv",
-  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-vclock.json"
+  "divergence_cause_counts_among_failures": { "RNG": 18 },
+  "generatedAt": "2026-11-19T05:34:18.571Z",
+  "divergence_catalog": "diagnostics/tracking/defects/measurement/DEF-M-005-divergence-20261119.json",
+  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-vclock-boot.json"
 }

@@ -63,7 +63,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   };
   const rng = mulberry32((Number(seed) || 1) >>> 0);
 
-  localStorage.removeItem("gutterbones1977:run:v1");
+  if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+    window.__GB_SIM_APPLY_BASE_STORAGE__();
+  } else {
+    localStorage.removeItem("gutterbones1977:run:v1");
+  }
 
   const scan = () => {
     document.querySelectorAll("[data-pt]").forEach((e) => e.removeAttribute("data-pt"));
@@ -353,9 +357,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   }
   await pause(400);
 
+  let lastPhaseForClock = null;
   for (let step = 0; step < maxSteps; step++) {
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
+    if (awaitClock && ph !== lastPhaseForClock) {
+      await yieldClock(48);
+      lastPhaseForClock = ph;
+    }
     if (tracingSteps) {
       stepTrace.push({
         step,
@@ -365,6 +374,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         gold: st?.gold,
         hands: st?.hands,
         target: st?.target,
+        rngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
       });
     }
     if (ph === "PLAY") started = true;

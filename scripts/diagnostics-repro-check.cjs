@@ -25,6 +25,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
   const prev = { ...process.env };
   process.env.SIM_SEED_GAME = "1";
   process.env.SIM_NODE_PACED = "1";
+  process.env.SIM_BOOT_SETTLE_MS = process.env.SIM_BOOT_SETTLE_MS || "0";
   process.env.SIM_STREET_RAT_PROFILE = "1";
   process.env.SIM_POLICY_REVISION = batch.FIXED_POLICY_REVISION;
   process.env.SIM_LINK_OBSERVER = "1";
@@ -32,7 +33,10 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
 
   const rulesRoot = batch.ensureRulesRoot(baseline, "", true);
   const { runOneGame, pickViewports, startServer } = require(path.join(ROOT, "tests/sim/run.cjs"));
-  const { ensurePlaywrightClock } = require(path.join(ROOT, "tests/sim/run-paced-bot.cjs"));
+  const { ensurePlaywrightClock, installDeterministicNetwork } = require(path.join(
+    ROOT,
+    "tests/sim/run-paced-bot.cjs",
+  ));
   const viewportsList = pickViewports("blocking");
   const server = await startServer(0, rulesRoot);
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -46,6 +50,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
       const isoBrowser = await chromium.launch({ headless: true });
       const context = await isoBrowser.newContext();
       await ensurePlaywrightClock(context);
+      await installDeterministicNetwork(context);
       const page = await context.newPage();
       page.__baseUrl = baseUrl;
       const booted = { value: false };
@@ -81,6 +86,21 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
   await new Promise((r) => server.close(r));
   Object.assign(process.env, prev);
   return byRid;
+}
+
+function categorizeDivergence(diverge) {
+  if (!diverge || !diverge.a || !diverge.b) return "timer";
+  const keys = ["phase", "round", "score", "gold", "hands", "target", "rngDraws"];
+  const changed = keys.filter((k) => JSON.stringify(diverge.a[k]) !== JSON.stringify(diverge.b[k]));
+  if (changed.includes("rngDraws")) return "RNG";
+  if (changed.some((k) => ["score", "gold", "hands", "target"].includes(k))) {
+    if (diverge.a.rngDraws !== diverge.b.rngDraws) return "RNG";
+    return "timer";
+  }
+  if (changed.includes("phase") && diverge.index < 2) return "load";
+  if (changed.includes("round") && diverge.index < 3) return "storage";
+  if (changed.includes("phase") && diverge.index < 5) return "animation";
+  return "timer";
 }
 
 function firstDivergingStep(traceA, traceB) {
@@ -121,8 +141,10 @@ function comparePairs(byRid) {
     if (ok) matched += 1;
     else {
       const diverge = firstDivergingStep(a.stepTrace, b.stepTrace);
+      const causeCategory = categorizeDivergence(diverge);
       mismatches.push({
         rid,
+        causeCategory,
         a: {
           outcome: a.outcome,
           maxRound: a.maxRound,
@@ -250,7 +272,7 @@ async function main() {
   }
 
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const batchId = `REPRO-DEFM005-${stamp}-vclock`;
+  const batchId = `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   fs.mkdirSync(RUNS_DIR, { recursive: true });
@@ -259,7 +281,11 @@ async function main() {
   const trackingCsv = writeTrackingCsv({ report, batchId, maxSteps: args.maxSteps });
   report.trackingCsv = trackingCsv;
   fs.writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  const gateSummaryPath = path.join(TRACKING_DIR, "defects/measurement", `DEF-M-005-gate-${stamp}-vclock.json`);
+  const gateSummaryPath = path.join(
+    TRACKING_DIR,
+    "defects/measurement",
+    `DEF-M-005-gate-${stamp}-vclock-boot.json`,
+  );
   const totals = Object.values(report.baselines).reduce(
     (acc, b) => ({
       matched: acc.matched + b.matched,
@@ -267,15 +293,37 @@ async function main() {
     }),
     { matched: 0, total: 0 },
   );
+  const divergenceCatalog = [];
+  for (const [baseline, data] of Object.entries(report.baselines)) {
+    for (const mm of data.mismatches || []) {
+      divergenceCatalog.push({
+        baseline,
+        rid: mm.rid,
+        causeCategory: mm.causeCategory || "timer",
+        firstDivergingStep: mm.firstDivergingStep || null,
+        tuple: { a: mm.a, b: mm.b },
+      });
+    }
+  }
+  const catalogPath = path.join(
+    TRACKING_DIR,
+    "defects/measurement",
+    `DEF-M-005-divergence-${stamp}.json`,
+  );
+  fs.writeFileSync(catalogPath, `${JSON.stringify({ catalog: divergenceCatalog }, null, 2)}\n`, "utf8");
+
   fs.writeFileSync(
     gateSummaryPath,
     `${JSON.stringify(
       {
         id: "DEF-M-005",
         gate_batch_id: batchId,
-        harness_mode: "node_paced_playwright_clock",
-        harness_shim_rev: "2026-11-19-harness-clock-v1",
-        prior_gate_record: { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
+        harness_mode: "node_paced_playwright_clock_boot",
+        harness_shim_rev: "2026-11-19-harness-clock-v3",
+        prior_gate_records: [
+          { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
+          { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },
+        ],
         generatedAt: report.generatedAt,
         denominators: totals,
         perBaseline: Object.fromEntries(

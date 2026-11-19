@@ -71,7 +71,13 @@
     };
   };
 
+  window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
+  window.__GB_SIM_RNG_BOOT_LOCKED__ = true;
+  let activeDraw = null;
+
   window.__GB_SIM_INSTALL_GAME_SEED__ = function installGameSeed(seed) {
+    const seedU32 = (Number(seed) || 1) >>> 0;
+    window.__GB_SIM_GAME_SEED__ = seedU32;
     const mulberry32 = (a) => {
       return () => {
         a |= 0;
@@ -81,13 +87,28 @@
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
       };
     };
-    const draw = mulberry32((Number(seed) || 1) >>> 0);
-    const rng = () => draw();
-    Math.random = rng;
-    window.__GB_SIM_GAME_RANDOM__ = rng;
-    window.__GB_SIM_STEP_SYNC__ = true;
+    activeDraw = mulberry32(seedU32);
+    window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
     return true;
   };
 
-  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v1";
+  window.__GB_SIM_UNLOCK_GAME_RNG__ = function unlockGameRng() {
+    window.__GB_SIM_RNG_BOOT_LOCKED__ = false;
+    if (window.__GB_SIM_GAME_SEED__ != null) {
+      window.__GB_SIM_INSTALL_GAME_SEED__(window.__GB_SIM_GAME_SEED__);
+    }
+    return true;
+  };
+
+  const rng = () => {
+    if (window.__GB_SIM_RNG_BOOT_LOCKED__) return 0.375;
+    if (!activeDraw) return 0.375;
+    window.__GB_SIM_RNG_DRAW_COUNT__ = (window.__GB_SIM_RNG_DRAW_COUNT__ || 0) + 1;
+    return activeDraw();
+  };
+  Math.random = rng;
+  window.__GB_SIM_GAME_RANDOM__ = rng;
+  window.__GB_SIM_STEP_SYNC__ = true;
+
+  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v3";
 })();

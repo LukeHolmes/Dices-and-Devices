@@ -10,7 +10,16 @@ const path = require("node:path");
 const ROOT = path.join(__dirname, "../..");
 const BOT_FN = fs.readFileSync(path.join(__dirname, "in-page-bot.js"), "utf8");
 const HARNESS_SHIM = fs.readFileSync(path.join(__dirname, "harness-determinism-shim.js"), "utf8");
-const { ensurePlaywrightClock, runBotEvaluateWithClock } = require("./run-paced-bot.cjs");
+const {
+  clockModeActive,
+  ensurePlaywrightClock,
+  installDeterministicNetwork,
+  runBotEvaluateWithClock,
+  prepareSimRunStart,
+  gotoWithClock,
+  reloadWithClock,
+  waitForPredicateWithClock,
+} = require("./run-paced-bot.cjs");
 const VIEWPORTS_ALL = [
   { name: "360x640", width: 360, height: 640 },
   { name: "390x844", width: 390, height: 844 },
@@ -121,66 +130,77 @@ async function bootPage(page, baseUrl, viewport) {
   const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
   const ruleExp = process.env.SIM_RULE_EXPERIMENTS || "";
   const ruleQ = ruleExp ? `&ruleExp=${encodeURIComponent(ruleExp)}` : "";
-  await page.goto(
-    `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}${ruleQ}`,
-    { waitUntil: "domcontentloaded", timeout: 120_000 },
-  );
-  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
-  await page.evaluate(() => {
-    localStorage.setItem(
-      "gutterbones1977:settings:v1",
-      JSON.stringify({
-        pacing: "fast",
-        reducedMotionPref: true,
-        tutorialCompleted: true,
-        skippedAlleyIntro: true,
-      }),
-    );
-    try {
+  const navOpts = { waitUntil: "domcontentloaded", timeout: 120_000 };
+  const entryUrl = `${baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${observerQ}${linkQ}${ruleQ}`;
+  if (clockModeActive()) {
+    await gotoWithClock(page, entryUrl, navOpts);
+    await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 120_000 });
+    await page.evaluate(() => {
+      if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+        window.__GB_SIM_APPLY_BASE_STORAGE__();
+      }
+    });
+    await reloadWithClock(page, navOpts);
+    await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 90_000 });
+  } else {
+    await page.goto(entryUrl, navOpts);
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 120_000 });
+    await page.evaluate(() => {
       localStorage.setItem(
-        "gutterbones1977:meta:v1",
+        "gutterbones1977:settings:v1",
         JSON.stringify({
-          totalRuns: 12,
-          victories: 2,
-          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
-          unlockedFaceIds: [
-            "MULT_FACE",
-            "GOLD_FACE",
-            "BLOOD_6",
-            "WILD_FACE",
-            "ECHO_FACE",
-            "GHOST_FACE",
-            "SHIV_FACE",
-            "WIREBAG_FACE",
-            "MAGNET_FACE",
-            "MARK_FACE",
-            "FUSE_FACE",
-            "DOUBLE_DOWN_FACE",
-          ],
-          unlockedHardwareIds: [
-            "BOOKENDS",
-            "LOADED_DIE",
-            "BRASS_KNUCKLES",
-            "BLACK_BOOK",
-            "BURNER_PHONE",
-            "CROWBAR",
-            "ENGINE",
-            "FUSE_BOX",
-            "MIRROR_RIG",
-            "DEBT_COLLECTOR",
-            "HOT_STREAK_COIL",
-            "CENTERPIECE",
-          ],
-          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+          pacing: "fast",
+          reducedMotionPref: true,
+          tutorialCompleted: true,
+          skippedAlleyIntro: true,
         }),
       );
-    } catch (_) {
-      /* ignore */
-    }
-    localStorage.removeItem("gutterbones1977:run:v1");
-  });
-  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
-  await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+      try {
+        localStorage.setItem(
+          "gutterbones1977:meta:v1",
+          JSON.stringify({
+            totalRuns: 12,
+            victories: 2,
+            unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
+            unlockedFaceIds: [
+              "MULT_FACE",
+              "GOLD_FACE",
+              "BLOOD_6",
+              "WILD_FACE",
+              "ECHO_FACE",
+              "GHOST_FACE",
+              "SHIV_FACE",
+              "WIREBAG_FACE",
+              "MAGNET_FACE",
+              "MARK_FACE",
+              "FUSE_FACE",
+              "DOUBLE_DOWN_FACE",
+            ],
+            unlockedHardwareIds: [
+              "BOOKENDS",
+              "LOADED_DIE",
+              "BRASS_KNUCKLES",
+              "BLACK_BOOK",
+              "BURNER_PHONE",
+              "CROWBAR",
+              "ENGINE",
+              "FUSE_BOX",
+              "MIRROR_RIG",
+              "DEBT_COLLECTOR",
+              "HOT_STREAK_COIL",
+              "CENTERPIECE",
+            ],
+            purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+          }),
+        );
+      } catch (_) {
+        /* ignore */
+      }
+      localStorage.removeItem("gutterbones1977:run:v1");
+    });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+  }
   await page.evaluate((rev) => {
     window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
   }, simPolicy);
@@ -216,69 +236,83 @@ async function runOneGame(
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     const simPolicy = process.env.SIM_POLICY_REVISION || "2026-11-11-phase-b-v1";
     const linkQ = process.env.SIM_LINK_OBSERVER === "1" ? "&linkObserver=1" : "";
-    await page.goto(
-      `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${linkQ}`,
-      { waitUntil: "domcontentloaded", timeout: 90_000 },
-    );
-    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    const reentryUrl = `${page.__baseUrl}/index.html?e2e=1&simPolicy=${encodeURIComponent(simPolicy)}${linkQ}`;
+    const reNav = { waitUntil: "domcontentloaded", timeout: 90_000 };
+    if (clockModeActive()) {
+      await gotoWithClock(page, reentryUrl, reNav);
+      await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 60_000 });
+    } else {
+      await page.goto(reentryUrl, reNav);
+      await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    }
     await page.evaluate((rev) => {
       window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
     }, simPolicy);
-    await page.evaluate(() => {
-      localStorage.setItem(
-        "gutterbones1977:settings:v1",
-        JSON.stringify({
-          pacing: "fast",
-          reducedMotionPref: true,
-          tutorialCompleted: true,
-          skippedAlleyIntro: true,
-        }),
-      );
-      try {
+    if (clockModeActive()) {
+      await page.evaluate(() => {
+        if (typeof window.__GB_SIM_APPLY_BASE_STORAGE__ === "function") {
+          window.__GB_SIM_APPLY_BASE_STORAGE__();
+        }
+      });
+      await reloadWithClock(page, reNav);
+      await waitForPredicateWithClock(page, "!!window.__GB_E2E__", { timeoutMs: 60_000 });
+    } else {
+      await page.evaluate(() => {
         localStorage.setItem(
-          "gutterbones1977:meta:v1",
+          "gutterbones1977:settings:v1",
           JSON.stringify({
-          totalRuns: 12,
-          victories: 2,
-          unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
-          unlockedFaceIds: [
-            "MULT_FACE",
-            "GOLD_FACE",
-            "BLOOD_6",
-            "WILD_FACE",
-            "ECHO_FACE",
-            "GHOST_FACE",
-            "SHIV_FACE",
-            "WIREBAG_FACE",
-            "MAGNET_FACE",
-            "MARK_FACE",
-            "FUSE_FACE",
-            "DOUBLE_DOWN_FACE",
-          ],
-          unlockedHardwareIds: [
-            "BOOKENDS",
-            "LOADED_DIE",
-            "BRASS_KNUCKLES",
-            "BLACK_BOOK",
-            "BURNER_PHONE",
-            "CROWBAR",
-            "ENGINE",
-            "FUSE_BOX",
-            "MIRROR_RIG",
-            "DEBT_COLLECTOR",
-            "HOT_STREAK_COIL",
-            "CENTERPIECE",
-          ],
-          purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
-        }),
+            pacing: "fast",
+            reducedMotionPref: true,
+            tutorialCompleted: true,
+            skippedAlleyIntro: true,
+          }),
         );
-      } catch (_) {
-        /* ignore */
-      }
-      localStorage.removeItem("gutterbones1977:run:v1");
-    });
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
-    await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+        try {
+          localStorage.setItem(
+            "gutterbones1977:meta:v1",
+            JSON.stringify({
+              totalRuns: 12,
+              victories: 2,
+              unlockedPersonaIds: ["STREET_RAT", "HUSTLER", "ENFORCER", "CARD_COUNTER", "GRINDER"],
+              unlockedFaceIds: [
+                "MULT_FACE",
+                "GOLD_FACE",
+                "BLOOD_6",
+                "WILD_FACE",
+                "ECHO_FACE",
+                "GHOST_FACE",
+                "SHIV_FACE",
+                "WIREBAG_FACE",
+                "MAGNET_FACE",
+                "MARK_FACE",
+                "FUSE_FACE",
+                "DOUBLE_DOWN_FACE",
+              ],
+              unlockedHardwareIds: [
+                "BOOKENDS",
+                "LOADED_DIE",
+                "BRASS_KNUCKLES",
+                "BLACK_BOOK",
+                "BURNER_PHONE",
+                "CROWBAR",
+                "ENGINE",
+                "FUSE_BOX",
+                "MIRROR_RIG",
+                "DEBT_COLLECTOR",
+                "HOT_STREAK_COIL",
+                "CENTERPIECE",
+              ],
+              purchasedUpgradeIds: ["rig-shop", "rare-faces", "danger-faces", "chain-manual"],
+            }),
+          );
+        } catch (_) {
+          /* ignore */
+        }
+        localStorage.removeItem("gutterbones1977:run:v1");
+      });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+      await page.waitForFunction(() => window.__GB_E2E__, { timeout: 60_000 });
+    }
     await page.evaluate((rev) => {
       window.__GB_SIM_POLICY__ = Object.freeze({ revision: rev });
     }, simPolicy);
@@ -301,7 +335,8 @@ async function runOneGame(
     seedGame,
     traceReplay,
   };
-  const useClock = process.env.SIM_SEED_GAME === "1" && process.env.SIM_NODE_PACED !== "0";
+  await prepareSimRunStart(page, seed);
+  const useClock = clockModeActive();
   const result = useClock
     ? await runBotEvaluateWithClock(page, evaluatePayload)
     : await page.evaluate(
