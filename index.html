@@ -5497,6 +5497,31 @@
         87.5%, 100% { background-position: 100% 100%; }
     }
 
+    #root-gutterbones[data-look-and-feel="1"] .alley-critter-crawl--rat .alley-critter-rat-legacy,
+    #root-gutterbones[data-look-and-feel="1"] .alley-critter-crawl--rat .alley-critter-legs {
+        display: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .alley-critter-crawl--rat .alley-critter-rat-webp {
+        width: 80px;
+        height: 80px;
+        background: url("assets/art/look-and-feel/alley-rat-8frame.webp") 0 0 / 800% 100% no-repeat;
+        animation: lafRatSprite8 calc(var(--critter-ms, 2200ms) / 2) steps(8, end) infinite;
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones[data-look-and-feel="1"] .alley-critter-crawl--rat .alley-critter-rat-webp {
+            width: 56px;
+            height: 56px;
+        }
+    }
+    @keyframes lafRatSprite8 {
+        from { background-position: 0% 0%; }
+        to { background-position: 100% 0%; }
+    }
+    #root-gutterbones[data-look-and-feel="1"]:has(.gutter-roll-hand-overlay .animate-gutter-hand) .alley-critter-crawl,
+    #root-gutterbones[data-look-and-feel="1"][data-score-overlay-open="1"] .alley-critter-crawl {
+        animation-play-state: paused !important;
+        opacity: 0.35;
+    }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
