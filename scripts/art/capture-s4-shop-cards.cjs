@@ -17,7 +17,9 @@ const OUT = process.env.S4_SHOP_CARD_OUT || path.join("/opt/cursor/artifacts", `
 
 const VIEWPORTS = [
   { tag: "1440x900", width: 1440, height: 900 },
+  { tag: "1366x768", width: 1366, height: 768 },
   { tag: "1024x768", width: 1024, height: 768 },
+  { tag: "768x1024", width: 768, height: 1024 },
   { tag: "390x844", width: 390, height: 844 },
 ];
 
@@ -105,17 +107,28 @@ async function main() {
 
     await page.screenshot({ path: path.join(OUT, `shop-states-${vp.tag}.png`) });
 
-    const priceTag = page.locator(".shop-item-card__price-tag-wrap").first();
-    if (await priceTag.count()) {
-      const box = await priceTag.boundingBox();
+    const priceTag = page.locator(".shop-item-card__price-was").first().locator("xpath=ancestor::*[contains(@class,'shop-item-card__price-tag-wrap')]");
+    const discountedTag = page.locator(".shop-item-card__price-tag-wrap:has(.shop-item-card__price-was)").first();
+    const tag = (await discountedTag.count()) ? discountedTag : page.locator(".shop-item-card__price-tag-wrap").first();
+    if (await tag.count()) {
+      const box = await tag.boundingBox();
       if (box) {
+        const padX = Math.max(18, box.width * 0.75);
+        const padY = Math.max(14, box.height * 0.75);
+        const clip = {
+          x: Math.max(0, box.x - padX),
+          y: Math.max(0, box.y - padY),
+          width: Math.min(box.width + padX * 2, vp.width),
+          height: Math.min(box.height + padY * 2, vp.height),
+        };
+        await page.screenshot({ path: path.join(OUT, `price-tag-closeup-${vp.tag}.png`), clip });
         await page.screenshot({
-          path: path.join(OUT, `price-tag-closeup-${vp.tag}.png`),
+          path: path.join(OUT, `price-tag-closeup-3x-${vp.tag}.png`),
           clip: {
-            x: Math.max(0, box.x - 12),
-            y: Math.max(0, box.y - 8),
-            width: Math.min(box.width + 24, vp.width),
-            height: Math.min(box.height + 16, vp.height),
+            x: Math.max(0, box.x - box.width),
+            y: Math.max(0, box.y - box.height),
+            width: Math.min(box.width * 3, vp.width),
+            height: Math.min(box.height * 3, vp.height),
           },
         });
       }

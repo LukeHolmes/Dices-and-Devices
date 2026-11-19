@@ -21,7 +21,9 @@ const DEMO_SHOP_IDS = [
 
 const VIEWPORTS = [
   { tag: "1440x900", width: 1440, height: 900 },
+  { tag: "1366x768", width: 1366, height: 768 },
   { tag: "1024x768", width: 1024, height: 768 },
+  { tag: "768x1024", width: 768, height: 1024 },
   { tag: "390x844", width: 390, height: 844 },
 ];
 
@@ -32,6 +34,8 @@ function s3DemoShopRun() {
     gold: 120,
     target: 140,
     shopItems: DEMO_SHOP_IDS.map((id) => ({ id })),
+    routeModifiers: { shopDiscount: 0.1 },
+    inventory: [{ id: "CROWBAR", name: "The Crowbar", instanceId: "hw-fence-demo" }],
     paths: fixtures.shop()?.paths || [],
   });
 }
