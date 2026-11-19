@@ -4788,15 +4788,25 @@
     }
 
     /* —— Batch 5.2 approved production art (visual only) —— */
-  #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+    #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
         position: absolute;
-        left: 0.35rem;
-        bottom: 5.15rem;
-        width: min(22%, 132px);
+        left: max(1rem, 2.2%);
+        bottom: 6.1rem;
+        width: min(18%, 118px);
+        max-height: 22%;
         height: auto;
+        object-fit: contain;
+        object-position: left bottom;
         z-index: 18;
         pointer-events: none;
         filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.55));
+    }
+    @media (min-width: 1200px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            left: max(1.25rem, 2.5%);
+            bottom: 6.35rem;
+            width: min(16%, 112px);
+        }
     }
     #root-gutterbones[data-batch52-art="1"] .felt-smoke-wisp--batch52-ember {
         left: 14% !important;
@@ -4818,9 +4828,11 @@
         content: "";
         position: absolute;
         inset: -4px -3px -6px -3px;
-        background: url("assets/art/batch-5-2/ui/matchbook-blank-ledger.webp") center / 100% 100% no-repeat;
+        background: url("assets/art/batch-5-2/ui/matchbook-blank-ledger.webp") center 2px / 100% 100% no-repeat;
         pointer-events: none;
         z-index: 0;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 12.5%, #000 16%, #000 100%);
+        mask-image: linear-gradient(to bottom, transparent 0%, transparent 12.5%, #000 16%, #000 100%);
     }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger > *,
     #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet > * {
@@ -4828,7 +4840,27 @@
         z-index: 1;
     }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger {
-        padding: 1.1rem 0.85rem 1.15rem !important;
+        padding: 1.05rem 0.85rem 1.15rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows {
+        position: relative;
+        margin-top: 0.55rem !important;
+        padding-top: 0.35rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows::before {
+        content: "";
+        position: absolute;
+        left: 3%;
+        right: 5%;
+        top: -0.4rem;
+        height: 1.55rem;
+        background: linear-gradient(180deg, rgba(240, 228, 205, 0.97) 0%, rgba(240, 228, 205, 0.88) 70%, transparent 100%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows > * {
+        position: relative;
+        z-index: 1;
     }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows,
     #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-body {
@@ -4854,16 +4886,47 @@
         color: #1a1208 !important;
         text-shadow: none !important;
     }
-    #root-gutterbones[data-batch52-art="1"] .score-row-name,
-    #root-gutterbones[data-batch52-art="1"] .score-row--compact .payout-row-state,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row--compact .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-fixed.gb-payout-row-btn[data-payout-row="FH"] .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-fixed.gb-payout-row-btn[data-payout-row="SS"] .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-fixed.gb-payout-row-btn[data-payout-row="LS"] .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-fixed.gb-payout-row-btn[data-payout-row="Y"] .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-row-state,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-heat-pill,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-preview-inline,
     #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet .score-row-name {
-        color: #1a1208 !important;
-        font-weight: 700;
+        color: #2a1a10 !important;
+        font-weight: 700 !important;
+        text-shadow: none !important;
+        opacity: 1 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        -webkit-line-clamp: unset !important;
+        line-clamp: unset !important;
     }
-    #root-gutterbones[data-batch52-art="1"] .score-row--compact .payout-heat-pill {
-        color: #3f2a12 !important;
-        border-color: rgba(60, 40, 16, 0.55) !important;
-        background: rgba(248, 236, 210, 0.55) !important;
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-heat-pill {
+        color: #2a1a10 !important;
+        border-color: rgba(42, 26, 16, 0.45) !important;
+        background: rgba(248, 236, 210, 0.72) !important;
+        font-weight: 800 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-fixed,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .gb-payout-row-btn {
+        background: rgba(248, 236, 210, 0.38) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-tier-idle,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-tier-idle .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-tier-idle .payout-heat-pill,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-tier-idle .payout-row-state {
+        opacity: 1 !important;
+        color: #2a1a10 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-tier-live .score-row-name,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-tier-live .payout-heat-pill {
+        color: #2a1a10 !important;
+        opacity: 1 !important;
     }
     #root-gutterbones[data-batch52-art="1"] .street-ledger-top--unified,
     #root-gutterbones[data-batch52-art="1"] .street-ledger-top {
@@ -5041,18 +5104,28 @@
     #root-gutterbones[data-batch52-art="1"] [data-layout-key="play-roll-btn"] .roll-ready-pulse-inner {
         opacity: 0.35;
     }
-    @media (max-width: 1024px) {
+    @media (min-width: 501px) and (max-width: 1199px) {
         #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
-            width: min(26%, 110px);
-            bottom: 5.35rem;
+            left: max(0.9rem, 2%);
+            bottom: 6rem;
+            width: min(20%, 100px);
+        }
+    }
+    @media (max-width: 414px) and (min-width: 361px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            display: none;
+        }
+    }
+    @media (max-width: 500px) and (min-width: 415px) {
+        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
+            display: block;
+            width: 48px;
+            max-height: 16%;
+            left: max(0.55rem, 1.8%);
+            bottom: 5.95rem;
         }
     }
     @media (max-width: 500px) {
-        #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
-            width: 68px;
-            left: 0.12rem;
-            bottom: 5.55rem;
-        }
         #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
         #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
         #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
@@ -5118,22 +5191,69 @@
             padding-bottom: 0.55rem !important;
         }
     }
-    @media (max-width: 400px), (max-height: 580px) {
+    @media (max-width: 360px), (max-height: 568px) and (max-width: 400px) {
         #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
             display: none;
         }
     }
     @media (min-width: 768px) and (max-width: 1023px) {
-        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .score-row-name {
-            font-size: 11px !important;
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .score-row-name,
+        #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet .score-row--compact .score-row-name {
+            font-size: 9px !important;
             white-space: normal !important;
             overflow: visible !important;
             text-overflow: unset !important;
-            line-height: 1.1 !important;
+            line-height: 1.06 !important;
+            word-break: break-word;
+            hyphens: auto;
+            letter-spacing: -0.01em;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .payout-heat-pill {
+            font-size: 8px !important;
+            min-width: 2.1rem !important;
+            padding-left: 0.15rem !important;
+            padding-right: 0.15rem !important;
         }
         #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row-name-block {
             min-width: 0;
-            flex: 1 1 52%;
+            flex: 1 1 62%;
+            max-width: 68%;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact {
+            align-items: flex-start !important;
+            gap: 0.12rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="Y"] .score-row-name,
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="SS"] .score-row-name,
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="FH"] .score-row-name,
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="LS"] .score-row-name {
+            font-size: 8px !important;
+            line-height: 1.05 !important;
+            letter-spacing: -0.02em;
+            white-space: normal !important;
+            text-overflow: unset !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="Y"],
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="SS"],
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="FH"],
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="LS"] {
+            min-height: 2.05rem !important;
+            max-height: 2.35rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact .score-row-name-block {
+            overflow: visible !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="SS"] .score-row-name-block,
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger--compact .score-row--compact[data-payout-row="Y"] .score-row-name-block {
+            transform: scale(0.93);
+            transform-origin: left center;
+        }
+    }
+    @media (min-width: 1024px) {
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-name,
+        #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-heat-pill {
+            color: #2a1a10 !important;
+            font-weight: 800 !important;
         }
     }
 </style>
@@ -11998,7 +12118,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             aria-label={item ? `Hardware slot ${idx + 1}: ${item.name}. ${item.desc}` : `Hardware slot ${idx + 1}: empty`}
                             title={item ? item.name : 'Empty slot'}
                         >
-                            {item && itemArtLookup(item.id) ? (
+                            {item && item.id === 'BRASS_KNUCKLES' && itemArtLookup(item.id) ? (
                                 <ItemArtTile itemId={item.id} variant="hardware" size="hud" label={item.name} className="hardware-rail-socket-art" />
                             ) : null}
                             {item ? <span className="leading-tight line-clamp-2 hardware-rail-socket-label">{hardwareRailShortLabel(item.name)}</span> : <span className="opacity-40" aria-hidden>—</span>}

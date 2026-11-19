@@ -106,6 +106,18 @@ for (const [w, h] of SIZES) {
   await seedPlay(page);
   const key = `${w}x${h}`;
   await page.screenshot({ path: path.join(outDir, `${label}_${key}_play.png`), fullPage: false });
+  if (w === 768 && h === 1024) {
+    const ledger = page.locator('[data-layout-key="play-ledger-column"]');
+    if (await ledger.count()) {
+      await ledger.screenshot({ path: path.join(outDir, `${label}_${key}_ledger.png`) });
+    }
+  }
+  if (w === 1920 && h === 1080) {
+    const alley = page.locator('[data-layout-key="play-alley"]');
+    if (await alley.count()) {
+      await alley.screenshot({ path: path.join(outDir, `${label}_${key}_alley.png`) });
+    }
+  }
   if (MOBILE.has(w * 10000 + h)) {
     const openBtn = page.locator('[data-layout-key="mobile-score-sheet-open"]');
     if (await openBtn.count()) {
@@ -115,18 +127,52 @@ for (const [w, h] of SIZES) {
       await page.screenshot({ path: path.join(outDir, `${label}_${key}_matchbook-drawer.png`), fullPage: false });
     }
   }
-  const overlap = await page.evaluate(() => {
+  const checks = await page.evaluate(() => {
     const ashtray = document.querySelector('.batch52-ashtray-prop');
     const roll = document.querySelector('[data-layout-key="play-roll-btn"]');
     const lane = document.querySelector('[data-layout-key="play-dice-lane"]');
-    if (!ashtray || ashtray.getBoundingClientRect().width < 2) return { ok: true, reason: 'no-ashtray' };
-    const a = ashtray.getBoundingClientRect();
-    const hit = (b) => !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
-    const badRoll = roll && hit(roll.getBoundingClientRect());
-    const badLane = lane && hit(lane.getBoundingClientRect());
-    return { ok: !badRoll && !badLane, badRoll: !!badRoll, badLane: !!badLane };
+    const alley = document.querySelector('[data-layout-key="play-alley"]');
+    let overlap = { ok: true, reason: 'no-ashtray' };
+    if (ashtray && ashtray.getBoundingClientRect().width >= 2) {
+      const a = ashtray.getBoundingClientRect();
+      const hit = (b) => !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+      const badRoll = roll && hit(roll.getBoundingClientRect());
+      const badLane = lane && hit(lane.getBoundingClientRect());
+      let insideAlley = true;
+      if (alley) {
+        const ar = alley.getBoundingClientRect();
+        insideAlley =
+          a.left >= ar.left + 2 &&
+          a.right <= ar.right - 2 &&
+          a.top >= ar.top + 2 &&
+          a.bottom <= ar.bottom - 2;
+      }
+      overlap = { ok: !badRoll && !badLane && insideAlley, badRoll: !!badRoll, badLane: !!badLane, insideAlley };
+    }
+    const longNames = ['Triad', 'Full Ride', 'Short Run', 'THE JACKPOT'];
+    const ledgerRows = {};
+    for (const name of longNames) {
+      const el = [...document.querySelectorAll('.matchbook-ledger .score-row-name, .mobile-score-sheet .score-row-name')].find(
+        (node) => (node.textContent || '').trim().includes(name)
+      );
+      if (!el) {
+        ledgerRows[name] = { found: false };
+        continue;
+      }
+      const cs = getComputedStyle(el);
+      ledgerRows[name] = {
+        found: true,
+        truncated: el.scrollWidth > el.clientWidth + 1,
+        color: cs.color,
+        fontWeight: cs.fontWeight,
+      };
+    }
+    return { overlap, ledgerRows };
   });
-  qa.sizes[key] = { overlap, batch52: await page.evaluate(() => document.getElementById('root-gutterbones')?.dataset?.batch52Art === '1') };
+  qa.sizes[key] = {
+    ...checks,
+    batch52: await page.evaluate(() => document.getElementById('root-gutterbones')?.dataset?.batch52Art === '1'),
+  };
   await page.close();
 }
 
@@ -153,6 +199,7 @@ await fpsPage.close();
 
 qa.consoleErrors = errors;
 qa.bboxAllOk = Object.values(qa.sizes).every((s) => s.overlap?.ok !== false);
+qa.ledger768 = qa.sizes['768x1024']?.ledgerRows || null;
 fs.writeFileSync(path.join(outDir, 'qa-report.json'), `${JSON.stringify(qa, null, 2)}\n`);
 console.log(JSON.stringify(qa, null, 2));
 
