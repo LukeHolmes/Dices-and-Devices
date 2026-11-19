@@ -107,12 +107,13 @@ async function main() {
 
     await page.screenshot({ path: path.join(OUT, `shop-states-${vp.tag}.png`) });
 
-    const discountedTag = page
-      .locator('[data-layout-key="shop-items-panel"] .shop-item-card__price-tag-wrap:has(.shop-item-card__price-was)')
-      .first();
+    const bloodCard = page.locator(".shop-item-card", { hasText: /Blood Pact/i }).first();
+    const discountedTag = bloodCard.locator(".shop-item-card__price-tag-wrap:has(.shop-item-card__price-was)");
     const tag = (await discountedTag.count())
-      ? discountedTag
-      : page.locator('[data-layout-key="shop-items-panel"] .shop-item-card__price-tag-wrap').first();
+      ? discountedTag.first()
+      : page
+          .locator('[data-layout-key="shop-items-panel"] .shop-item-card__price-tag-wrap:has(.shop-item-card__price-was)')
+          .first();
     if (await tag.count()) {
       const box = await tag.boundingBox();
       if (box && box.width > 4 && box.height > 4) {
