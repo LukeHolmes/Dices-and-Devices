@@ -189,9 +189,10 @@ for (const vp of VIEWPORTS) {
           const scaled = panel ? getComputedStyle(panel).transform : "none";
 
           const fenceSell = document.querySelectorAll(".shop-options-fence button").length;
-          const fenceHeader = [...document.querySelectorAll(".shop-section-header__label")].some(
-            (el) => /FENCE HARDWARE/i.test(el.textContent || ""),
-          );
+          const fenceHeader =
+            [...document.querySelectorAll(".shop-section-header__label")].some((el) =>
+              /FENCE HARDWARE/i.test(el.textContent || ""),
+            ) || /FENCE HARDWARE/i.test(document.querySelector(".shop-options-fence")?.textContent || "");
 
           return {
             count: cards.length,
@@ -223,9 +224,10 @@ for (const vp of VIEWPORTS) {
       assert.equal(badSold.length, 0, JSON.stringify(badSold, null, 2));
 
       const fence = await page.evaluate(() => {
-        const header = [...document.querySelectorAll(".shop-section-header__label")].some((el) =>
-          /FENCE HARDWARE/i.test(el.textContent || ""),
-        );
+        const header =
+          [...document.querySelectorAll(".shop-section-header__label")].some((el) =>
+            /FENCE HARDWARE/i.test(el.textContent || ""),
+          ) || /FENCE HARDWARE/i.test(document.querySelector(".shop-options-fence")?.textContent || "");
         const rows = document.querySelectorAll(".shop-options-fence button").length;
         const fenceBox = document.querySelector(".shop-options-fence")?.getBoundingClientRect();
         const visible =

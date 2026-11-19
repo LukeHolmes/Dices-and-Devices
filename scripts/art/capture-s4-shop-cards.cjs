@@ -107,14 +107,17 @@ async function main() {
 
     await page.screenshot({ path: path.join(OUT, `shop-states-${vp.tag}.png`) });
 
-    const priceTag = page.locator(".shop-item-card__price-was").first().locator("xpath=ancestor::*[contains(@class,'shop-item-card__price-tag-wrap')]");
-    const discountedTag = page.locator(".shop-item-card__price-tag-wrap:has(.shop-item-card__price-was)").first();
-    const tag = (await discountedTag.count()) ? discountedTag : page.locator(".shop-item-card__price-tag-wrap").first();
+    const discountedTag = page
+      .locator('[data-layout-key="shop-items-panel"] .shop-item-card__price-tag-wrap:has(.shop-item-card__price-was)')
+      .first();
+    const tag = (await discountedTag.count())
+      ? discountedTag
+      : page.locator('[data-layout-key="shop-items-panel"] .shop-item-card__price-tag-wrap').first();
     if (await tag.count()) {
       const box = await tag.boundingBox();
-      if (box) {
-        const padX = Math.max(18, box.width * 0.75);
-        const padY = Math.max(14, box.height * 0.75);
+      if (box && box.width > 4 && box.height > 4) {
+        const padX = Math.max(10, box.width * 0.35);
+        const padY = Math.max(8, box.height * 0.35);
         const clip = {
           x: Math.max(0, box.x - padX),
           y: Math.max(0, box.y - padY),
@@ -122,13 +125,17 @@ async function main() {
           height: Math.min(box.height + padY * 2, vp.height),
         };
         await page.screenshot({ path: path.join(OUT, `price-tag-closeup-${vp.tag}.png`), clip });
+        const zoomW = box.width * 3;
+        const zoomH = box.height * 3;
+        const zoomX = Math.max(0, Math.min(box.x + box.width / 2 - zoomW / 2, vp.width - zoomW));
+        const zoomY = Math.max(0, Math.min(box.y + box.height / 2 - zoomH / 2, vp.height - zoomH));
         await page.screenshot({
           path: path.join(OUT, `price-tag-closeup-3x-${vp.tag}.png`),
           clip: {
-            x: Math.max(0, box.x - box.width),
-            y: Math.max(0, box.y - box.height),
-            width: Math.min(box.width * 3, vp.width),
-            height: Math.min(box.height * 3, vp.height),
+            x: zoomX,
+            y: zoomY,
+            width: Math.min(zoomW, vp.width - zoomX),
+            height: Math.min(zoomH, vp.height - zoomY),
           },
         });
       }
