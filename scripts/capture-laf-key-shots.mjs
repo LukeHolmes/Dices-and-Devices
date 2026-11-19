@@ -74,15 +74,18 @@ async function capture1920() {
   await page.close();
 }
 
-async function capture390() {
+async function captureViewport(vp, name) {
   const page = await browser.newPage();
-  await bootPlay(page, { width: 390, height: 844 });
-  await page.screenshot({ path: path.join(OUT, `${label}_390x844_ready.png`) });
+  await bootPlay(page, vp);
+  await page.screenshot({ path: path.join(OUT, `${label}_${name}_ready.png`) });
   await page.close();
 }
 
 await capture1920();
-if (label === 'after') await capture390();
+if (label === 'after') {
+  await captureViewport({ width: 768, height: 1024 }, '768x1024');
+  await captureViewport({ width: 390, height: 844 }, '390x844');
+}
 await browser.close();
 server.kill();
 console.log('done', label, ROOT);
