@@ -11886,6 +11886,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const openingSniffPendingRef = useRef(false);
         const lastRollStartedAtRef = useRef(0);
         const pendingPayoutRef = useRef(null);
+        const releaseRollSettleRef = useRef(null);
+        const staleRollLockSinceRef = useRef(0);
+        const stalePhaseTransitionSinceRef = useRef(0);
+        const staleOverlayLatchSinceRef = useRef(0);
         const pendingUnlockMessageRef = useRef(null);
         const scoreBreakdownTimeoutRef = useRef(null);
         const scoreResolutionTimeoutRef = useRef(null);
@@ -13318,11 +13322,20 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     stuckIdleTicksRef.current = 0;
                     return;
                 }
-                if (hands > 0 && hasRolled && !payoutInputLock) {
+                if (
+                    hands > 0
+                    && hasRolled
+                    && !payoutInputLock
+                    && !rollLockRef.current
+                    && !pendingPayoutRef.current
+                ) {
                     stuckIdleTicksRef.current = 0;
                     return;
                 }
-                if (pendingPhaseTransitionRef.current || pendingRoundFinalizeRef.current) {
+                if (
+                    (pendingPhaseTransitionRef.current || pendingRoundFinalizeRef.current)
+                    && (scoreBreakdown || scoreResolution)
+                ) {
                     stuckIdleTicksRef.current = 0;
                     return;
                 }
@@ -14368,26 +14381,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 ? GutterbonesTutorial.nextRollIndex()
                 : null;
             const completeRoll = () => {
-                setRollLock(false);
-                const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
-                if (GutterbonesReplay && mods.includes('RISK_BONE')) {
-                    setDice((current) => {
-                        const riskToll = GutterbonesReplay.riskBoneToll(current, activeMask);
-                        if (riskToll > 0) {
-                            setGold((g) => Math.max(0, g - riskToll));
-                            spawnHitCallout('RISK BONE −$1');
-                        }
-                        return current;
-                    });
-                }
-                if (typeof notifyTutorial === 'function') notifyTutorial('roll_settled');
-                if (!reducedMotion) setPayoutPostRollGen((g) => g + 1);
-                if (typeof maybeScheduleAlleyCritterAfterRoll === 'function') maybeScheduleAlleyCritterAfterRoll();
-                const pending = pendingPayoutRef.current;
-                if (pending) {
-                    pendingPayoutRef.current = null;
-                    executePayout(pending);
-                }
+                releaseRollSettleRef.current?.({ fullHandRoll: true, activeMask });
             };
             if (!activeIndices.length) {
                 completeRoll();
@@ -14520,7 +14514,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     return next;
                 });
                 setRollingSlots(prev => prev.map(() => false));
-                setRollLock(false);
+                releaseRollSettleRef.current?.({ fullHandRoll: false });
                 if (!reducedMotion) {
                     if (typeof AudioSystem.dieThud === 'function') AudioSystem.dieThud(0);
                     else AudioSystem.clatter();
@@ -15191,6 +15185,79 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             }
             queueFinalizeRound(settlementCash, projectedCash);
         };
+
+        const releaseRollSettle = ({ fullHandRoll = false, activeMask: rollMask = null } = {}) => {
+            setRollLock(false);
+            staleRollLockSinceRef.current = 0;
+            if (fullHandRoll) {
+                const mods = typeof runModifierIds !== 'undefined' ? runModifierIds : [];
+                if (GutterbonesReplay && mods.includes('RISK_BONE') && rollMask) {
+                    setDice((current) => {
+                        const riskToll = GutterbonesReplay.riskBoneToll(current, rollMask);
+                        if (riskToll > 0) {
+                            setGold((g) => Math.max(0, g - riskToll));
+                            spawnHitCallout('RISK BONE −$1');
+                        }
+                        return current;
+                    });
+                }
+                if (typeof notifyTutorial === 'function') notifyTutorial('roll_settled');
+                if (!reducedMotion) setPayoutPostRollGen((g) => g + 1);
+                if (typeof maybeScheduleAlleyCritterAfterRoll === 'function') maybeScheduleAlleyCritterAfterRoll();
+            }
+            const pending = pendingPayoutRef.current;
+            if (!pending) return;
+            pendingPayoutRef.current = null;
+            setDice((currentDice) => {
+                if (typeof e2ePendingDiceRef !== 'undefined') e2ePendingDiceRef.current = currentDice;
+                scheduleTimeout(() => executePayout(pending), 0);
+                return currentDice;
+            });
+        };
+        releaseRollSettleRef.current = releaseRollSettle;
+
+        useEffect(() => {
+            if (phase !== 'PLAY' || runClosed || showSystemMenu) return undefined;
+            const tick = () => {
+                const now = Date.now();
+                const laneRolling = rollingSlots.some(Boolean);
+                if (rollLockRef.current && !laneRolling) {
+                    if (!staleRollLockSinceRef.current) staleRollLockSinceRef.current = now;
+                    else if (now - staleRollLockSinceRef.current >= 2000) {
+                        console.warn('[gutterbones] watchdog: clearing stale roll lock (no rolling slots)');
+                        staleRollLockSinceRef.current = 0;
+                        setRollingSlots((prev) => prev.map(() => false));
+                        releaseRollSettleRef.current?.({ fullHandRoll: false });
+                    }
+                } else {
+                    staleRollLockSinceRef.current = 0;
+                }
+                if (pendingPhaseTransitionRef.current || pendingRoundFinalizeRef.current) {
+                    if (!stalePhaseTransitionSinceRef.current) stalePhaseTransitionSinceRef.current = now;
+                    else if (now - stalePhaseTransitionSinceRef.current >= 2000) {
+                        console.warn('[gutterbones] watchdog: recovering pending phase transition');
+                        stalePhaseTransitionSinceRef.current = 0;
+                        recoverLastHandStuckState();
+                    }
+                } else {
+                    stalePhaseTransitionSinceRef.current = 0;
+                }
+                const overlayLatchStuck = scoreOverlayActiveRef.current && !scoreBreakdown && !scoreResolution;
+                if (overlayLatchStuck) {
+                    if (!staleOverlayLatchSinceRef.current) staleOverlayLatchSinceRef.current = now;
+                    else if (now - staleOverlayLatchSinceRef.current >= 2000) {
+                        console.warn('[gutterbones] watchdog: clearing stale score overlay latch');
+                        staleOverlayLatchSinceRef.current = 0;
+                        forceClearPresentationOverlays();
+                        recoverLastHandStuckState();
+                    }
+                } else {
+                    staleOverlayLatchSinceRef.current = 0;
+                }
+            };
+            const id = window.setInterval(tick, 500);
+            return () => window.clearInterval(id);
+        }, [phase, runClosed, showSystemMenu, rollingSlots, scoreBreakdown, scoreResolution]);
 
         const leaveGambleForShop = () => {
             if (phase === 'SHOP' && !screenTransition) return;
