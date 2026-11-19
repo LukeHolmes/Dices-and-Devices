@@ -375,6 +375,9 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         hands: st?.hands,
         target: st?.target,
         rngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
+        gameRngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
+        cosmeticRngDraws: window.__GB_SIM_COSMETIC_DRAW_COUNT__ || 0,
+        lastGameDrawSite: window.__GB_SIM_LAST_GAME_DRAW_SITE__ || null,
       });
     }
     if (ph === "PLAY") started = true;

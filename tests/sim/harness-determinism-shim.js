@@ -62,7 +62,6 @@
       "*,*::before,*::after{animation-duration:0.001ms!important;animation-delay:0s!important;"
       + "transition-duration:0.001ms!important;transition-delay:0s!important;}";
     (document.head || document.documentElement).appendChild(style);
-    const raf = window.requestAnimationFrame;
     window.requestAnimationFrame = function patchedRaf(cb) {
       return window.setTimeout(() => cb(performance.now()), 16);
     };
@@ -71,24 +70,90 @@
     };
   };
 
+  const mulberry32 = (a) => {
+    return () => {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  const deriveSeed32 = (baseU32, label) => {
+    const s = `${baseU32 >>> 0}:${label}`;
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i += 1) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  };
+
+  const BOOT_DRAW = 0.375;
+  let gameDraw = null;
+  let cosmeticDraw = null;
+
   window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
+  window.__GB_SIM_COSMETIC_DRAW_COUNT__ = 0;
   window.__GB_SIM_RNG_BOOT_LOCKED__ = true;
-  let activeDraw = null;
+  window.__GB_SIM_LAST_GAME_DRAW_SITE__ = null;
+  window.__GB_SIM_GAME_DRAW_LOG__ = [];
+
+  const captureGameCallSite = () => {
+    try {
+      const stack = String(new Error().stack || "").split("\n");
+      for (let i = 2; i < stack.length; i += 1) {
+        const line = stack[i].trim();
+        if (!line) continue;
+        if (line.includes("harness-determinism-shim")) continue;
+        if (line.includes("__GB_SIM_GAME_RANDOM__")) continue;
+        if (line.includes("taggedGameRandom")) continue;
+        return line.length > 140 ? `${line.slice(0, 137)}...` : line;
+      }
+    } catch (_) {
+      /* ignore */
+    }
+    return "(unknown)";
+  };
+
+  const pushGameDrawRecord = (n, site, value) => {
+    const log = window.__GB_SIM_GAME_DRAW_LOG__;
+    if (log.length >= 25000) return;
+    log.push({ n, site, v: value });
+  };
+
+  const taggedGameRandom = () => {
+    if (window.__GB_SIM_RNG_BOOT_LOCKED__) return BOOT_DRAW;
+    if (!gameDraw) return BOOT_DRAW;
+    const n = (window.__GB_SIM_RNG_DRAW_COUNT__ = (window.__GB_SIM_RNG_DRAW_COUNT__ || 0) + 1);
+    const site = captureGameCallSite();
+    window.__GB_SIM_LAST_GAME_DRAW_SITE__ = site;
+    const value = gameDraw();
+    pushGameDrawRecord(n, site, value);
+    return value;
+  };
+
+  const cosmeticRandom = () => {
+    if (window.__GB_SIM_RNG_BOOT_LOCKED__) return BOOT_DRAW;
+    if (!cosmeticDraw) return BOOT_DRAW;
+    window.__GB_SIM_COSMETIC_DRAW_COUNT__ = (window.__GB_SIM_COSMETIC_DRAW_COUNT__ || 0) + 1;
+    return cosmeticDraw();
+  };
 
   window.__GB_SIM_INSTALL_GAME_SEED__ = function installGameSeed(seed) {
     const seedU32 = (Number(seed) || 1) >>> 0;
     window.__GB_SIM_GAME_SEED__ = seedU32;
-    const mulberry32 = (a) => {
-      return () => {
-        a |= 0;
-        a = (a + 0x6d2b79f5) | 0;
-        let t = Math.imul(a ^ (a >>> 15), 1 | a);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    };
-    activeDraw = mulberry32(seedU32);
+    const gameSeed = deriveSeed32(seedU32, "game");
+    const cosmeticSeed = deriveSeed32(seedU32, "cosmetic");
+    gameDraw = mulberry32(gameSeed);
+    cosmeticDraw = mulberry32(cosmeticSeed);
     window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
+    window.__GB_SIM_COSMETIC_DRAW_COUNT__ = 0;
+    window.__GB_SIM_GAME_DRAW_LOG__ = [];
+    window.__GB_SIM_LAST_GAME_DRAW_SITE__ = null;
+    Math.random = cosmeticRandom;
+    window.__GB_SIM_GAME_RANDOM__ = taggedGameRandom;
     return true;
   };
 
@@ -100,15 +165,9 @@
     return true;
   };
 
-  const rng = () => {
-    if (window.__GB_SIM_RNG_BOOT_LOCKED__) return 0.375;
-    if (!activeDraw) return 0.375;
-    window.__GB_SIM_RNG_DRAW_COUNT__ = (window.__GB_SIM_RNG_DRAW_COUNT__ || 0) + 1;
-    return activeDraw();
-  };
-  Math.random = rng;
-  window.__GB_SIM_GAME_RANDOM__ = rng;
+  Math.random = cosmeticRandom;
+  window.__GB_SIM_GAME_RANDOM__ = taggedGameRandom;
   window.__GB_SIM_STEP_SYNC__ = true;
 
-  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v3";
+  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v4";
 })();

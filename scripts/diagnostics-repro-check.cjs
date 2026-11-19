@@ -76,6 +76,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
         steps: r.steps,
         digest: digestRunResult(r),
         stepTrace: r.stepTrace || [],
+        gameDrawLog: r.gameDrawLog || [],
       });
     }
   }
@@ -90,9 +91,13 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
 
 function categorizeDivergence(diverge) {
   if (!diverge || !diverge.a || !diverge.b) return "timer";
-  const keys = ["phase", "round", "score", "gold", "hands", "target", "rngDraws"];
+  const keys = ["phase", "round", "score", "gold", "hands", "target", "rngDraws", "gameRngDraws", "cosmeticRngDraws"];
   const changed = keys.filter((k) => JSON.stringify(diverge.a[k]) !== JSON.stringify(diverge.b[k]));
-  if (changed.includes("rngDraws")) return "RNG";
+  if (changed.includes("rngDraws") || changed.includes("gameRngDraws")) return "RNG";
+  if (changed.includes("cosmeticRngDraws") && !changed.some((k) => ["score", "gold", "hands", "target"].includes(k))) {
+    return "cosmetic-timing";
+  }
+  if (changed.includes("cosmeticRngDraws")) return "cosmetic-timing";
   if (changed.some((k) => ["score", "gold", "hands", "target"].includes(k))) {
     if (diverge.a.rngDraws !== diverge.b.rngDraws) return "RNG";
     return "timer";
@@ -101,6 +106,44 @@ function categorizeDivergence(diverge) {
   if (changed.includes("round") && diverge.index < 3) return "storage";
   if (changed.includes("phase") && diverge.index < 5) return "animation";
   return "timer";
+}
+
+function firstDivergingGameDraw(logA, logB, diverge) {
+  const a = logA || [];
+  const b = logB || [];
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i += 1) {
+    const ea = a[i];
+    const eb = b[i];
+    if (ea.n !== eb.n || ea.site !== eb.site || ea.v !== eb.v) {
+      return { drawIndex: i + 1, a: ea, b: eb };
+    }
+  }
+  if (a.length !== b.length) {
+    const extra = a.length > b.length ? a[len] : b[len];
+    return {
+      drawIndex: len + 1,
+      a: a[len] || null,
+      b: b[len] || null,
+      reason: "log_length_mismatch",
+      stepDivergence: diverge?.index ?? null,
+    };
+  }
+  if (diverge && diverge.a && diverge.b) {
+    const ga = diverge.a.gameRngDraws ?? diverge.a.rngDraws ?? 0;
+    const gb = diverge.b.gameRngDraws ?? diverge.b.rngDraws ?? 0;
+    if (ga !== gb) {
+      const n = Math.min(ga, gb);
+      return {
+        drawIndex: n + 1,
+        a: a[n] || null,
+        b: b[n] || null,
+        reason: "count_mismatch_at_step",
+        stepDivergence: diverge.index,
+      };
+    }
+  }
+  return null;
 }
 
 function firstDivergingStep(traceA, traceB) {
@@ -142,9 +185,11 @@ function comparePairs(byRid) {
     else {
       const diverge = firstDivergingStep(a.stepTrace, b.stepTrace);
       const causeCategory = categorizeDivergence(diverge);
+      const firstGameDraw = firstDivergingGameDraw(a.gameDrawLog, b.gameDrawLog, diverge);
       mismatches.push({
         rid,
         causeCategory,
+        firstDivergingGameDraw: firstGameDraw,
         a: {
           outcome: a.outcome,
           maxRound: a.maxRound,
@@ -274,7 +319,7 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const instrumentedGate = baselines.some((b) => String(b).endsWith("-i"));
   const batchId = instrumentedGate
-    ? `REPRO-DEFM005-${stamp}-instrumented`
+    ? `REPRO-DEFM005-${stamp}-instrumented-v4`
     : `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
@@ -288,7 +333,7 @@ async function main() {
     TRACKING_DIR,
     "defects/measurement",
     instrumentedGate
-      ? `DEF-M-005-gate-${stamp}-instrumented.json`
+      ? `DEF-M-005-gate-${stamp}-instrumented-v4.json`
       : `DEF-M-005-gate-${stamp}-vclock-boot.json`,
   );
   const totals = Object.values(report.baselines).reduce(
@@ -306,6 +351,7 @@ async function main() {
         rid: mm.rid,
         causeCategory: mm.causeCategory || "timer",
         firstDivergingStep: mm.firstDivergingStep || null,
+        firstDivergingGameDraw: mm.firstDivergingGameDraw || null,
         tuple: { a: mm.a, b: mm.b },
       });
     }
@@ -324,12 +370,14 @@ async function main() {
         id: "DEF-M-005",
         gate_batch_id: batchId,
         harness_mode: "node_paced_playwright_clock_boot",
-        harness_shim_rev: "2026-11-19-harness-clock-v3",
+        harness_shim_rev: "2026-11-19-harness-clock-v4",
         prior_gate_records: instrumentedGate
           ? [
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
               { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },
               { batch: "REPRO-DEFM005-20261119-vclock-boot", matched: 2, total: 20, baselines: "R-main,R78" },
+              { batch: "REPRO-DEFM005-20261119-instrumented", matched: 3, total: 20, baselines: "R-main-i,R78-i" },
+              { batch: "REPRO-DEFM005-20261119-instrumented-v4", note: "interim af8ef9a", matched: 15, total: 20 },
             ]
           : [
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },

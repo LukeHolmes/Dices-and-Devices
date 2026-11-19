@@ -1,8 +1,8 @@
 {
   "id": "DEF-M-005",
-  "title": "Full-run reproducibility — pair mismatch persists on instrumented baselines",
+  "title": "Full-run reproducibility — R78-i closed on v4 harness; R-main-i flaky on cosmetic-timing",
   "kind": "measurement",
   "status": "open",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "notes": "2026-11-19 instrumented gate REPRO-DEFM005-20261119-instrumented: 3/20 (R-main-i 0/10, R78-i 3/10). Rules: baseline/r-main-instrumented (af8ef9a from 7d649ef) and baseline/r78-instrumented (0dffccf from 59e11dc) with __GB_SIM_GAME_RANDOM__ in beginContract + gameplayRandom() on bare roll paths. Harness: node-paced Playwright clock boot, shim v3. 17 failing pairs still RNG-skew at identical visible state (rngDraws delta 1–12+). Hook-off proof: tests/diagnostics/hook-off-equivalence.test.cjs (stubbed Math.random / e2eRef cases). Prior gates preserved: 0/20 wall-clock, 3/20 vclock, 2/20 vclock-boot on unpinned R-main/R78. LLM calls: 0."
+  "notes": "2026-11-19 gate REPRO-DEFM005-20261119-instrumented-v4: 14/20 (R-main-i 4/10, R78-i 10/10). Prior same-batch attempt with af8ef9a: 15/20 (R-main-i 5/10). Harness shim v4: independent mulberry32 streams (seed+game vs seed+cosmetic), gameplay draw log with call sites. R-main-i f0f79cf adds gameplayRandom routes for blueprint pick, opening sniff slot, path consumable grant. Remaining R-main-i failures: identical gameRngDraws at first trace step but cosmeticRngDraws skew ±1 at step 0; later same-valued draws from generateShop vs inline caller (ordering). Hook-off: hook-off-equivalence + harness-determinism tests. Prior gates: 0/20, 3/20 vclock, 2/20 vclock-boot, 3/20 instrumented-v3. LLM: 0."
 }

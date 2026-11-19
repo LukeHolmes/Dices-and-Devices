@@ -141,11 +141,14 @@ async function runBotEvaluateWithClock(page, evaluatePayload) {
         if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
           window.__GB_SIM_INSTALL_GAME_SEED__(opts.seed);
           window.__GB_SIM_RNG_BOOT_LOCKED__ = true;
+        } else if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
+          window.__GB_SIM_INSTALL_GAME_SEED__(opts.seed);
         } else if (typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
           window.__GB_SIM_STEP_SYNC__ = true;
+          const cosmetic = GutterbonesReplay.mulberry32(opts.seed + 1);
           const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
           window.__GB_SIM_GAME_RANDOM__ = () => gameRandom();
-          Math.random = () => gameRandom();
+          Math.random = () => cosmetic();
         }
       }
       if (traceReplayFlag) {

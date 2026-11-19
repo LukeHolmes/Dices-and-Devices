@@ -46,7 +46,7 @@ const BASELINES = {
   "R-main-i": {
     label: "R-main-i",
     branch: "baseline/r-main-instrumented",
-    rulesCommit: "af8ef9a15dc35b28d1794aa1de9380f04f4eb11e",
+    rulesCommit: "f0f79cffb1d75e2de63603c1bfdbb167ffd3f39b",
     ref: "baseline/r-main-instrumented",
     instrumentedFrom: "7d649ef894dda8c3dbad77760e5fd3ecc943b4ba",
   },

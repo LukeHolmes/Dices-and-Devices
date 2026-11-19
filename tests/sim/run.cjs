@@ -367,8 +367,9 @@ async function runOneGame(
             } else if (typeof GutterbonesReplay !== "undefined" && GutterbonesReplay.mulberry32) {
               window.__GB_SIM_STEP_SYNC__ = true;
               const gameRandom = GutterbonesReplay.mulberry32(opts.seed);
+              const cosmetic = GutterbonesReplay.mulberry32(opts.seed + 1);
               window.__GB_SIM_GAME_RANDOM__ = () => gameRandom();
-              Math.random = () => gameRandom();
+              Math.random = () => cosmetic();
             }
           }
           if (traceReplayFlag) {
@@ -410,6 +411,9 @@ async function runOneGame(
   const stepTrace = useClock
     ? await page.evaluate(() => window.__GB_SIM_STEP_TRACE__ || [])
     : [];
+  const gameDrawLog = useClock
+    ? await page.evaluate(() => (window.__GB_SIM_GAME_DRAW_LOG__ || []).slice())
+    : [];
   const telem = await page.evaluate(() => {
     const st = window.__GB_E2E__?.getState?.() || {};
     const hands = (window.__GB_SIM_TELEM__ && window.__GB_SIM_TELEM__.hands) || [];
@@ -428,7 +432,7 @@ async function runOneGame(
       linkObserver: window.__GB_SIM_TELEM__?.linkObserver?.summarize?.() || null,
     };
   });
-  return { rid, viewport: viewport.name, ...result, telem, stepTrace };
+  return { rid, viewport: viewport.name, ...result, telem, stepTrace, gameDrawLog };
 }
 
 function classifyFailures(results, maxSteps) {
