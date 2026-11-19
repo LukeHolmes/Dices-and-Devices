@@ -1,8 +1,8 @@
 {
   "id": "DEF-M-005",
-  "title": "Full-run reproducibility under harness — steps/digest still drift after harness seed shim",
+  "title": "Full-run reproducibility under harness — steps/digest still drift after clock-paced bot",
   "kind": "measurement",
   "status": "open",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "notes": "2026-11-19 gate REPRO-DEFM005-20261119 (seeds 0–9 ×2 × R-main/R78, 8000 steps, harness commit ed15142+): 0/20 full-tuple matches (outcome+maxRound+steps+digest). Harness: pre-nav Math.random seed shim, isolated browser/sim, repro CSV. Pinned rules lack __GB_SIM_STEP_SYNC__; drift = bot/async step path vs real timers on rules pins. LLM calls: 0. See DEF-M-005-gate-20261119.json + diagnostics/tracking/runs/REPRO-DEFM005-20261119.csv. Prior 2026-11-18 partial-repro text kept in git history."
+  "notes": "2026-11-19 vclock gate REPRO-DEFM005-20261119-vclock (seeds 0–9 ×2 × R-main/R78, node-paced Playwright clock + seed shim): 3/20 full-tuple matches — R-main 0/10, R78 3/10. Prior wall-clock gate 0/20 preserved in DEF-M-005-gate-20261119.json. Clock pacing shortened R-main runs (~30–80 steps vs 8000-cap stalls) but score/gold diverge by step 2–9 (game RNG/async not fully serialized). R78: 7/10 pairs still mismatch; early PLAY score divergence (e.g. rid0 step 4 score 92 vs 120). LLM calls: 0. See DEF-M-005-gate-20261119-vclock.json + REPRO-DEFM005-20261119-vclock.csv."
 }

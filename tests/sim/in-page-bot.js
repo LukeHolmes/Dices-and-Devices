@@ -1,11 +1,27 @@
-async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
+async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks, traceSteps }) {
+  const awaitClock = Boolean(window.__GB_SIM_AWAIT_CLOCK__);
+  const stepTrace = window.__GB_SIM_STEP_TRACE__ || (window.__GB_SIM_STEP_TRACE__ = []);
+  const tracingSteps = Boolean(traceSteps) || Array.isArray(window.__GB_SIM_STEP_TRACE__);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const yieldClock = async (ms) => {
+    if (awaitClock) {
+      await new Promise((resolve) => {
+        window.__GB_SIM_PENDING_CLOCK_MS__ = Math.max(0, Number(ms) || 0);
+        window.__GB_SIM_CLOCK_RESOLVE__ = resolve;
+      });
+      return;
+    }
+    await wait(ms);
+  };
   const seededBuilder = strategy === "builder" && typeof window.__GB_SIM_GAME_RANDOM__ === "function";
-  const yieldTick = () => wait(0);
+  const yieldTick = () => (awaitClock ? yieldClock(0) : wait(0));
   const spin = async (ticks) => {
     for (let i = 0; i < ticks; i += 1) await yieldTick();
   };
   const pause = async (ms) => {
+    if (awaitClock) {
+      return yieldClock(ms || 16);
+    }
     if (seededBuilder) {
       const ticks = Math.max(4, Math.min(24, Math.round((ms || 16) / 14)));
       return spin(ticks);
@@ -340,6 +356,17 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   for (let step = 0; step < maxSteps; step++) {
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
+    if (tracingSteps) {
+      stepTrace.push({
+        step,
+        phase: ph,
+        round: st?.round,
+        score: st?.score,
+        gold: st?.gold,
+        hands: st?.hands,
+        target: st?.target,
+      });
+    }
     if (ph === "PLAY") started = true;
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
       maxRound = st.round;

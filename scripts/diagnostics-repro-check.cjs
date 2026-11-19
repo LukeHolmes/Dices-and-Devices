@@ -24,6 +24,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
   const batch = require(path.join(ROOT, "scripts/diagnostics-batch.cjs"));
   const prev = { ...process.env };
   process.env.SIM_SEED_GAME = "1";
+  process.env.SIM_NODE_PACED = "1";
   process.env.SIM_STREET_RAT_PROFILE = "1";
   process.env.SIM_POLICY_REVISION = batch.FIXED_POLICY_REVISION;
   process.env.SIM_LINK_OBSERVER = "1";
@@ -31,6 +32,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
 
   const rulesRoot = batch.ensureRulesRoot(baseline, "", true);
   const { runOneGame, pickViewports, startServer } = require(path.join(ROOT, "tests/sim/run.cjs"));
+  const { ensurePlaywrightClock } = require(path.join(ROOT, "tests/sim/run-paced-bot.cjs"));
   const viewportsList = pickViewports("blocking");
   const server = await startServer(0, rulesRoot);
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -43,6 +45,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
     for (const rid of rids) {
       const isoBrowser = await chromium.launch({ headless: true });
       const context = await isoBrowser.newContext();
+      await ensurePlaywrightClock(context);
       const page = await context.newPage();
       page.__baseUrl = baseUrl;
       const booted = { value: false };
@@ -67,6 +70,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
         maxRound: r.maxRound,
         steps: r.steps,
         digest: digestRunResult(r),
+        stepTrace: r.stepTrace || [],
       });
     }
   }
@@ -77,6 +81,27 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
   await new Promise((r) => server.close(r));
   Object.assign(process.env, prev);
   return byRid;
+}
+
+function firstDivergingStep(traceA, traceB) {
+  const a = traceA || [];
+  const b = traceB || [];
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i += 1) {
+    const sa = JSON.stringify(a[i]);
+    const sb = JSON.stringify(b[i]);
+    if (sa !== sb) return { index: i, a: a[i], b: b[i] };
+  }
+  if (a.length !== b.length) {
+    return {
+      index: len,
+      a: a[len] || null,
+      b: b[len] || null,
+      reason: "trace_length_mismatch",
+      lengths: { a: a.length, b: b.length },
+    };
+  }
+  return null;
 }
 
 function comparePairs(byRid) {
@@ -95,7 +120,23 @@ function comparePairs(byRid) {
       && a.digest === b.digest;
     if (ok) matched += 1;
     else {
-      mismatches.push({ rid, a, b });
+      const diverge = firstDivergingStep(a.stepTrace, b.stepTrace);
+      mismatches.push({
+        rid,
+        a: {
+          outcome: a.outcome,
+          maxRound: a.maxRound,
+          steps: a.steps,
+          digest: a.digest,
+        },
+        b: {
+          outcome: b.outcome,
+          maxRound: b.maxRound,
+          steps: b.steps,
+          digest: b.digest,
+        },
+        firstDivergingStep: diverge,
+      });
     }
   }
   return { matched, total, mismatches };
@@ -190,14 +231,26 @@ async function main() {
   const baselines = args.baselines.split(",").map((s) => s.trim()).filter(Boolean);
   const report = { rids, baselines: {}, generatedAt: new Date().toISOString() };
 
+  function slimByRid(byRid) {
+    const out = {};
+    for (const [rid, reps] of Object.entries(byRid)) {
+      out[rid] = reps.map((rep) => {
+        const { stepTrace, ...rest } = rep;
+        return { ...rest, stepTraceSteps: stepTrace?.length || 0 };
+      });
+    }
+    return out;
+  }
+
   for (const baseline of baselines) {
     const byRid = await runPair({ baseline, rids, maxSteps: args.maxSteps, parallel: args.parallel });
     annotatePairMatches(byRid);
     const cmp = comparePairs(byRid);
-    report.baselines[baseline] = { ...cmp, byRid };
+    report.baselines[baseline] = { ...cmp, byRid: slimByRid(byRid) };
   }
 
-  const batchId = `REPRO-DEFM005-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const batchId = `REPRO-DEFM005-${stamp}-vclock`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   fs.mkdirSync(RUNS_DIR, { recursive: true });
@@ -206,11 +259,7 @@ async function main() {
   const trackingCsv = writeTrackingCsv({ report, batchId, maxSteps: args.maxSteps });
   report.trackingCsv = trackingCsv;
   fs.writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  const gateSummaryPath = path.join(
-    TRACKING_DIR,
-    "defects/measurement",
-    `DEF-M-005-gate-${new Date().toISOString().slice(0, 10)}.json`,
-  );
+  const gateSummaryPath = path.join(TRACKING_DIR, "defects/measurement", `DEF-M-005-gate-${stamp}-vclock.json`);
   const totals = Object.values(report.baselines).reduce(
     (acc, b) => ({
       matched: acc.matched + b.matched,
@@ -224,6 +273,9 @@ async function main() {
       {
         id: "DEF-M-005",
         gate_batch_id: batchId,
+        harness_mode: "node_paced_playwright_clock",
+        harness_shim_rev: "2026-11-19-harness-clock-v1",
+        prior_gate_record: { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
         generatedAt: report.generatedAt,
         denominators: totals,
         perBaseline: Object.fromEntries(
