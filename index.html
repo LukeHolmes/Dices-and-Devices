@@ -5363,8 +5363,114 @@
     #root-gutterbones[data-look-and-feel="1"] .felt-smoke-wisp {
         display: none !important;
     }
-    #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-prop {
-        opacity: 0.88;
+    #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+        position: absolute;
+        left: max(1rem, 2.2%);
+        bottom: 6.05rem;
+        width: min(18%, 118px);
+        max-height: 24%;
+        z-index: 19;
+        pointer-events: none;
+        overflow: visible;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-visual {
+        position: relative;
+        width: 100%;
+        transform: scale(var(--ashtray-visual-scale, 1.5));
+        transform-origin: left bottom;
+        filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.28)) drop-shadow(0 2px 5px rgba(0, 0, 0, 0.18));
+    }
+    #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+        --ashtray-visual-scale: 1.5;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor .batch52-ashtray-prop {
+        position: relative !important;
+        left: auto !important;
+        bottom: auto !important;
+        display: block;
+        width: 100% !important;
+        max-height: 100%;
+        height: auto;
+        object-fit: contain;
+        object-position: left bottom;
+        filter: none !important;
+        opacity: 1;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .laf-ashtray-ember {
+        position: absolute;
+        left: 50%;
+        top: 2%;
+        width: min(38%, 42px);
+        max-width: 42px;
+        aspect-ratio: 1;
+        background: url("assets/art/look-and-feel/cigarette-ember-8frame.webp") 0 0 / 400% 200% no-repeat;
+        animation: lafAshtrayEmber 1.15s steps(8, end) infinite;
+        pointer-events: none;
+        opacity: 0.92;
+        z-index: 1;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .laf-ashtray-smoke {
+        position: absolute;
+        left: 44%;
+        top: -16%;
+        width: 34%;
+        max-width: 52px;
+        aspect-ratio: 0.85;
+        background: url("assets/art/look-and-feel/cigarette-smoke-rise-8frame.webp") 0 0 / 400% 200% no-repeat;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 2;
+        animation: lafAshtraySmokeLoop 16s steps(8, end) infinite;
+        transform-origin: 50% 100%;
+    }
+    @keyframes lafAshtrayEmber {
+        to { background-position: 100% 100%; }
+    }
+    @keyframes lafAshtraySmokeLoop {
+        0%, 72% { opacity: 0; background-position: 0% 0%; transform: translateY(10px) scale(0.92); }
+        78% { opacity: 0.55; }
+        100% { opacity: 0; background-position: 100% 100%; transform: translateY(-18px) scale(1.02); }
+    }
+    @media (min-width: 501px) and (max-width: 1199px) {
+        #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+            left: max(0.9rem, 2%);
+            bottom: 5.9rem;
+            width: min(20%, 100px);
+        }
+    }
+    @media (min-width: 1200px) and (max-width: 1399px) {
+        #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+            left: max(0.65rem, 1.2%);
+            bottom: 6.05rem;
+            width: min(14%, 76px);
+            --ashtray-visual-scale: 1.45;
+        }
+    }
+    @media (min-width: 1400px) {
+        #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+            left: max(1.25rem, 2.5%);
+            bottom: 6.2rem;
+            width: min(16%, 112px);
+            --ashtray-visual-scale: 1.5;
+        }
+    }
+    @media (min-width: 415px) and (max-width: 500px) {
+        #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+            display: block;
+            width: 48px;
+            max-height: 18%;
+            left: max(0.55rem, 1.8%);
+            bottom: 5.7rem;
+        }
+    }
+    @media (max-width: 414px) {
+        #root-gutterbones[data-look-and-feel="1"] .batch52-ashtray-anchor {
+            display: none !important;
+        }
+    }
+    #root-gutterbones[data-look-and-feel="1"].gb-motion-reduce .laf-ashtray-ember,
+    #root-gutterbones[data-look-and-feel="1"].gb-motion-reduce .laf-ashtray-smoke {
+        display: none !important;
     }
 </style>
 
@@ -20252,16 +20358,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     <div className="felt-smoke-wisp right-[-12%] top-[46%]" style={{ '--sx': '-62px', '--sy': '-36px', '--dur': '44s' }}></div>
                                     <div className="felt-smoke-wisp felt-smoke-wisp--batch52-ember left-[28%] bottom-[-14%]" style={{ '--sx': '34px', '--sy': '-48px', '--dur': '58s' }}></div>
                                 </div>
-                                <img
-                                    className="batch52-ashtray-prop"
-                                    src="assets/art/batch-5-2/ambient/cigarette-ashtray.webp"
-                                    alt=""
-                                    aria-hidden="true"
-                                    loading="lazy"
-                                    decoding="async"
-                                    width="280"
-                                    height="220"
-                                />
+                                <div data-layout-key="batch52-ashtray-anchor" className="batch52-ashtray-anchor" aria-hidden="true">
+                                    <div className="batch52-ashtray-visual">
+                                        <img
+                                            className="batch52-ashtray-prop"
+                                            src="assets/art/batch-5-2/ambient/cigarette-ashtray.webp"
+                                            alt=""
+                                            loading="lazy"
+                                            decoding="async"
+                                            width="280"
+                                            height="220"
+                                        />
+                                    </div>
+                                    <span className="laf-ashtray-ember" />
+                                    <span className="laf-ashtray-smoke" />
+                                </div>
                                 {pillBursts.map((pill) => <div key={pill.id} className="pill-burst" style={{ left: `${18 + (pill.idx * 15)}%`, top: '72%', '--pill-x': `${(pill.idx - 2) * 30}px`, '--pill-y': '-90px' }}></div>)}
                                 <div className="absolute top-5 text-2xl md:text-3xl text-[#ff007f] font-marker opacity-20 tracking-widest italic animate-[flicker_4s_infinite]">THE ALLEYWAY</div>
                                 {swapMode && (
