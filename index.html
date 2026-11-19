@@ -921,18 +921,35 @@
         }
     }
     @media (min-width: 821px) and (max-height: 820px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            align-items: stretch !important;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
-            max-height: min(62dvh, calc(100dvh - 8.5rem)) !important;
-            min-height: 9rem !important;
+            max-height: none !important;
+            min-height: 0 !important;
+            height: auto !important;
+            align-self: stretch !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-workbench {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
             flex: 1 1 auto !important;
             min-height: 0 !important;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
             max-height: none !important;
             flex: 1 1 auto !important;
-            min-height: 6.5rem !important;
+            min-height: 0 !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
         }
@@ -2710,8 +2727,21 @@
       max-height: none;
     }
   }
-  #root-gutterbones .shop-item-card__title {
-    word-break: break-word;
+    #root-gutterbones .shop-options-fence span.truncate {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        line-height: 1.25;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    #root-gutterbones .shop-options-fence .flex.items-center.justify-between {
+        align-items: flex-start;
+    }
+    #root-gutterbones .shop-item-card__title {
+        word-break: break-word;
     overflow-wrap: anywhere;
     white-space: normal;
   }
@@ -10860,10 +10890,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (panelRoom > 0) {
                         shell.style.maxHeight = `${panelRoom}px`;
                     }
-                } else if (isShopItems && typeof window !== 'undefined') {
-                    const rect = shell.getBoundingClientRect();
-                    const viewportRoom = window.innerHeight - Math.max(0, rect.top) - 8;
-                    if (viewportRoom > 0) avail = viewportRoom;
+                } else if (isShopItems) {
+                    const workbench = shell.closest('.shop-workbench');
+                    const pag = shell.querySelector('[data-layout-key="shop-item-pagination"]');
+                    const pagH = pag?.offsetHeight || 0;
+                    let shellH = shell.clientHeight;
+                    if (shellH <= 0 && workbench) shellH = workbench.clientHeight;
+                    if (shellH <= 0 && shell.parentElement) shellH = shell.parentElement.clientHeight;
+                    avail = Math.max(120, shellH - pagH - 4);
                 } else if (avail <= 0 && shell.parentElement) {
                     avail = shell.parentElement.clientHeight;
                 }
@@ -10920,11 +10954,23 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     body.style.transform = 'none';
                     body.style.width = '';
                     body.style.marginBottom = '0';
-                    shell.style.overflowY = need > avail + 2 ? 'auto' : '';
+                    body.style.flex = '1 1 auto';
+                    body.style.minHeight = '0';
+                    shell.style.overflowY = 'hidden';
                     shell.style.overflowX = 'hidden';
-                    shell.style.maxHeight = need > avail + 2 ? `${Math.max(120, avail)}px` : '';
-                    shell.style.height = need > 0 ? `${Math.min(avail, need)}px` : '';
+                    shell.style.maxHeight = '';
+                    shell.style.height = '';
+                    shell.style.flex = '1 1 auto';
+                    shell.style.minHeight = '0';
+                    if (need > avail + 2) {
+                        body.style.overflowY = 'auto';
+                        body.style.maxHeight = `${Math.max(96, avail)}px`;
+                    } else {
+                        body.style.overflowY = 'visible';
+                        body.style.maxHeight = 'none';
+                    }
                     delete shell.dataset.intelScaled;
+                    return;
                 }
             };
             fit();
@@ -13132,6 +13178,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 else if (h < 820) {
                     let cap = 4;
                     if (w >= 768 && w <= 1366) cap = h <= 768 ? 2 : 3;
+                    if (w >= 1024 && h >= 700 && h <= 820) cap = Math.max(cap, 2);
                     setShopItemsPerPage(Math.max(minPerPage, Math.min(cap, count)));
                 }
                 else setShopItemsPerPage(count);

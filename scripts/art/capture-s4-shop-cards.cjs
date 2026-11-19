@@ -38,7 +38,10 @@ function s4DemoShopRun() {
     round: 4,
     gold: 200,
     target: 161,
-    inventory: [{ id: "LOADED_DIE", instanceId: "hw-fence-demo" }],
+    inventory: [
+      { id: "LOADED_DIE", name: "Weighted Core", instanceId: "hw-fence-demo" },
+      { id: "CROWBAR", name: "The Crowbar", instanceId: "hw-fence-demo-2" },
+    ],
     shopItems: S4_DEMO_IDS.map((id) => ({ id })),
     routeModifiers: { shopDiscount: 0.12 },
     paths: fixtures.shop()?.paths || [],
