@@ -81,10 +81,57 @@ async function captureViewport(vp, name) {
   await page.close();
 }
 
+async function bootShop(page, vp) {
+  await page.setViewportSize(vp);
+  await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+  const payload = plain(
+    createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.shopBusy()),
+  );
+  await page.evaluate(
+    ({ key, data }) => {
+      localStorage.setItem(
+        'gutterbones1977:settings:v1',
+        JSON.stringify({ pacing: 'fast', reducedMotion: false, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+      localStorage.setItem(key, JSON.stringify(data));
+    },
+    { key: 'gutterbones1977:run:v1', data: payload },
+  );
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+  await page.waitForSelector('[data-phase="SHOP"], [data-layout-key="shop-layout"]', { timeout: 60_000 });
+  await page.waitForTimeout(800);
+}
+
+async function captureShop(vp, name) {
+  const page = await browser.newPage();
+  await bootShop(page, vp);
+  await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`) });
+  await page.close();
+}
+
+async function capture390Drawer() {
+  const page = await browser.newPage();
+  await bootPlay(page, { width: 390, height: 844 });
+  const openBtn = page.locator('[data-layout-key="mobile-score-sheet-open"]');
+  if (await openBtn.count()) {
+    await openBtn.click();
+    await page.waitForSelector('.mobile-score-sheet--expanded', { timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(300);
+  }
+  await page.screenshot({ path: path.join(OUT, `${label}_390x844_drawer.png`) });
+  await page.close();
+}
+
 await capture1920();
+await captureShop({ width: 1920, height: 1080 }, '1920x1080');
 if (label === 'after') {
   await captureViewport({ width: 768, height: 1024 }, '768x1024');
+  await captureShop({ width: 768, height: 1024 }, '768x1024');
   await captureViewport({ width: 390, height: 844 }, '390x844');
+  await capture390Drawer();
 }
 await browser.close();
 server.kill();
