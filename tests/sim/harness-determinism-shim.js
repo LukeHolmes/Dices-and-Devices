@@ -106,6 +106,11 @@
     "grantRandomConsumable",
     "legacyGameRandom",
     "gameplay",
+    "rollLane",
+    "pillRng",
+    "rollBoneFace",
+    "rollBoneId",
+    "rerollBonePick",
   ]);
 
   window.__GB_SIM_RNG_DRAW_COUNT__ = 0;
@@ -218,5 +223,5 @@
   window.__GB_SIM_GAME_RANDOM__ = taggedGameRandom;
   window.__GB_SIM_STEP_SYNC__ = true;
 
-  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v6";
+  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v7";
 })();

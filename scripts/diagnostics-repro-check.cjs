@@ -21,6 +21,10 @@ const {
   isNaturalTermination,
   normalizeRunOutcome,
 } = require(path.join(ROOT, "tests/helpers/run-results-csv.cjs"));
+const {
+  classifyTraceDivergence,
+  firstTraceDivergence,
+} = require(path.join(ROOT, "tests/helpers/sim-canonical-state.cjs"));
 
 async function runPair({ baseline, rids, maxSteps, parallel }) {
   const batch = require(path.join(ROOT, "scripts/diagnostics-batch.cjs"));
@@ -158,6 +162,8 @@ function firstDivergingGameDraw(logA, logB, diverge) {
 }
 
 function firstDivergingStep(traceA, traceB) {
+  const traceDiv = firstTraceDivergence(traceA, traceB);
+  if (traceDiv) return traceDiv;
   const a = traceA || [];
   const b = traceB || [];
   const len = Math.min(a.length, b.length);
@@ -213,10 +219,15 @@ function comparePairs(byRid, { naturalOnly = false } = {}) {
     else {
       const diverge = firstDivergingStep(a.stepTrace, b.stepTrace);
       const causeCategory = categorizeDivergence(diverge);
+      const causeClassV7 = classifyTraceDivergence(diverge, {
+        gameDrawLogA: a.gameDrawLog,
+        gameDrawLogB: b.gameDrawLog,
+      });
       const firstGameDraw = firstDivergingGameDraw(a.gameDrawLog, b.gameDrawLog, diverge);
       mismatches.push({
         rid,
         causeCategory,
+        causeClassV7,
         firstDivergingGameDraw: firstGameDraw,
         a: {
           outcome: a.outcome,
@@ -235,6 +246,30 @@ function comparePairs(byRid, { naturalOnly = false } = {}) {
     }
   }
   return { matched, total, mismatches, skippedNonNatural };
+}
+
+function buildMismatchCauseTable(reportBaselines) {
+  const rows = [];
+  for (const [baseline, data] of Object.entries(reportBaselines)) {
+    for (const mm of data.naturalTerminationRepro?.mismatches || data.mismatches || []) {
+      const div = mm.firstDivergingStep;
+      rows.push({
+        baseline,
+        rid: mm.rid,
+        causeClassV7: mm.causeClassV7 || "unknown",
+        causeCategory: mm.causeCategory,
+        firstStep: div?.index ?? null,
+        stateHashA: div?.a?.stateHash ?? null,
+        stateHashB: div?.b?.stateHash ?? null,
+        actionA: div?.a?.action ?? null,
+        actionB: div?.b?.action ?? null,
+        gameRngDrawsA: div?.a?.gameRngDraws ?? null,
+        gameRngDrawsB: div?.b?.gameRngDraws ?? null,
+        firstDivergingGameDraw: mm.firstDivergingGameDraw ?? null,
+      });
+    }
+  }
+  return rows;
 }
 
 function parseArgs(argv) {
@@ -368,7 +403,7 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const instrumentedGate = baselines.some((b) => String(b).endsWith("-i"));
   const batchId = instrumentedGate
-    ? process.env.DEFM005_BATCH_ID || "REPRO-DEFM005-20261119-instrumented-v6"
+    ? process.env.DEFM005_BATCH_ID || "REPRO-DEFM005-20261119-instrumented-v7"
     : `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
@@ -382,7 +417,7 @@ async function main() {
     TRACKING_DIR,
     "defects/measurement",
     instrumentedGate
-      ? `DEF-M-005-gate-20261119-instrumented-v6.json`
+      ? `DEF-M-005-gate-20261119-instrumented-v7.json`
       : `DEF-M-005-gate-${stamp}-vclock-boot.json`,
   );
   const totals = Object.values(report.baselines).reduce(
@@ -415,6 +450,11 @@ async function main() {
     `DEF-M-005-divergence-${stamp}.json`,
   );
   fs.writeFileSync(catalogPath, `${JSON.stringify({ catalog: divergenceCatalog }, null, 2)}\n`, "utf8");
+  const causeTable = buildMismatchCauseTable(report.baselines);
+  const causeTablePath = path.join(ARTIFACTS, "v7-mismatch-cause-table.json");
+  fs.writeFileSync(causeTablePath, `${JSON.stringify({ batchId, causeTable }, null, 2)}\n`, "utf8");
+  report.causeTablePath = causeTablePath;
+  report.causeTable = causeTable;
 
   fs.writeFileSync(
     gateSummaryPath,
@@ -423,9 +463,10 @@ async function main() {
         id: "DEF-M-005",
         gate_batch_id: batchId,
         harness_mode: "node_paced_playwright_clock_boot",
-        harness_shim_rev: "2026-11-19-harness-clock-v6",
+        harness_shim_rev: "2026-11-19-harness-clock-v7",
         prior_gate_records: instrumentedGate
           ? [
+              { batch: "REPRO-DEFM005-20261119-instrumented-v6", matched: 9, total: 20, note: "natural-only" },
               { batch: "REPRO-DEFM005-20261119-instrumented-v5b", matched: 6, total: 20, note: "natural-only" },
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
               { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },

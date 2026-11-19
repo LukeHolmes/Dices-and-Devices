@@ -114,6 +114,61 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
     return { btn: out, st };
   };
 
+  const canonicalState = () => {
+    const e2e = window.__GB_E2E__;
+    if (typeof e2e?.getSimCanonicalState === "function") return e2e.getSimCanonicalState();
+    return e2e?.getState?.() || {};
+  };
+
+  const stableStringify = (value) => {
+    if (value == null || typeof value !== "object") return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map((v) => stableStringify(v)).join(",")}]`;
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(",")}}`;
+  };
+
+  const hashCanonical = (state) => {
+    const s = stableStringify(state);
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i += 1) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16).padStart(8, "0");
+  };
+
+  const takeSnapshot = () => {
+    const canonical = canonicalState();
+    const { btn, st } = scan();
+    return Object.freeze({ btn, st: st || canonical, canonical });
+  };
+
+  let traceEntry = null;
+  const openStepTrace = (snap, step) => {
+    if (!tracingSteps) return;
+    traceEntry = {
+      step,
+      stateHash: hashCanonical(snap.canonical),
+      action: "pending",
+      phase: snap.canonical?.phase ?? snap.st?.phase,
+      round: snap.canonical?.round ?? snap.st?.round,
+      score: snap.canonical?.score ?? snap.st?.score,
+      gold: snap.canonical?.gold ?? snap.st?.gold,
+      hands: snap.canonical?.hands ?? snap.st?.hands,
+      target: snap.canonical?.target ?? snap.st?.target,
+      gameRngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
+      rngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
+      cosmeticRngDraws: window.__GB_SIM_COSMETIC_DRAW_COUNT__ || 0,
+      lastGameDrawSite: window.__GB_SIM_LAST_GAME_DRAW_SITE__ || null,
+    };
+    stepTrace.push(traceEntry);
+  };
+
+  const closeStepTrace = (action) => {
+    if (traceEntry) traceEntry.action = action || traceEntry.action || "noop";
+    traceEntry = null;
+  };
+
   const num = (t) => {
     const m = String(t).match(/(\d+)\s*$/);
     return m ? Number(m[1]) : null;
@@ -378,30 +433,22 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   let lastPhaseForClock = null;
   for (let step = 0; step < maxSteps; step++) {
     await awaitHarnessQuiescence();
-    const { btn, st } = scan();
-    const ph = (st && st.phase) || "?";
-    if (st?.phase) window.__GB_SIM_PHASE__ = st.phase;
+    const snap = takeSnapshot();
+    const st = snap.st;
+    const btn = snap.btn;
+    const ph = (st && st.phase) || snap.canonical?.phase || "?";
+    const syncRound = snap.canonical?.round ?? st?.round;
+    if (ph && ph !== "?") window.__GB_SIM_PHASE__ = ph;
+    if (syncRound != null) window.__GB_SIM_ROUND__ = syncRound;
+    openStepTrace(snap, step);
+    let stepAction = "pending";
+    const tagStep = (label) => {
+      stepAction = label;
+    };
+    try {
     if (awaitClock && ph !== lastPhaseForClock) {
       await yieldClock(48);
       lastPhaseForClock = ph;
-    }
-    if (tracingSteps) {
-      stepTrace.push({
-        step,
-        phase: ph,
-        round: st?.round,
-        score: st?.score,
-        gold: st?.gold,
-        hands: st?.hands,
-        target: st?.target,
-        roundClear: Boolean(st?.roundClearVisible),
-        selectedShopPathId: st?.selectedShopPathId || null,
-        buttons: btn.slice(0, 10).map((b) => ({ t: b.t, lk: b.lk })),
-        rngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
-        gameRngDraws: window.__GB_SIM_RNG_DRAW_COUNT__ || 0,
-        cosmeticRngDraws: window.__GB_SIM_COSMETIC_DRAW_COUNT__ || 0,
-        lastGameDrawSite: window.__GB_SIM_LAST_GAME_DRAW_SITE__ || null,
-      });
     }
     if (ph === "PLAY") started = true;
     if (st && (ph === "PLAY" || ph === "SHOP" || ph === "GAMBLE") && st.round > maxRound) {
@@ -436,6 +483,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       log._gambleTries = (log._gambleTries || 0) + 1;
       if (seededBuilder) {
         if (log._gambleTries === 1) window.__GB_E2E__.takeSafeCut?.();
+        tagStep(log._gambleTries === 1 ? "e2e:takeSafeCut" : "e2e:gamble_wait");
         await spinUntil(() => window.__GB_E2E__?.getState?.()?.phase !== "GAMBLE", 200);
         continue;
       }
@@ -590,6 +638,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       }
       if (!window.__GB_E2E__?.getHasRolled?.()) {
         window.__GB_E2E__?.rollOnce?.();
+        tagStep("e2e:rollOnce");
         await pause(50);
         continue;
       }
@@ -597,6 +646,7 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         (strategy === "builder" || strategy === "greedy")
         && window.__GB_E2E__?.autoPlayHand?.()
       ) {
+        tagStep("e2e:autoPlayHand");
         await pause(50);
         continue;
       }
@@ -605,16 +655,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         && window.__GB_E2E__?.getHasRolled?.()
         && window.__GB_E2E__?.scoreFirstPayoutRow?.()
       ) {
+        tagStep("e2e:scoreFirstPayoutRow");
         await pause(45);
         continue;
       }
       if (st?.score >= st?.target && st?.hands > 0) {
         window.__GB_E2E__?.advanceRunPhase?.();
+        tagStep("e2e:advanceRunPhase");
         await pause(80);
         continue;
       }
       if (st?.roundClearVisible) {
         window.__GB_E2E__?.finishRoundClear?.();
+        tagStep("e2e:finishRoundClear");
         await pause(80);
         continue;
       }
@@ -631,8 +684,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       const b = document.querySelector('[data-pt="' + pick + '"]');
       if (b) b.click();
     }
+    if (pick != null) tagStep(`click:${btn[pick]?.lk || pick}:${btn[pick]?.t || ""}`);
+    else tagStep(ph === "PLAY" ? "e2e:play_fallback" : "noop");
     if (seededBuilder) await spin(16);
     else await pause(strategy === "rapid" ? 25 : strategy === "greedy" ? 45 : 32);
+    } finally {
+      if (stepAction === "pending") stepAction = "step_tick";
+      closeStepTrace(stepAction);
+    }
   }
 
   const preForfeit = window.__GB_E2E__.getState();
