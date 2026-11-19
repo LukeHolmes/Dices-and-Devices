@@ -157,6 +157,14 @@
     return true;
   };
 
+  window.__GB_SIM_RESET_COSMETIC_STREAM__ = function resetCosmeticStream() {
+    if (window.__GB_SIM_GAME_SEED__ == null) return false;
+    const cosmeticSeed = deriveSeed32(window.__GB_SIM_GAME_SEED__, "cosmetic");
+    cosmeticDraw = mulberry32(cosmeticSeed);
+    window.__GB_SIM_COSMETIC_DRAW_COUNT__ = 0;
+    return true;
+  };
+
   window.__GB_SIM_UNLOCK_GAME_RNG__ = function unlockGameRng() {
     window.__GB_SIM_RNG_BOOT_LOCKED__ = false;
     if (window.__GB_SIM_GAME_SEED__ != null) {
@@ -169,5 +177,5 @@
   window.__GB_SIM_GAME_RANDOM__ = taggedGameRandom;
   window.__GB_SIM_STEP_SYNC__ = true;
 
-  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v4";
+  window.__GB_SIM_HARNESS_REV__ = "2026-11-19-harness-clock-v4b";
 })();

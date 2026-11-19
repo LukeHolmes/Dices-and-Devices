@@ -3,108 +3,108 @@
     {
       "baseline": "R-main-i",
       "rid": "0",
-      "causeCategory": "timer",
+      "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
-        "index": 0,
+        "index": 3,
         "a": {
-          "step": 0,
+          "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 26,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
-          "rngDraws": 1,
-          "gameRngDraws": 1,
-          "cosmeticRngDraws": 90876,
-          "lastGameDrawSite": "at beginContract (<anonymous>:6:177031)"
+          "rngDraws": 11,
+          "gameRngDraws": 11,
+          "cosmeticRngDraws": 262,
+          "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         },
         "b": {
-          "step": 0,
+          "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 26,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
-          "rngDraws": 1,
-          "gameRngDraws": 1,
-          "cosmeticRngDraws": 90875,
-          "lastGameDrawSite": "at beginContract (<anonymous>:6:177031)"
+          "rngDraws": 11,
+          "gameRngDraws": 11,
+          "cosmeticRngDraws": 274,
+          "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         }
       },
       "firstDivergingGameDraw": {
-        "drawIndex": 414,
+        "drawIndex": 320,
         "a": {
-          "n": 414,
-          "site": "at generateShop (<anonymous>:6:237374)",
-          "v": 0.4602686979342252
+          "n": 320,
+          "site": "at generateShop (<anonymous>:6:237461)",
+          "v": 0.6516225931700319
         },
         "b": {
-          "n": 414,
-          "site": "at <anonymous>:6:236558",
-          "v": 0.4602686979342252
+          "n": 320,
+          "site": "at weightedSortJitter (<anonymous>:6:236408)",
+          "v": 0.6516225931700319
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 84,
-          "digest": "e7c4f14402d0ee5abb107a1995955e1cb7cedf15b3aba5ccbd93e43c37d0d699"
+          "maxRound": 5,
+          "steps": 48,
+          "digest": "bca6b55f3b6a616edca3b04db5dd408a206cc1be2e94d5ba2f4c7f17cf21b4e8"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 8,
-          "steps": 79,
-          "digest": "dd90ad749b472f58f0898e1e11ba90704117721bc31ad310040b51da7de8fba9"
+          "steps": 85,
+          "digest": "4844f5f94e63df6bdfde84d4df686183561cd0e07e03397ae96a40fa3dcad502"
         }
       }
     },
     {
       "baseline": "R-main-i",
       "rid": "1",
-      "causeCategory": "timer",
+      "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
-        "index": 0,
+        "index": 2,
         "a": {
-          "step": 0,
+          "step": 2,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 30,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
-          "rngDraws": 1,
-          "gameRngDraws": 1,
-          "cosmeticRngDraws": 90865,
-          "lastGameDrawSite": "at beginContract (<anonymous>:6:177031)"
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 242,
+          "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         },
         "b": {
-          "step": 0,
+          "step": 2,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 30,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
-          "rngDraws": 1,
-          "gameRngDraws": 1,
-          "cosmeticRngDraws": 90864,
-          "lastGameDrawSite": "at beginContract (<anonymous>:6:177031)"
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 232,
+          "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         }
       },
       "firstDivergingGameDraw": {
-        "drawIndex": 631,
+        "drawIndex": 405,
         "a": {
-          "n": 631,
-          "site": "at <anonymous>:6:236558",
-          "v": 0.440949464449659
+          "n": 405,
+          "site": "at gameplayRandom (<anonymous>:6:89301)",
+          "v": 0.5733834425918758
         },
         "b": {
-          "n": 631,
-          "site": "at generateShop (<anonymous>:6:237374)",
-          "v": 0.440949464449659
+          "n": 405,
+          "site": "at weightedSortJitter (<anonymous>:6:236408)",
+          "v": 0.5733834425918758
         }
       },
       "tuple": {
@@ -117,74 +117,15 @@
         "b": {
           "outcome": "BUST",
           "maxRound": 9,
-          "steps": 99,
-          "digest": "498e523c1e89c8c70300efaed03f1e0fb28c46cd302c59b61f4709cb9760512f"
-        }
-      }
-    },
-    {
-      "baseline": "R-main-i",
-      "rid": "2",
-      "causeCategory": "timer",
-      "firstDivergingStep": {
-        "index": 3,
-        "a": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 30,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 91029,
-          "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
-        },
-        "b": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 30,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 91030,
-          "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
-        }
-      },
-      "firstDivergingGameDraw": {
-        "drawIndex": 108,
-        "a": null,
-        "b": {
-          "n": 108,
-          "site": "at gameplayRandom (<anonymous>:6:89301)",
-          "v": 0.39669842435978353
-        },
-        "reason": "log_length_mismatch",
-        "stepDivergence": 3
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 2,
-          "steps": 22,
-          "digest": "07164c8281a9bd4439eae6e3c9fb75c5f44b62d45de5da8d3309fda5826b70ef"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 54,
-          "digest": "e7ac24684f462ff3385e04634047adbdbbe54b89a839b6950d7276a95325b1e9"
+          "steps": 92,
+          "digest": "d04538169cfaba10514a176210dcbb7b26690bdfb2ad7c81045bc502e432b4c7"
         }
       }
     },
     {
       "baseline": "R-main-i",
       "rid": "4",
-      "causeCategory": "timer",
+      "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
         "index": 3,
         "a": {
@@ -197,7 +138,7 @@
           "target": 75,
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 90936,
+          "cosmeticRngDraws": 218,
           "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         },
         "b": {
@@ -210,30 +151,42 @@
           "target": 75,
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 90946,
+          "cosmeticRngDraws": 217,
           "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         }
       },
-      "firstDivergingGameDraw": null,
+      "firstDivergingGameDraw": {
+        "drawIndex": 99,
+        "a": {
+          "n": 99,
+          "site": "at gameplayRandom (<anonymous>:6:89301)",
+          "v": 0.6232303597498685
+        },
+        "b": {
+          "n": 99,
+          "site": "at weightedSortJitter (<anonymous>:6:236408)",
+          "v": 0.6232303597498685
+        }
+      },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 96,
-          "digest": "7d1a143062219213e43afbc6ced1a54e60a1ea41e5b115d728687424dbe9b7ed"
+          "maxRound": 6,
+          "steps": 76,
+          "digest": "cc30fbb82e3754ca6516517e0609e6ae339a3bd4be4df8bd2ccb5a161146ddc6"
         },
         "b": {
           "outcome": "BUST",
           "maxRound": 8,
-          "steps": 95,
-          "digest": "17ba674fb15b0aa76e44ff443594f687ff12ee574510406cd171f01348a1c69a"
+          "steps": 96,
+          "digest": "7d1a143062219213e43afbc6ced1a54e60a1ea41e5b115d728687424dbe9b7ed"
         }
       }
     },
     {
       "baseline": "R-main-i",
       "rid": "6",
-      "causeCategory": "timer",
+      "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
         "index": 3,
         "a": {
@@ -246,7 +199,7 @@
           "target": 75,
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 90974,
+          "cosmeticRngDraws": 244,
           "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         },
         "b": {
@@ -259,7 +212,7 @@
           "target": 75,
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 90973,
+          "cosmeticRngDraws": 243,
           "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         }
       },
@@ -267,12 +220,12 @@
         "drawIndex": 131,
         "a": {
           "n": 131,
-          "site": "at generateShop (<anonymous>:6:237374)",
+          "site": "at generateShop (<anonymous>:6:237461)",
           "v": 0.7451687634456903
         },
         "b": {
           "n": 131,
-          "site": "at <anonymous>:6:236558",
+          "site": "at weightedSortJitter (<anonymous>:6:236408)",
           "v": 0.7451687634456903
         }
       },
@@ -280,8 +233,8 @@
         "a": {
           "outcome": "BUST",
           "maxRound": 7,
-          "steps": 85,
-          "digest": "df023c80c898ef679b4f1fa2df3fec44bd361a138d9e2bf30b04112390a4386b"
+          "steps": 87,
+          "digest": "47bee14ce97ece62a76ccdd42267b102918a7284f5b0acc38c9eeb595e02b248"
         },
         "b": {
           "outcome": "BUST",
@@ -293,34 +246,34 @@
     },
     {
       "baseline": "R-main-i",
-      "rid": "7",
-      "causeCategory": "timer",
+      "rid": "8",
+      "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
         "index": 3,
         "a": {
           "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 32,
+          "score": 29,
           "gold": 23,
           "hands": 3,
           "target": 75,
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 90973,
+          "cosmeticRngDraws": 217,
           "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         },
         "b": {
           "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 32,
+          "score": 29,
           "gold": 23,
           "hands": 3,
           "target": 75,
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 90974,
+          "cosmeticRngDraws": 218,
           "lastGameDrawSite": "at gameplayRandom (<anonymous>:6:89301)"
         }
       },
@@ -328,15 +281,64 @@
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 87,
-          "digest": "d646a92525c7751f373f45793effe8cea97272d05d72583b721fd77dde5191e2"
+          "maxRound": 6,
+          "steps": 85,
+          "digest": "9c764b236eee8b340b54b10f2ca9882512a147d01a4d3a381a33c7dc1169258d"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 86,
-          "digest": "8c0930e8916bce5c13184b74b118a950ae63e1510d5f164bcb7bd598a242dcae"
+          "maxRound": 6,
+          "steps": 84,
+          "digest": "b07a5ff01202f1ae7d5c0a7edc8179568652688b85b3c7f76c4f50f829cc4bce"
+        }
+      }
+    },
+    {
+      "baseline": "R-main-i",
+      "rid": "9",
+      "causeCategory": "cosmetic-timing",
+      "firstDivergingStep": {
+        "index": 3,
+        "a": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 91,
+          "gold": 53,
+          "hands": 3,
+          "target": 75,
+          "rngDraws": 77,
+          "gameRngDraws": 77,
+          "cosmeticRngDraws": 3844,
+          "lastGameDrawSite": "at weightedSortJitter (<anonymous>:6:236408)"
+        },
+        "b": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 91,
+          "gold": 53,
+          "hands": 3,
+          "target": 75,
+          "rngDraws": 77,
+          "gameRngDraws": 77,
+          "cosmeticRngDraws": 3845,
+          "lastGameDrawSite": "at weightedSortJitter (<anonymous>:6:236408)"
+        }
+      },
+      "firstDivergingGameDraw": null,
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 6,
+          "steps": 72,
+          "digest": "37509ab4a51b9918f1323c988ac9f75512faf663ce62f2b62da9164ef9f27b27"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 6,
+          "steps": 71,
+          "digest": "d63b010272944653166d9f60807c306f6965386b92dd7a6d0728c4da615914bf"
         }
       }
     }

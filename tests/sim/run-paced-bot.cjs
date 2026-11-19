@@ -207,6 +207,9 @@ async function prepareSimRunStart(page, gameSeed) {
       if (typeof window.__GB_SIM_UNLOCK_GAME_RNG__ === "function") {
         window.__GB_SIM_GAME_SEED__ = (Number(seed) || 1) >>> 0;
         window.__GB_SIM_UNLOCK_GAME_RNG__();
+        if (typeof window.__GB_SIM_RESET_COSMETIC_STREAM__ === "function") {
+          window.__GB_SIM_RESET_COSMETIC_STREAM__();
+        }
       } else if (typeof window.__GB_SIM_INSTALL_GAME_SEED__ === "function") {
         window.__GB_SIM_INSTALL_GAME_SEED__(seed);
       }

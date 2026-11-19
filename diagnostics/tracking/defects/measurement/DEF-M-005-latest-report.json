@@ -1,7 +1,7 @@
 {
-  "gate_batch_id": "REPRO-DEFM005-20261119-instrumented-v4",
+  "gate_batch_id": "REPRO-DEFM005-20261119-instrumented-v4c",
   "harness_mode": "node_paced_playwright_clock_boot",
-  "harness_shim_rev": "2026-11-19-harness-clock-v4",
+  "harness_shim_rev": "2026-11-19-harness-clock-v4b",
   "denominators": { "matched": 14, "total": 20 },
   "perBaseline": {
     "R-main-i": { "matched": 4, "total": 10 },
@@ -11,17 +11,14 @@
     { "batch": "REPRO-DEFM005-20261119", "matched": 0, "total": 20 },
     { "batch": "REPRO-DEFM005-20261119-vclock", "matched": 3, "total": 20 },
     { "batch": "REPRO-DEFM005-20261119-vclock-boot", "matched": 2, "total": 20, "baselines": "R-main,R78" },
-    { "batch": "REPRO-DEFM005-20261119-instrumented", "matched": 3, "total": 20, "baselines": "R-main-i,R78-i" },
-    { "batch": "REPRO-DEFM005-20261119-instrumented-v4", "note": "interim af8ef9a", "matched": 15, "total": 20, "R-main-i": "5/10", "R78-i": "10/10" }
+    { "batch": "REPRO-DEFM005-20261119-instrumented", "matched": 3, "total": 20 },
+    { "batch": "REPRO-DEFM005-20261119-instrumented-v4", "matched": 15, "total": 20, "note": "af8ef9a" },
+    { "batch": "REPRO-DEFM005-20261119-instrumented-v4", "matched": 14, "total": 20, "note": "f0f79cf" },
+    { "batch": "REPRO-DEFM005-20261119-instrumented-v4b", "matched": 12, "total": 20, "note": "19de179 sync sniff" }
   ],
+  "f0f79cf_verdict": "regressed R-main-i vs af8ef9a (5/10→4/10); path consumable kept; opening-sniff-in-effect restored",
+  "named_call_site_swap": "weightedSortJitter (generateShop shop-offer jitter) vs second generateShop entry (refreshShop / leaveGambleForShop)",
+  "remaining_rmain_seeds_failed": [0, 1, 4, 6, 8, 9],
   "status": "open",
-  "remaining_rmain_call_sites": [
-    "generateShop vs inline shop rng caller (ordering; same draw value, swapped stack at draw ~414–631)",
-    "cosmeticRngDraws ±1 before bot step 1 (mount/render timing)",
-    "defaults: pickRandomBlueprintId/pickRandomArcId/resolveFlip module defaults (cosmetic when called bare) — partial fix f0f79cf for blueprint/opening sniff/path consumable"
-  ],
-  "instrumented_baselines_registry": "diagnostics/tracking/baselines/registry.json",
-  "divergence_catalog": "diagnostics/tracking/defects/measurement/DEF-M-005-divergence-20261119.json",
-  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-instrumented-v4.json",
-  "generatedAt": "2026-11-19T08:05:00.000Z"
+  "gate_json": "diagnostics/tracking/defects/measurement/DEF-M-005-gate-20261119-instrumented-v4c.json"
 }

@@ -1,8 +1,8 @@
 {
   "id": "DEF-M-005",
-  "title": "Full-run reproducibility — R78-i closed on v4 harness; R-main-i flaky on cosmetic-timing",
+  "title": "R78-i closed on v4; R-main-i 6/10 fail on shop draw ordering",
   "kind": "measurement",
   "status": "open",
   "evidence": "/opt/cursor/artifacts/diagnostics-repro-report.json",
-  "notes": "2026-11-19 gate REPRO-DEFM005-20261119-instrumented-v4: 14/20 (R-main-i 4/10, R78-i 10/10). Prior same-batch attempt with af8ef9a: 15/20 (R-main-i 5/10). Harness shim v4: independent mulberry32 streams (seed+game vs seed+cosmetic), gameplay draw log with call sites. R-main-i f0f79cf adds gameplayRandom routes for blueprint pick, opening sniff slot, path consumable grant. Remaining R-main-i failures: identical gameRngDraws at first trace step but cosmeticRngDraws skew ±1 at step 0; later same-valued draws from generateShop vs inline caller (ordering). Hook-off: hook-off-equivalence + harness-determinism tests. Prior gates: 0/20, 3/20 vclock, 2/20 vclock-boot, 3/20 instrumented-v3. LLM: 0."
+  "notes": "2026-11-19 REPRO-DEFM005-20261119-instrumented-v4c: 14/20 (R-main-i 4/10, R78-i 10/10). Harness v4b: cosmetic reset at startNewRun + pre-bot yieldClock(480) after cosmetic reset; dual RNG streams; gameplay draw site log. R-main-i 81ec337: reverted harmful f0f79cf/19de179 opening-sniff sync; kept path consumable + gbSimGameplayRandom on pickRandomArcId/Blueprint/resolveFlip + weightedSortJitter naming. f0f79cf route regression confirmed (5→4/10). Named swap: weightedSortJitter vs duplicate generateShop passes (finalizeRound vs refreshShop). Opening sniff openingStashEffect remains effect-ordered. Best R-main v4: 5/10 (af8ef9a). LLM: 0."
 }

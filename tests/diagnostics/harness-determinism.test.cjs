@@ -47,3 +47,17 @@ test("gameplay draws record call sites", () => {
   assert.ok(typeof w.__GB_SIM_GAME_DRAW_LOG__[0].site === "string");
   assert.equal(w.__GB_SIM_GAME_DRAW_LOG__[0].n, 1);
 });
+
+test("cosmetic stream resets without touching gameplay stream", () => {
+  const w = runShim(99);
+  w.__GB_SIM_RNG_BOOT_LOCKED__ = false;
+  const g1 = w.__GB_SIM_GAME_RANDOM__();
+  const c1 = w.Math.random();
+  w.__GB_SIM_RESET_COSMETIC_STREAM__();
+  const g2 = w.__GB_SIM_GAME_RANDOM__();
+  const c2 = w.Math.random();
+  assert.equal(w.__GB_SIM_RNG_DRAW_COUNT__, 2);
+  assert.equal(w.__GB_SIM_COSMETIC_DRAW_COUNT__, 1);
+  assert.equal(c1, c2);
+  assert.notEqual(g1, g2);
+});

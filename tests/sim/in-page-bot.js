@@ -355,7 +355,14 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
   } catch (e) {
     return { stuck: true, reason: "boot_failed", detail: String(e), seed, strategy, steps: 0, maxRound: 1 };
   }
-  await pause(400);
+  if (awaitClock) {
+    if (typeof window.__GB_SIM_RESET_COSMETIC_STREAM__ === "function") {
+      window.__GB_SIM_RESET_COSMETIC_STREAM__();
+    }
+    await yieldClock(480);
+  } else {
+    await pause(400);
+  }
 
   let lastPhaseForClock = null;
   for (let step = 0; step < maxSteps; step++) {
