@@ -10889,15 +10889,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         body.style.marginBottom = '0';
                     }
                     const vh = window.innerHeight;
-                    for (let pass = 0; pass < 8; pass += 1) {
+                    const stashBar = shell.closest('[data-tutorial="shop-panel"]')?.querySelector('[data-layout-key="shop-stash-panel"]');
+                    const stashTop = stashBar?.getBoundingClientRect().top;
+                    const vhBudget = stashTop && stashTop > 0 && stashTop < vh ? Math.max(96, stashTop - 6) : vh - 6;
+                    for (let pass = 0; pass < 12; pass += 1) {
                         const buttons = shell.querySelectorAll('[data-layout-key="shop-buy-button"]');
                         if (!buttons.length) break;
                         let maxBottom = 0;
                         buttons.forEach((el) => {
                             maxBottom = Math.max(maxBottom, el.getBoundingClientRect().bottom);
                         });
-                        if (maxBottom <= vh + 1) break;
-                        scale = Math.max(minScale, scale * ((vh - 6) / maxBottom));
+                        if (maxBottom <= vhBudget + 1) break;
+                        scale = Math.max(minScale, scale * (vhBudget / maxBottom));
                         body.style.transformOrigin = 'top center';
                         body.style.transform = `scale(${scale})`;
                         body.style.width = '100%';
@@ -13077,7 +13080,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (h <= 390) return 0.3;
                 if (h <= 640) return 0.36;
                 if (w < 768 && h >= 700) return 0.38;
-                if (w >= 768 && w <= 1100 && h <= 820) return 0.62;
+                if (w >= 768 && w <= 1100 && h <= 820) return 0.52;
                 if (h < 520) return 0.42;
                 return 0.48;
             })()
@@ -13125,7 +13128,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 const minPerPage = phoneLike ? 2 : 1;
                 if (w < 420 || h <= 390) setShopItemsPerPage(Math.max(minPerPage, Math.min(4, count)));
                 else if (w < 768 || h < 700) setShopItemsPerPage(Math.max(minPerPage, Math.min(4, count)));
-                else if (h < 820) setShopItemsPerPage(Math.max(minPerPage, Math.min(4, count)));
+                else if (h < 820) {
+                    let cap = 4;
+                    if (w >= 768 && w <= 1100) cap = h <= 768 ? 2 : 3;
+                    setShopItemsPerPage(Math.max(minPerPage, Math.min(cap, count)));
+                }
                 else setShopItemsPerPage(count);
             };
             computeItemsPerPage();
