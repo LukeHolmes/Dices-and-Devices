@@ -33,8 +33,20 @@ console.log("\n=== check:fast — hand-roll overlay (production sprites) ===\n")
 code = run("node", ["--test", "--test-timeout=180000", "tests/hand-roll-overlay.test.cjs"]);
 if (code !== 0) process.exit(code);
 
+console.log("\n=== check:fast — LAF reduced motion ===\n");
+code = run("node", ["--test", "--test-timeout=120000", "tests/laf-reduced-motion.test.cjs"]);
+if (code !== 0) process.exit(code);
+
+console.log("\n=== check:fast — index.html asset paths ===\n");
+code = run("node", ["scripts/check-index-assets.cjs"]);
+if (code !== 0) process.exit(code);
+
 console.log("\n=== check:fast — option C play layout (390 / 1366 / 1920) ===\n");
 code = run("node", ["--test", "--test-timeout=300000", "tests/option-c-play-layout.test.cjs"]);
+if (code !== 0) process.exit(code);
+
+console.log("\n=== check:fast — matchbook payout row labels (8 viewports) ===\n");
+code = run("node", ["--test", "--test-timeout=600000", "tests/matchbook-payout-labels.test.cjs"]);
 if (code !== 0) process.exit(code);
 
 const fullLayout = process.env.FULL_LAYOUT_REPLAY === "1";

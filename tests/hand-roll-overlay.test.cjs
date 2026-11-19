@@ -226,6 +226,63 @@ test("hand overlay — repeat roll retriggers and roll button stays clickable", 
   }
 });
 
+test("hand overlay — PNG fallback when spritesheet 404", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.route("**/hand-front-spritesheet.webp", (route) => route.abort());
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({ pacing: "fast", reducedMotion: false, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+    });
+    const payload = plain(
+      createGame(fixtures.snapshot()).api.normalizeSavedRun(
+        fixtures.run({
+          phase: "PLAY",
+          round: 3,
+          score: 12,
+          target: 110,
+          hands: 4,
+          discards: 3,
+          stash: 55,
+          hasRolled: false,
+          dice: fixtures.dice([3, 4, 5, 2, 6]),
+        }),
+      ),
+    );
+    await page.evaluate(({ key, data }) => localStorage.setItem(key, JSON.stringify(data)), {
+      key: RUN_KEY,
+      data: payload,
+    });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_ROLL_HAND_SPRITE_MODE === "png", { timeout: 15_000 });
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+    await page.click('[data-tutorial="roll-btn"]');
+    await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand', { timeout: 3000 });
+    const mode = await page.evaluate(() => {
+      const closed = document.querySelector(".gutter-roll-hand-closed");
+      const sheet = document.querySelector(".gutter-roll-hand-sheet-frame");
+      return {
+        spriteMode: window.__GB_ROLL_HAND_SPRITE_MODE,
+        closedVisible: closed && parseFloat(getComputedStyle(closed).opacity) > 0.1,
+        sheetGone: !sheet || getComputedStyle(sheet).display === "none",
+      };
+    });
+    assert.equal(mode.spriteMode, "png");
+    assert.equal(mode.sheetGone, true);
+    assert.equal(mode.closedVisible, true);
+    const pixels = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels());
+    assert.ok(pixels?.ok, `hand visible on PNG fallback (${JSON.stringify(pixels)})`);
+  } finally {
+    await browser.close();
+  }
+});
+
 test("hand overlay — reduced motion suppresses overlay", async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();

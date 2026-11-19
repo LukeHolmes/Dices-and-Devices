@@ -526,8 +526,10 @@
     }
     #root-gutterbones [data-layout-key="shop-routes-panel"] {
         min-width: 0;
+        min-height: 0;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
     }
     #root-gutterbones .shop-routes-footer {
         flex-shrink: 0;
@@ -2105,14 +2107,16 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
             max-height: min(100%, calc(100dvh - 14.5rem)) !important;
-            overflow-y: auto !important;
-            overflow-x: hidden;
+            overflow: hidden !important;
+            display: flex;
+            flex-direction: column;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
             flex: 1 1 auto;
             min-height: 0;
-            overflow-y: auto !important;
             overflow-x: hidden;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             min-height: 0 !important;
@@ -2126,6 +2130,34 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] .text-xl {
             font-size: 1rem !important;
             line-height: 1.15;
+        }
+    }
+    @media (min-width: 1024px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            min-height: 0 !important;
+            max-height: min(100%, calc(100dvh - 9.5rem)) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            transform: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            transform: none !important;
+            flex: 0 0 auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-footer,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            flex-shrink: 0 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+            min-height: 44px;
+            transform: none !important;
         }
     }
     #root-gutterbones .tutorial-coach-card,
@@ -3614,8 +3646,7 @@
         82% { opacity: 0.48; }
         92%, 100% { opacity: 0; }
     }
-    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.gutter-roll-hand-overlay .animate-gutter-hand),
-    #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.gutter-roll-hand-overlay [data-layout-key="roll-hand-throw-overlay"]) {
+    #root-gutterbones[data-ui-redesign="1"][data-roll-hand-active="1"] [data-layout-key="play-alley"] {
         overflow: visible;
     }
     #root-gutterbones[data-ui-redesign="1"] [data-layout-key="play-alley"]:has(.bone-pill-target) .play-dice-lane {
@@ -4869,7 +4900,7 @@
     #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet::before {
         content: "";
         position: absolute;
-        inset: -2px -3px -6px -3px;
+        inset: 6px 7px 8px 7px;
         background: url("assets/art/batch-5-2/ui/matchbook-blank-ledger-cropped.webp") center top / 100% 100% no-repeat;
         pointer-events: none;
         z-index: 0;
@@ -4879,20 +4910,53 @@
         position: relative;
         z-index: 1;
     }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger,
+    #root-gutterbones[data-batch52-art="1"] .mobile-score-sheet-body {
+        box-sizing: border-box;
+        overflow: hidden;
+        isolation: isolate;
+    }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger {
-        padding: 0.55rem 0.85rem 1rem !important;
+        --matchbook-rule-inset-x: clamp(0.55rem, 10%, 1.35rem);
+        padding: 0.45rem var(--matchbook-rule-inset-x) 0.65rem !important;
     }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger.matchbook-ledger--compact {
-        padding: 0.35rem 0.5rem 0.45rem !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-compact-head {
+        flex-shrink: 0;
+        margin-top: 0.05rem;
+        margin-bottom: 0.25rem !important;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows {
         position: relative;
-        margin-top: 0.2rem !important;
-        padding-top: 0.1rem !important;
+        margin-top: 0.05rem !important;
+        padding: 0.1rem clamp(0.35rem, 2%, 0.65rem) 0.15rem clamp(0.15rem, 1%, 0.35rem) !important;
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
         overscroll-behavior: contain;
+        box-sizing: border-box;
+        width: 100%;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row--compact,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-fixed,
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .locked-payout-row {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: clamp(0.25rem, 3%, 0.55rem) !important;
+        padding-right: clamp(0.2rem, 2%, 0.45rem) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .score-row-name-block {
+        max-width: none !important;
+        min-width: 0;
+        flex: 1 1 auto;
     }
     #root-gutterbones[data-batch52-art="1"] .matchbook-ledger .payout-sheet-rows > * {
         position: relative;
@@ -5380,7 +5444,7 @@
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment {
         flex: 0 1 auto;
         border-right: 0 !important;
-        background-color: transparent !important;
+        background-color: #e8e0d0 !important;
         color: #1a1208 !important;
         text-shadow: none !important;
         min-height: 1.85rem;
@@ -5397,6 +5461,7 @@
         flex: 1 1 5.5rem;
         min-width: 6.8rem;
         max-width: 100%;
+        background-color: #e8e0d0 !important;
         background: url("assets/art/batch-5-2/hud/status-gauge-split.webp") center / 100% 100% no-repeat !important;
         padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
         display: grid !important;
@@ -5627,10 +5692,22 @@
     #root-gutterbones[data-look-and-feel="1"].gb-motion-reduce .laf-ashtray-smoke {
         display: none !important;
     }
+    #root-gutterbones[data-look-and-feel="1"].gb-motion-reduce .alley-critter-rat-webp,
+    #root-gutterbones.gb-motion-reduce .alley-critter-rat-webp {
+        animation: none !important;
+        background-position: 0% 0% !important;
+    }
 
-    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-closed,
-    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-open {
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sprite--sheet .gutter-roll-hand-closed,
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sprite--sheet .gutter-roll-hand-open {
         display: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sprite--png .gutter-roll-hand-sheet-frame {
+        display: none !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sprite--png .gutter-roll-hand-closed,
+    #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sprite--png .gutter-roll-hand-open {
+        display: block !important;
     }
     #root-gutterbones[data-look-and-feel="1"] .gutter-roll-hand-sheet-frame {
         width: 100%;
@@ -5672,8 +5749,8 @@
         from { background-position: 0% 0%; }
         to { background-position: 100% 0%; }
     }
-    #root-gutterbones[data-look-and-feel="1"]:has(.gutter-roll-hand-overlay .animate-gutter-hand) .alley-critter-crawl,
-    #root-gutterbones[data-look-and-feel="1"][data-score-overlay-open="1"] .alley-critter-crawl {
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .alley-critter-crawl,
+    #root-gutterbones[data-look-and-feel="1"][data-ambient-pause="1"] .alley-critter-crawl {
         animation-play-state: paused !important;
         opacity: 0.35;
     }
@@ -5684,12 +5761,30 @@
         pointer-events: none;
         z-index: 8;
         overflow: hidden;
+        contain: layout style paint;
     }
     #root-gutterbones[data-look-and-feel="1"] .laf-ambient {
         position: absolute;
         background-repeat: no-repeat;
         background-size: 400% 200%;
         opacity: 0.72;
+        will-change: background-position;
+        contain: layout style paint;
+    }
+    #root-gutterbones[data-look-and-feel="1"] .laf-ashtray-ember,
+    #root-gutterbones[data-look-and-feel="1"] .laf-ashtray-smoke {
+        will-change: transform, opacity;
+        contain: layout style paint;
+    }
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .laf-ambient,
+    #root-gutterbones[data-look-and-feel="1"][data-ambient-pause="1"] .laf-ambient,
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .laf-ashtray-ember,
+    #root-gutterbones[data-look-and-feel="1"][data-ambient-pause="1"] .laf-ashtray-ember,
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .laf-ashtray-smoke,
+    #root-gutterbones[data-look-and-feel="1"][data-ambient-pause="1"] .laf-ashtray-smoke,
+    #root-gutterbones[data-look-and-feel="1"][data-roll-hand-active="1"] .alley-critter-rat-webp,
+    #root-gutterbones[data-look-and-feel="1"][data-ambient-pause="1"] .alley-critter-rat-webp {
+        animation-play-state: paused !important;
     }
     #root-gutterbones[data-look-and-feel="1"] .laf-ambient-bulb {
         left: 42%;
@@ -5752,8 +5847,7 @@
         }
     }
     #root-gutterbones[data-look-and-feel="1"].gb-motion-reduce .look-and-feel-ambient,
-    #root-gutterbones[data-look-and-feel="1"]:not([data-phase="PLAY"]) .look-and-feel-ambient,
-    #root-gutterbones[data-look-and-feel="1"][data-score-overlay-open="1"] .look-and-feel-ambient {
+    #root-gutterbones[data-look-and-feel="1"]:not([data-phase="PLAY"]) .look-and-feel-ambient {
         display: none !important;
     }
 </style>
@@ -10198,12 +10292,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         };
     })();
 
-    const RollHandThrowOverlay = ({ generation, spritesReady }) => {
-        if (!generation || !spritesReady) return null;
+    const ROLL_HAND_PNG_CLOSED = 'assets/scenes/hand-closed.png';
+    const ROLL_HAND_PNG_OPEN = 'assets/scenes/hand-open.png';
+
+    const RollHandThrowOverlay = ({ generation, spriteMode }) => {
+        if (!generation || spriteMode === 'none') return null;
         return (
             <div data-layout-key="roll-hand-throw-overlay" className="gutter-roll-hand-overlay" aria-hidden="true">
-                <div key={generation} className="gutter-roll-hand-sprite gutter-roll-hand-sprite--sheet animate-gutter-hand">
-                    <div className="gutter-roll-hand-sheet-frame" role="presentation" />
+                <div
+                    key={generation}
+                    className={`gutter-roll-hand-sprite gutter-roll-hand-sprite--${spriteMode} animate-gutter-hand`}
+                >
+                    {spriteMode === 'sheet' ? (
+                        <div className="gutter-roll-hand-sheet-frame" role="presentation" />
+                    ) : (
+                        <>
+                            <img src={ROLL_HAND_PNG_CLOSED} alt="" className="gutter-roll-hand-closed" draggable="false" />
+                            <img src={ROLL_HAND_PNG_OPEN} alt="" className="gutter-roll-hand-open" draggable="false" />
+                        </>
+                    )}
                 </div>
             </div>
         );
@@ -11974,11 +12081,20 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     return;
                 }
             };
-            fit();
-            if (typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(() => fit());
-            }
-            const ro = new ResizeObserver(fit);
+            let fitRaf = null;
+            const scheduleFit = () => {
+                if (typeof requestAnimationFrame !== 'function') {
+                    fit();
+                    return;
+                }
+                if (fitRaf != null) cancelAnimationFrame(fitRaf);
+                fitRaf = requestAnimationFrame(() => {
+                    fitRaf = null;
+                    fit();
+                });
+            };
+            scheduleFit();
+            const ro = new ResizeObserver(scheduleFit);
             ro.observe(shell);
             if (shell.parentElement) ro.observe(shell.parentElement);
             const panel = shell.closest?.('[data-layout-key="shop-routes-panel"]');
@@ -11986,6 +12102,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (footer) ro.observe(footer);
             return () => {
                 ro.disconnect();
+                if (fitRaf != null) cancelAnimationFrame(fitRaf);
                 if (shell) {
                     shell.style.height = '';
                     shell.style.maxHeight = '';
@@ -13340,8 +13457,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [payoutPostRollGen, setPayoutPostRollGen] = useState(0);
         const [rollBtnSquash, setRollBtnSquash] = useState(false);
         const [rollHandFxGen, setRollHandFxGen] = useState(0);
-        const [rollHandSpritesReady, setRollHandSpritesReady] = useState(false);
-        const rollHandSpritesReadyRef = useRef(false);
+        const [rollHandSpriteMode, setRollHandSpriteMode] = useState('none');
+        const rollHandSpriteModeRef = useRef('none');
         const rollHandFxTimerRef = useRef(null);
         const rollHandFxGenRef = useRef(0);
         const alleyCritterFlagsRef = useRef(parseAlleyCritterQuery());
@@ -14118,7 +14235,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             shopRefreshCost
         ], {
             enabled: phase === 'SHOP' && typeof window !== 'undefined'
-                && window.innerWidth >= 768 && window.innerHeight >= 820,
+                && window.innerWidth >= 768 && window.innerWidth < 1024
+                && window.innerHeight >= 820,
             minScale: (() => {
                 if (typeof window === 'undefined') return 0.62;
                 const w = window.innerWidth;
@@ -14266,9 +14384,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             let alive = true;
             probeRollHandSprites().then((ok) => {
                 if (!alive) return;
-                rollHandSpritesReadyRef.current = ok;
-                setRollHandSpritesReady(ok);
-                if (typeof window !== 'undefined') window.__GB_ROLL_HAND_SPRITES_READY = !!ok;
+                const mode = ok ? 'sheet' : 'png';
+                rollHandSpriteModeRef.current = mode;
+                setRollHandSpriteMode(mode);
+                if (typeof window !== 'undefined') {
+                    window.__GB_ROLL_HAND_SPRITES_READY = true;
+                    window.__GB_ROLL_HAND_SPRITE_MODE = mode;
+                }
             });
             return () => {
                 alive = false;
@@ -14281,7 +14403,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         }, []);
 
         const pulseRollHandFx = () => {
-            if (reducedMotion || !rollHandSpritesReadyRef.current) return;
+            if (reducedMotion || rollHandSpriteModeRef.current === 'none') return;
             const handMs = GutterbonesPresentation.rollHandFxMs(presentationPacing(), reducedMotion);
             if (!handMs) return;
             if (typeof document !== 'undefined') {
@@ -14721,6 +14843,27 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!root) return;
             root.dataset.scoreOverlayOpen = (scoreBreakdown || scoreResolution) ? '1' : '0';
         }, [scoreBreakdown, scoreResolution]);
+
+        useEffect(() => {
+            const root = document.getElementById('root-gutterbones');
+            if (!root) return;
+            root.dataset.rollHandActive = rollHandFxGen > 0 ? '1' : '0';
+        }, [rollHandFxGen]);
+
+        useEffect(() => {
+            const root = document.getElementById('root-gutterbones');
+            if (!root) return;
+            const pauseAmbient = !!(
+                scoreBreakdown
+                || scoreResolution
+                || showSystemMenu
+                || showHelpOverlay
+                || showLorePanel
+                || upgradeIntelId
+                || bossIntro
+            );
+            root.dataset.ambientPause = pauseAmbient ? '1' : '0';
+        }, [scoreBreakdown, scoreResolution, showSystemMenu, showHelpOverlay, showLorePanel, upgradeIntelId, bossIntro]);
 
         useEffect(() => {
             const root = document.getElementById('root-gutterbones');
@@ -15772,7 +15915,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const maybeScheduleAlleyCritterAfterRoll = () => {
             if (alleyCritterFlagsRef.current.disabled || reducedMotion || phase !== 'PLAY') return;
             if (alleyCritterCrawlRef.current) return;
-            const handDelay = (!reducedMotion && rollHandSpritesReadyRef.current)
+            const handDelay = (!reducedMotion && rollHandSpriteModeRef.current !== 'none')
                 ? GutterbonesPresentation.rollHandFxMs(presentationPacing(), false)
                 : 0;
             scheduleTimeout(() => {
@@ -19832,6 +19975,71 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                     return { ok: bad.length === 0, bad: bad.slice(0, 12), count: bad.length, minPx };
                 },
+                auditMatchbookPayoutLabels: () => {
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    let panel = document.querySelector('[data-layout-key="play-ledger-column"]');
+                    const mobileSheet = document.querySelector('.mobile-score-sheet--expanded');
+                    if ((!panel || panel.getBoundingClientRect().width < 2) && mobileSheet) {
+                        panel = mobileSheet;
+                    }
+                    if (!panel || panel.getBoundingClientRect().width < 2) {
+                        const open = document.querySelector('[data-layout-key="mobile-score-sheet-open"]');
+                        if (open && vw <= 767) {
+                            return { ok: true, skipped: true, reason: 'mobile-collapsed' };
+                        }
+                        return { ok: true, skipped: true, reason: 'no-ledger-panel' };
+                    }
+                    const pr = panel.getBoundingClientRect();
+                    const minNameLeft = pr.left + 4;
+                    const head = panel.querySelector('.matchbook-compact-head, .mobile-score-sheet-handle, .mobile-score-sheet-open');
+                    const bad = [];
+                    if (head) {
+                        const hr = head.getBoundingClientRect();
+                        if (hr.top < pr.top - 1.5) {
+                            bad.push({ kind: 'head-above', headTop: hr.top, panelTop: pr.top });
+                        }
+                        if (hr.bottom > pr.bottom + 1.5) {
+                            bad.push({ kind: 'head-below', headBottom: hr.bottom, panelBottom: pr.bottom });
+                        }
+                    }
+                    if (pr.top < -2 || pr.bottom > vh + 2) {
+                        bad.push({ kind: 'panel-oob', top: pr.top, bottom: pr.bottom, vh });
+                    }
+                    panel.querySelectorAll('.score-row-name').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden') return;
+                        const r = el.getBoundingClientRect();
+                        if (r.width < 2 || r.height < 2) return;
+                        const text = (el.textContent || '').trim();
+                        if (!text) return;
+                        if (r.left < minNameLeft - 0.5) {
+                            bad.push({
+                                kind: 'left-edge',
+                                text: text.slice(0, 32),
+                                left: r.left,
+                                minLeft: minNameLeft
+                            });
+                        }
+                        if (el.scrollWidth > el.clientWidth + 1) {
+                            bad.push({
+                                kind: 'label-clip',
+                                text: text.slice(0, 32),
+                                scrollWidth: el.scrollWidth,
+                                clientWidth: el.clientWidth
+                            });
+                        }
+                    });
+                    return {
+                        ok: bad.length === 0,
+                        bad: bad.slice(0, 16),
+                        count: bad.length,
+                        vw,
+                        vh,
+                        panel: { left: pr.left, top: pr.top, right: pr.right, bottom: pr.bottom }
+                    };
+                },
                 auditPhoneTapTargets: (minPx = 32) => {
                     const vw = window.innerWidth;
                     if (vw > 430) return { ok: true, skipped: true, vw };
@@ -20869,7 +21077,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         </div>
                                     ))}
                                 </div>
-                                <RollHandThrowOverlay generation={rollHandFxGen} spritesReady={rollHandSpritesReady} />
+                                <RollHandThrowOverlay generation={rollHandFxGen} spriteMode={rollHandSpriteMode} />
                                 {pillInteractReady && (
                                     <div data-layout-key="play-pill-tray-row" className="pill-attach-tray-row">
                                         <button

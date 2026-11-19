@@ -127,6 +127,7 @@ async function capture390Drawer() {
 
 await capture1920();
 await captureShop({ width: 1920, height: 1080 }, '1920x1080');
+await captureViewport({ width: 1366, height: 768 }, '1366x768');
 if (label === 'after') {
   await captureViewport({ width: 768, height: 1024 }, '768x1024');
   await captureShop({ width: 768, height: 1024 }, '768x1024');
