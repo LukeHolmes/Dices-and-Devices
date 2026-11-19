@@ -170,6 +170,7 @@ function createGame(snapshot = {}, options = {}) {
     playHudRef: { current: null },
     lastRollStartedAtRef: { current: 0 },
     pendingPayoutRef: { current: null },
+    releaseRollSettleRef: { current: null },
     nextShopTagRef: { current: snapshot.nextShopTag ?? null },
     routeModifiersRef: { current: snapshot.routeModifiers ?? {} },
     modifierFlagsRef: {
@@ -179,6 +180,7 @@ function createGame(snapshot = {}, options = {}) {
     sacrificePlayPenaltyRef: { current: 0 },
     sacrificeBonusRef: { current: 0 },
     rollingSlots: [false, false, false, false, false],
+    rolling: false,
     pillRunBonus: 0,
     pillBursts: [],
     scoreBreakdownTimeoutRef: { current: null },
@@ -258,8 +260,29 @@ function createGame(snapshot = {}, options = {}) {
       if (key === "dailyRunActive") sandbox.dailyRunActive = next;
       if (key === "scoreBreakdown" || key === "scoreResolution") sandbox[key] = next;
       if (key === "hands") sandbox.hands = next;
+      if (key === "rollingSlots") {
+        sandbox.rollingSlots = next;
+        sandbox.rolling = Array.isArray(next) && next.some(Boolean);
+      }
     };
   }
+  const wireReleaseRollSettle = () => {
+    const { executePayout } = context.game;
+    sandbox.releaseRollSettleRef.current = ({ fullHandRoll = false, activeMask: rollMask = null } = {}) => {
+      sandbox.setRollLock(false);
+      if (fullHandRoll && rollMask && sandbox.runModifierIds?.includes?.("RISK_BONE")) {
+        /* risk bone omitted in harness — production handles via GutterbonesReplay */
+      }
+      const pending = sandbox.pendingPayoutRef.current;
+      if (!pending) return;
+      sandbox.pendingPayoutRef.current = null;
+      sandbox.setDice((currentDice) => {
+        sandbox.e2ePendingDiceRef.current = currentDice;
+        sandbox.scheduleTimeout(() => executePayout(pending));
+        return currentDice;
+      });
+    };
+  };
   const context = vm.createContext(sandbox);
   new vm.Script(
     sharedSource +
@@ -283,6 +306,7 @@ function createGame(snapshot = {}, options = {}) {
       exportedNames.join(", ") +
       " };",
   ).runInContext(context, { timeout: 2000 });
+  wireReleaseRollSettle();
   return {
     api: context.game,
     storage,
@@ -294,6 +318,11 @@ function createGame(snapshot = {}, options = {}) {
       queued.forEach((callback) => callback());
     },
     dismissScoreOverlays: () => sandbox.dismissScoreOverlays(),
+    playLocks: () => ({
+      rollLocked: !!sandbox.rollLockRef.current,
+      rolling: !!sandbox.rolling,
+      pendingPayout: sandbox.pendingPayoutRef.current,
+    }),
   };
 }
 
