@@ -14119,7 +14119,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             openingSniffPendingRef.current = tut ? tut.openingStash > 0 : !!(EARLY_GAME_TUNING.openingStashGrant);
             const enterPlay = () => {
                 if (meta.purchasedUpgradeIds.includes('fixer-network')) {
-                    grantBlueprint(pickRandomBlueprintId());
+                    grantBlueprint(pickRandomBlueprintId(gameplayRandom()));
                 }
                 setPhase('PLAY');
                 const e2eMode = typeof window !== 'undefined'
@@ -14611,7 +14611,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setStash(grant);
             const slot = tutorialActiveRef.current && GutterbonesTutorial
                 ? GutterbonesTutorial.TUNING.openingSniffSlot
-                : Math.floor(Math.random() * 5);
+                : Math.floor(gameplayRandom() * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
@@ -15234,7 +15234,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 flowStreak,
                 gold,
                 random: gameplayRandom(),
-                pickBlueprintId: () => pickRandomBlueprintId()
+                pickBlueprintId: () => pickRandomBlueprintId(gameplayRandom())
             });
             if (balanceObserverActive()) {
                 window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
@@ -16352,7 +16352,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
             if (path.grantRandomConsumable) {
                 const pool = Object.values(CONSUMABLES);
-                const drop = pool[Math.floor(Math.random() * pool.length)];
+                const drop = pool[Math.floor(gameplayRandom() * pool.length)];
                 if (drop) {
                     setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
