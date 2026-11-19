@@ -42,6 +42,17 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       return !locks?.rolling && !locks?.rollLocked;
     }, 320);
   };
+  const harnessQuiescent = () => {
+    if (window.__GB_SIM_CLOCK_RESOLVE__) return false;
+    const locks = window.__GB_E2E__?.getPlayLocks?.();
+    if (locks?.rolling || locks?.rollLocked) return false;
+    return true;
+  };
+  const awaitHarnessQuiescence = async () => {
+    if (!awaitClock) return;
+    await spinUntil(harnessQuiescent, 240);
+    await yieldClock(16);
+  };
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
@@ -366,8 +377,10 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   let lastPhaseForClock = null;
   for (let step = 0; step < maxSteps; step++) {
+    await awaitHarnessQuiescence();
     const { btn, st } = scan();
     const ph = (st && st.phase) || "?";
+    if (st?.phase) window.__GB_SIM_PHASE__ = st.phase;
     if (awaitClock && ph !== lastPhaseForClock) {
       await yieldClock(48);
       lastPhaseForClock = ph;

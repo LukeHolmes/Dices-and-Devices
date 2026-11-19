@@ -59,6 +59,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
       const viewport = viewportsList[(rid >> 2) % viewportsList.length];
       const seed = rid * 7919;
       process.stderr.write(`repro baseline=${baseline} rep=${repIndex} rid=${rid}\n`);
+      const wallStart = Date.now();
       const r = await runOneGame(page, {
         rid,
         seed,
@@ -74,6 +75,7 @@ async function runPair({ baseline, rids, maxSteps, parallel }) {
       byRid[key] = byRid[key] || [];
       byRid[key].push({
         replicateIndex: repIndex,
+        wallMs: Date.now() - wallStart,
         outcome: norm.outcome || r.outcome || (r.stuck ? "STUCK" : "ERROR"),
         terminalReason: norm.terminal_reason,
         naturalTermination: isNaturalTermination(norm.outcome),
@@ -124,7 +126,7 @@ function firstDivergingGameDraw(logA, logB, diverge) {
   for (let i = 0; i < len; i += 1) {
     const ea = a[i];
     const eb = b[i];
-    if (ea.n !== eb.n || ea.site !== eb.site || ea.v !== eb.v) {
+    if (ea.n !== eb.n || ea.site !== eb.site || ea.v !== eb.v || ea.phase !== eb.phase || ea.drawIndex !== eb.drawIndex) {
       return { drawIndex: i + 1, a: ea, b: eb };
     }
   }
@@ -289,6 +291,7 @@ function writeTrackingCsv({ report, batchId, maxSteps }) {
             terminal_reason: norm.terminal_reason || rep.terminalReason || "",
             max_round: rep.maxRound,
             steps: rep.steps,
+            wall_ms: rep.wallMs ?? "",
             replay_digest: rep.digest,
             stuck_flag: norm.stuck_flag || (rep.stuck ? "1" : "0"),
             replay_match: rep.replicateIndex === 0 ? "" : rep.matchPair === true ? 1 : 0,
@@ -365,7 +368,7 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const instrumentedGate = baselines.some((b) => String(b).endsWith("-i"));
   const batchId = instrumentedGate
-    ? process.env.DEFM005_BATCH_ID || "REPRO-DEFM005-20261119-instrumented-v5b"
+    ? process.env.DEFM005_BATCH_ID || "REPRO-DEFM005-20261119-instrumented-v6"
     : `REPRO-DEFM005-${stamp}-vclock-boot`;
   report.batchId = batchId;
   fs.mkdirSync(ARTIFACTS, { recursive: true });
@@ -379,7 +382,7 @@ async function main() {
     TRACKING_DIR,
     "defects/measurement",
     instrumentedGate
-      ? `DEF-M-005-gate-20261119-instrumented-v5b.json`
+      ? `DEF-M-005-gate-20261119-instrumented-v6.json`
       : `DEF-M-005-gate-${stamp}-vclock-boot.json`,
   );
   const totals = Object.values(report.baselines).reduce(
@@ -420,9 +423,10 @@ async function main() {
         id: "DEF-M-005",
         gate_batch_id: batchId,
         harness_mode: "node_paced_playwright_clock_boot",
-        harness_shim_rev: "2026-11-19-harness-clock-v5",
+        harness_shim_rev: "2026-11-19-harness-clock-v6",
         prior_gate_records: instrumentedGate
           ? [
+              { batch: "REPRO-DEFM005-20261119-instrumented-v5b", matched: 6, total: 20, note: "natural-only" },
               { batch: "REPRO-DEFM005-20261119", matched: 0, total: 20 },
               { batch: "REPRO-DEFM005-20261119-vclock", matched: 3, total: 20 },
               { batch: "REPRO-DEFM005-20261119-vclock-boot", matched: 2, total: 20, baselines: "R-main,R78" },

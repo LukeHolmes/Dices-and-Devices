@@ -10,7 +10,7 @@
           "step": 2,
           "phase": "PLAY",
           "round": 1,
-          "score": 25,
+          "score": 20,
           "gold": 23,
           "hands": 3,
           "target": 75,
@@ -60,14 +60,14 @@
           ],
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 206,
+          "cosmeticRngDraws": 228,
           "lastGameDrawSite": "gameplay"
         },
         "b": {
           "step": 2,
           "phase": "PLAY",
           "round": 1,
-          "score": 25,
+          "score": 20,
           "gold": 23,
           "hands": 3,
           "target": 75,
@@ -117,41 +117,45 @@
           ],
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 215,
+          "cosmeticRngDraws": 227,
           "lastGameDrawSite": "gameplay"
         }
       },
       "firstDivergingGameDraw": {
-        "drawIndex": 99,
+        "drawIndex": 190,
         "a": {
-          "n": 99,
+          "n": 190,
           "site": "weightedSortJitter",
           "caller": "weightedSortJitter",
-          "round": 2,
+          "round": 4,
+          "phase": "GAMBLE",
           "subCounter": 1,
-          "v": 0.5044232602231205
+          "drawIndex": 0,
+          "v": 0.7453825413249433
         },
         "b": {
-          "n": 99,
+          "n": 190,
           "site": "gameplay",
           "caller": "gameplay",
-          "round": 2,
-          "subCounter": 11,
-          "v": 0.6588387286756188
+          "round": 3,
+          "phase": "PLAY",
+          "subCounter": 16,
+          "drawIndex": 15,
+          "v": 0.09105847892351449
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 74,
-          "digest": "94abb6c9f62ba65c5f327ef73e804c604d59eee78ad3ff475c61f5658dbf13c5"
+          "maxRound": 6,
+          "steps": 57,
+          "digest": "cb49c9e4418981372f598c20eee0cc93e1a241b10538aee87ea73f0bc8704fbe"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 78,
-          "digest": "15aed41b335911bc171d884c1aad7408b1fb9a33e5bd54ed11cf3d5f5b5d090e"
+          "maxRound": 6,
+          "steps": 57,
+          "digest": "fc1a8000aadb44749e4e8c7ad1b09aca34a97f040cb9edee22d5065a9bd73842"
         }
       }
     },
@@ -165,446 +169,64 @@
           "step": 4,
           "phase": "PLAY",
           "round": 1,
-          "score": 61,
-          "gold": 24,
+          "score": 102,
+          "gold": 49,
           "hands": 2,
           "target": 75,
-          "roundClear": false,
+          "roundClear": true,
           "selectedShopPathId": null,
           "buttons": [
             {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": "play-roll-btn"
+              "t": "CONTINUE",
+              "lk": "round-clear-continue"
             }
           ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 390,
-          "lastGameDrawSite": "gameplay"
+          "rngDraws": 82,
+          "gameRngDraws": 82,
+          "cosmeticRngDraws": 530,
+          "lastGameDrawSite": "weightedSortJitter"
         },
         "b": {
           "step": 4,
           "phase": "PLAY",
           "round": 1,
-          "score": 61,
-          "gold": 24,
+          "score": 102,
+          "gold": 49,
           "hands": 2,
           "target": 75,
-          "roundClear": false,
+          "roundClear": true,
           "selectedShopPathId": null,
           "buttons": [
             {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": "play-roll-btn"
+              "t": "CONTINUE",
+              "lk": "round-clear-continue"
             }
           ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 412,
-          "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": {
-        "drawIndex": 503,
-        "a": {
-          "n": 503,
-          "site": "weightedSortJitter",
-          "caller": "weightedSortJitter",
-          "round": 7,
-          "subCounter": 29,
-          "v": 0.2312061320990324
-        },
-        "b": {
-          "n": 503,
-          "site": "generateShop",
-          "caller": "generateShop",
-          "round": 7,
-          "subCounter": 1,
-          "v": 0.32991805067285895
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 72,
-          "digest": "a610fdc4fcbeee5563f6fa19f13e3754e0e2be5adda335102f28b3e6319899bb"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 7,
-          "steps": 74,
-          "digest": "7e07b6240183e763370a6feda479e74151ed6592e596709e615ceac74a40c229"
-        }
-      }
-    },
-    {
-      "baseline": "R-main-i",
-      "rid": "3",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 3,
-        "a": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 31,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Full Ride BUST BUST",
-              "lk": "payout-row-FH"
-            },
-            {
-              "t": "Fives FLOW x1.06 OPEN +21",
-              "lk": "payout-row-FIVES"
-            },
-            {
-              "t": "Quad BUST BUST",
-              "lk": "payout-row-FOK"
-            },
-            {
-              "t": "Fours BUST BUST",
-              "lk": "payout-row-FOURS"
-            },
-            {
-              "t": "Long Run BUST BUST",
-              "lk": "payout-row-LS"
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 300,
-          "lastGameDrawSite": "gameplay"
-        },
-        "b": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 31,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Full Ride BUST BUST",
-              "lk": "payout-row-FH"
-            },
-            {
-              "t": "Fives FLOW x1.06 OPEN +21",
-              "lk": "payout-row-FIVES"
-            },
-            {
-              "t": "Quad BUST BUST",
-              "lk": "payout-row-FOK"
-            },
-            {
-              "t": "Fours BUST BUST",
-              "lk": "payout-row-FOURS"
-            },
-            {
-              "t": "Long Run BUST BUST",
-              "lk": "payout-row-LS"
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 301,
-          "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": {
-        "drawIndex": 288,
-        "a": {
-          "n": 288,
-          "site": "gameplay",
-          "caller": "gameplay",
-          "round": 4,
-          "subCounter": 16,
-          "v": 0.5785036077722907
-        },
-        "b": {
-          "n": 288,
-          "site": "gameplay",
-          "caller": "gameplay",
-          "round": 5,
-          "subCounter": 1,
-          "v": 0.2992428997531533
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 61,
-          "digest": "47e4082265884d55516b1e14e2746c71da4d84864355a1edd95d2454097c11d3"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 59,
-          "digest": "abf1967d75bf15cf7dd26d87a145495583aaac968008d8ed22cdb1c3e1876de2"
-        }
-      }
-    },
-    {
-      "baseline": "R-main-i",
-      "rid": "4",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 3,
-        "a": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 29,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": "play-roll-btn"
-            }
-          ],
-          "rngDraws": 6,
-          "gameRngDraws": 6,
-          "cosmeticRngDraws": 216,
-          "lastGameDrawSite": "gameplay"
-        },
-        "b": {
-          "step": 3,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 29,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": "play-roll-btn"
-            }
-          ],
-          "rngDraws": 6,
-          "gameRngDraws": 6,
-          "cosmeticRngDraws": 218,
-          "lastGameDrawSite": "gameplay"
+          "rngDraws": 82,
+          "gameRngDraws": 82,
+          "cosmeticRngDraws": 519,
+          "lastGameDrawSite": "weightedSortJitter"
         }
       },
       "firstDivergingGameDraw": null,
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 79,
-          "digest": "e72bd97c88b4097be777cccad9beba846fa651f71485a9dba79dee726d3ae0f4"
+          "maxRound": 5,
+          "steps": 48,
+          "digest": "1f353912c8778a45294361a18f6d5d96db0d9a203382e6d2913459cffdf33d48"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 77,
-          "digest": "99b7717ade5d4c8d98ab53c7c58cacf969c2457713d31dffe1161745269ef790"
+          "maxRound": 5,
+          "steps": 47,
+          "digest": "d9f092a2b2b0b7ad45057751723f16ec60ca1ba1982db9835365533a768eb6ef"
         }
       }
     },
     {
       "baseline": "R-main-i",
-      "rid": "5",
+      "rid": "3",
       "causeCategory": "timer",
       "firstDivergingStep": {
         "index": 0,
@@ -632,24 +254,32 @@
               "lk": ""
             },
             {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
               "t": "LOG",
               "lk": "play-history-log"
             },
             {
               "t": "ROLL 'EM",
               "lk": "play-roll-btn"
-            },
-            {
-              "t": "STASH",
-              "lk": "play-stash-open-mobile"
-            },
-            {
-              "t": "◷ R1 0/75 $22 IOU $0 💊 3",
-              "lk": "play-status-bar"
-            },
-            {
-              "t": "SYS",
-              "lk": "system-menu-street"
             }
           ],
           "rngDraws": 1,
@@ -685,11 +315,11 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 2",
+              "t": "Bone slot 4",
               "lk": ""
             },
             {
-              "t": "Bone slot 4",
+              "t": "Bone slot 5",
               "lk": ""
             },
             {
@@ -697,7 +327,7 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 5",
+              "t": "Bone slot 2",
               "lk": ""
             },
             {
@@ -715,25 +345,47 @@
           "lastGameDrawSite": "pickRandomArcId"
         }
       },
-      "firstDivergingGameDraw": null,
+      "firstDivergingGameDraw": {
+        "drawIndex": 188,
+        "a": {
+          "n": 188,
+          "site": "weightedSortJitter",
+          "caller": "weightedSortJitter",
+          "round": 4,
+          "phase": "GAMBLE",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.591011542128399
+        },
+        "b": {
+          "n": 188,
+          "site": "gameplay",
+          "caller": "gameplay",
+          "round": 4,
+          "phase": "PLAY",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.7676097801886499
+        }
+      },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 4,
-          "steps": 43,
-          "digest": "15f0f26c239dd77fc0bfb7960ff218e2da6f6b80826fc82094e1e3af5b890f8b"
+          "maxRound": 7,
+          "steps": 65,
+          "digest": "387a2321c854b91fdb3a5d874d30ed72a6cbccb794ebfdd5bbd7ef290845f383"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 4,
-          "steps": 42,
-          "digest": "fe9295bcdaa84f510a87aad5a865165ad8c24c2c6776b6910348a9a910ed6f18"
+          "maxRound": 6,
+          "steps": 58,
+          "digest": "6877c4bf45fc67e753485a0ee29035c546f104d13604337810d5ddbeeefb3e98"
         }
       }
     },
     {
       "baseline": "R-main-i",
-      "rid": "8",
+      "rid": "4",
       "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
         "index": 3,
@@ -741,7 +393,7 @@
           "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 23,
+          "score": 28,
           "gold": 23,
           "hands": 3,
           "target": 75,
@@ -761,7 +413,7 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 1",
+              "t": "Bone slot 5",
               "lk": ""
             },
             {
@@ -769,36 +421,36 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
               "t": "Bone slot 3",
               "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-1"
+              "t": "Bone slot 2",
+              "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-2"
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
             }
           ],
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 229,
+          "cosmeticRngDraws": 228,
           "lastGameDrawSite": "gameplay"
         },
         "b": {
           "step": 3,
           "phase": "PLAY",
           "round": 1,
-          "score": 23,
+          "score": 28,
           "gold": 23,
           "hands": 3,
           "target": 75,
@@ -818,7 +470,7 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 1",
+              "t": "Bone slot 5",
               "lk": ""
             },
             {
@@ -826,762 +478,231 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
               "t": "Bone slot 3",
               "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-1"
+              "t": "Bone slot 2",
+              "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-2"
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
             }
           ],
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 218,
+          "cosmeticRngDraws": 230,
           "lastGameDrawSite": "gameplay"
         }
       },
       "firstDivergingGameDraw": {
-        "drawIndex": 103,
-        "a": null,
-        "b": {
-          "n": 103,
+        "drawIndex": 185,
+        "a": {
+          "n": 185,
           "site": "gameplay",
           "caller": "gameplay",
-          "round": 2,
-          "subCounter": 21,
-          "v": 0.20704819215461612
-        },
-        "reason": "log_length_mismatch",
-        "stepDivergence": 3
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 2,
-          "steps": 26,
-          "digest": "58045ae153d9ff394ec013900207d03ebacedd50345915a52b1226f04150a04c"
+          "round": 3,
+          "phase": "PLAY",
+          "subCounter": 11,
+          "drawIndex": 10,
+          "v": 0.019510824466124177
         },
         "b": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 89,
-          "digest": "11cb24b04d1bf24ddf5cfd5c3b087616dc9ca1c5cce34b812af9f715df03ef4f"
-        }
-      }
-    },
-    {
-      "baseline": "R78-i",
-      "rid": "0",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 2,
-        "a": {
-          "step": 2,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 21,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            }
-          ],
-          "rngDraws": 6,
-          "gameRngDraws": 6,
-          "cosmeticRngDraws": 227,
-          "lastGameDrawSite": "gameplay"
-        },
-        "b": {
-          "step": 2,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 21,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            }
-          ],
-          "rngDraws": 6,
-          "gameRngDraws": 6,
-          "cosmeticRngDraws": 229,
-          "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": {
-        "drawIndex": 467,
-        "a": {
-          "n": 467,
+          "n": 185,
           "site": "gameplay",
           "caller": "gameplay",
           "round": 4,
-          "subCounter": 1,
-          "v": 0.4557625502347946
-        },
-        "b": {
-          "n": 467,
-          "site": "weightedSortJitter",
-          "caller": "weightedSortJitter",
-          "round": 4,
-          "subCounter": 70,
-          "v": 0.6200226405635476
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 78,
-          "digest": "0e41293e1e0645d539665c68deceada4c452ceea2c420948379cdffaaf16b017"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 78,
-          "digest": "fca43e035c0b9a33ce35582836882c344ce8bdfd660862e7a6362bf0e1b3c249"
-        }
-      }
-    },
-    {
-      "baseline": "R78-i",
-      "rid": "1",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 4,
-        "a": {
-          "step": 4,
           "phase": "PLAY",
-          "round": 1,
-          "score": 67,
-          "gold": 24,
-          "hands": 2,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 388,
-          "lastGameDrawSite": "gameplay"
-        },
-        "b": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 67,
-          "gold": 24,
-          "hands": 2,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 386,
-          "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": {
-        "drawIndex": 361,
-        "a": {
-          "n": 361,
-          "site": "gameplay",
-          "caller": "gameplay",
-          "round": 5,
-          "subCounter": 16,
-          "v": 0.28760169446468353
-        },
-        "b": {
-          "n": 361,
-          "site": "weightedSortJitter",
-          "caller": "weightedSortJitter",
-          "round": 6,
           "subCounter": 1,
-          "v": 0.43735628202557564
+          "drawIndex": 0,
+          "v": 0.6045380712021142
         }
       },
       "tuple": {
         "a": {
           "outcome": "BUST",
           "maxRound": 8,
-          "steps": 91,
-          "digest": "c7c8914e78ccfdae4da48dab356f81f95c5cb95be584acd3725db6ff2ed7a87d"
+          "steps": 87,
+          "digest": "b116fe747a90c40e4d6524fb52d8b1a50d3616e9ceb97b892a50813e7c3696d8"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 90,
-          "digest": "afea61a06cc2fd8b49ca658d8c81a40de52b1dc27ab4e80efa9558818e937505"
+          "maxRound": 7,
+          "steps": 69,
+          "digest": "f41eaf35c022e610019ed7ad8cc24fd3542e742f35554843aded8eea70a15c9b"
         }
       }
     },
     {
-      "baseline": "R78-i",
-      "rid": "3",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 4,
-        "a": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 52,
-          "gold": 24,
-          "hands": 2,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 415,
-          "lastGameDrawSite": "gameplay"
-        },
-        "b": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 52,
-          "gold": 24,
-          "hands": 2,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "$5 → +$9",
-              "lk": ""
-            },
-            {
-              "t": "$10 → +$18",
-              "lk": ""
-            },
-            {
-              "t": "$15 → +$26",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
-              "t": "LOG",
-              "lk": "play-history-log"
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 417,
-          "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": {
-        "drawIndex": 575,
-        "a": {
-          "n": 575,
-          "site": "gameplay",
-          "caller": "gameplay",
-          "round": 5,
-          "subCounter": 1,
-          "v": 0.2992428997531533
-        },
-        "b": {
-          "n": 575,
-          "site": "weightedSortJitter",
-          "caller": "weightedSortJitter",
-          "round": 5,
-          "subCounter": 79,
-          "v": 0.5666771768592298
-        }
-      },
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 65,
-          "digest": "dbff54a40a381205534402bcfb3faa9155a476e16142ce8e83f8bca329493d62"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 67,
-          "digest": "b25737b9d9048b7ec9ade49a1ac2261a908512acefb215f92e3e93faeb5f5ad2"
-        }
-      }
-    },
-    {
-      "baseline": "R78-i",
-      "rid": "4",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 4,
-        "a": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 29,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 279,
-          "lastGameDrawSite": "gameplay"
-        },
-        "b": {
-          "step": 4,
-          "phase": "PLAY",
-          "round": 1,
-          "score": 29,
-          "gold": 23,
-          "hands": 3,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": null,
-          "buttons": [
-            {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 1",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 2",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            },
-            {
-              "t": "PILL",
-              "lk": ""
-            }
-          ],
-          "rngDraws": 11,
-          "gameRngDraws": 11,
-          "cosmeticRngDraws": 290,
-          "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": null,
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 79,
-          "digest": "8c995b01f615abb165a12506150c1b76ac0015aea76936c2b58cb6467045a33d"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 76,
-          "digest": "b9360e9ad02b05ee011ec9350b01a879ee49a31251a9122e458b035f95891e64"
-        }
-      }
-    },
-    {
-      "baseline": "R78-i",
+      "baseline": "R-main-i",
       "rid": "5",
       "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
-        "index": 4,
+        "index": 3,
         "a": {
-          "step": 4,
-          "phase": "SHOP",
-          "round": 2,
-          "score": 91,
-          "gold": 57,
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 30,
+          "gold": 23,
           "hands": 3,
           "target": 75,
           "roundClear": false,
-          "selectedShopPathId": "LOCAL",
+          "selectedShopPathId": null,
           "buttons": [
             {
-              "t": "→",
+              "t": "$5 → +$9",
               "lk": ""
             },
             {
-              "t": "HIT THE STREETS",
-              "lk": "shop-hit-streets"
+              "t": "$10 → +$18",
+              "lk": ""
             },
             {
-              "t": "IN",
-              "lk": "shop-inspect-offer"
+              "t": "$15 → +$26",
+              "lk": ""
             },
             {
-              "t": "REFRESH STOCK $10",
-              "lk": "shop-refresh-stock"
+              "t": "Bone slot 5",
+              "lk": ""
             },
             {
-              "t": "BACK ALLEY ☷ ALLEY · LOCAL Standard hustle. Next quota: ~97",
-              "lk": "shop-route-card"
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
             }
           ],
-          "rngDraws": 77,
-          "gameRngDraws": 77,
-          "cosmeticRngDraws": 7678,
-          "lastGameDrawSite": "weightedSortJitter"
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 266,
+          "lastGameDrawSite": "gameplay"
         },
         "b": {
-          "step": 4,
-          "phase": "SHOP",
-          "round": 2,
-          "score": 91,
-          "gold": 57,
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 30,
+          "gold": 23,
           "hands": 3,
           "target": 75,
           "roundClear": false,
-          "selectedShopPathId": "LOCAL",
+          "selectedShopPathId": null,
           "buttons": [
             {
-              "t": "→",
+              "t": "$5 → +$9",
               "lk": ""
             },
             {
-              "t": "HIT THE STREETS",
-              "lk": "shop-hit-streets"
+              "t": "$10 → +$18",
+              "lk": ""
             },
             {
-              "t": "IN",
-              "lk": "shop-inspect-offer"
+              "t": "$15 → +$26",
+              "lk": ""
             },
             {
-              "t": "REFRESH STOCK $10",
-              "lk": "shop-refresh-stock"
+              "t": "Bone slot 5",
+              "lk": ""
             },
             {
-              "t": "BACK ALLEY ☷ ALLEY · LOCAL Standard hustle. Next quota: ~97",
-              "lk": "shop-route-card"
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
             }
           ],
-          "rngDraws": 77,
-          "gameRngDraws": 77,
-          "cosmeticRngDraws": 7667,
-          "lastGameDrawSite": "weightedSortJitter"
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 268,
+          "lastGameDrawSite": "gameplay"
         }
       },
-      "firstDivergingGameDraw": null,
+      "firstDivergingGameDraw": {
+        "drawIndex": 286,
+        "a": {
+          "n": 286,
+          "site": "gameplay",
+          "caller": "gameplay",
+          "round": 5,
+          "phase": "PLAY",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.9383396878838539
+        },
+        "b": {
+          "n": 286,
+          "site": "weightedSortJitter",
+          "caller": "weightedSortJitter",
+          "round": 5,
+          "phase": "GAMBLE",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.3553996968548745
+        }
+      },
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 79,
-          "digest": "083fc07425e39793d5df11066e0f447c737baf39fdbd5fda52815cbfc04edb8b"
+          "maxRound": 8,
+          "steps": 99,
+          "digest": "fee0513ee58c6c5eed2fe92501cccb837d1c87f712a664c147d54b7a0410c37c"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 6,
-          "steps": 83,
-          "digest": "d39dfee47df8effb2329887f85caee51a3e01cbcba5212e3b1f8b180c10fbca7"
+          "maxRound": 8,
+          "steps": 89,
+          "digest": "9833c543cc3779d17073eb41d43ef3068d81c222ccd0c06bcb997fde66b6316d"
         }
       }
     },
     {
-      "baseline": "R78-i",
+      "baseline": "R-main-i",
       "rid": "6",
       "causeCategory": "cosmetic-timing",
       "firstDivergingStep": {
@@ -1630,17 +751,17 @@
               "lk": ""
             },
             {
-              "t": "ROLL 'EM",
-              "lk": ""
-            },
-            {
               "t": "LOG",
               "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
             }
           ],
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 266,
+          "cosmeticRngDraws": 255,
           "lastGameDrawSite": "gameplay"
         },
         "b": {
@@ -1648,6 +769,426 @@
           "phase": "PLAY",
           "round": 1,
           "score": 31,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "$5 → +$9",
+              "lk": ""
+            },
+            {
+              "t": "$10 → +$18",
+              "lk": ""
+            },
+            {
+              "t": "$15 → +$26",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
+            }
+          ],
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 257,
+          "lastGameDrawSite": "gameplay"
+        }
+      },
+      "firstDivergingGameDraw": {
+        "drawIndex": 183,
+        "a": {
+          "n": 183,
+          "site": "weightedSortJitter",
+          "caller": "weightedSortJitter",
+          "round": 4,
+          "phase": "GAMBLE",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.9884592490270734
+        },
+        "b": {
+          "n": 183,
+          "site": "gameplay",
+          "caller": "gameplay",
+          "round": 4,
+          "phase": "PLAY",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.4106637977529317
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 8,
+          "steps": 97,
+          "digest": "0a62c92a5b332172efc15e4d73454460a49797c9bc66cff4e825a02d9237e88d"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 8,
+          "steps": 98,
+          "digest": "ddc2b8b977aacfc8728f3bfb8b5ed1b372629f811eb3ace687644fd8cc003424"
+        }
+      }
+    },
+    {
+      "baseline": "R-main-i",
+      "rid": "7",
+      "causeCategory": "cosmetic-timing",
+      "firstDivergingStep": {
+        "index": 3,
+        "a": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 25,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "$5 → +$9",
+              "lk": ""
+            },
+            {
+              "t": "$10 → +$18",
+              "lk": ""
+            },
+            {
+              "t": "$15 → +$26",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
+            }
+          ],
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 229,
+          "lastGameDrawSite": "gameplay"
+        },
+        "b": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 25,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "$5 → +$9",
+              "lk": ""
+            },
+            {
+              "t": "$10 → +$18",
+              "lk": ""
+            },
+            {
+              "t": "$15 → +$26",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
+            }
+          ],
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 230,
+          "lastGameDrawSite": "gameplay"
+        }
+      },
+      "firstDivergingGameDraw": {
+        "drawIndex": 290,
+        "a": {
+          "n": 290,
+          "site": "weightedSortJitter",
+          "caller": "weightedSortJitter",
+          "round": 5,
+          "phase": "GAMBLE",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.6460543680004776
+        },
+        "b": {
+          "n": 290,
+          "site": "gameplay",
+          "caller": "gameplay",
+          "round": 5,
+          "phase": "PLAY",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.20052653807215393
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 7,
+          "steps": 93,
+          "digest": "8a6425f98b6f745ec996bcb63d498c6e7abe62c498c8c9afdc34ed46fcf57356"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 7,
+          "steps": 88,
+          "digest": "506c69fceec7b3527c8ab95049409fbb5fd0e0ba443676fb573d4dd43f007950"
+        }
+      }
+    },
+    {
+      "baseline": "R-main-i",
+      "rid": "8",
+      "causeCategory": "timer",
+      "firstDivergingStep": {
+        "index": 0,
+        "a": {
+          "step": 0,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 0,
+          "gold": 22,
+          "hands": 4,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "$5 → +$9",
+              "lk": ""
+            },
+            {
+              "t": "$10 → +$18",
+              "lk": ""
+            },
+            {
+              "t": "$15 → +$26",
+              "lk": ""
+            },
+            {
+              "t": "—",
+              "lk": "hardware-rail-socket-1"
+            },
+            {
+              "t": "—",
+              "lk": "hardware-rail-socket-2"
+            },
+            {
+              "t": "—",
+              "lk": "hardware-rail-socket-3"
+            },
+            {
+              "t": "LOG",
+              "lk": "play-history-log"
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": "play-roll-btn"
+            },
+            {
+              "t": "STASH",
+              "lk": "play-stash-open-mobile"
+            },
+            {
+              "t": "◷ R1 0/75 $22 IOU $0 💊 3",
+              "lk": "play-status-bar"
+            }
+          ],
+          "rngDraws": 1,
+          "gameRngDraws": 1,
+          "cosmeticRngDraws": 0,
+          "lastGameDrawSite": "pickRandomArcId"
+        },
+        "b": {
+          "step": 0,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 0,
+          "gold": 22,
+          "hands": 4,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "$5 → +$9",
+              "lk": ""
+            },
+            {
+              "t": "$10 → +$18",
+              "lk": ""
+            },
+            {
+              "t": "$15 → +$26",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "—",
+              "lk": "hardware-rail-socket-1"
+            },
+            {
+              "t": "—",
+              "lk": "hardware-rail-socket-2"
+            }
+          ],
+          "rngDraws": 1,
+          "gameRngDraws": 1,
+          "cosmeticRngDraws": 0,
+          "lastGameDrawSite": "pickRandomArcId"
+        }
+      },
+      "firstDivergingGameDraw": {
+        "drawIndex": 185,
+        "a": {
+          "n": 185,
+          "site": "weightedSortJitter",
+          "caller": "weightedSortJitter",
+          "round": 4,
+          "phase": "GAMBLE",
+          "subCounter": 1,
+          "drawIndex": 0,
+          "v": 0.7267165810335428
+        },
+        "b": {
+          "n": 185,
+          "site": "gameplay",
+          "caller": "gameplay",
+          "round": 3,
+          "phase": "PLAY",
+          "subCounter": 11,
+          "drawIndex": 10,
+          "v": 0.6798924314789474
+        }
+      },
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 8,
+          "steps": 85,
+          "digest": "bcb9082362bd8fb275f4385d7597a041ebed58023193d7d8f47a105bf66e94a1"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 8,
+          "steps": 92,
+          "digest": "1004207eab42741b3af0487e3d3d1bc77c8735d3bb21cb7a5e9a4800091e1ce1"
+        }
+      }
+    },
+    {
+      "baseline": "R78-i",
+      "rid": "2",
+      "causeCategory": "cosmetic-timing",
+      "firstDivergingStep": {
+        "index": 2,
+        "a": {
+          "step": 2,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 60,
           "gold": 23,
           "hands": 3,
           "target": 75,
@@ -1697,136 +1238,16 @@
           ],
           "rngDraws": 6,
           "gameRngDraws": 6,
-          "cosmeticRngDraws": 255,
+          "cosmeticRngDraws": 284,
           "lastGameDrawSite": "gameplay"
-        }
-      },
-      "firstDivergingGameDraw": null,
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 74,
-          "digest": "cde5759b712dc9cdbfe3d8449bdc8231d0a1788d7740747f79fefe3ab5f47cbf"
         },
         "b": {
-          "outcome": "BUST",
-          "maxRound": 5,
-          "steps": 72,
-          "digest": "842d5ee9f21606cd2fc9bcc803e945a5d7f714f590eac9488cdb46427c6277c8"
-        }
-      }
-    },
-    {
-      "baseline": "R78-i",
-      "rid": "7",
-      "causeCategory": "cosmetic-timing",
-      "firstDivergingStep": {
-        "index": 7,
-        "a": {
-          "step": 7,
-          "phase": "SHOP",
-          "round": 2,
-          "score": 102,
-          "gold": 52,
-          "hands": 2,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": "LOCAL",
-          "buttons": [
-            {
-              "t": "→",
-              "lk": ""
-            },
-            {
-              "t": "HIT THE STREETS",
-              "lk": "shop-hit-streets"
-            },
-            {
-              "t": "IN",
-              "lk": "shop-inspect-offer"
-            },
-            {
-              "t": "REFRESH STOCK $10",
-              "lk": "shop-refresh-stock"
-            },
-            {
-              "t": "BACK ALLEY ☷ ALLEY · LOCAL Standard hustle. Next quota: ~97",
-              "lk": "shop-route-card"
-            }
-          ],
-          "rngDraws": 83,
-          "gameRngDraws": 83,
-          "cosmeticRngDraws": 777,
-          "lastGameDrawSite": "weightedSortJitter"
-        },
-        "b": {
-          "step": 7,
-          "phase": "SHOP",
-          "round": 2,
-          "score": 102,
-          "gold": 52,
-          "hands": 2,
-          "target": 75,
-          "roundClear": false,
-          "selectedShopPathId": "LOCAL",
-          "buttons": [
-            {
-              "t": "→",
-              "lk": ""
-            },
-            {
-              "t": "HIT THE STREETS",
-              "lk": "shop-hit-streets"
-            },
-            {
-              "t": "IN",
-              "lk": "shop-inspect-offer"
-            },
-            {
-              "t": "REFRESH STOCK $10",
-              "lk": "shop-refresh-stock"
-            },
-            {
-              "t": "BACK ALLEY ☷ ALLEY · LOCAL Standard hustle. Next quota: ~97",
-              "lk": "shop-route-card"
-            }
-          ],
-          "rngDraws": 83,
-          "gameRngDraws": 83,
-          "cosmeticRngDraws": 776,
-          "lastGameDrawSite": "weightedSortJitter"
-        }
-      },
-      "firstDivergingGameDraw": null,
-      "tuple": {
-        "a": {
-          "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 104,
-          "digest": "caf5e6e14f020601ef8a2de3aeb3fb3c6db39f74ac1fdf1d898208e2767111cf"
-        },
-        "b": {
-          "outcome": "BUST",
-          "maxRound": 8,
-          "steps": 107,
-          "digest": "9355fb68919148dd964af529a46384f28cbe2f568278a95f28d9ffb306575659"
-        }
-      }
-    },
-    {
-      "baseline": "R78-i",
-      "rid": "9",
-      "causeCategory": "timer",
-      "firstDivergingStep": {
-        "index": 0,
-        "a": {
-          "step": 0,
+          "step": 2,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 60,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
           "roundClear": false,
           "selectedShopPathId": null,
@@ -1844,15 +1265,7 @@
               "lk": ""
             },
             {
-              "t": "Bone slot 3",
-              "lk": ""
-            },
-            {
               "t": "Bone slot 4",
-              "lk": ""
-            },
-            {
-              "t": "Bone slot 5",
               "lk": ""
             },
             {
@@ -1864,26 +1277,194 @@
               "lk": ""
             },
             {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
               "t": "ROLL 'EM",
               "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-1"
+              "t": "LOG",
+              "lk": "play-history-log"
             }
           ],
-          "rngDraws": 1,
-          "gameRngDraws": 1,
-          "cosmeticRngDraws": 0,
-          "lastGameDrawSite": "pickRandomArcId"
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 274,
+          "lastGameDrawSite": "gameplay"
+        }
+      },
+      "firstDivergingGameDraw": null,
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 5,
+          "steps": 57,
+          "digest": "1d754a5e9f2502a5f3c522e7468781a94d2265a77204a7484de4a242424b0c51"
         },
         "b": {
-          "step": 0,
+          "outcome": "BUST",
+          "maxRound": 5,
+          "steps": 56,
+          "digest": "6362b533508c4016d9095428b6f14b5a35f79d9c6b1c260beea1d45e1c643475"
+        }
+      }
+    },
+    {
+      "baseline": "R78-i",
+      "rid": "6",
+      "causeCategory": "cosmetic-timing",
+      "firstDivergingStep": {
+        "index": 4,
+        "a": {
+          "step": 4,
           "phase": "PLAY",
           "round": 1,
-          "score": 0,
-          "gold": 22,
-          "hands": 4,
+          "score": 31,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            }
+          ],
+          "rngDraws": 11,
+          "gameRngDraws": 11,
+          "cosmeticRngDraws": 322,
+          "lastGameDrawSite": "gameplay"
+        },
+        "b": {
+          "step": 4,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 31,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            },
+            {
+              "t": "PILL",
+              "lk": ""
+            }
+          ],
+          "rngDraws": 11,
+          "gameRngDraws": 11,
+          "cosmeticRngDraws": 311,
+          "lastGameDrawSite": "gameplay"
+        }
+      },
+      "firstDivergingGameDraw": null,
+      "tuple": {
+        "a": {
+          "outcome": "BUST",
+          "maxRound": 7,
+          "steps": 92,
+          "digest": "f690699bc656aaae7c0dcbd374ae7aeed15872b234ed7904d45302d2ad2257a1"
+        },
+        "b": {
+          "outcome": "BUST",
+          "maxRound": 7,
+          "steps": 91,
+          "digest": "3a42d4f79372ab411a46550e67074591d9fedb9de4159e4e1ccc3fc3dd764749"
+        }
+      }
+    },
+    {
+      "baseline": "R78-i",
+      "rid": "7",
+      "causeCategory": "cosmetic-timing",
+      "firstDivergingStep": {
+        "index": 3,
+        "a": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 25,
+          "gold": 23,
+          "hands": 3,
           "target": 75,
           "roundClear": false,
           "selectedShopPathId": null,
@@ -1901,49 +1482,110 @@
               "lk": ""
             },
             {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
               "t": "ROLL 'EM",
               "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-1"
+              "t": "LOG",
+              "lk": "play-history-log"
+            }
+          ],
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 239,
+          "lastGameDrawSite": "gameplay"
+        },
+        "b": {
+          "step": 3,
+          "phase": "PLAY",
+          "round": 1,
+          "score": 25,
+          "gold": 23,
+          "hands": 3,
+          "target": 75,
+          "roundClear": false,
+          "selectedShopPathId": null,
+          "buttons": [
+            {
+              "t": "$5 → +$9",
+              "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-2"
+              "t": "$10 → +$18",
+              "lk": ""
             },
             {
-              "t": "—",
-              "lk": "hardware-rail-socket-3"
+              "t": "$15 → +$26",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 1",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 3",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 4",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 2",
+              "lk": ""
+            },
+            {
+              "t": "Bone slot 5",
+              "lk": ""
+            },
+            {
+              "t": "ROLL 'EM",
+              "lk": ""
             },
             {
               "t": "LOG",
               "lk": "play-history-log"
-            },
-            {
-              "t": "SYS",
-              "lk": "system-menu-street"
             }
           ],
-          "rngDraws": 1,
-          "gameRngDraws": 1,
-          "cosmeticRngDraws": 0,
-          "lastGameDrawSite": "pickRandomArcId"
+          "rngDraws": 6,
+          "gameRngDraws": 6,
+          "cosmeticRngDraws": 250,
+          "lastGameDrawSite": "gameplay"
         }
       },
       "firstDivergingGameDraw": null,
       "tuple": {
         "a": {
           "outcome": "BUST",
-          "maxRound": 2,
-          "steps": 31,
-          "digest": "7fabe39056188d25b957f4dd11116ee27a381d33e445daaf41a8bbb4e45baf1e"
+          "maxRound": 8,
+          "steps": 104,
+          "digest": "402a7352721e2518dbdd450dcd23b7088621f12dd8f5c50ead817169a608a23f"
         },
         "b": {
           "outcome": "BUST",
-          "maxRound": 2,
-          "steps": 32,
-          "digest": "320f2a38fbd6e5cc11dba28543c936e9e2720a883fc9c63bf4a6f5a854d7975d"
+          "maxRound": 8,
+          "steps": 106,
+          "digest": "cd6fef0aa85901b4440601491e9ca071ae04a316be9b280480abb87f9ce747a1"
         }
       }
     }

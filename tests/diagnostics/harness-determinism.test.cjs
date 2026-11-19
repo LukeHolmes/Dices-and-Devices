@@ -20,7 +20,7 @@ function runShim(seed) {
   return sandbox.window;
 }
 
-test("harness v5 splits cosmetic Math.random from gameplay substreams", () => {
+test("harness v6 splits cosmetic Math.random from gameplay substreams", () => {
   const w = runShim(42);
   const cosmetic = [w.Math.random(), w.Math.random()];
   w.__GB_SIM_ROUND__ = 3;
@@ -41,6 +41,7 @@ test("harness v5 splits cosmetic Math.random from gameplay substreams", () => {
 test("named substreams are call-order independent within a round", () => {
   const w = runShim(7);
   w.__GB_SIM_ROUND__ = 5;
+  w.__GB_SIM_PHASE__ = "SHOP";
   const a1 = w.__GB_SIM_DRAW_GAME__("generateShop", 5);
   const b1 = w.__GB_SIM_DRAW_GAME__("weightedSortJitter", 5);
   const a2 = w.__GB_SIM_DRAW_GAME__("generateShop", 5);
@@ -48,6 +49,7 @@ test("named substreams are call-order independent within a round", () => {
 
   const w2 = runShim(7);
   w2.__GB_SIM_ROUND__ = 5;
+  w2.__GB_SIM_PHASE__ = "SHOP";
   const b1Alt = w2.__GB_SIM_DRAW_GAME__("weightedSortJitter", 5);
   const a1Alt = w2.__GB_SIM_DRAW_GAME__("generateShop", 5);
   const b2Alt = w2.__GB_SIM_DRAW_GAME__("weightedSortJitter", 5);
@@ -80,6 +82,7 @@ test("cosmetic stream resets without touching gameplay substreams", () => {
   const w = runShim(99);
   w.__GB_SIM_RNG_BOOT_LOCKED__ = false;
   w.__GB_SIM_ROUND__ = 4;
+  w.__GB_SIM_PHASE__ = "SHOP";
   const g1 = w.__GB_SIM_DRAW_GAME__("generateShop", 4);
   const c1 = w.Math.random();
   w.__GB_SIM_RESET_COSMETIC_STREAM__();
@@ -89,4 +92,29 @@ test("cosmetic stream resets without touching gameplay substreams", () => {
   assert.equal(w.__GB_SIM_COSMETIC_DRAW_COUNT__, 1);
   assert.equal(c1, c2);
   assert.notEqual(g1, g2);
+});
+
+test("non-gameplay callers use cosmetic stream only", () => {
+  const w = runShim(12);
+  w.__GB_SIM_ROUND__ = 2;
+  w.__GB_SIM_PHASE__ = "PLAY";
+  const cosmeticBefore = w.__GB_SIM_COSMETIC_DRAW_COUNT__;
+  w.__GB_SIM_DRAW_GAME__("moduleDefault", 2);
+  assert.equal(w.__GB_SIM_RNG_DRAW_COUNT__, 0);
+  assert.equal(w.__GB_SIM_COSMETIC_DRAW_COUNT__, cosmeticBefore + 1);
+  assert.equal(w.__GB_SIM_GAME_DRAW_LOG__.length, 0);
+});
+
+test("draw index resets on phase boundary", () => {
+  const w = runShim(33);
+  w.__GB_SIM_ROUND__ = 3;
+  w.__GB_SIM_PHASE__ = "SHOP";
+  w.__GB_SIM_DRAW_GAME__("generateShop", 3);
+  w.__GB_SIM_PHASE__ = "PLAY";
+  w.__GB_SIM_DRAW_GAME__("generateShop", 3);
+  assert.equal(w.__GB_SIM_GAME_DRAW_LOG__.length, 2);
+  assert.equal(w.__GB_SIM_GAME_DRAW_LOG__[0].drawIndex, 0);
+  assert.equal(w.__GB_SIM_GAME_DRAW_LOG__[1].drawIndex, 0);
+  assert.equal(w.__GB_SIM_GAME_DRAW_LOG__[0].phase, "SHOP");
+  assert.equal(w.__GB_SIM_GAME_DRAW_LOG__[1].phase, "PLAY");
 });
