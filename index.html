@@ -6903,7 +6903,7 @@ const GutterbonesRoutes = (() => {
     const describePathModifiers = (path) => {
         if (!path) return [];
         const notes = [];
-        if (path.mod && path.mod !== 1) notes.push(`Quota x${path.mod.toFixed(2)} (scaled by round curve)`);
+        if (path.mod && path.mod !== 1) notes.push(`Quota route modifier ×${path.mod.toFixed(2)} (curve weights baseline growth)`);
         if (path.reward) notes.push(`+$${path.reward} cash on pick`);
         if (path.fillStash) notes.push('Stash to 100% on pick');
         if (path.handDelta) notes.push(`${path.handDelta > 0 ? '+' : ''}${path.handDelta} play next round`);
@@ -8036,7 +8036,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         CENTERPIECE: { id: 'CENTERPIECE', name: 'The Centerpiece', desc: 'Slot 3 bone triggers base value and face bonuses twice.', cost: 20, rarity: 'rare' },
         BOOKENDS: { id: 'BOOKENDS', name: 'The Bookends', desc: 'If Slot 1 and 5 match exactly, +30 chips.', cost: 18, rarity: 'common' },
         ENGINE: { id: 'ENGINE', name: 'The Engine', desc: 'Slot 1 adds mult for each higher-value bone to its right. Max +4.', cost: 25, rarity: 'rare' },
-        LOADED_DIE: { id: 'LOADED_DIE', name: 'Weighted Core', desc: '+10 chips on Triad.', cost: 12, rarity: 'common' },
+        LOADED_DIE: { id: 'LOADED_DIE', name: 'Weighted Core', desc: '+20 chips on Triad when synergy chains are on (+10 otherwise).', cost: 12, rarity: 'common' },
         BLOOD_PACT: { id: 'BLOOD_PACT', name: 'Blood Pact', desc: 'x3 mult, but -$1 per roll.', cost: 20, rarity: 'danger' },
         BRASS_KNUCKLES: { id: 'BRASS_KNUCKLES', name: 'Brass Knuckles', desc: 'If all scoring bones are 1s, 2s, or 3s, +3 mult.', cost: 18, rarity: 'common' },
         BLACK_BOOK: { id: 'BLACK_BOOK', name: 'The Black Book', desc: 'Gain $1 when you pop a pill.', cost: 20, rarity: 'rare' },
@@ -8543,9 +8543,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         debtQuotaPenaltyRatio: 1.5,
         debtQuotaPenaltyCap: 120,
         earlyBossRoundCap: 6,
-        earlyBouncerRelief: 0.9,
-        raidQuotaRelief: 0.9,
-        bossPathTargetRelief: 0.91,
         crookedCopHardwareMult: 0.55
     };
 
@@ -8595,6 +8592,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         SHOP_AGENCY_TUNING.refreshBaseCost +
             ((roundNum - 1) * SHOP_AGENCY_TUNING.refreshRoundTax) +
             (refreshCount * SHOP_AGENCY_TUNING.refreshEscalation)
+    );
+
+    const getEffectiveShopRefreshCost = (roundNum, refreshCount, shopRefreshDiscount = 0) => Math.max(
+        0,
+        getShopRefreshCost(roundNum, refreshCount) - (shopRefreshDiscount || 0)
     );
 
     const getHardwareSellValue = (item) => Math.max(2, Math.floor((item?.cost || 10) * SHOP_AGENCY_TUNING.sellRate));
@@ -8788,7 +8790,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             BOUNCER: 'Owns the club doors and skims every take. If you cannot clear his inflated quota, you are out on the curb.',
             LOAN_SHARK: 'Fronts cash with a smile and collects with interest. Every roll costs tribute, especially when you already owe.',
             JUNKIE: 'A chaos broker who salts the bones. Sixes twist into ones when he is around, shredding high-roll plans.',
-            CROOKED_COP: 'Badge on paper, extortionist in practice. Hardware goes dark while the cop watches your table.',
+            CROOKED_COP: 'Badge on paper, extortionist in practice. Hardware still fires, but payouts run at ~55% while the cop watches your table.',
             INFORMANT: 'Knows every stash route in the district. Locks your stash progress until you force your way through.',
             THE_RAID: 'Not a person but a citywide crackdown. Boss quota ×1.38 (~+38%), expensive pills, and no room for sloppy hands. Clear round 10 to escape — beating the raid does not end your run.'
         }
@@ -8845,19 +8847,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const CATEGORY_RULE_TOOLTIPS = {
-        ONES: 'Sum of 1s ×2 mult (wilds count as 1).',
-        TWOS: 'Sum of 2s ×2 mult.',
-        THREES: 'Sum of 3s ×2 mult.',
-        FOURS: 'Sum of 4s ×3 mult.',
-        FIVES: 'Sum of 5s ×3 mult.',
-        SIXES: 'Sum of 6s ×3 mult (five 6s = 90 heat).',
+        ONES: 'Sum of 1s ×1.5 mult (wilds count as 1; upper cap 2.5x).',
+        TWOS: 'Sum of 2s ×1.5 mult (upper cap 2.5x).',
+        THREES: 'Sum of 3s ×1.5 mult (upper cap 2.5x).',
+        FOURS: 'Sum of 4s ×2 mult (upper cap 2.5x).',
+        FIVES: 'Sum of 5s ×2 mult (upper cap 2.5x).',
+        SIXES: 'Sum of 6s ×2 mult (upper cap 2.5x; five 6s ≈ 60–75 heat).',
         TOK: 'Three of a kind — 20 chips ×2 mult.',
         FOK: 'Four of a kind — 35 chips ×3 mult.',
         FH: 'Full house (3+2) — 30 chips ×3 mult.',
         SS: 'Small straight (4 in a row) — 30 chips ×2 mult.',
         LS: 'Large straight (5 in a row) — 40 chips ×3 mult.',
         Y: 'Five of a kind — 50 chips ×5 mult.',
-        C: 'Chance — sum of faces +10 chips ×1.5 mult.'
+        C: 'Chance — sum of faces +5 chips ×1.22 mult.'
     };
 
     const CATEGORIES = {
@@ -13466,9 +13468,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             ? (hands <= 1 ? 'high' : (debt > 0 || (discards <= 1 && hasRolled) ? 'low' : ''))
             : '';
         const inRunPhase = RUN_PHASES.includes(phase);
-        const shopRefreshCost = Math.max(
-            0,
-            getShopRefreshCost(round, shopRefreshes) - (currentRouteEffect?.shopRefreshDiscount || 0)
+        const shopRefreshCost = getEffectiveShopRefreshCost(
+            round,
+            shopRefreshes,
+            currentRouteEffect?.shopRefreshDiscount
         );
         const flowStreakCap = GutterbonesRoutes.effectiveFlowCap(FLOW_TUNING.maxStreak, routeModifiers);
         const flowMultiplier = getFlowMultiplier(flowStreak, flowStreakCap);
@@ -16097,6 +16100,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 if (result.categoryMarkEarned) {
                     setSynergyState((prev) => ({
+                        ...prev,
                         categoryMarks: {
                             ...(prev.categoryMarks || {}),
                             [catId]: (prev.categoryMarks?.[catId] || 0) + 1
@@ -16590,25 +16594,33 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (tag === 'chaos') return getArchetypeTagsForItemId(item.id).includes(BUILD_IDS.CHAOS);
                 return false;
             };
+            const placeGuarantee = (item, slotIndex) => {
+                if (!item || picks.some((p) => p.id === item.id)) return;
+                const slot = Math.max(0, Math.min(3, slotIndex));
+                if (picks.length >= 4) {
+                    picks[slot] = item;
+                    return;
+                }
+                if (picks.length <= slot) picks.push(item);
+                else picks[slot] = item;
+            };
+
             if (offerTag && offerTag !== 'balanced' && !picks.some((item) => tagMatchesOffer(offerTag, item))) {
                 const guaranteePool = weightedSort(
                     [...faces, ...hardware, ...consumablePoolSeed].filter((item) => tagMatchesOffer(offerTag, item))
                 );
-                if (guaranteePool.length) {
-                    if (picks.length >= 4) picks[picks.length - 1] = guaranteePool[0];
-                    else pushUnique(guaranteePool[0]);
-                }
+                if (guaranteePool.length) placeGuarantee(guaranteePool[0], 0);
             }
 
-            const ensureStarterHardware = (deviceId) => {
+            const ensureStarterHardware = (deviceId, slotIndex) => {
                 if (round > 4 || inventory.some((i) => i.id === deviceId)) return;
+                if (!meta.unlockedHardwareIds.includes(deviceId)) return;
                 const device = DEVISES[deviceId];
                 if (!device || picks.some((p) => p.id === deviceId)) return;
-                if (picks.length >= 4) picks[picks.length - 1] = device;
-                else picks.push(device);
+                placeGuarantee(device, slotIndex);
             };
-            ensureStarterHardware('ENGINE');
-            ensureStarterHardware('LOADED_DIE');
+            ensureStarterHardware('ENGINE', 1);
+            ensureStarterHardware('LOADED_DIE', 2);
 
             const ensureEarlySmellingSalts = () => {
                 if (round > 4) return;
@@ -16617,8 +16629,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 if (!salts || picks.some((p) => p.id === 'SMELLING_SALTS')) return;
                 const roll = typeof rng === 'function' ? rng() : Math.random();
                 if (roll > 0.55) return;
-                if (picks.length >= 4) picks[picks.length - 1] = salts;
-                else picks.push(salts);
+                placeGuarantee(salts, 3);
             };
             ensureEarlySmellingSalts();
 
@@ -16693,7 +16704,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         });
                     }
                     const bossIdx = Math.max(0, next.length - 1);
-                    next[bossIdx] = { ...next[bossIdx], id: 'BOSS', name: 'TURF WAR', desc: `${b.name}: ${b.desc}`, color: 'border-red-600 text-red-600 animate-pulse', boss: b };
+                    next[bossIdx] = {
+                        id: 'BOSS',
+                        name: 'TURF WAR',
+                        desc: `${b.name}: ${b.desc}`,
+                        color: 'border-red-600 text-red-600 animate-pulse',
+                        boss: b,
+                        mod: 1
+                    };
                 }
                 setPaths(next);
                 if (next.length === 1) setSelectedShopPathId(next[0].id);
@@ -16718,7 +16736,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 }
                 return;
             }
-            const cost = getShopRefreshCost(round, shopRefreshes);
+            const cost = getEffectiveShopRefreshCost(round, shopRefreshes, currentRouteEffect?.shopRefreshDiscount);
             if (gold < cost) {
                 if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({

@@ -35,7 +35,10 @@ function s3DemoShopRun() {
     target: 140,
     shopItems: DEMO_SHOP_IDS.map((id) => ({ id })),
     routeModifiers: { shopDiscount: 0.1 },
-    inventory: [{ id: "CROWBAR", name: "The Crowbar", instanceId: "hw-fence-demo" }],
+    inventory: [
+      { id: "CENTERPIECE", name: "Weighted Core", instanceId: "hw-fence-demo" },
+      { id: "CROWBAR", name: "The Crowbar", instanceId: "hw-fence-demo-2" },
+    ],
     paths: fixtures.shop()?.paths || [],
   });
 }
