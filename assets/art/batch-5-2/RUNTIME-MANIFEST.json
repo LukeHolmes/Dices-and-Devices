@@ -88,35 +88,55 @@
       "sha": "607fc9364396bdfc4a64ebb7ec7173ea574d0c4c9742f10dc7ed6183bf1950d7",
       "out": "assets/art/batch-5-2/atlas/hud-statusplate-ink.webp",
       "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_ink_v1.png",
-      "masterSha256": "cfe0343e4b4c8dde6bad474e0c6808a7b907a0ce3f0a51997cce184e03d5ab75"
+      "masterSha256": null,
+      "intermediateSha256": "cfe0343e4b4c8dde6bad474e0c6808a7b907a0ce3f0a51997cce184e03d5ab75",
+      "masterSha256Verified": false,
+      "edgeCleaned": true,
+      "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
     },
     {
       "bytes": 12598,
       "sha": "22507307bd9103d5be5e22f984262e36b53142df40c8cb1c5219959f6f7fd1fc",
       "out": "assets/art/batch-5-2/atlas/hud-statusplate-felt.webp",
       "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_felt_v1.png",
-      "masterSha256": "ca5d2c3823410dc334b9833f8c0c610d5a5ccee1f1c16964377421bc193e18cc"
+      "masterSha256": null,
+      "intermediateSha256": "ca5d2c3823410dc334b9833f8c0c610d5a5ccee1f1c16964377421bc193e18cc",
+      "masterSha256Verified": false,
+      "edgeCleaned": true,
+      "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
     },
     {
       "bytes": 12428,
       "sha": "a561cd3f8b2931210d24828db41ba943b8fd7d1dd3cc65957369381e030e9ac0",
       "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp",
       "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-worn_v1.png",
-      "masterSha256": "6bd5b78a75d04becf8a053ec97669cc57c3fb385a1fb00a14d69b12575e0eced"
+      "masterSha256": null,
+      "intermediateSha256": "6bd5b78a75d04becf8a053ec97669cc57c3fb385a1fb00a14d69b12575e0eced",
+      "masterSha256Verified": false,
+      "edgeCleaned": true,
+      "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
     },
     {
       "bytes": 12636,
       "sha": "91bd8ff01abcb67b547acfbfcbfd4aea19484eab99a41d5fc784f2234456f80f",
       "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp",
       "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-clean_v1.png",
-      "masterSha256": "5910a59b8dc8614162a3fd9a1afd34965513178a9ffe2808103f149a86e31a01"
+      "masterSha256": null,
+      "intermediateSha256": "5910a59b8dc8614162a3fd9a1afd34965513178a9ffe2808103f149a86e31a01",
+      "masterSha256Verified": false,
+      "edgeCleaned": true,
+      "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
     },
     {
       "bytes": 36004,
       "sha": "d3cc7fcef2b42ed5db4bc836da766c47663ea097c2470c0fa2fa84b1f7aa6265",
       "out": "assets/art/batch-5-2/atlas/hud-progressbar-ink.webp",
       "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_progressbar_ink_v1.png",
-      "masterSha256": "ca506018e9bc7e2919139a620669e0a699d02bc8f8b4d0d034304a05535ce0b4"
+      "masterSha256": null,
+      "intermediateSha256": "ca506018e9bc7e2919139a620669e0a699d02bc8f8b4d0d034304a05535ce0b4",
+      "masterSha256Verified": false,
+      "edgeCleaned": true,
+      "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
     },
     {
       "bytes": 46716,
@@ -227,7 +247,7 @@
       "out": "assets/art/look-and-feel/tungsten-bulb-flicker-8frame.webp"
     }
   ],
-  "totalBytes": 1753908,
+  "totalBytes": 2106198,
   "finalArtPass": {
     "handoffDir": "/tmp/gb-art-parts/handoff",
     "sceneAssets": [
@@ -254,40 +274,60 @@
         "sha": "607fc9364396bdfc4a64ebb7ec7173ea574d0c4c9742f10dc7ed6183bf1950d7",
         "out": "assets/art/batch-5-2/atlas/hud-statusplate-ink.webp",
         "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_ink_v1.png",
-        "masterSha256": "cfe0343e4b4c8dde6bad474e0c6808a7b907a0ce3f0a51997cce184e03d5ab75",
-        "category": "atlas-icon"
+        "masterSha256": null,
+        "category": "atlas-icon",
+        "intermediateSha256": "cfe0343e4b4c8dde6bad474e0c6808a7b907a0ce3f0a51997cce184e03d5ab75",
+        "masterSha256Verified": false,
+        "edgeCleaned": true,
+        "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
       },
       {
         "bytes": 12598,
         "sha": "22507307bd9103d5be5e22f984262e36b53142df40c8cb1c5219959f6f7fd1fc",
         "out": "assets/art/batch-5-2/atlas/hud-statusplate-felt.webp",
         "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_felt_v1.png",
-        "masterSha256": "ca5d2c3823410dc334b9833f8c0c610d5a5ccee1f1c16964377421bc193e18cc",
-        "category": "atlas-icon"
+        "masterSha256": null,
+        "category": "atlas-icon",
+        "intermediateSha256": "ca5d2c3823410dc334b9833f8c0c610d5a5ccee1f1c16964377421bc193e18cc",
+        "masterSha256Verified": false,
+        "edgeCleaned": true,
+        "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
       },
       {
         "bytes": 12428,
         "sha": "a561cd3f8b2931210d24828db41ba943b8fd7d1dd3cc65957369381e030e9ac0",
         "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp",
         "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-worn_v1.png",
-        "masterSha256": "6bd5b78a75d04becf8a053ec97669cc57c3fb385a1fb00a14d69b12575e0eced",
-        "category": "atlas-icon"
+        "masterSha256": null,
+        "category": "atlas-icon",
+        "intermediateSha256": "6bd5b78a75d04becf8a053ec97669cc57c3fb385a1fb00a14d69b12575e0eced",
+        "masterSha256Verified": false,
+        "edgeCleaned": true,
+        "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
       },
       {
         "bytes": 12636,
         "sha": "91bd8ff01abcb67b547acfbfcbfd4aea19484eab99a41d5fc784f2234456f80f",
         "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp",
         "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-clean_v1.png",
-        "masterSha256": "5910a59b8dc8614162a3fd9a1afd34965513178a9ffe2808103f149a86e31a01",
-        "category": "atlas-icon"
+        "masterSha256": null,
+        "category": "atlas-icon",
+        "intermediateSha256": "5910a59b8dc8614162a3fd9a1afd34965513178a9ffe2808103f149a86e31a01",
+        "masterSha256Verified": false,
+        "edgeCleaned": true,
+        "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
       },
       {
         "bytes": 36004,
         "sha": "d3cc7fcef2b42ed5db4bc836da766c47663ea097c2470c0fa2fa84b1f7aa6265",
         "out": "assets/art/batch-5-2/atlas/hud-progressbar-ink.webp",
         "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_progressbar_ink_v1.png",
-        "masterSha256": "ca506018e9bc7e2919139a620669e0a699d02bc8f8b4d0d034304a05535ce0b4",
-        "category": "atlas-icon"
+        "masterSha256": null,
+        "category": "atlas-icon",
+        "intermediateSha256": "ca506018e9bc7e2919139a620669e0a699d02bc8f8b4d0d034304a05535ce0b4",
+        "masterSha256Verified": false,
+        "edgeCleaned": true,
+        "provenanceNote": "Recorded hash describes postprocessed PNG; original-source hash must be reverified from handoff on next clean export."
       },
       {
         "bytes": 46716,
@@ -361,5 +401,11 @@
       "hud_statusplate_paper-clean_v1.png",
       "hud_statusplate_paper-worn_v1.png"
     ]
+  },
+  "provenanceAudit": {
+    "status": "partial-pending-source-recheck",
+    "reason": "Five edge-cleaned atlas PNGs were previously mislabelled with processed intermediate SHA as master SHA.",
+    "affectedOriginals": 5,
+    "action": "Run repaired export-final-art-webp.py against intact handoff; compare source, intermediate and WebP SHA before release."
   }
 }
