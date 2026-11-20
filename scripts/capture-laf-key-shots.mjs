@@ -11,7 +11,7 @@ const { createGame, plain } = require('../tests/helpers/game.cjs');
 
 const ROOT = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(import.meta.dirname, '..');
 const label = process.argv[3] || 'after';
-const OUT = '/opt/cursor/artifacts';
+const OUT = process.env.GB_ARTIFACT_DIR ? path.resolve(process.env.GB_ARTIFACT_DIR) : path.join(ROOT, 'artifacts', 'laf-captures');
 fs.mkdirSync(OUT, { recursive: true });
 
 const CAPTURE_UNSCROLL_CSS = `
@@ -198,7 +198,7 @@ async function assertFooterInViewport(page, name, viewportHeight) {
     const bar = footer?.querySelector('.h-4.bg-black');
     const filled = footer ? [...footer.querySelectorAll('.h-4.bg-black .rounded-sm')].filter((el) => {
       const bg = getComputedStyle(el).backgroundColor;
-      return bg && bg !== 'rgb(55, 65, 81)' && !bg.includes('128, 128, 128');
+      return bg && bg !== 'rgb(31, 41, 55)' && bg !== 'rgb(55, 65, 81)' && !bg.includes('128, 128, 128');
     }).length : 0;
     const fr = footer?.getBoundingClientRect();
     const hr = hit?.getBoundingClientRect();
@@ -317,7 +317,7 @@ async function captureShopTall(vp, name) {
   }
   await page.evaluate(() => document.getElementById('__gb_capture_unscroll')?.remove());
   await page.close();
-  return { outPath, shotHeight, footerBottom: finalCheck, stashSegs: metrics };
+  return { outPath, shotHeight, footerBottom: finalCheck, stashSegs: metrics.stashFilledSegs ?? null, metrics };
 }
 
 async function capture390Drawer() {
@@ -427,9 +427,6 @@ if (shopCaptureAll) {
   await captureShop({ width: 1366, height: 768 }, '1366x768');
   await captureShop({ width: 1920, height: 1080 }, '1920x1080');
   console.log('tall', JSON.stringify({ tall390, tall768 }));
-  if (process.env.CAPTURE_FINAL_ART === '1') {
-    await captureFinalArtScreens();
-  }
 } else {
   await capture1920();
   await captureShop({ width: 1920, height: 1080 }, '1920x1080');
@@ -440,6 +437,9 @@ if (shopCaptureAll) {
     await captureShop({ width: 1024, height: 768 }, '1024x768');
     await capture390Drawer();
   }
+}
+if (process.env.CAPTURE_FINAL_ART === '1') {
+  await captureFinalArtScreens();
 }
 await context.close();
 await browser.close();
