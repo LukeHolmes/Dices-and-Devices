@@ -19,7 +19,7 @@ const positional = argv.filter((a, i) => !a.startsWith('-') && (labelIdx < 0 || 
 const root = positional[0] ? path.resolve(positional[0]) : path.join(__dirname, '..');
 const outDir = positional[1]
   ? path.resolve(positional[1])
-  : path.join('/opt/cursor/artifacts', `ashtray-scale-${label}`);
+  : path.join(root, 'artifacts', `ashtray-scale-${label}`);
 fs.mkdirSync(outDir, { recursive: true });
 
 const CROP_SIZES = [
