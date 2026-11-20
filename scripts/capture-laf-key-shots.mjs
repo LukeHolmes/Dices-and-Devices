@@ -88,12 +88,66 @@ async function bootPlay(page, vp) {
 }
 
 const browser = await chromium.launch({ headless: true });
+const context = await browser.newContext({ deviceScaleFactor: 1 });
 const defaultTimeoutMs = 180_000;
 async function openPage() {
-  const page = await browser.newPage();
+  const page = await context.newPage();
   page.setDefaultTimeout(defaultTimeoutMs);
   page.setDefaultNavigationTimeout(defaultTimeoutMs);
   return page;
+}
+
+async function measureShopLayoutMetrics(page) {
+  return page.evaluate(() => {
+    const layout = document.querySelector('[data-layout-key="shop-layout"]');
+    const routes = document.querySelector('[data-layout-key="shop-routes-panel"]');
+    const stock = document.querySelector('[data-tutorial="shop-panel"]');
+    const layoutCs = layout ? getComputedStyle(layout) : null;
+    const routesCs = routes ? getComputedStyle(routes) : null;
+    return {
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio,
+      layout: layout
+        ? {
+            height: layout.getBoundingClientRect().height,
+            computedHeight: layoutCs?.height,
+            computedMaxHeight: layoutCs?.maxHeight,
+          }
+        : null,
+      routesPanel: routes
+        ? {
+            height: routes.getBoundingClientRect().height,
+            computedHeight: routesCs?.height,
+            computedMaxHeight: routesCs?.maxHeight,
+          }
+        : null,
+      stockPanel: stock ? { height: stock.getBoundingClientRect().height } : null,
+    };
+  });
+}
+
+async function assertBossIntroCard(page, name) {
+  const card = await page.evaluate(() => {
+    const el = document.querySelector('.boss-intro-card');
+    if (!(el instanceof HTMLElement)) return null;
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    return {
+      width: r.width,
+      height: r.height,
+      display: cs.display,
+      visibility: cs.visibility,
+      opacity: cs.opacity,
+    };
+  });
+  if (!card || card.width < 200 || card.height < 120) {
+    throw new Error(`${name}: boss-intro-card missing or too small: ${JSON.stringify(card)}`);
+  }
+  if (card.visibility === 'hidden' || Number(card.opacity) < 0.05) {
+    throw new Error(`${name}: boss-intro-card not visible: ${JSON.stringify(card)}`);
+  }
+  return card;
 }
 
 async function injectShopUnscroll(page) {
@@ -219,10 +273,23 @@ async function captureShop(vp, name) {
     if (screen instanceof HTMLElement) screen.scrollTop = 0;
   });
   await page.waitForTimeout(150);
+  const metrics = await measureShopLayoutMetrics(page);
+  if (process.env.CAPTURE_FINAL_ART === '1' && (name === '1920x1080' || name === '1366x768' || name === '390x844')) {
+    console.log(`shop-metrics ${name}`, JSON.stringify(metrics));
+    if (vp.width >= 1024) {
+      const minFill = vp.height * 0.62;
+      if (!metrics.layout?.height || metrics.layout.height < minFill) {
+        throw new Error(`${name}: shop-layout height ${metrics.layout?.height} < ${minFill} (vh=${metrics.innerHeight})`);
+      }
+      if (!metrics.routesPanel?.height || metrics.routesPanel.height < minFill) {
+        throw new Error(`${name}: shop-routes-panel height ${metrics.routesPanel?.height} < ${minFill}`);
+      }
+    }
+  }
   const outPath = path.join(OUT, `${label}_${name}_shop.png`);
   await page.screenshot({ path: outPath });
   await page.close();
-  return outPath;
+  return { outPath, metrics };
 }
 
 async function captureShopTall(vp, name) {
@@ -294,12 +361,15 @@ async function captureFinalArtScreens() {
   for (const [vp, name] of [
     [{ width: 1920, height: 1080 }, '1920x1080'],
     [{ width: 1366, height: 768 }, '1366x768'],
+    [{ width: 390, height: 844 }, '390x844'],
   ]) {
     const page = await openPage();
     await bootPlayMinimal(page, vp);
     await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openBossIntroFor('BOUNCER'));
     await page.waitForSelector('[data-layout-key="boss-intro-overlay"]', { timeout: 10_000 });
+    await page.waitForSelector('.boss-intro-card', { timeout: 10_000 });
     await page.waitForTimeout(300);
+    await assertBossIntroCard(page, name);
     await page.screenshot({ path: path.join(OUT, `${label}_${name}_boss-intro.png`) });
     await page.close();
   }
@@ -320,6 +390,7 @@ async function captureFinalArtScreens() {
   for (const [gVp, gName] of [
     [{ width: 1920, height: 1080 }, '1920x1080'],
     [{ width: 1366, height: 768 }, '1366x768'],
+    [{ width: 390, height: 844 }, '390x844'],
   ]) {
     const gPage = await openPage();
     const gamblePayload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.gamble()));
@@ -370,6 +441,7 @@ if (shopCaptureAll) {
     await capture390Drawer();
   }
 }
+await context.close();
 await browser.close();
 await new Promise((resolve) => server.close(resolve));
 console.log('done', label, ROOT);

@@ -2530,21 +2530,38 @@
         #root-gutterbones[data-phase="SHOP"] .gb-screen {
             flex: 1 1 auto;
             min-height: 0;
-            height: 100%;
+            height: 100dvh;
             max-height: 100dvh;
+            box-sizing: border-box;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
-            flex: 1 1 auto !important;
+            flex: 1 1 0 !important;
             min-height: 0 !important;
-            height: 100%;
+            height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             align-items: stretch !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"],
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             max-height: 100% !important;
-            height: 100%;
+            height: 100% !important;
+            min-height: 0 !important;
+            flex: 1 1 0% !important;
             align-self: stretch !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            position: relative;
+            z-index: 2;
+            isolation: isolate;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            position: relative;
+            z-index: 4;
+            pointer-events: auto;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-options-block button {
+            position: relative;
+            z-index: 2;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
             flex: 1 1 auto !important;
@@ -2557,11 +2574,15 @@
             -webkit-mask-image: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-            flex: 0 1 auto !important;
+            flex: 1 1 0 !important;
+            flex-shrink: 1 !important;
             min-height: 0 !important;
-            max-height: min(46vh, 30rem) !important;
+            max-height: none !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence .space-y-2 {
+            max-height: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-options-block {
             display: flex;
@@ -2589,7 +2610,7 @@
     }
     @media (min-width: 1366px) and (min-height: 821px) {
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-            max-height: min(50vh, 32rem) !important;
+            max-height: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
             min-height: 14rem !important;
@@ -2610,13 +2631,14 @@
     @media (min-width: 1024px) and (min-height: 821px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
-            max-height: min(100%, calc(100dvh - 14.5rem)) !important;
+            max-height: 100% !important;
+            height: 100% !important;
             overflow: hidden !important;
             display: flex;
             flex-direction: column;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            flex: 1 1 auto;
+            flex: 1 1 0 !important;
             min-height: 0;
             overflow-x: hidden;
             overflow-y: hidden !important;
@@ -2624,7 +2646,8 @@
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             min-height: 0 !important;
-            max-height: min(100%, calc(100dvh - 14.5rem)) !important;
+            max-height: 100% !important;
+            height: 100% !important;
             overflow: hidden;
         }
     }
@@ -3157,6 +3180,9 @@
     #root-gutterbones .boss-intro-card.gb-modal-shop-chrome {
         --shop-card-slice: 112;
         --shop-card-border: clamp(10px, 2.5vw, 14px);
+        width: 100%;
+        min-width: min(100%, 18rem);
+        max-width: 100%;
         border: var(--shop-card-border) solid transparent !important;
         border-image-slice: var(--shop-card-slice) fill;
         border-image-width: var(--shop-card-border);
@@ -3186,7 +3212,9 @@
     }
     #root-gutterbones .boss-intro-card .boss-intro-name-plate {
         margin-bottom: 0.75rem;
-        max-width: min(100%, 22rem);
+        width: min(100%, 20rem);
+        max-width: 20rem;
+        margin-inline: auto;
     }
     #root-gutterbones .boss-intro-card .boss-intro-name-plate .shop-section-header__label {
         font-size: clamp(1.35rem, 4.2vw, 2.35rem);
@@ -3232,9 +3260,34 @@
     #root-gutterbones .gb-modal-shop-chrome.gamble-card-tone h2.font-marker {
         color: #ff9fcf !important;
     }
+    #root-gutterbones [data-layout-key="gamble-card"] .shop-section-header {
+        width: 17.5rem !important;
+        max-width: min(100%, 17.5rem) !important;
+        min-width: 12rem !important;
+        margin-inline: auto !important;
+        flex: 0 0 auto !important;
+        align-self: center !important;
+        min-height: 2.5rem !important;
+        padding: 0.45rem 1.75rem !important;
+        box-sizing: border-box !important;
+    }
+    #root-gutterbones [data-layout-key="gamble-card"] .shop-section-header__label {
+        font-size: 12px !important;
+        white-space: normal !important;
+        line-height: 1.25 !important;
+    }
     #root-gutterbones [data-layout-key="gamble-card"] .gamble-readability-line {
-        font-size: max(12px, 0.75rem) !important;
-        line-height: 1.35;
+        font-size: max(12px, 0.8125rem) !important;
+        line-height: 1.35 !important;
+    }
+    #root-gutterbones [data-layout-key="gamble-card"] button .gamble-readability-line {
+        font-size: max(12px, 0.8125rem) !important;
+    }
+    @media (min-width: 1366px) {
+        #root-gutterbones [data-layout-key="gamble-card"] button .gamble-readability-line,
+        #root-gutterbones [data-layout-key="gamble-card"] .gamble-readability-line {
+            font-size: 12px !important;
+        }
     }
     #root-gutterbones .safehouse-screen {
         background: transparent !important;
@@ -3260,6 +3313,16 @@
     }
     #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-stats-row {
         flex-shrink: 0;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-btn-secondary {
+        background: #1a1510 !important;
+        color: #d6b85c !important;
+        border: 2px solid rgba(199, 139, 22, 0.65) !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-btn-secondary:hover {
+        background: #2a2114 !important;
+        color: #f5ecd6 !important;
+        border-color: #c78b16 !important;
     }
     #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
     #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
@@ -11724,7 +11787,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 </div>
             </div>
         );
-        const host = typeof document !== 'undefined' ? document.body : null;
+        const host = typeof document !== 'undefined' ? document.getElementById('root-gutterbones') : null;
         return host ? ReactDOM.createPortal(overlay, host) : overlay;
     };
 
@@ -21740,7 +21803,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-3 border-t border-black/20 mt-2">
                                 <button onClick={() => { setLoreTab('bosses'); setShowLorePanel(true); }} className="px-8 py-3 bg-[#2a0017] text-[#ff9fcf] font-bold font-mono border-2 border-[#7a003d] hover:bg-[#3b0120] transition-colors">STREET INTEL</button>
-                                <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                                <button onClick={() => setPhase('LINEUP')} className="safehouse-btn-secondary px-8 py-3 font-bold font-mono transition-colors">BACK TO LINEUP</button>
                             </div>
                         </div>
                     </div>
