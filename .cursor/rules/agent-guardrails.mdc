@@ -1,0 +1,20 @@
+---
+description: Gutterbones safe agent workflow, protected baselines, diagnostics and artwork
+alwaysApply: true
+globs: ""
+---
+
+# Gutterbones 1977 — Cursor guardrails
+
+Read AGENTS.md and docs/testing.md first. This is intentionally a single-file browser game. The Phase 7 Vite/module split is deferred; do not refactor the monolith or add runtime dependencies unless Luke explicitly authorizes it.
+
+- Establish branch, baseline commit, gameplay rules, tests and expected visual outcome before edits. Keep changes scoped and reversible.
+- Keep investigation, measurement repair, balance tuning, visual polish and architecture tasks separate. Never convert a diagnostics-only task into a gameplay patch.
+- Make experiments reproducible: record rules/policy/diagnostics commits, scenario, seed, profile, budget, coverage denominator, result and evidence. Distinguish verified, reported, hypothetical and tentative observations. Leave unknown fields blank.
+- Preserve holdouts 55–59; do not consume, rerun or repurpose them without explicit authorization and a recorded decision.
+- Prefer scripted checks, seeded simulations and reusable fixtures over repeated AI gameplay loops. Start with npm run check:fast; run npm test, npm run sim:50, browser/layout checks and manual visual QA based on changed behavior and docs/testing.md.
+- A green unit test cannot establish browser rendering, animation, saves or playability. Known-issue reproduction does not mean fixed.
+- Import only approved externally prepared artwork. Cursor may handle paths, sizing, transparency checks, sprite/animation integration and QA but should not improvise replacement visual assets.
+- Preserve save schema, accessibility, mobile usability, boss flow and runtime CDN assumptions unless explicitly in scope.
+- No multiplayer, accounts, backend, extra modes, balancing decisions, releases or deployments without approval.
+- Handoff: branch/commit, changed files, tests/outcomes, screenshots/traces when relevant, defects, deferred decisions and approval required.
