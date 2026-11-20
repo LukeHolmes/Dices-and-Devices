@@ -14,6 +14,25 @@ const label = process.argv[3] || 'after';
 const OUT = '/opt/cursor/artifacts';
 fs.mkdirSync(OUT, { recursive: true });
 
+const CAPTURE_UNSCROLL_CSS = `
+  html, body { height: auto !important; max-height: none !important; overflow: visible !important; }
+  #root-gutterbones[data-phase="SHOP"] .gb-screen {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+    position: relative !important;
+    bottom: auto !important;
+  }
+  #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+`;
+
 const PORT = 8824 + Math.floor(Math.random() * 50);
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
@@ -77,6 +96,77 @@ async function openPage() {
   return page;
 }
 
+async function injectShopUnscroll(page) {
+  await page.evaluate((css) => {
+    document.getElementById('__gb_capture_unscroll')?.remove();
+    const tag = document.createElement('style');
+    tag.id = '__gb_capture_unscroll';
+    tag.textContent = css;
+    document.head.appendChild(tag);
+    window.scrollTo(0, 0);
+    const screen = document.querySelector('#root-gutterbones[data-phase="SHOP"] .gb-screen');
+    if (screen instanceof HTMLElement) screen.scrollTop = 0;
+  }, CAPTURE_UNSCROLL_CSS);
+}
+
+async function measureShopTallHeight(page) {
+  return page.evaluate(() => {
+    const screen = document.querySelector('#root-gutterbones[data-phase="SHOP"] .gb-screen');
+    const layout = document.querySelector('[data-layout-key="shop-layout"]');
+    const footer = document.querySelector('[data-layout-key="shop-stash-panel"]');
+    const hit = document.querySelector('[data-layout-key="shop-hit-streets"]');
+    const pad = 36;
+    const tops = [];
+    if (screen instanceof HTMLElement) tops.push(screen.getBoundingClientRect().top);
+    if (layout instanceof HTMLElement) tops.push(layout.getBoundingClientRect().top);
+    const anchorTop = tops.length ? Math.min(...tops) : 0;
+  const bottoms = [];
+    if (footer instanceof HTMLElement) bottoms.push(footer.getBoundingClientRect().bottom);
+    if (hit instanceof HTMLElement) bottoms.push(hit.getBoundingClientRect().bottom);
+    if (layout instanceof HTMLElement) bottoms.push(layout.getBoundingClientRect().bottom);
+    const docBottom = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+      screen instanceof HTMLElement ? screen.scrollHeight + anchorTop : 0,
+    );
+    bottoms.push(docBottom);
+    const anchorBottom = Math.max(...bottoms, anchorTop + 400);
+    const height = Math.min(16000, Math.ceil(anchorBottom - anchorTop + pad));
+    const footerBottom = footer instanceof HTMLElement ? footer.getBoundingClientRect().bottom : anchorBottom;
+    return { height, anchorTop, footerBottom, hitVisible: hit instanceof HTMLElement };
+  });
+}
+
+async function assertFooterInViewport(page, name, viewportHeight) {
+  const check = await page.evaluate(() => {
+    const footer = document.querySelector('[data-layout-key="shop-stash-panel"]');
+    const hit = document.querySelector('[data-layout-key="shop-hit-streets"]');
+    const bar = footer?.querySelector('.h-4.bg-black');
+    const filled = footer ? [...footer.querySelectorAll('.h-4.bg-black .rounded-sm')].filter((el) => {
+      const bg = getComputedStyle(el).backgroundColor;
+      return bg && bg !== 'rgb(55, 65, 81)' && !bg.includes('128, 128, 128');
+    }).length : 0;
+    const fr = footer?.getBoundingClientRect();
+    const hr = hit?.getBoundingClientRect();
+    return {
+      vh: window.innerHeight,
+      footerBottom: fr?.bottom ?? null,
+      hitBottom: hr?.bottom ?? null,
+      stashFilledSegs: filled,
+    };
+  });
+  const limit = viewportHeight;
+  if (check.footerBottom == null || check.footerBottom > limit + 1.5) {
+    throw new Error(
+      `${name}: footer bottom ${check.footerBottom} exceeds capture height ${limit} (vh=${check.vh})`,
+    );
+  }
+  if (check.hitBottom != null && check.hitBottom > limit + 1.5) {
+    throw new Error(`${name}: HIT THE STREETS bottom ${check.hitBottom} exceeds capture height ${limit}`);
+  }
+  return check;
+}
+
 async function capture1920() {
   const page = await openPage();
   await bootPlay(page, { width: 1920, height: 1080 });
@@ -102,9 +192,7 @@ async function bootShop(page, vp) {
   await page.setViewportSize(vp);
   await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 180_000 });
   await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 180_000 });
-  const payload = plain(
-    createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.shopBusy()),
-  );
+  const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.shopBusy()));
   await page.evaluate(
     ({ key, data }) => {
       localStorage.setItem(
@@ -131,47 +219,38 @@ async function captureShop(vp, name) {
     if (screen instanceof HTMLElement) screen.scrollTop = 0;
   });
   await page.waitForTimeout(150);
-  await page.screenshot({ path: path.join(OUT, `${label}_${name}_shop.png`) });
+  const outPath = path.join(OUT, `${label}_${name}_shop.png`);
+  await page.screenshot({ path: outPath });
   await page.close();
+  return outPath;
 }
 
 async function captureShopTall(vp, name) {
   const page = await openPage();
   await bootShop(page, vp);
-  const shotHeight = await page.evaluate(() => {
-    document.getElementById('__gb_capture_unscroll')?.remove();
-    const tag = document.createElement('style');
-    tag.id = '__gb_capture_unscroll';
-    tag.textContent = `
-      html, body { height: auto !important; max-height: none !important; overflow: visible !important; }
-      #root-gutterbones[data-phase="SHOP"] .gb-screen {
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        overflow: visible !important;
-      }
-    `;
-    document.head.appendChild(tag);
-    window.scrollTo(0, 0);
-    const screen = document.querySelector('#root-gutterbones[data-phase="SHOP"] .gb-screen');
-    if (screen instanceof HTMLElement) screen.scrollTop = 0;
-    const hit = document.querySelector('[data-layout-key="shop-hit-streets"]');
-    const layout = document.querySelector('[data-layout-key="shop-layout"]');
-    const anchorTop = screen instanceof HTMLElement ? screen.getBoundingClientRect().top : 0;
-    const anchorBottom = hit
-      ? hit.getBoundingClientRect().bottom
-      : (layout?.getBoundingClientRect().bottom ?? anchorTop + 2400);
-    const pad = 28;
-    return Math.min(16000, Math.max(window.innerHeight, Math.ceil(anchorBottom - anchorTop + pad)));
-  });
-  await page.setViewportSize({ width: vp.width, height: shotHeight });
-  await page.waitForTimeout(200);
-  await page.screenshot({
-    path: path.join(OUT, `${label}_${name}_shop.png`),
-    fullPage: false,
-  });
+  await injectShopUnscroll(page);
+  await page.waitForTimeout(150);
+  let metrics = await measureShopTallHeight(page);
+  let shotHeight = Math.max(metrics.height, vp.height);
+  for (let i = 0; i < 3; i++) {
+    await page.setViewportSize({ width: vp.width, height: shotHeight });
+    await page.waitForTimeout(200);
+    await injectShopUnscroll(page);
+    metrics = await measureShopTallHeight(page);
+    const next = Math.max(metrics.height, vp.height);
+    if (next <= shotHeight + 2) break;
+    shotHeight = next;
+  }
+  await assertFooterInViewport(page, name, shotHeight);
+  const outPath = path.join(OUT, `${label}_${name}_shop.png`);
+  await page.screenshot({ path: outPath, fullPage: false });
+  const finalCheck = await page.evaluate(() => document.querySelector('[data-layout-key="shop-stash-panel"]')?.getBoundingClientRect().bottom);
+  if (finalCheck != null && finalCheck > shotHeight + 1.5) {
+    throw new Error(`${name}: post-shot footer bottom ${finalCheck} > ${shotHeight}`);
+  }
   await page.evaluate(() => document.getElementById('__gb_capture_unscroll')?.remove());
   await page.close();
+  return { outPath, shotHeight, footerBottom: finalCheck, stashSegs: metrics };
 }
 
 async function capture390Drawer() {
@@ -187,10 +266,15 @@ async function capture390Drawer() {
   await page.close();
 }
 
-if (process.env.CAPTURE_SHOP_ONLY === '1') {
-  await captureShopTall({ width: 390, height: 844 }, '390x844');
-  await captureShopTall({ width: 768, height: 1024 }, '768x1024');
+const round9 = process.env.CAPTURE_ROUND9 === '1' || process.env.CAPTURE_SHOP_ONLY === '1';
+
+if (round9) {
+  const tall390 = await captureShopTall({ width: 390, height: 844 }, '390x844');
+  const tall768 = await captureShopTall({ width: 768, height: 1024 }, '768x1024');
   await captureShop({ width: 1024, height: 768 }, '1024x768');
+  await captureShop({ width: 1366, height: 768 }, '1366x768');
+  await captureShop({ width: 1920, height: 1080 }, '1920x1080');
+  console.log('tall', JSON.stringify({ tall390, tall768 }));
 } else {
   await capture1920();
   await captureShop({ width: 1920, height: 1080 }, '1920x1080');
