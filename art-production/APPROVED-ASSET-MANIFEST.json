@@ -1,0 +1,85 @@
+{
+  "title": "Gutterbones 1977 — approved character and rat animation GitHub archive",
+  "date": "2026-11-17",
+  "repository": "LukeHolmes/Dices-and-Devices",
+  "source_library": "/Projects/Gutterbones-1977-Art-Project/",
+  "source_library_full_resolution_portraits": "1086×1448 PNG (retained unchanged in ChatGPT Library)",
+  "github_portrait_exports": "900×1200 WebP, quality 90, 3:4 aspect ratio",
+  "library_original_bundle": "00_Project-Docs/Gutterbones-1977-GitHub-Import-Bundle.zip",
+  "library_bundle_sha256": "ecf5e2f3688298d03d03beeb9da42894637cc9e9bcab1262cede4db29221961f",
+  "integration_status": "ARCHIVED_ON_BRANCH_NOT_GAME_INTEGRATED",
+  "files": [
+    {
+      "path": "art-production/01_Characters/Bosses/loan-shark.webp",
+      "status": "approved",
+      "git_blob_sha1": "7cb2b760a67f91139d2cbb17812cdde7f6945418",
+      "source_png_library_path": "01_Characters/Bosses/loan-shark.png"
+    },
+    {
+      "path": "art-production/01_Characters/Bosses/junkie.webp",
+      "status": "approved",
+      "git_blob_sha1": "1c4da290bb9f866b2f41c6ded6b2ecf4e180d31c",
+      "source_png_library_path": "01_Characters/Bosses/junkie.png"
+    },
+    {
+      "path": "art-production/01_Characters/Bosses/crooked-cop.webp",
+      "status": "approved",
+      "git_blob_sha1": "1955607a8a6c2c9dac9ef183dcdabdaf88769595",
+      "source_png_library_path": "01_Characters/Bosses/crooked-cop.png"
+    },
+    {
+      "path": "art-production/01_Characters/Bosses/informant.webp",
+      "status": "approved",
+      "git_blob_sha1": "270daa92a384ff27d28885b47c98fc6da6488b9d",
+      "source_png_library_path": "01_Characters/Bosses/informant.png"
+    },
+    {
+      "path": "art-production/01_Characters/Bosses/the-raid.webp",
+      "status": "approved",
+      "git_blob_sha1": "4cdcfa047c4317ada4056fbcac74dd39144eda05",
+      "source_png_library_path": "01_Characters/Bosses/the-raid.png"
+    },
+    {
+      "path": "art-production/01_Characters/Playable/Review-Candidates/grinder.webp",
+      "status": "review_candidate",
+      "git_blob_sha1": "c2ef2b758caaef2e93f806870716de5a2c37a0cd",
+      "source_png_library_path": "01_Characters/Playable/Review-Candidates/grinder.png"
+    },
+    {
+      "path": "art-production/05_Animations/Ambient/alley-rat-8frame-game-ready.png",
+      "status": "archived",
+      "git_blob_sha1": "163c47dc36fc923853456c9f6ac6ac0c3f6d2eed"
+    },
+    {
+      "path": "art-production/05_Animations/Ambient/alley-rat-8frame-horizontal.png",
+      "status": "archived",
+      "git_blob_sha1": "e2e3159c7d03605ea94f8796a4fca2fa55e4636f"
+    },
+    {
+      "path": "art-production/05_Animations/Ambient/alley-rat-80px-loop.webp",
+      "status": "archived",
+      "git_blob_sha1": "d5f1c2f69187259fbc95793abf1a025dc6f96f16"
+    },
+    {
+      "path": "art-production/05_Animations/Ambient/alley-rat-preview.apng",
+      "status": "archived",
+      "git_blob_sha1": "80db2fd326e03f793adc14d888d2a8436efd6878"
+    },
+    {
+      "path": "art-production/05_Animations/Ambient/alley-rat-preview.gif",
+      "status": "archived",
+      "git_blob_sha1": "0ca2b62621cbff1eafe77a138aebaa83b986a099"
+    },
+    {
+      "path": "art-production/05_Animations/Ambient/alley-rat-size-reference.png",
+      "status": "archived",
+      "git_blob_sha1": "6f1041520cef77cc7c03031e415b142100de8a51"
+    }
+  ],
+  "notes": [
+    "Approved boss portraits: Loan Shark, Junkie, Crooked Cop, Informant, The Raid.",
+    "The Grinder has NOT received explicit image approval and is a review candidate only.",
+    "No live runtime files under assets/bosses, assets/personas or assets/scenes are modified.",
+    "For pixel-exact original PNGs, use the ChatGPT Library bundle rather than WebP previews."
+  ]
+}
