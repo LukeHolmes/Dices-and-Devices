@@ -291,29 +291,59 @@ async function bootPlayMinimal(page, vp) {
 }
 
 async function captureFinalArtScreens() {
-  const vp = { width: 1920, height: 1080 };
-  const page = await openPage();
-  await bootPlayMinimal(page, vp);
-  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openBossIntroFor('BOUNCER'));
-  await page.waitForSelector('[data-layout-key="boss-intro-overlay"]', { timeout: 10_000 });
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_boss-intro.png`) });
-  const gamblePayload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.gamble()));
-  await page.evaluate(
-    ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
-    { key: 'gutterbones1977:run:v1', data: gamblePayload },
-  );
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
-  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
-  await page.waitForSelector('[data-layout-key="gamble-card"]', { timeout: 10_000 });
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_gamble-modal.png`) });
-  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSafehouseDemo());
-  await page.waitForSelector('[data-layout-key="safehouse-card"]', { timeout: 10_000 });
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_safehouse-nightclub.png`) });
-  await page.close();
+  for (const [vp, name] of [
+    [{ width: 1920, height: 1080 }, '1920x1080'],
+    [{ width: 1366, height: 768 }, '1366x768'],
+  ]) {
+    const page = await openPage();
+    await bootPlayMinimal(page, vp);
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openBossIntroFor('BOUNCER'));
+    await page.waitForSelector('[data-layout-key="boss-intro-overlay"]', { timeout: 10_000 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(OUT, `${label}_${name}_boss-intro.png`) });
+    await page.close();
+  }
+  for (const [safeVp, safeName] of [
+    [{ width: 1920, height: 1080 }, '1920x1080'],
+    [{ width: 1366, height: 768 }, '1366x768'],
+    [{ width: 390, height: 844 }, '390x844'],
+  ]) {
+    const safePage = await openPage();
+    await safePage.setViewportSize(safeVp);
+    await bootPlayMinimal(safePage, safeVp);
+    await safePage.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSafehouseDemo());
+    await safePage.waitForSelector('[data-layout-key="safehouse-card"]', { timeout: 10_000 });
+    await safePage.waitForTimeout(400);
+    await safePage.screenshot({ path: path.join(OUT, `${label}_${safeName}_safehouse-nightclub.png`) });
+    await safePage.close();
+  }
+  for (const [gVp, gName] of [
+    [{ width: 1920, height: 1080 }, '1920x1080'],
+    [{ width: 1366, height: 768 }, '1366x768'],
+  ]) {
+    const gPage = await openPage();
+    const gamblePayload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.gamble()));
+    await gPage.setViewportSize(gVp);
+    await gPage.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 180_000 });
+    await gPage.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 180_000 });
+    await gPage.evaluate(
+      ({ key, data }) => {
+        localStorage.setItem(
+          'gutterbones1977:settings:v1',
+          JSON.stringify({ pacing: 'fast', reducedMotion: true, tutorialCompleted: true, skippedAlleyIntro: true }),
+        );
+        localStorage.setItem(key, JSON.stringify(data));
+      },
+      { key: 'gutterbones1977:run:v1', data: gamblePayload },
+    );
+    await gPage.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
+    await gPage.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+    await gPage.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+    await gPage.waitForSelector('[data-layout-key="gamble-card"]', { timeout: 10_000 });
+    await gPage.waitForTimeout(300);
+    await gPage.screenshot({ path: path.join(OUT, `${label}_${gName}_gamble-modal.png`) });
+    await gPage.close();
+  }
 }
 
 if (shopCaptureAll) {
