@@ -19788,11 +19788,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 <div className="shop-fixter-line mb-3 text-[10px] font-mono text-gray-400 border border-gray-800 rounded px-2 py-1 bg-black/30">{fixerLine}</div>
                                 <div className="shop-options-block mb-4 border border-gray-800 rounded p-3 bg-black/40">
                                     <div className="font-mono text-xs tracking-wider text-[#0df] mb-2">SHOP OPTIONS</div>
-                                    <button type="button" data-layout-key="shop-refresh-stock" onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-3 px-3 min-h-[44px] border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    <button type="button" data-layout-key="shop-refresh-stock" title="Tip the dealer — cycle fresh alley stock" onClick={refreshShop} disabled={gold < shopRefreshCost} className="w-full py-3 px-3 min-h-[44px] border border-[#0df] text-[#0df] font-mono text-xs flex justify-between items-center bg-black/30 hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed">
                                         <span>REFRESH STOCK</span>
                                         <span>${shopRefreshCost}</span>
                                     </button>
-                                    <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
+                                    <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes} · Tip the dealer</div>
                                     <div className="mt-3 border-t border-gray-800 pt-3 shop-options-fence max-h-[5.5rem] overflow-hidden">
                                         <div className="font-mono text-[10px] text-gray-400 mb-2">FENCE HARDWARE</div>
                                         {inventory.length === 0 ? (
