@@ -1492,7 +1492,7 @@
         transform-origin: top center;
     }
     #root-gutterbones .boss-intro-card .boss-intro-turf-label {
-        color: #fca5a5;
+        color: #c9a227;
     }
     #root-gutterbones .boss-intro-card .boss-intro-desc {
         color: #e5e7eb;
@@ -1524,6 +1524,9 @@
         max-height: calc(100dvh - 2rem);
         overflow: hidden;
         box-sizing: border-box;
+    }
+    #root-gutterbones .boss-intro-card.gb-modal-shop-chrome {
+        overflow: visible;
     }
     #root-gutterbones [data-layout-key="shop-refresh-stock"] {
         min-height: 2.75rem !important;
@@ -2372,10 +2375,23 @@
             overflow: hidden;
         }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1024px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
             max-height: min(100%, calc(100dvh - 14.5rem)) !important;
+            overflow: hidden !important;
+            display: flex;
+            flex-direction: column;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            min-height: 0 !important;
+            max-height: min(100%, calc(100dvh - 14.5rem)) !important;
+            overflow: hidden;
+        }
+    }
+    @media (min-width: 1024px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            min-height: 0 !important;
             overflow: hidden !important;
             display: flex;
             flex-direction: column;
@@ -2389,7 +2405,6 @@
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             min-height: 0 !important;
-            max-height: min(100%, calc(100dvh - 14.5rem)) !important;
             overflow: hidden;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-route-card--compact,
@@ -2422,7 +2437,6 @@
             flex-direction: column !important;
             overflow: hidden !important;
             min-height: 0 !important;
-            max-height: min(100%, calc(100dvh - 9.5rem)) !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
             flex: 1 1 auto !important;
@@ -2436,7 +2450,6 @@
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
             flex: 0 1 auto !important;
             min-height: 0 !important;
-            max-height: min(34vh, 18.5rem) !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             overscroll-behavior: contain;
@@ -2452,7 +2465,7 @@
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
             transform: none !important;
             flex: 1 1 auto !important;
-            min-height: min(26vh, 10.5rem) !important;
+            min-height: 8rem !important;
             overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
@@ -2463,7 +2476,7 @@
             overscroll-behavior: contain;
             scrollbar-width: thin;
             scrollbar-gutter: stable;
-            padding-inline-end: 0.35rem;
+            padding-inline: 0.45rem 0.35rem;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list::-webkit-scrollbar {
             width: 8px;
@@ -2517,15 +2530,106 @@
         }
     }
     @media (min-width: 1024px) and (min-height: 821px) {
+        #root-gutterbones[data-phase="SHOP"] .gb-screen {
+            flex: 1 1 auto;
+            min-height: 0;
+            height: 100dvh;
+            max-height: 100dvh;
+            box-sizing: border-box;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
+            height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
+            max-height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
+            align-items: stretch !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"],
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            max-height: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            flex: 1 1 0% !important;
+            align-self: stretch !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            min-height: auto !important;
+            max-height: none !important;
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence .space-y-2 {
+            max-height: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+            display: flex;
+            flex-direction: column;
+            flex: 0 0 auto !important;
+            min-height: auto !important;
+            max-height: none;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
+            flex: 0 0 auto !important;
+            min-height: auto !important;
+            max-height: min(12rem, 30vh) !important;
+            overflow-y: auto;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            flex: 1 1 0 !important;
+            min-height: 8rem !important;
+            max-height: none !important;
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            flex: 1 1 auto !important;
+            min-height: 5.5rem !important;
+            max-height: none !important;
+            overflow-y: auto !important;
+        }
+    }
+    @media (min-width: 1366px) and (min-height: 821px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            max-height: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            min-height: 14rem !important;
+        }
+    }
+    @media (min-width: 1024px) and (max-height: 820px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            overflow-x: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            padding-inline: 0.55rem 0.35rem;
+            overflow-x: visible;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+            margin-inline: 1px;
+        }
+    }
+    @media (min-width: 1024px) and (min-height: 821px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             min-height: 0 !important;
-            max-height: min(100%, calc(100dvh - 14.5rem)) !important;
+            max-height: 100% !important;
+            height: 100% !important;
             overflow: hidden !important;
             display: flex;
             flex-direction: column;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            flex: 1 1 auto;
+            flex: 1 1 0 !important;
             min-height: 0;
             overflow-x: hidden;
             overflow-y: hidden !important;
@@ -2533,7 +2637,8 @@
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             min-height: 0 !important;
-            max-height: min(100%, calc(100dvh - 14.5rem)) !important;
+            max-height: 100% !important;
+            height: 100% !important;
             overflow: hidden;
         }
     }
@@ -3044,6 +3149,179 @@
       background-size: cover;
       background-position: center 42%;
       background-repeat: no-repeat;
+    }
+    #root-gutterbones .nightclub-backroom-backdrop {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(180deg, rgba(6, 4, 10, 0.82) 0%, rgba(14, 8, 18, 0.55) 40%, rgba(4, 2, 8, 0.88) 100%),
+        url('assets/art/scenes/nightclub-backroom.webp');
+      background-size: cover;
+      background-position: center 36%;
+      background-repeat: no-repeat;
+    }
+    #root-gutterbones .boss-intro-vignette {
+        background:
+            radial-gradient(ellipse 92% 82% at 50% 42%, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.62) 52%, rgba(0, 0, 0, 0.86) 100%),
+            linear-gradient(180deg, rgba(58, 10, 18, 0.38) 0%, rgba(0, 0, 0, 0.15) 38%, rgba(0, 0, 0, 0.12) 62%, rgba(32, 6, 12, 0.42) 100%);
+        pointer-events: auto;
+    }
+    #root-gutterbones .boss-intro-card.gb-modal-shop-chrome {
+        --shop-card-slice: 112;
+        --shop-card-border: clamp(10px, 2.5vw, 14px);
+        position: relative;
+        width: 100%;
+        min-width: min(100%, 18rem);
+        max-width: 100%;
+        box-sizing: border-box !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        border: var(--shop-card-border) solid transparent !important;
+        border-image-slice: var(--shop-card-slice) fill !important;
+        border-image-width: var(--shop-card-border) !important;
+        border-image-repeat: stretch !important;
+        border-image-source: url('assets/art/shop/standard-frame.webp') !important;
+        background-color: rgba(18, 17, 19, 0.94) !important;
+        background-clip: padding-box !important;
+        color: #f5ecd6;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+        isolation: isolate;
+    }
+    #root-gutterbones .boss-intro-card.gb-modal-shop-chrome > * {
+        position: relative;
+        z-index: 1;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-turf-plate {
+        width: min(100%, 14rem);
+        margin-inline: auto;
+        margin-bottom: 0.75rem;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-turf-plate .shop-section-header__label {
+        font-size: max(11px, 0.6875rem) !important;
+        line-height: 1.25 !important;
+        color: #1a1204 !important;
+        letter-spacing: 0.18em;
+        font-weight: 800 !important;
+        white-space: normal;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-name-plate {
+        margin-bottom: 0.75rem;
+        width: min(100%, 20rem);
+        max-width: 20rem;
+        margin-inline: auto;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-name-plate .shop-section-header__label {
+        font-size: clamp(1.35rem, 4.2vw, 2.35rem);
+        letter-spacing: 0.06em;
+        white-space: normal;
+        line-height: 1.1;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-desc {
+        color: #e8dfd0 !important;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-quota {
+        color: #fbbf24 !important;
+    }
+    #root-gutterbones .gb-modal-shop-chrome {
+        --shop-card-slice: 112;
+        --shop-card-border: clamp(10px, 2.2vw, 14px);
+        position: relative;
+        z-index: 10;
+        border: var(--shop-card-border) solid transparent !important;
+        border-image-slice: var(--shop-card-slice) fill;
+        border-image-width: var(--shop-card-border);
+        border-image-repeat: stretch;
+        border-image-source: url('assets/art/shop/standard-frame.webp');
+        background-color: rgba(18, 17, 19, 0.94) !important;
+        color: #f5ecd6;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+        box-sizing: border-box;
+    }
+    #root-gutterbones .gb-modal-shop-chrome.gb-modal-shop-chrome--glass {
+        background-color: rgba(12, 11, 13, 0.82) !important;
+    }
+    #root-gutterbones .gb-modal-shop-chrome .font-marker,
+    #root-gutterbones .gb-modal-shop-chrome h2.font-marker {
+        color: #f5ecd6;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.65);
+    }
+    #root-gutterbones .gb-modal-shop-chrome .font-mono {
+        color: #d6c9b0;
+    }
+    #root-gutterbones .gb-modal-shop-chrome .gb-modal-body {
+        color: #e8dfd0;
+    }
+    #root-gutterbones .gb-modal-shop-chrome.gamble-card-tone h2.font-marker {
+        color: #ff9fcf !important;
+    }
+    #root-gutterbones [data-layout-key="gamble-card"] .shop-section-header {
+        width: 17.5rem !important;
+        max-width: min(100%, 17.5rem) !important;
+        min-width: 12rem !important;
+        margin-inline: auto !important;
+        flex: 0 0 auto !important;
+        align-self: center !important;
+        min-height: 2.75rem !important;
+        padding: 0.5rem 1.75rem !important;
+        box-sizing: border-box !important;
+    }
+    #root-gutterbones [data-layout-key="gamble-card"] .shop-section-header__label {
+        font-size: max(13px, 0.8125rem) !important;
+        color: #1a1204 !important;
+        white-space: normal !important;
+        line-height: 1.3 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+    #root-gutterbones [data-layout-key="gamble-card"] .gamble-readability-line {
+        font-size: max(12px, 0.8125rem) !important;
+        line-height: 1.35 !important;
+    }
+    #root-gutterbones [data-layout-key="gamble-card"] button .gamble-readability-line {
+        font-size: max(12px, 0.8125rem) !important;
+    }
+    @media (min-width: 1366px) {
+        #root-gutterbones [data-layout-key="gamble-card"] button .gamble-readability-line,
+        #root-gutterbones [data-layout-key="gamble-card"] .gamble-readability-line {
+            font-size: 12px !important;
+        }
+    }
+    #root-gutterbones .safehouse-screen {
+        background: transparent !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .paper-card {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(214, 184, 92, 0.45) !important;
+        color: #f5ecd6;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .border-black,
+    #root-gutterbones [data-layout-key="safehouse-card"] .border-b-2 {
+        border-color: rgba(214, 184, 92, 0.35) !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .text-green-800,
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-cash-total {
+        color: #86efac !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-buy-btn:disabled {
+        background: #1a1510 !important;
+        border-color: rgba(120, 100, 72, 0.55) !important;
+        color: rgba(214, 184, 92, 0.72) !important;
+        opacity: 1 !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-stats-row {
+        flex-shrink: 0;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-btn-secondary {
+        background: #1a1510 !important;
+        color: #d6b85c !important;
+        border: 2px solid rgba(199, 139, 22, 0.65) !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-btn-secondary:hover {
+        background: #2a2114 !important;
+        color: #f5ecd6 !important;
+        border-color: #c78b16 !important;
     }
     #root-gutterbones .ambient-grain { position: absolute; inset: -20px; pointer-events: none; z-index: 1; opacity: .16; mix-blend-mode: soft-light; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 1px, transparent 1.6px), radial-gradient(circle at 60% 40%, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 1px, transparent 1.6px), radial-gradient(circle at 80% 70%, rgba(0,0,0,.45) 0, rgba(0,0,0,.45) 1.3px, transparent 1.9px); background-size: 4px 4px, 6px 6px, 7px 7px; animation: grainShift .12s steps(3) infinite; }
     #root-gutterbones .ambient-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 18%, rgba(0,0,0,.3) 58%, rgba(0,0,0,.68) 100%); }
@@ -11462,9 +11740,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 aria-modal="true"
             >
                 <div className="boss-intro-backdrop pointer-events-none" aria-hidden></div>
-                <div className="absolute inset-0 bg-black/55 pointer-events-auto z-[1]" aria-hidden="true"></div>
-                {!reducedMotion && <div className="absolute top-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-top z-[2] pointer-events-none"></div>}
-                {!reducedMotion && <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-red-900/40 boss-blind-bottom z-[2] pointer-events-none"></div>}
+                <div className="absolute inset-0 boss-intro-vignette z-[1]" aria-hidden="true"></div>
                 <div className="boss-intro-fit-wrap relative z-[3] pointer-events-auto" style={fitScale < 0.995 ? { zoom: fitScale } : undefined}>
                     <div
                         ref={cardRef}
@@ -11481,12 +11757,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 onDone();
                             }
                         }}
-                        className="boss-intro-card border-4 border-red-700 bg-[#141018] p-8 w-full text-center shadow-2xl relative overflow-hidden pointer-events-auto cursor-pointer"
+                        className="boss-intro-card p-8 w-full max-w-md text-center shadow-2xl relative border-0 rounded-none pointer-events-auto cursor-pointer gb-modal-shop-chrome"
                         style={{ animation: reducedMotion ? 'none' : 'bossIntro .35s ease-out forwards' }}
                     >
                         <BossPortrait boss={boss} variant="intro" />
-                        <div className="boss-intro-turf-label font-mono tracking-[.4em] text-xs mb-3">TURF WAR</div>
-                        <h2 className={`${boss.color} font-marker text-5xl mb-3 min-h-[3rem] drop-shadow-[0_1px_0_rgba(0,0,0,0.85)]`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
+                        <div className="shop-section-header boss-intro-turf-plate">
+                            <span className="shop-section-header__label">TURF WAR</span>
+                        </div>
+                        <div className="shop-section-header boss-intro-name-plate mx-auto">
+                            <h2 className={`shop-section-header__label ${boss.color}`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
+                        </div>
                         <p className={`boss-intro-desc font-mono transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
                         <p className="boss-intro-quota font-mono text-xs mt-3">Quota: {target}</p>
                         <p className="font-mono text-[10px] text-red-200 mt-2">{microByBoss[boss.id]}</p>
@@ -11508,7 +11788,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 </div>
             </div>
         );
-        const host = typeof document !== 'undefined' ? document.body : null;
+        const host = typeof document !== 'undefined' ? document.getElementById('root-gutterbones') : null;
         return host ? ReactDOM.createPortal(overlay, host) : overlay;
     };
 
@@ -19929,6 +20209,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         setBossIntro(boss);
                     }
                 },
+                openSafehouseDemo: () => {
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setPhase('SAFEHOUSE');
+                },
+                openGambleDemo: () => {
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setPhase('GAMBLE');
+                },
                 pushToast: (payload) => pushToast(payload),
                 getPhase: () => phase,
                 getMeta: () => ({ ...meta }),
@@ -21480,12 +21770,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 )}
 
                 {phase === 'SAFEHOUSE' && (
-                    <div className="gb-screen relative z-30 flex p-[var(--gb-pad)] bg-black/50 items-center justify-center">
-                        <div data-layout-key="safehouse-card" className="gb-modal-fit w-full max-w-5xl max-h-[min(92dvh,720px)] bg-[#E2D1B8] text-black border-l-[18px] border-[#c4b59d] shadow-[10px_20px_30px_black] p-4 md:p-6 mx-auto flex flex-col overflow-hidden">
+                    <div className="gb-screen safehouse-screen relative z-30 flex p-[var(--gb-pad)] items-center justify-center overflow-hidden">
+                        <div className="nightclub-backroom-backdrop scene-backdrop-fade" aria-hidden />
+                        <div data-layout-key="safehouse-card" className="gb-modal-fit gb-modal-shop-chrome gb-modal-shop-chrome--glass w-full max-w-5xl max-h-[min(92dvh,720px)] text-[#f5ecd6] border-0 shadow-[10px_20px_30px_black] p-4 md:p-6 mx-auto flex flex-col overflow-hidden relative z-10">
                             <div className="gb-modal-body pr-1 min-h-0 flex-1 overflow-y-auto">
                             <div className="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-black pb-4 mb-6 gap-3">
                                 <div><div className="font-marker text-4xl md:text-5xl">THE SAFEHOUSE</div><div className="font-mono text-sm opacity-70">Spend laundered cash on permanent contacts.</div></div>
-                                <div className="font-mono text-2xl text-green-800 font-bold">${meta.launderedCash}</div>
+                                <div className="font-mono text-2xl safehouse-cash-total font-bold">${meta.launderedCash}</div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-4 mb-6">
                                 {SAFEHOUSE_UPGRADES.map(upgrade => {
@@ -21500,20 +21791,20 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             {upgrade.id === 'fixer-network' && (
                                                 <div className="font-mono text-[10px] mt-3 opacity-60">Perk: random blueprint at the start of each run.</div>
                                             )}
-                                            <button onClick={() => purchaseSafehouseUpgrade(upgrade)} disabled={!canBuy} className={`mt-4 w-full py-2 font-mono font-bold border-2 ${bought ? 'border-green-700 text-green-800 bg-green-100' : canBuy ? 'border-black bg-[#c78b16] text-black hover:bg-yellow-500' : 'border-gray-500 text-gray-500 bg-gray-200'}`}>{bought ? 'CONTACT SECURED' : canBuy ? 'PAY THE BRIBE' : 'NEED MORE CASH'}</button>
+                                            <button onClick={() => purchaseSafehouseUpgrade(upgrade)} disabled={!canBuy} className={`safehouse-buy-btn mt-4 w-full py-2 font-mono font-bold border-2 ${bought ? 'border-green-700 text-green-800 bg-green-100' : canBuy ? 'border-black bg-[#c78b16] text-black hover:bg-yellow-500' : 'border-gray-500 text-gray-500 bg-gray-200'}`}>{bought ? 'CONTACT SECURED' : canBuy ? 'PAY THE BRIBE' : 'NEED MORE CASH'}</button>
                                         </div>
                                     );
                                 })}
                             </div>
-                            <div className="grid md:grid-cols-3 gap-3 font-mono text-xs bg-black/10 border border-black/20 p-3 mb-6">
+                            </div>
+                            <div className="safehouse-stats-row grid md:grid-cols-3 gap-3 font-mono text-xs bg-black/35 border border-[#c78b16]/25 p-3 mx-0 mt-2 shrink-0">
                                 <div><b>Personas:</b> {meta.unlockedPersonaIds.length}/{PERSONAS.length}</div>
                                 <div><b>Contraband Faces:</b> {meta.unlockedFaceIds.length}/{Object.keys(FACE_DATABASE).length}</div>
                                 <div><b>Hardware:</b> {meta.unlockedHardwareIds.length}/{Object.keys(DEVISES).length}</div>
                             </div>
-                            </div>
                             <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-3 border-t border-black/20 mt-2">
                                 <button onClick={() => { setLoreTab('bosses'); setShowLorePanel(true); }} className="px-8 py-3 bg-[#2a0017] text-[#ff9fcf] font-bold font-mono border-2 border-[#7a003d] hover:bg-[#3b0120] transition-colors">STREET INTEL</button>
-                                <button onClick={() => setPhase('LINEUP')} className="px-8 py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-[#ff007f] hover:text-white transition-colors">BACK TO LINEUP</button>
+                                <button onClick={() => setPhase('LINEUP')} className="safehouse-btn-secondary px-8 py-3 font-bold font-mono transition-colors">BACK TO LINEUP</button>
                             </div>
                         </div>
                     </div>
@@ -22159,16 +22450,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 {phase === 'GAMBLE' && (
                     <div className="gb-screen items-center justify-center p-[var(--gb-pad)] z-[320] relative">
                         <div className="gamble-backdrop" aria-hidden></div>
-                        <div data-layout-key="gamble-card" className="gb-modal-fit w-full max-w-2xl border-4 border-[#ff007f] bg-[#111] rounded-xl p-4 md:p-8 shadow-2xl relative z-10">
-                            <div className="gb-modal-body pr-1">
-                            <div className="font-mono text-[10px] tracking-[.35em] text-[#0df] mb-2 text-center">SIDE ACTION</div>
+                        <div data-layout-key="gamble-card" className="gb-modal-fit gb-modal-shop-chrome gamble-card-tone w-full max-w-2xl border-0 rounded-none p-4 md:p-8 shadow-2xl relative z-10">
+                            <div className="gb-modal-body pr-1 gamble-readability">
+                            <ShopSectionHeader>SIDE ACTION</ShopSectionHeader>
                             <h2 className="font-marker text-4xl text-center text-[#ff007f] italic mb-3">DOUBLE OR NOTHING</h2>
-                            <p className="font-mono text-xs text-gray-400 text-center mb-2">
+                            <p className="font-mono gamble-readability-line text-gray-400 text-center mb-2">
                                 Base stake from cash: <b className="text-yellow-300">${GutterbonesGamble.baseStake(gold)}</b>
                                 {' '}(22% rate, min ${GAMBLE_TUNING.minStake}, cap ${GAMBLE_TUNING.stakeCap})
                             </p>
                             {flowStreak > 0 && (
-                                <p className="font-mono text-[11px] text-[#0df] text-center mb-2">
+                                <p className="font-mono gamble-readability-line text-[#0df] text-center mb-2">
                                     Flow streak +{GutterbonesGamble.formatWinPercent(GutterbonesGamble.flowWinBonus(flowStreak))} win odds on every tier.
                                 </p>
                             )}
@@ -22179,9 +22470,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 className="w-full py-3 px-2 min-h-[44px] mb-4 border-2 border-gray-600 bg-black/50 text-gray-200 font-mono hover:border-[#0df] text-left"
                             >
                                 <div className="font-bold">TAKE SAFE CUT</div>
-                                <div className="text-[11px] text-gray-400 mt-1">Keep all ${gold}. Enter shop — no flip.</div>
+                                <div className="gamble-readability-line text-gray-400 mt-1">Keep all ${gold}. Enter shop — no flip.</div>
                             </button>
-                            <div className="font-mono text-[10px] tracking-[.2em] text-gray-500 text-center mb-2">PICK YOUR FLIP</div>
+                            <ShopSectionHeader>PICK YOUR FLIP</ShopSectionHeader>
                             <button
                                 type="button"
                                 onClick={resolveGambleBlueprint}
@@ -22189,7 +22480,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 className="w-full py-3 px-2 min-h-[44px] mb-3 border-2 border-fuchsia-600/80 bg-fuchsia-950/30 text-fuchsia-100 font-mono hover:bg-fuchsia-900/40 text-left"
                             >
                                 <div className="font-bold">BLUEPRINT FLIP</div>
-                                <div className="text-[11px] text-gray-300 mt-1">
+                                <div className="gamble-readability-line text-gray-300 mt-1">
                                     Fair odds — stake ${GutterbonesGamble.stakeForTier(gold, 'FAIR')} · win a random blueprint or lose stake
                                 </div>
                             </button>
@@ -22208,10 +22499,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                             className="py-3 px-2 min-h-[44px] border-2 border-[#ff007f]/70 bg-[#2a0017] text-[#ff9fcf] font-mono hover:bg-[#3b0120] text-left"
                                         >
                                             <div className="font-bold text-sm">{tier.name.toUpperCase()}</div>
-                                            <div className="text-[10px] text-gray-400 mt-0.5">{tier.blurb}</div>
-                                            <div className="text-[11px] mt-2 text-yellow-200">Stake ${tierStake}</div>
-                                            <div className="text-[11px] text-emerald-300/90">{GutterbonesGamble.formatWinPercent(pWin)} → +${winPay}</div>
-                                            <div className="text-[11px] text-red-300/90">Miss → −${lossPay}</div>
+                                            <div className="gamble-readability-line text-gray-400 mt-0.5">{tier.blurb}</div>
+                                            <div className="gamble-readability-line mt-2 text-yellow-200">Stake ${tierStake}</div>
+                                            <div className="gamble-readability-line text-emerald-300/90">{GutterbonesGamble.formatWinPercent(pWin)} → +${winPay}</div>
+                                            <div className="gamble-readability-line text-red-300/90">Miss → −${lossPay}</div>
                                         </button>
                                     );
                                 })}
@@ -22333,7 +22624,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </button>
                                     <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
                                     <ShopPanelDivider />
-                                    <div className="shop-options-fence max-h-[10rem] overflow-y-auto overscroll-contain pr-0.5">
+                                    <div className="shop-options-fence overflow-y-auto overscroll-contain pr-0.5">
                                         <ShopSectionHeader>FENCE HARDWARE</ShopSectionHeader>
                                         {inventory.length === 0 ? (
                                             <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
@@ -22540,7 +22831,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         <div
                             data-layout-key="rap-sheet"
                             data-rap-sheet-settled={rapSheetSettled ? '1' : '0'}
-                            className="paper-card paper-card-flat gb-modal-fit bg-[#E2D1B8] w-full p-4 md:p-6 text-black shadow-[10px_20px_30px_black] border-l-[16px] border-[#c4b59d] relative z-20"
+                            className="paper-card paper-card-flat gb-modal-fit gb-modal-shop-chrome bg-[#111] w-full p-4 md:p-6 text-[#f5ecd6] shadow-[10px_20px_30px_black] border-0 relative z-20"
                             onAnimationEnd={(e) => {
                                 if (e.animationName === 'paperRevealIn') {
                                     window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
