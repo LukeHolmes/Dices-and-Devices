@@ -308,7 +308,7 @@ async function captureShopTall(vp, name) {
     if (next <= shotHeight + 2) break;
     shotHeight = next;
   }
-  await assertFooterInViewport(page, name, shotHeight);
+  const footerMetrics = await assertFooterInViewport(page, name, shotHeight);
   const outPath = path.join(OUT, `${label}_${name}_shop.png`);
   await page.screenshot({ path: outPath, fullPage: false });
   const finalCheck = await page.evaluate(() => document.querySelector('[data-layout-key="shop-stash-panel"]')?.getBoundingClientRect().bottom);
@@ -317,7 +317,7 @@ async function captureShopTall(vp, name) {
   }
   await page.evaluate(() => document.getElementById('__gb_capture_unscroll')?.remove());
   await page.close();
-  return { outPath, shotHeight, footerBottom: finalCheck, stashSegs: metrics.stashFilledSegs ?? null, metrics };
+  return { outPath, shotHeight, footerBottom: finalCheck, stashSegs: footerMetrics.stashFilledSegs, footerMetrics, metrics };
 }
 
 async function capture390Drawer() {
