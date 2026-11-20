@@ -19,7 +19,7 @@ const positional = argv.filter((a, i) => !a.startsWith('-') && (labelIdx < 0 || 
 const root = positional[0] ? path.resolve(positional[0]) : path.join(__dirname, '..');
 const outDir = positional[1]
   ? path.resolve(positional[1])
-  : path.join('/opt/cursor/artifacts', `laf-qa-${label}`);
+  : path.join(root, 'artifacts', `laf-qa-${label}`);
 fs.mkdirSync(outDir, { recursive: true });
 
 const SIZES = [
@@ -218,7 +218,7 @@ async function measureFps(page, duringRoll) {
       const tick = (t) => {
         samples.push(1000 / Math.max(1, t - last));
         last = t;
-        if (++n >= 50) resolve();
+        if (++n >= 50) { resolve(); return; }
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
