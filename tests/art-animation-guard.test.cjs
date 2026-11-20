@@ -38,7 +38,7 @@ test('rat 8x1 sheet reaches the eighth cell without half-cell slices', () => {
 
 test('roll hand validates both PNG fallback images before readiness', () => {
   assert.match(html, /loadImage\(ROLL_HAND_SPRITE_SHEET\)/);
-  assert.match(html, /loadImage\(ROLL_HAND_PNG_CLOSED\), loadImage\(ROLL_HAND_PNG_OPEN\)/);
+  assert.match(html, /loadImage\(ROLL_HAND_PNG_CLOSED\),\s*loadImage\(ROLL_HAND_PNG_OPEN\)/);
   assert.match(html, /closedOk && openOk \? 'png' : 'none'/);
   assert.match(html, /probeRollHandSprites\(\)\.then\(\(mode\)/);
   assert.doesNotMatch(html, /const mode = ok \? 'sheet' : 'png'/);
