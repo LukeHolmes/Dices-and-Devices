@@ -74,7 +74,7 @@ def clean_edge_crop(im: Image.Image, pad: int = 12) -> Image.Image:
     cropped.putalpha(a)
     w, h = cropped.size
     canvas = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
-    canvas.paste(cropped, (pad, pad), cropped)
+    canvas.alpha_composite(cropped, (pad, pad))
     return canvas
 
 
@@ -113,13 +113,17 @@ def main() -> int:
 
     for src_name, out_name, max_w in ATLAS:
         handoff_png = HANDOFF / "candidates/atlas_extractions" / src_name
+        if not handoff_png.is_file():
+            print(f"missing original atlas candidate {handoff_png}", file=__import__("sys").stderr)
+            return 1
+        master_sha = sha256_file(handoff_png)  # Never hash the cleaned copy as the original.
         staged = STAGING / src_name
         shutil.copy2(handoff_png, staged)
         work = staged
         if src_name in EDGE_CROP_CLEAN:
             cleaned = clean_edge_crop(Image.open(staged))
             cleaned.save(staged)
-        master_sha = sha256_file(work)
+        intermediate_sha = sha256_file(work)
         out_path = OUT_ATLAS / out_name
         nbytes = to_webp(work, out_path, max_w, 85)
         rel = out_path.relative_to(REPO).as_posix()
@@ -130,6 +134,8 @@ def main() -> int:
                 "out": rel,
                 "source": f"gutterbones-approved-assets-v1/candidates/atlas_extractions/{src_name}",
                 "masterSha256": master_sha,
+                "intermediateSha256": intermediate_sha,
+                "edgeCleaned": src_name in EDGE_CROP_CLEAN,
                 "category": "atlas-icon",
             }
         )
@@ -148,7 +154,10 @@ def main() -> int:
             "atlasEdgeCleaned": sorted(EDGE_CROP_CLEAN),
         },
         "assets": merged,
-        "totalBytes": sum(int(a.get("bytes", 0)) for a in merged),
+        "totalBytes": (
+            sum(int(a.get("bytes", 0)) for a in merged)
+            + sum(int(a.get("bytes", 0)) for a in existing.get("lookAndFeelAssets", []))
+        ),
     }
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps({"exported": len(rows), "totalBytes": manifest["totalBytes"]}, indent=2))
