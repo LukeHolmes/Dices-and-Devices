@@ -1492,7 +1492,7 @@
         transform-origin: top center;
     }
     #root-gutterbones .boss-intro-card .boss-intro-turf-label {
-        color: #fca5a5;
+        color: #c9a227;
     }
     #root-gutterbones .boss-intro-card .boss-intro-desc {
         color: #e5e7eb;
@@ -1524,6 +1524,9 @@
         max-height: calc(100dvh - 2rem);
         overflow: hidden;
         box-sizing: border-box;
+    }
+    #root-gutterbones .boss-intro-card.gb-modal-shop-chrome {
+        overflow: visible;
     }
     #root-gutterbones [data-layout-key="shop-refresh-stock"] {
         min-height: 2.75rem !important;
@@ -2549,20 +2552,6 @@
             flex: 1 1 0% !important;
             align-self: stretch !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
-            position: relative;
-            z-index: 2;
-            isolation: isolate;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            position: relative;
-            z-index: 4;
-            pointer-events: auto;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-options-block button {
-            position: relative;
-            z-index: 2;
-        }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
             flex: 1 1 auto !important;
             min-height: 0 !important;
@@ -2574,12 +2563,12 @@
             -webkit-mask-image: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-            flex: 1 1 0 !important;
-            flex-shrink: 1 !important;
-            min-height: 0 !important;
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            min-height: auto !important;
             max-height: none !important;
             overflow-x: hidden !important;
-            overflow-y: auto !important;
+            overflow-y: visible !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-options-fence .space-y-2 {
             max-height: none !important;
@@ -2587,25 +2576,27 @@
         #root-gutterbones[data-phase="SHOP"] .shop-options-block {
             display: flex;
             flex-direction: column;
-            min-height: 0;
-            flex: 1 1 auto;
+            flex: 0 0 auto !important;
+            min-height: auto !important;
             max-height: none;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
-            max-height: none !important;
-            flex: 1 1 auto;
-            min-height: 5.5rem;
+            flex: 0 0 auto !important;
+            min-height: auto !important;
+            max-height: min(12rem, 30vh) !important;
             overflow-y: auto;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 1 1 auto !important;
-            min-height: 12rem !important;
+            flex: 1 1 0 !important;
+            min-height: 8rem !important;
             max-height: none !important;
+            overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
             flex: 1 1 auto !important;
-            min-height: 8rem !important;
+            min-height: 5.5rem !important;
             max-height: none !important;
+            overflow-y: auto !important;
         }
     }
     @media (min-width: 1366px) and (min-height: 821px) {
@@ -3180,35 +3171,40 @@
     #root-gutterbones .boss-intro-card.gb-modal-shop-chrome {
         --shop-card-slice: 112;
         --shop-card-border: clamp(10px, 2.5vw, 14px);
+        position: relative;
         width: 100%;
         min-width: min(100%, 18rem);
         max-width: 100%;
+        box-sizing: border-box !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
         border: var(--shop-card-border) solid transparent !important;
-        border-image-slice: var(--shop-card-slice) fill;
-        border-image-width: var(--shop-card-border);
-        border-image-repeat: stretch;
-        border-image-source: url('assets/art/shop/standard-frame.webp');
+        border-image-slice: var(--shop-card-slice) fill !important;
+        border-image-width: var(--shop-card-border) !important;
+        border-image-repeat: stretch !important;
+        border-image-source: url('assets/art/shop/standard-frame.webp') !important;
         background-color: rgba(18, 17, 19, 0.94) !important;
+        background-clip: padding-box !important;
         color: #f5ecd6;
         box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+        isolation: isolate;
     }
-    #root-gutterbones .boss-intro-card .boss-intro-turf-label {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 2rem;
-        padding: 0.35rem 1.35rem;
+    #root-gutterbones .boss-intro-card.gb-modal-shop-chrome > * {
+        position: relative;
+        z-index: 1;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-turf-plate {
+        width: min(100%, 14rem);
         margin-inline: auto;
-        border: 12px solid transparent;
-        border-image-source: url('assets/art/shop/section-header-blank.webp');
-        border-image-slice: 48 80 fill;
-        border-image-width: 12px 28px;
-        border-image-repeat: stretch;
-        background-color: #121113;
-        color: #f5ecd6 !important;
-        letter-spacing: 0.28em;
-        font-weight: 700;
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 3px rgba(26, 18, 4, 0.85);
+        margin-bottom: 0.75rem;
+    }
+    #root-gutterbones .boss-intro-card .boss-intro-turf-plate .shop-section-header__label {
+        font-size: max(11px, 0.6875rem) !important;
+        line-height: 1.25 !important;
+        color: #1a1204 !important;
+        letter-spacing: 0.18em;
+        font-weight: 800 !important;
+        white-space: normal;
     }
     #root-gutterbones .boss-intro-card .boss-intro-name-plate {
         margin-bottom: 0.75rem;
@@ -3267,14 +3263,17 @@
         margin-inline: auto !important;
         flex: 0 0 auto !important;
         align-self: center !important;
-        min-height: 2.5rem !important;
-        padding: 0.45rem 1.75rem !important;
+        min-height: 2.75rem !important;
+        padding: 0.5rem 1.75rem !important;
         box-sizing: border-box !important;
     }
     #root-gutterbones [data-layout-key="gamble-card"] .shop-section-header__label {
-        font-size: 12px !important;
+        font-size: max(13px, 0.8125rem) !important;
+        color: #1a1204 !important;
         white-space: normal !important;
-        line-height: 1.25 !important;
+        line-height: 1.3 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
     }
     #root-gutterbones [data-layout-key="gamble-card"] .gamble-readability-line {
         font-size: max(12px, 0.8125rem) !important;
@@ -11758,11 +11757,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 onDone();
                             }
                         }}
-                        className="boss-intro-card p-8 w-full text-center shadow-2xl relative overflow-hidden pointer-events-auto cursor-pointer gb-modal-shop-chrome"
+                        className="boss-intro-card p-8 w-full max-w-md text-center shadow-2xl relative border-0 rounded-none pointer-events-auto cursor-pointer gb-modal-shop-chrome"
                         style={{ animation: reducedMotion ? 'none' : 'bossIntro .35s ease-out forwards' }}
                     >
                         <BossPortrait boss={boss} variant="intro" />
-                        <div className="boss-intro-turf-label font-mono tracking-[.4em] text-xs mb-3">TURF WAR</div>
+                        <div className="shop-section-header boss-intro-turf-plate">
+                            <span className="shop-section-header__label">TURF WAR</span>
+                        </div>
                         <div className="shop-section-header boss-intro-name-plate mx-auto">
                             <h2 className={`shop-section-header__label ${boss.color}`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
                         </div>
