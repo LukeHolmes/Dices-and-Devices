@@ -1,5 +1,6 @@
 async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFallbacks }) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const seededBuilder = strategy === "builder" && typeof window.__GB_SIM_GAME_RANDOM__ === "function";
   const log = { _shopclicks: 0, _paytab: 0, _gambleExit: false };
   let fallbacks = 0;
   let stuck = 0;
@@ -280,7 +281,16 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
   try {
     window.__GB_E2E__.goLineup();
-    if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
+    if (seededBuilder) {
+      window.__GB_E2E__.selectFirstPersona();
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const state = window.__GB_E2E__.getState();
+        if (state.phase === "LINEUP" && state.selectedPersonaId === "STREET_RAT") break;
+        await wait(20);
+      }
+      const state = window.__GB_E2E__.getState();
+      if (state.phase !== "LINEUP" || state.selectedPersonaId !== "STREET_RAT") throw Error("Street Rat lineup did not commit");
+    } else if (strategy === "builder" && window.__GB_E2E__.selectPersonaByIndex) {
       if (!window.__GB_E2E__.selectPersonaByIndex(4)) {
         window.__GB_E2E__.selectPersonaByIndex(1);
       }
@@ -330,6 +340,11 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
 
     if (ph === "GAMBLE") {
       log._gambleTries = (log._gambleTries || 0) + 1;
+      if (seededBuilder) {
+        if (log._gambleTries === 1) window.__GB_E2E__.takeSafeCut();
+        await wait(160);
+        continue;
+      }
       if (log._gambleTries === 1 || log._gambleTries % 5 === 0) {
         window.__GB_E2E__.takeSafeCut?.();
         window.__GB_E2E__.abortGamble?.();
@@ -347,6 +362,23 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
       window.__GB_E2E__?.finishRoundClear?.();
       await wait(120);
       continue;
+    }
+
+    // A payout commits before its score overlay and round finalizer finish.
+    // During settlement or cash-out, acknowledge presentation only.
+    if (seededBuilder && (ph === "PLAY" || ph === "SHOP")) {
+      const boundary = window.__GB_SIM_TELEM__?.roundEvents?.findLast(e =>
+        e.kind === "round_cleared" || e.kind === "round_play_start");
+      if (ph === "SHOP" && boundary?.kind === "round_play_start" && boundary.round === st.round) {
+        await wait(90);
+        continue;
+      }
+      if (ph === "PLAY" && (boundary?.kind === "round_cleared" || window.__GB_E2E__.debugStuck().pendingFinalize)) {
+        window.__GB_E2E__.dismissOverlays?.();
+        window.__GB_E2E__.skipIntroOverlays?.();
+        await wait(100);
+        continue;
+      }
     }
 
     const shopBot = strategy === "builder" || strategy === "greedy";
@@ -460,12 +492,19 @@ async function runBotSession({ maxSteps, seed, strategy, stuckThreshold, maxFall
         window.__GB_E2E__?.dismissOverlays?.();
       }
       const locks = window.__GB_E2E__?.getPlayLocks?.();
-      if (locks?.rolling || locks?.rollLocked) {
+      if (locks?.rolling || locks?.rollLocked || locks?.payoutInputLock) {
         await wait(60);
         continue;
       }
       if (!window.__GB_E2E__?.getHasRolled?.()) {
         window.__GB_E2E__?.rollOnce?.();
+        await wait(50);
+        continue;
+      }
+      // While the seeded builder waits for its selected payout to render,
+      // retry the same policy instead of letting a DOM scan pick another move.
+      if (seededBuilder && simPolicyRev === "2026-11-12-wp3-shop-v1") {
+        window.__GB_E2E__?.autoPlayHand?.();
         await wait(50);
         continue;
       }
