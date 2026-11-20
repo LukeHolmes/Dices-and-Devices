@@ -269,6 +269,53 @@ async function capture390Drawer() {
 const shopCaptureAll =
   process.env.CAPTURE_ROUND9 === '1' || process.env.CAPTURE_ROUND10 === '1' || process.env.CAPTURE_SHOP_ONLY === '1';
 
+async function bootPlayMinimal(page, vp) {
+  await page.setViewportSize(vp);
+  await page.goto(`${base}/index.html?layoutAudit=1`, { waitUntil: 'domcontentloaded', timeout: 180_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 180_000 });
+  const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.run()));
+  await page.evaluate(
+    ({ key, data }) => {
+      localStorage.setItem(
+        'gutterbones1977:settings:v1',
+        JSON.stringify({ pacing: 'fast', reducedMotion: true, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+      localStorage.setItem(key, JSON.stringify(data));
+    },
+    { key: 'gutterbones1977:run:v1', data: payload },
+  );
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+  await page.waitForTimeout(400);
+}
+
+async function captureFinalArtScreens() {
+  const vp = { width: 1920, height: 1080 };
+  const page = await openPage();
+  await bootPlayMinimal(page, vp);
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openBossIntroFor('BOUNCER'));
+  await page.waitForSelector('[data-layout-key="boss-intro-overlay"]', { timeout: 10_000 });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_boss-intro.png`) });
+  const gamblePayload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.gamble()));
+  await page.evaluate(
+    ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
+    { key: 'gutterbones1977:run:v1', data: gamblePayload },
+  );
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 120_000 });
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+  await page.waitForSelector('[data-layout-key="gamble-card"]', { timeout: 10_000 });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_gamble-modal.png`) });
+  await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.openSafehouseDemo());
+  await page.waitForSelector('[data-layout-key="safehouse-card"]', { timeout: 10_000 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(OUT, `${label}_1920x1080_safehouse-nightclub.png`) });
+  await page.close();
+}
+
 if (shopCaptureAll) {
   const tall390 = await captureShopTall({ width: 390, height: 844 }, '390x844');
   const tall768 = await captureShopTall({ width: 768, height: 1024 }, '768x1024');
@@ -279,6 +326,9 @@ if (shopCaptureAll) {
   await captureShop({ width: 1366, height: 768 }, '1366x768');
   await captureShop({ width: 1920, height: 1080 }, '1920x1080');
   console.log('tall', JSON.stringify({ tall390, tall768 }));
+  if (process.env.CAPTURE_FINAL_ART === '1') {
+    await captureFinalArtScreens();
+  }
 } else {
   await capture1920();
   await captureShop({ width: 1920, height: 1080 }, '1920x1080');

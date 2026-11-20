@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T15:16:06.967Z",
+  "generatedAt": "2026-11-20T03:31:38.608322Z",
   "webpQuality": 85,
   "ledgerMasterSha256": "1ff8ca45781cb11dbf21b2b0b93e4e5b431f7b8fdd404a071e21bebea9b075ea",
   "assets": [
@@ -68,19 +68,298 @@
       "sha": "1c98c32c963d90c59900028e71d03e7dae990004a30abdcbf2183cbf7bca44f0",
       "out": "assets/art/batch-5-2/ui/matchbook-blank-ledger-cropped.webp",
       "note": "runtime crop; master ui_matchbook_blank-ledger_v1.png untouched"
+    },
+    {
+      "bytes": 537156,
+      "sha": "817f6aedfd353b88777cfdc14c72a8f10cc064c8fe1794ebb66330c6f10f861c",
+      "out": "assets/art/scenes/nightclub-backroom.webp",
+      "source": "gutterbones-approved-assets-v1/approved/02_Environments/nightclub-backroom.png",
+      "masterSha256": "2aec0a155aad4c5637f99dc2d6a4d4842acef764753b5ba964d75522fafff430"
+    },
+    {
+      "bytes": 26970,
+      "sha": "b5352028b0aa81de3d93bcbdaf548c47b468309349a66a87b003a970f937b2f2",
+      "out": "assets/art/batch-5-2/atlas/ui-topbar-segmented-ink.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_topbar_segmented-ink_v1.png",
+      "masterSha256": "3d1f228891914c0b9850b1bd270b3cb783893cf04738abb44d2339dad1daa3ec"
+    },
+    {
+      "bytes": 12320,
+      "sha": "607fc9364396bdfc4a64ebb7ec7173ea574d0c4c9742f10dc7ed6183bf1950d7",
+      "out": "assets/art/batch-5-2/atlas/hud-statusplate-ink.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_ink_v1.png",
+      "masterSha256": "cfe0343e4b4c8dde6bad474e0c6808a7b907a0ce3f0a51997cce184e03d5ab75"
+    },
+    {
+      "bytes": 12598,
+      "sha": "22507307bd9103d5be5e22f984262e36b53142df40c8cb1c5219959f6f7fd1fc",
+      "out": "assets/art/batch-5-2/atlas/hud-statusplate-felt.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_felt_v1.png",
+      "masterSha256": "ca5d2c3823410dc334b9833f8c0c610d5a5ccee1f1c16964377421bc193e18cc"
+    },
+    {
+      "bytes": 12428,
+      "sha": "a561cd3f8b2931210d24828db41ba943b8fd7d1dd3cc65957369381e030e9ac0",
+      "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-worn_v1.png",
+      "masterSha256": "6bd5b78a75d04becf8a053ec97669cc57c3fb385a1fb00a14d69b12575e0eced"
+    },
+    {
+      "bytes": 12636,
+      "sha": "91bd8ff01abcb67b547acfbfcbfd4aea19484eab99a41d5fc784f2234456f80f",
+      "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-clean_v1.png",
+      "masterSha256": "5910a59b8dc8614162a3fd9a1afd34965513178a9ffe2808103f149a86e31a01"
+    },
+    {
+      "bytes": 36004,
+      "sha": "d3cc7fcef2b42ed5db4bc836da766c47663ea097c2470c0fa2fa84b1f7aa6265",
+      "out": "assets/art/batch-5-2/atlas/hud-progressbar-ink.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_progressbar_ink_v1.png",
+      "masterSha256": "ca506018e9bc7e2919139a620669e0a699d02bc8f8b4d0d034304a05535ce0b4"
+    },
+    {
+      "bytes": 46716,
+      "sha": "0cb65fbddfa3661ae72a941d0de2f4b03b0bd2ad90dec97cbcc2321e21913821",
+      "out": "assets/art/batch-5-2/atlas/hud-plays-counter-atlas.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_plays-counter_v1.png",
+      "masterSha256": "e931d56a7a2fcab67cc66069792f9607934b5f0a52776da59f373ea415112bce"
+    },
+    {
+      "bytes": 35696,
+      "sha": "8a77a8a4d2ad50b90fc2f16ec9025f80702821ba8867bff27eb7a2354f5583a5",
+      "out": "assets/art/batch-5-2/atlas/hud-progressbar-paper.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_progressbar_paper_v1.png",
+      "masterSha256": "777dabc469e40f55cd64da1db4a6bd90c1034dbc34325ae3273d13dd9cf891b6"
+    },
+    {
+      "bytes": 33954,
+      "sha": "4935bb71bcfd629b8eb43392a297d047e79a3b50216b68e2c25abc4f49b55de1",
+      "out": "assets/art/batch-5-2/atlas/ui-badge-laurel.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_badge_laurel_v1.png",
+      "masterSha256": "7d730b995f5e59f450609cf96ee8586690ea2e29d259c8276a69a26f0a3bc4b5"
+    },
+    {
+      "bytes": 21844,
+      "sha": "a6c8232c7f5d4b0ff8f3e39804c880547945404bd3621a90ab90a23be742bfc0",
+      "out": "assets/art/batch-5-2/atlas/ui-badge-starburst.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_badge_starburst_v1.png",
+      "masterSha256": "031db1e430be2c4d4255a138e6b33409e633a814c544d14f850629b5215bd9ca"
+    },
+    {
+      "bytes": 21756,
+      "sha": "a2749dc6abbbd2cecd58376a6f803c89228c39f2a41a42bd110ca898de7bc3c8",
+      "out": "assets/art/batch-5-2/atlas/ui-badge-round.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_badge_round_v1.png",
+      "masterSha256": "9ce0df28d69f424bba12d374700eafe8838bbf4937066ef0a74d45fc53a507ba"
+    },
+    {
+      "bytes": 66876,
+      "sha": "726783382e3fca9341eb8d1f43d9a213dc45b5a81f8f72363077452457c320b4",
+      "out": "assets/art/batch-5-2/atlas/ui-dossier-clipboard.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_dossier_clipboard_v1.png",
+      "masterSha256": "aaf08a1aef534c89594d7e20dc59011d9202157449f68c9d9d75114af0b4f3a9"
+    },
+    {
+      "bytes": 8822,
+      "sha": "11c70ad91748e122a2aef4afb81dedf78251ccb41ea4de341e99a58a324756d2",
+      "out": "assets/art/batch-5-2/atlas/ui-control-button-left.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_control_button-left_v1.png",
+      "masterSha256": "84bc62b5234eb907bbc966835197aea45008573d295411c9916a8c9d8fcfd400"
+    },
+    {
+      "bytes": 7792,
+      "sha": "3f8014c99717d9e2a1cfde38a234223a722b602b653bf881f203ba19f209c226",
+      "out": "assets/art/batch-5-2/atlas/ui-control-button-right.webp",
+      "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_control_button-right_v1.png",
+      "masterSha256": "f121a8b0128134c413ea7fe4a383295ce6371890302aef08cf6d7aad5b89dc4e"
     }
   ],
   "lookAndFeelAssets": [
-    { "bytes": 55312, "sha": "b8a00fe6461b235450af7b2cc9b180e3cce807e1e77ecef828e63a7002a500cb", "out": "assets/art/look-and-feel/hand-front-spritesheet.webp" },
-    { "bytes": 40874, "sha": "e2abbad9cd6d5a53c26086f06e65f73ccd1c1422a7b0ed6a6996f9e46d5d91dc", "out": "assets/art/look-and-feel/alley-rat-8frame.webp" },
-    { "bytes": 40874, "sha": "e5006ae94b57ba06a03c0014206c2a0d2f7d80fb9657d855193850d766e1aa46", "out": "assets/art/look-and-feel/cigarette-ember-8frame.webp" },
-    { "bytes": 61008, "sha": "3bbf355f93b35363ed0847288ceb1c2da204e382bc0e9c38470ff27631c245c1", "out": "assets/art/look-and-feel/cigarette-smoke-rise-8frame.webp" },
-    { "bytes": 33104, "sha": "564c3d498429054501766da8fd058f159a8053de83aeb52c1aee840b0eccaef9", "out": "assets/art/look-and-feel/cockroach-crawl-8frame.webp" },
-    { "bytes": 14606, "sha": "66c2259482bb5c74a05e9e851753b204b353644f9bb9b11cfa9d76485801ce50", "out": "assets/art/look-and-feel/debris-betting-slip-8frame.webp" },
-    { "bytes": 9970, "sha": "1acf36fc352fc3a43de83c42177a975161d684df157d1c643c0d9ca4691c4d7c", "out": "assets/art/look-and-feel/debris-rag-scrap-8frame.webp" },
-    { "bytes": 18006, "sha": "9b223fca7cb33ed05110009593ffe63b1cbba08c5c3577d98ed6c3cb8fbd512a", "out": "assets/art/look-and-feel/cash-bill-one-8frame.webp" },
-    { "bytes": 22236, "sha": "5670dd8f43634876a15699138c43b86be203cf514e7a85dc8023cc718964ee5b", "out": "assets/art/look-and-feel/cash-betting-slip-8frame.webp" },
-    { "bytes": 56300, "sha": "cc8800a64c0cc272412821d26ffac11af2bf1c77fc20665a237809f91a669d59", "out": "assets/art/look-and-feel/tungsten-bulb-flicker-8frame.webp" }
+    {
+      "bytes": 55312,
+      "sha": "b8a00fe6461b235450af7b2cc9b180e3cce807e1e77ecef828e63a7002a500cb",
+      "out": "assets/art/look-and-feel/hand-front-spritesheet.webp"
+    },
+    {
+      "bytes": 40874,
+      "sha": "e2abbad9cd6d5a53c26086f06e65f73ccd1c1422a7b0ed6a6996f9e46d5d91dc",
+      "out": "assets/art/look-and-feel/alley-rat-8frame.webp"
+    },
+    {
+      "bytes": 40874,
+      "sha": "e5006ae94b57ba06a03c0014206c2a0d2f7d80fb9657d855193850d766e1aa46",
+      "out": "assets/art/look-and-feel/cigarette-ember-8frame.webp"
+    },
+    {
+      "bytes": 61008,
+      "sha": "3bbf355f93b35363ed0847288ceb1c2da204e382bc0e9c38470ff27631c245c1",
+      "out": "assets/art/look-and-feel/cigarette-smoke-rise-8frame.webp"
+    },
+    {
+      "bytes": 33104,
+      "sha": "564c3d498429054501766da8fd058f159a8053de83aeb52c1aee840b0eccaef9",
+      "out": "assets/art/look-and-feel/cockroach-crawl-8frame.webp"
+    },
+    {
+      "bytes": 14606,
+      "sha": "66c2259482bb5c74a05e9e851753b204b353644f9bb9b11cfa9d76485801ce50",
+      "out": "assets/art/look-and-feel/debris-betting-slip-8frame.webp"
+    },
+    {
+      "bytes": 9970,
+      "sha": "1acf36fc352fc3a43de83c42177a975161d684df157d1c643c0d9ca4691c4d7c",
+      "out": "assets/art/look-and-feel/debris-rag-scrap-8frame.webp"
+    },
+    {
+      "bytes": 18006,
+      "sha": "9b223fca7cb33ed05110009593ffe63b1cbba08c5c3577d98ed6c3cb8fbd512a",
+      "out": "assets/art/look-and-feel/cash-bill-one-8frame.webp"
+    },
+    {
+      "bytes": 22236,
+      "sha": "5670dd8f43634876a15699138c43b86be203cf514e7a85dc8023cc718964ee5b",
+      "out": "assets/art/look-and-feel/cash-betting-slip-8frame.webp"
+    },
+    {
+      "bytes": 56300,
+      "sha": "cc8800a64c0cc272412821d26ffac11af2bf1c77fc20665a237809f91a669d59",
+      "out": "assets/art/look-and-feel/tungsten-bulb-flicker-8frame.webp"
+    }
   ],
-  "totalBytes": 559894
+  "totalBytes": 1753908,
+  "finalArtPass": {
+    "handoffDir": "/tmp/gb-art-parts/handoff",
+    "sceneAssets": [
+      {
+        "bytes": 537156,
+        "sha": "817f6aedfd353b88777cfdc14c72a8f10cc064c8fe1794ebb66330c6f10f861c",
+        "out": "assets/art/scenes/nightclub-backroom.webp",
+        "source": "gutterbones-approved-assets-v1/approved/02_Environments/nightclub-backroom.png",
+        "masterSha256": "2aec0a155aad4c5637f99dc2d6a4d4842acef764753b5ba964d75522fafff430",
+        "category": "scene"
+      }
+    ],
+    "atlasIconAssets": [
+      {
+        "bytes": 26970,
+        "sha": "b5352028b0aa81de3d93bcbdaf548c47b468309349a66a87b003a970f937b2f2",
+        "out": "assets/art/batch-5-2/atlas/ui-topbar-segmented-ink.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_topbar_segmented-ink_v1.png",
+        "masterSha256": "3d1f228891914c0b9850b1bd270b3cb783893cf04738abb44d2339dad1daa3ec",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 12320,
+        "sha": "607fc9364396bdfc4a64ebb7ec7173ea574d0c4c9742f10dc7ed6183bf1950d7",
+        "out": "assets/art/batch-5-2/atlas/hud-statusplate-ink.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_ink_v1.png",
+        "masterSha256": "cfe0343e4b4c8dde6bad474e0c6808a7b907a0ce3f0a51997cce184e03d5ab75",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 12598,
+        "sha": "22507307bd9103d5be5e22f984262e36b53142df40c8cb1c5219959f6f7fd1fc",
+        "out": "assets/art/batch-5-2/atlas/hud-statusplate-felt.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_felt_v1.png",
+        "masterSha256": "ca5d2c3823410dc334b9833f8c0c610d5a5ccee1f1c16964377421bc193e18cc",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 12428,
+        "sha": "a561cd3f8b2931210d24828db41ba943b8fd7d1dd3cc65957369381e030e9ac0",
+        "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-worn_v1.png",
+        "masterSha256": "6bd5b78a75d04becf8a053ec97669cc57c3fb385a1fb00a14d69b12575e0eced",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 12636,
+        "sha": "91bd8ff01abcb67b547acfbfcbfd4aea19484eab99a41d5fc784f2234456f80f",
+        "out": "assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_statusplate_paper-clean_v1.png",
+        "masterSha256": "5910a59b8dc8614162a3fd9a1afd34965513178a9ffe2808103f149a86e31a01",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 36004,
+        "sha": "d3cc7fcef2b42ed5db4bc836da766c47663ea097c2470c0fa2fa84b1f7aa6265",
+        "out": "assets/art/batch-5-2/atlas/hud-progressbar-ink.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_progressbar_ink_v1.png",
+        "masterSha256": "ca506018e9bc7e2919139a620669e0a699d02bc8f8b4d0d034304a05535ce0b4",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 46716,
+        "sha": "0cb65fbddfa3661ae72a941d0de2f4b03b0bd2ad90dec97cbcc2321e21913821",
+        "out": "assets/art/batch-5-2/atlas/hud-plays-counter-atlas.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_plays-counter_v1.png",
+        "masterSha256": "e931d56a7a2fcab67cc66069792f9607934b5f0a52776da59f373ea415112bce",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 35696,
+        "sha": "8a77a8a4d2ad50b90fc2f16ec9025f80702821ba8867bff27eb7a2354f5583a5",
+        "out": "assets/art/batch-5-2/atlas/hud-progressbar-paper.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/hud_progressbar_paper_v1.png",
+        "masterSha256": "777dabc469e40f55cd64da1db4a6bd90c1034dbc34325ae3273d13dd9cf891b6",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 33954,
+        "sha": "4935bb71bcfd629b8eb43392a297d047e79a3b50216b68e2c25abc4f49b55de1",
+        "out": "assets/art/batch-5-2/atlas/ui-badge-laurel.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_badge_laurel_v1.png",
+        "masterSha256": "7d730b995f5e59f450609cf96ee8586690ea2e29d259c8276a69a26f0a3bc4b5",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 21844,
+        "sha": "a6c8232c7f5d4b0ff8f3e39804c880547945404bd3621a90ab90a23be742bfc0",
+        "out": "assets/art/batch-5-2/atlas/ui-badge-starburst.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_badge_starburst_v1.png",
+        "masterSha256": "031db1e430be2c4d4255a138e6b33409e633a814c544d14f850629b5215bd9ca",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 21756,
+        "sha": "a2749dc6abbbd2cecd58376a6f803c89228c39f2a41a42bd110ca898de7bc3c8",
+        "out": "assets/art/batch-5-2/atlas/ui-badge-round.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_badge_round_v1.png",
+        "masterSha256": "9ce0df28d69f424bba12d374700eafe8838bbf4937066ef0a74d45fc53a507ba",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 66876,
+        "sha": "726783382e3fca9341eb8d1f43d9a213dc45b5a81f8f72363077452457c320b4",
+        "out": "assets/art/batch-5-2/atlas/ui-dossier-clipboard.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_dossier_clipboard_v1.png",
+        "masterSha256": "aaf08a1aef534c89594d7e20dc59011d9202157449f68c9d9d75114af0b4f3a9",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 8822,
+        "sha": "11c70ad91748e122a2aef4afb81dedf78251ccb41ea4de341e99a58a324756d2",
+        "out": "assets/art/batch-5-2/atlas/ui-control-button-left.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_control_button-left_v1.png",
+        "masterSha256": "84bc62b5234eb907bbc966835197aea45008573d295411c9916a8c9d8fcfd400",
+        "category": "atlas-icon"
+      },
+      {
+        "bytes": 7792,
+        "sha": "3f8014c99717d9e2a1cfde38a234223a722b602b653bf881f203ba19f209c226",
+        "out": "assets/art/batch-5-2/atlas/ui-control-button-right.webp",
+        "source": "gutterbones-approved-assets-v1/candidates/atlas_extractions/ui_control_button-right_v1.png",
+        "masterSha256": "f121a8b0128134c413ea7fe4a383295ce6371890302aef08cf6d7aad5b89dc4e",
+        "category": "atlas-icon"
+      }
+    ],
+    "atlasEdgeCleaned": [
+      "hud_progressbar_ink_v1.png",
+      "hud_statusplate_felt_v1.png",
+      "hud_statusplate_ink_v1.png",
+      "hud_statusplate_paper-clean_v1.png",
+      "hud_statusplate_paper-worn_v1.png"
+    ]
+  }
 }
