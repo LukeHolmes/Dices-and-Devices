@@ -1,6 +1,8 @@
 "use strict";
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const { createGame } = require("./helpers/game.cjs");
 const { snapshot, dice } = require("./fixtures/runs.cjs");
 
@@ -51,4 +53,11 @@ test("analyzeBuild SET_CONSISTENCY when low chain variance and steady totals", (
     flowStreak: 1,
   });
   assert.equal(steady.primaryBuild, g.api.BUILD_IDS.SET_CONSISTENCY);
+});
+
+test("Phase 7.3: shop refresh stock includes tip the dealer hint", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  assert.ok(html.includes('data-layout-key="shop-refresh-stock"'));
+  assert.ok(html.includes('title="Tip the dealer — cycle fresh alley stock"'));
+  assert.ok(html.includes("Refreshes used this stop: {shopRefreshes} · Tip the dealer"));
 });
