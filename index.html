@@ -2126,7 +2126,29 @@
             opacity: 1 !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
+            display: grid !important;
+            grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+            align-items: stretch !important;
+            gap: 1px !important;
+            padding: 1px !important;
             min-height: 1rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black > div {
+            min-height: 0.65rem !important;
+            width: 100% !important;
+            align-self: stretch !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black > div.bg-gray-800 {
+            background-color: rgb(31, 41, 55) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black > div.bg-white {
+            background-color: #ffffff !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black > div[class*="bg-[#0df]"] {
+            background-color: #00ddff !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black > div[class*="bg-[#ff007f]"] {
+            background-color: #ff007f !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
             position: relative !important;
@@ -2408,20 +2430,44 @@
             overflow-x: hidden !important;
             overflow-y: hidden !important;
             transform: none !important;
-            display: flex;
-            flex-direction: column;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 1 auto !important;
+            min-height: 0 !important;
+            max-height: min(34vh, 18.5rem) !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled::-webkit-scrollbar {
+            width: 8px;
+            display: block;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-route-pagination {
+            flex-shrink: 0 !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
             transform: none !important;
             flex: 1 1 auto !important;
-            min-height: 0 !important;
+            min-height: min(26vh, 10.5rem) !important;
             overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
             flex: 1 1 auto;
-            min-height: 0;
+            min-height: 5.5rem;
+            overflow-x: hidden;
             overflow-y: auto;
             overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-gutter: stable;
+            padding-inline-end: 0.35rem;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list::-webkit-scrollbar {
+            width: 8px;
+            display: block;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-footer,
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
@@ -2430,6 +2476,8 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
             min-height: 44px;
             transform: none !important;
+            max-width: 100%;
+            box-sizing: border-box;
         }
     }
     @media (min-width: 1024px) and (max-height: 820px) {
@@ -2480,7 +2528,7 @@
             flex: 1 1 auto;
             min-height: 0;
             overflow-x: hidden;
-            overflow-y: auto !important;
+            overflow-y: hidden !important;
             -webkit-overflow-scrolling: touch;
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
@@ -3383,6 +3431,13 @@
       overflow-y: auto !important;
       overscroll-behavior: contain;
       scrollbar-width: thin;
+      scrollbar-gutter: stable;
+      padding-inline: 0.15rem 0.5rem;
+      box-sizing: border-box;
+    }
+    #root-gutterbones[data-phase="SHOP"] .gb-route-list::-webkit-scrollbar {
+      width: 8px;
+      display: block;
     }
     #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
       flex-shrink: 0 !important;
@@ -20715,24 +20770,60 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     } else {
                         bad.push({ kind: 'buy-not-hit-testable', reason: buyButtons.length ? 'all-hidden' : 'none-enabled' });
                     }
-                    const routeCard = panel.querySelector('[data-layout-key="shop-route-card"]')
-                        || root.querySelector('[data-layout-key="shop-route-card"]');
+                    const scrollHost = panel.querySelector('.shop-routes-scroll');
+                    const routeList = panel.querySelector('.gb-route-list');
+                    const shopScreen = root.querySelector('[data-phase="SHOP"] .gb-screen');
+                    if (shopScreen instanceof HTMLElement) shopScreen.scrollTop = 0;
+                    if (scrollHost instanceof HTMLElement) scrollHost.scrollTop = 0;
+                    if (routeList instanceof HTMLElement) routeList.scrollTop = 0;
+                    if (panel instanceof HTMLElement) panel.scrollTop = 0;
+                    const routeCandidates = [...root.querySelectorAll('[data-layout-key="shop-route-card"]')].filter(
+                        (el) => el instanceof HTMLElement
+                    );
+                    const routeCard = routeCandidates.find((el) => el.classList.contains('ring-2') || el.classList.contains('ring-[#0df]'))
+                        || routeCandidates[0]
+                        || null;
                     let routeVisibleRatio = null;
                     if (routeCard instanceof HTMLElement) {
                         const cardStyle = window.getComputedStyle(routeCard);
                         if (cardStyle.display !== 'none' && cardStyle.visibility !== 'hidden') {
-                            routeCard.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
-                            const cr = routeCard.getBoundingClientRect();
+                            const layoutStyle = shopLayout instanceof HTMLElement ? window.getComputedStyle(shopLayout) : null;
+                            const columnStack = vw < 1024
+                                || layoutStyle?.flexDirection === 'column'
+                                || layoutStyle?.flexDirection === 'column-reverse';
+                            let cr = routeCard.getBoundingClientRect();
+                            if (columnStack && shopScreen instanceof HTMLElement) {
+                                if (cr.top < 4) {
+                                    shopScreen.scrollTop += cr.top - 8;
+                                } else if (cr.bottom > vh - 4) {
+                                    shopScreen.scrollTop += cr.bottom - vh + 8;
+                                }
+                                cr = routeCard.getBoundingClientRect();
+                            }
                             if (cr.height > 2) {
                                 const visTop = Math.max(0, cr.top);
                                 const visBottom = Math.min(vh, cr.bottom);
                                 const visibleH = Math.max(0, visBottom - visTop);
                                 routeVisibleRatio = visibleH / cr.height;
+                                const sampleYs = [
+                                    cr.top + Math.min(12, cr.height * 0.2),
+                                    cr.top + cr.height * 0.5,
+                                    cr.bottom - Math.min(12, cr.height * 0.2),
+                                ];
+                                const cx = Math.min(vw - 4, Math.max(4, cr.left + cr.width / 2));
+                                const paintedSamples = sampleYs.filter((y) => {
+                                    const cy = Math.min(vh - 4, Math.max(4, y));
+                                    const stack = document.elementsFromPoint(cx, cy);
+                                    return stack.some((node) => node === routeCard || routeCard.contains(node));
+                                }).length;
+                                const paintedRatio = paintedSamples / sampleYs.length;
+                                routeVisibleRatio = Math.min(routeVisibleRatio, paintedRatio);
                                 const minRatio = 0.8;
-                                if (routeVisibleRatio + 0.001 < minRatio) {
+                                if (routeVisibleRatio + 0.001 < minRatio || paintedRatio + 0.001 < minRatio) {
                                     bad.push({
                                         kind: 'route-card-low-visibility',
                                         ratio: Math.round(routeVisibleRatio * 1000) / 1000,
+                                        paintedRatio: Math.round(paintedRatio * 1000) / 1000,
                                         minRatio,
                                         top: cr.top,
                                         bottom: cr.bottom,

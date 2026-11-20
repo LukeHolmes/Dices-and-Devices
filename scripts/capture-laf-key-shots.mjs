@@ -266,11 +266,15 @@ async function capture390Drawer() {
   await page.close();
 }
 
-const round9 = process.env.CAPTURE_ROUND9 === '1' || process.env.CAPTURE_SHOP_ONLY === '1';
+const shopCaptureAll =
+  process.env.CAPTURE_ROUND9 === '1' || process.env.CAPTURE_ROUND10 === '1' || process.env.CAPTURE_SHOP_ONLY === '1';
 
-if (round9) {
+if (shopCaptureAll) {
   const tall390 = await captureShopTall({ width: 390, height: 844 }, '390x844');
   const tall768 = await captureShopTall({ width: 768, height: 1024 }, '768x1024');
+  await captureShop({ width: 320, height: 568 }, '320x568');
+  await captureShop({ width: 412, height: 915 }, '412x915');
+  await captureShop({ width: 844, height: 390 }, '844x390');
   await captureShop({ width: 1024, height: 768 }, '1024x768');
   await captureShop({ width: 1366, height: 768 }, '1366x768');
   await captureShop({ width: 1920, height: 1080 }, '1920x1080');
