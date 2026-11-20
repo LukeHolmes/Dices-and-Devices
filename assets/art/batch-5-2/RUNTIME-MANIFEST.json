@@ -62,7 +62,25 @@
       "bytes": 33698,
       "sha": "8dba86fa498f5a4db0593a337ff490c94b7fd6f64351541b2ea53fed224a76f0",
       "out": "assets/art/batch-5-2/hud/label-backing-paper.webp"
+    },
+    {
+      "bytes": 300446,
+      "sha": "1c98c32c963d90c59900028e71d03e7dae990004a30abdcbf2183cbf7bca44f0",
+      "out": "assets/art/batch-5-2/ui/matchbook-blank-ledger-cropped.webp",
+      "note": "runtime crop; master ui_matchbook_blank-ledger_v1.png untouched"
     }
+  ],
+  "lookAndFeelAssets": [
+    { "bytes": 55312, "sha": "b8a00fe6461b235450af7b2cc9b180e3cce807e1e77ecef828e63a7002a500cb", "out": "assets/art/look-and-feel/hand-front-spritesheet.webp" },
+    { "bytes": 40874, "sha": "e2abbad9cd6d5a53c26086f06e65f73ccd1c1422a7b0ed6a6996f9e46d5d91dc", "out": "assets/art/look-and-feel/alley-rat-8frame.webp" },
+    { "bytes": 40874, "sha": "e5006ae94b57ba06a03c0014206c2a0d2f7d80fb9657d855193850d766e1aa46", "out": "assets/art/look-and-feel/cigarette-ember-8frame.webp" },
+    { "bytes": 61008, "sha": "3bbf355f93b35363ed0847288ceb1c2da204e382bc0e9c38470ff27631c245c1", "out": "assets/art/look-and-feel/cigarette-smoke-rise-8frame.webp" },
+    { "bytes": 33104, "sha": "564c3d498429054501766da8fd058f159a8053de83aeb52c1aee840b0eccaef9", "out": "assets/art/look-and-feel/cockroach-crawl-8frame.webp" },
+    { "bytes": 14606, "sha": "66c2259482bb5c74a05e9e851753b204b353644f9bb9b11cfa9d76485801ce50", "out": "assets/art/look-and-feel/debris-betting-slip-8frame.webp" },
+    { "bytes": 9970, "sha": "1acf36fc352fc3a43de83c42177a975161d684df157d1c643c0d9ca4691c4d7c", "out": "assets/art/look-and-feel/debris-rag-scrap-8frame.webp" },
+    { "bytes": 18006, "sha": "9b223fca7cb33ed05110009593ffe63b1cbba08c5c3577d98ed6c3cb8fbd512a", "out": "assets/art/look-and-feel/cash-bill-one-8frame.webp" },
+    { "bytes": 22236, "sha": "5670dd8f43634876a15699138c43b86be203cf514e7a85dc8023cc718964ee5b", "out": "assets/art/look-and-feel/cash-betting-slip-8frame.webp" },
+    { "bytes": 56300, "sha": "cc8800a64c0cc272412821d26ffac11af2bf1c77fc20665a237809f91a669d59", "out": "assets/art/look-and-feel/tungsten-bulb-flicker-8frame.webp" }
   ],
   "totalBytes": 559894
 }
