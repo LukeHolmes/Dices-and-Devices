@@ -16,6 +16,11 @@ npm run audit:known-issues
 
 Runs the same defect regression file (alias for CI compatibility).
 
+### Isolated synergy chain checks
+
+`node --test tests/synergy-chains.test.cjs` verifies blood ripple, ghost echo, wire feed, engine link, bookends, crowbar, and disabled-tuning suppression in isolation.
+Use it when iterating on chain scoring without running the full suite.
+
 The action harness executes selected production function bodies, substitutes storage/audio/timers and queues setters against a render snapshot. It fails loudly if source boundaries change. It does not test browser scheduling, React StrictMode, pointer interactions, layout or animation timing.
 
 ## Refactor equivalence gate
