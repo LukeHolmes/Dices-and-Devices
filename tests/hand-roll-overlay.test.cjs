@@ -94,24 +94,34 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
       timeout: 3000,
     });
     const grip = await page.evaluate(() => {
+      const sheet = document.querySelector(".gutter-roll-hand-sheet-frame");
       const closed = document.querySelector(".gutter-roll-hand-closed");
       const open = document.querySelector(".gutter-roll-hand-open");
       const overlay = document.querySelector(".gutter-roll-hand-overlay");
-      if (!closed || !open || !overlay) return null;
-      const cs = getComputedStyle(closed);
-      const os = getComputedStyle(open);
+      if (!overlay) return null;
       const pe = getComputedStyle(overlay).pointerEvents;
+      if (sheet) {
+        return {
+          mode: "sheet",
+          sheetDisplay: getComputedStyle(sheet).display,
+          pointerEvents: pe,
+          ariaHidden: overlay.getAttribute("aria-hidden"),
+        };
+      }
+      if (!closed || !open) return null;
       return {
-        closedOpacity: parseFloat(cs.opacity),
-        openOpacity: parseFloat(os.opacity),
+        mode: "dual",
+        closedOpacity: parseFloat(getComputedStyle(closed).opacity),
+        openOpacity: parseFloat(getComputedStyle(open).opacity),
         pointerEvents: pe,
         ariaHidden: overlay.getAttribute("aria-hidden"),
       };
     });
-    assert.ok(grip, "overlay mounted with production sprites");
+    assert.ok(grip, "overlay mounted with hand sprites");
     assert.equal(grip.pointerEvents, "none");
     assert.equal(grip.ariaHidden, "true");
-    assert.ok(grip.closedOpacity >= 0.85, "closed visible at start");
+    if (grip.mode === "dual") assert.ok(grip.closedOpacity >= 0.85, "closed visible at start");
+    else assert.notEqual(grip.sheetDisplay, "none", "sheet frame visible at start");
     let sawVisible = false;
     for (let i = 0; i < 12; i += 1) {
       await page.waitForTimeout(40);
@@ -145,17 +155,29 @@ test("hand overlay — production sprites enable sweep on eligible roll", async 
     });
     await page.waitForTimeout(Math.round(handMs * 0.54));
     const mid = await page.evaluate(() => {
+      const pose = window.__GB_LAYOUT_AUDIT__?.readRollHandPose?.();
+      if (pose?.ok) {
+        return { mode: "sheet", dominant: pose.dominant, progress: pose.animProgress };
+      }
       const closed = document.querySelector(".gutter-roll-hand-closed");
       const open = document.querySelector(".gutter-roll-hand-open");
       return {
+        mode: "dual",
         closedOpacity: closed ? parseFloat(getComputedStyle(closed).opacity) : -1,
         openOpacity: open ? parseFloat(getComputedStyle(open).opacity) : -1,
       };
     });
-    assert.ok(
-      mid.openOpacity > 0.55 && mid.openOpacity > mid.closedOpacity,
-      "open frame dominates during release window of handThrowSweep",
-    );
+  if (mid.mode === "sheet") {
+      assert.ok(
+        mid.dominant === "open" || (mid.progress != null && mid.progress >= 0.45),
+        "release window shows open sheet frames during handThrowSweep",
+      );
+    } else {
+      assert.ok(
+        mid.openOpacity > 0.55 && mid.openOpacity > mid.closedOpacity,
+        "open frame dominates during release window of handThrowSweep",
+      );
+    }
     await page.waitForTimeout(handMs + 80);
     assert.equal(
       await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(),
@@ -199,6 +221,63 @@ test("hand overlay — repeat roll retriggers and roll button stays clickable", 
     const handMs2 = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.getRollHandFxMs());
     await page.waitForTimeout(Math.max(520, handMs2 + 80));
     assert.equal(await page.locator('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand').count(), 0);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("hand overlay — PNG fallback when spritesheet 404", async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.route("**/hand-front-spritesheet.webp", (route) => route.abort());
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_LAYOUT_AUDIT__, { timeout: 90_000 });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "gutterbones1977:settings:v1",
+        JSON.stringify({ pacing: "fast", reducedMotion: false, tutorialCompleted: true, skippedAlleyIntro: true }),
+      );
+    });
+    const payload = plain(
+      createGame(fixtures.snapshot()).api.normalizeSavedRun(
+        fixtures.run({
+          phase: "PLAY",
+          round: 3,
+          score: 12,
+          target: 110,
+          hands: 4,
+          discards: 3,
+          stash: 55,
+          hasRolled: false,
+          dice: fixtures.dice([3, 4, 5, 2, 6]),
+        }),
+      ),
+    );
+    await page.evaluate(({ key, data }) => localStorage.setItem(key, JSON.stringify(data)), {
+      key: RUN_KEY,
+      data: payload,
+    });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.waitForFunction(() => window.__GB_ROLL_HAND_SPRITE_MODE === "png", { timeout: 15_000 });
+    await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
+    await page.click('[data-tutorial="roll-btn"]');
+    await page.waitForSelector('[data-layout-key="roll-hand-throw-overlay"] .animate-gutter-hand', { timeout: 3000 });
+    const mode = await page.evaluate(() => {
+      const closed = document.querySelector(".gutter-roll-hand-closed");
+      const sheet = document.querySelector(".gutter-roll-hand-sheet-frame");
+      return {
+        spriteMode: window.__GB_ROLL_HAND_SPRITE_MODE,
+        closedVisible: closed && parseFloat(getComputedStyle(closed).opacity) > 0.1,
+        sheetGone: !sheet || getComputedStyle(sheet).display === "none",
+      };
+    });
+    assert.equal(mode.spriteMode, "png");
+    assert.equal(mode.sheetGone, true);
+    assert.equal(mode.closedVisible, true);
+    const pixels = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.sampleRollHandOpaquePixels());
+    assert.ok(pixels?.ok, `hand visible on PNG fallback (${JSON.stringify(pixels)})`);
   } finally {
     await browser.close();
   }

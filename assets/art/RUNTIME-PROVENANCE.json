@@ -1,0 +1,753 @@
+{
+  "generatedAt": "2026-11-18T21:04:56.429Z",
+  "mastersDir": "/agent/repos/Dices-and-Devices/art-masters",
+  "portrait": {
+    "width": 600,
+    "height": 800,
+    "webpQuality": 82
+  },
+  "scene": {
+    "width": 1672,
+    "webpQuality": 78
+  },
+  "itemIcon": {
+    "size1x": 128,
+    "size2x": 256,
+    "webpQuality": 82
+  },
+  "shopCard": {
+    "webpQuality": 86,
+    "nineSlicePx": 112,
+    "dividerTrim": true
+  },
+  "assets": [
+    {
+      "output": "assets/art/personas/street-rat.webp",
+      "master": "character_street-rat_v1_aed7.png",
+      "masterManifestName": "character_street-rat_v1.png",
+      "masterSha256": "70bb5c36a7076f5c32ba33b93769760079702987f3f6e2c6a060fcb2c75d3e21",
+      "outputSha256": "e44c63add9adb34a79a94fb6d85f92d2929444d8991081f25efe41af8abc93a8",
+      "bytes": 206560
+    },
+    {
+      "output": "assets/art/personas/hustler.webp",
+      "master": "character_hustler_v1_b4bc.png",
+      "masterManifestName": "character_hustler_v1.png",
+      "masterSha256": "93f20459e440e0472d1841ad9a5ce941a516eb87c5d4ac169de279d31f1fd0ec",
+      "outputSha256": "a0b3c8c90659247e4f5d9c5315eb79bcbc41238a01a7611fb222b26ff6184403",
+      "bytes": 212098
+    },
+    {
+      "output": "assets/art/personas/card-counter.webp",
+      "master": "character_counter_v1_92cc.png",
+      "masterManifestName": "character_counter_v1.png",
+      "masterSha256": "6ecf338d2da8855b80cf630c505c63b397a369bcb68db85180fac05cf40702dc",
+      "outputSha256": "2b591fd3fd2a82ad6686ad242449e15943c28600b25ab306406a2e81c3c9361c",
+      "bytes": 216242
+    },
+    {
+      "output": "assets/art/personas/enforcer.webp",
+      "master": "character_enforcer_v1_e6d1.png",
+      "masterManifestName": "character_enforcer_v1.png",
+      "masterSha256": "4681e5974cc0a7bcb3725a4ae4ccee87b6da1d4a86151abc0d7ca6c3507be784",
+      "outputSha256": "7fffc5524426a44f16d192dd9056e85d759af3271ca8769d4722322c1fd96ced",
+      "bytes": 216410
+    },
+    {
+      "output": "assets/art/personas/grinder.webp",
+      "master": "character_grinder_v1_ca02.png",
+      "masterManifestName": "character_grinder_v1.png",
+      "masterSha256": "8fbcdef1a78fb922f972f69906aed6cf082804fa258f9914546e96680e357e14",
+      "outputSha256": "8d4b07e86dcb166d0dfa81d2b6964b8b496c6e4637dee33d85bdc0ee4ff349f6",
+      "bytes": 214188
+    },
+    {
+      "output": "assets/art/bosses/bouncer.webp",
+      "master": "boss_the-bouncer_v1_c7b2.png",
+      "masterManifestName": "boss_the-bouncer_v1.png",
+      "masterSha256": "504ae7cf90a38b667f14ff7365a417a495df8998672177027d09b769f40234b5",
+      "outputSha256": "cdae8a8c2843e730965efc9fd8277c9f643b15fe84ea1bbb582ebd7b2995b08d",
+      "bytes": 215158
+    },
+    {
+      "output": "assets/art/bosses/loan-shark.webp",
+      "master": "boss_loan-shark_v1_7ca5.png",
+      "masterManifestName": "boss_loan-shark_v1.png",
+      "masterSha256": "6983fb38e3d206e7b4ea099c43fe593c715f161c38e40d19cb231093e41bc49b",
+      "outputSha256": "a678674fde217b106e689d0849205d922a89f8336839fbdd95d7ad1a60e278eb",
+      "bytes": 252590
+    },
+    {
+      "output": "assets/art/bosses/junkie.webp",
+      "master": "boss_junkie_v1_3aba.png",
+      "masterManifestName": "boss_junkie_v1.png",
+      "masterSha256": "878e9aaae4f75b996266aee772ed89df214a6881aceea366c1170a05171a1ee8",
+      "outputSha256": "630a50285afbb84859d4bdb3197b2aa4e66556e9039ff17ef90dadc582f1077c",
+      "bytes": 169568
+    },
+    {
+      "output": "assets/art/bosses/crooked-cop.webp",
+      "master": "boss_crooked-cop_v1_c31d.png",
+      "masterManifestName": "boss_crooked-cop_v1.png",
+      "masterSha256": "ed6d3e3e5e423ea165f4fa6d9df8b34d4b378321ce8684e9617f3ff358c4572f",
+      "outputSha256": "69e69e0e760fecee5217bca2808c2c02dd136bd8d419f9b921fd45927a68e87a",
+      "bytes": 149350
+    },
+    {
+      "output": "assets/art/bosses/informant.webp",
+      "master": "boss_informant_v1_63c8.png",
+      "masterManifestName": "boss_informant_v1.png",
+      "masterSha256": "b92c1c1c4999453bbd5a1cb59b33e8330e89b773e62102d39db4cd90dfd2a1e9",
+      "outputSha256": "f6997842389234be96f3d280deddf4ee8b7698f8efa89b2d33e978459d24ba6b",
+      "bytes": 166110
+    },
+    {
+      "output": "assets/art/bosses/the-raid.webp",
+      "master": "boss_the-raid_v1_3133.png",
+      "masterManifestName": "boss_the-raid_v1.png",
+      "masterSha256": "946a8a8a49f44f2a11d5089b2d4c1009d0f33147c16b233f38975e51590adee9",
+      "outputSha256": "0ce13683d507c38adfbabfb5c6799fac0c0be37ac98cdde6e69314fc3e4891e7",
+      "bytes": 144894
+    },
+    {
+      "output": "assets/art/scenes/alley-playfield.webp",
+      "master": "background_alley-playfield_v1_7e87.png",
+      "masterManifestName": "background_alley-playfield_v1.png",
+      "masterSha256": "53de66da0f1afd71dac781a6faf576f756ada15a82c6f0057795ab4f31fb5bb4",
+      "outputSha256": "d2de7e4ae686dc0003016482b55660a2b68ee662cb9d23338017142d46bf208a",
+      "bytes": 552316
+    },
+    {
+      "output": "assets/art/scenes/stairwell-descent.webp",
+      "master": "background_stairwell-descent_v1_44ff.png",
+      "masterManifestName": "background_stairwell-descent_v1.png",
+      "masterSha256": "39533a0ac1e7dbde592282d1e2ae5c09bb98de598717348f34ff90ab08e62af7",
+      "outputSha256": "99523c6ad218b82ad37583539da4c415b26d5ec1f797ddca3e6b95accaf3dcd2",
+      "bytes": 612054
+    },
+    {
+      "output": "assets/art/scenes/counting-cash.webp",
+      "master": "background_counting-cash_v1_d74e.png",
+      "masterManifestName": "background_counting-cash_v1.png",
+      "masterSha256": "66f6d1c65343c05c78fd96ccbaac2b46057959095ad84b83677e3840719c69e7",
+      "outputSha256": "fbc5c9e6bb7c59c040b665c4125e09959e12ceca647273a5b926a57f4cfc1e40",
+      "bytes": 563316
+    },
+    {
+      "output": "assets/art/scenes/the-mod-bench.webp",
+      "master": "background_the-mod-bench_v1_af0d.png",
+      "masterManifestName": "background_the-mod-bench_v1.png",
+      "masterSha256": "311e42e260385bbba64dabf44f6bc0a4f4df3208cdd62ff7b46e576d4704a19f",
+      "outputSha256": "9185a9ff5c65f4adcdcd395e687be4a2f87eba5ad5e2ec27f6ac0243eab66732",
+      "bytes": 585974
+    },
+    {
+      "output": "assets/art/scenes/gamble-double-or-nothing.webp",
+      "master": "background_gamble-double-or-nothing_v1_1c78.png",
+      "masterManifestName": "background_gamble-double-or-nothing_v1.png",
+      "masterSha256": "cabd346735be24196dae8184495ce8b18a741d705f7d230f329a23fe0d2132a3",
+      "outputSha256": "6748da7b40850ce040b26cd7f01ca371eb0b5f50223c44ae06be211c0f25b86b",
+      "bytes": 502860
+    },
+    {
+      "output": "assets/art/scenes/busted.webp",
+      "master": "background_busted_v1_ff9c.png",
+      "masterManifestName": "background_busted_v1.png",
+      "masterSha256": "710b06e2b876a45e7818c1f9163bb560e6269d88d324e80dbd460ae7f887b32b",
+      "outputSha256": "e3c4943ff51111406e4c3ef5ea3cbe1614ce096cbd50dfb846faf5b82c60cd7e",
+      "bytes": 600868
+    },
+    {
+      "output": "assets/art/scenes/the-escape.webp",
+      "master": "background_the-escape_v1_63e6.png",
+      "masterManifestName": "background_the-escape_v1.png",
+      "masterSha256": "0f807673ae9a30b2f43022e75c55a019b07d33017f0ec3cb9d419c36cb9db810",
+      "outputSha256": "bc3c21c76613dad531d8fa5d9581c37bf08a1eb8fbd42b5cb2b449418bde69dd",
+      "bytes": 573490
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/mult-face.webp",
+      "master": "contraband_mult_v1.png",
+      "masterManifestName": "contraband_mult_v1.png",
+      "masterSha256": "2f92fba0cac524ce901c2906382935dad66dd451796cf493896fe007958ad2d9",
+      "outputSha256": "d23f8ac1dfdd20942108a3a7e73391a489aee6e7ce304e1171d83e4dca4cff71",
+      "bytes": 5998
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/mult-face@2x.webp",
+      "master": "contraband_mult_v1.png",
+      "masterManifestName": "contraband_mult_v1.png",
+      "masterSha256": "2f92fba0cac524ce901c2906382935dad66dd451796cf493896fe007958ad2d9",
+      "outputSha256": "cffe5436e166f8e149f4c4baac125b8dd7dd1f10d6facf0adedf4f5b7d165a87",
+      "bytes": 18680
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/gold-face.webp",
+      "master": "contraband_cash_v1.png",
+      "masterManifestName": "contraband_cash_v1.png",
+      "masterSha256": "6ba8f0c53de7b4a31b0a8d3753311745da8c36d875112ae17193b25769ca2a22",
+      "outputSha256": "c720e1d2cce2038e85b449d264ff774b8eaf220896fb1f9e434b454c0303e180",
+      "bytes": 5994
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/gold-face@2x.webp",
+      "master": "contraband_cash_v1.png",
+      "masterManifestName": "contraband_cash_v1.png",
+      "masterSha256": "6ba8f0c53de7b4a31b0a8d3753311745da8c36d875112ae17193b25769ca2a22",
+      "outputSha256": "4bc4f7b908e477d62f6f3932f5a7bc24bca69a90949199db5d3f7cf45cf84186",
+      "bytes": 17004
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/wild-face.webp",
+      "master": "contraband_wild_v1.png",
+      "masterManifestName": "contraband_wild_v1.png",
+      "masterSha256": "2a87061b9eafec381531815ee00acf44128b41e52b23c42827d5ed0f0c6a752f",
+      "outputSha256": "3171e464f1b14c1c9b13c7b6b2f7d267a5b9f6d3588a5834b5a29fcc1d611aa3",
+      "bytes": 4838
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/wild-face@2x.webp",
+      "master": "contraband_wild_v1.png",
+      "masterManifestName": "contraband_wild_v1.png",
+      "masterSha256": "2a87061b9eafec381531815ee00acf44128b41e52b23c42827d5ed0f0c6a752f",
+      "outputSha256": "48dc909fa9a00848b4fbfd35edbf0cc3ac2b3ceef898677814a222fdda0df695",
+      "bytes": 13984
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/blood-6.webp",
+      "master": "contraband_blood-6_v1.png",
+      "masterManifestName": "contraband_blood-6_v1.png",
+      "masterSha256": "f44d116b664127c4ea555f834b4786fb9ec20391d3c5326703fa4b3b8cefab21",
+      "outputSha256": "f4b2d797661dba302410e7fec71ea268019a82d2429475139b031101f70a91c6",
+      "bytes": 5018
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/blood-6@2x.webp",
+      "master": "contraband_blood-6_v1.png",
+      "masterManifestName": "contraband_blood-6_v1.png",
+      "masterSha256": "f44d116b664127c4ea555f834b4786fb9ec20391d3c5326703fa4b3b8cefab21",
+      "outputSha256": "0cb7d399c3e0e93cf24f53b5108f7e178376112497b5ecac0e6a59dd740f4edd",
+      "bytes": 15426
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/echo-face.webp",
+      "master": "contraband_echo_v1.png",
+      "masterManifestName": "contraband_echo_v1.png",
+      "masterSha256": "4ba9a6ba46274dafc63cc7251e0b28035ca247f9e08b024fedd5384e61e75cc3",
+      "outputSha256": "0bf2d63a0ca860f661664e7b1b3464ba37213e5cfbd7a541b50259fc21c1a56e",
+      "bytes": 6888
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/echo-face@2x.webp",
+      "master": "contraband_echo_v1.png",
+      "masterManifestName": "contraband_echo_v1.png",
+      "masterSha256": "4ba9a6ba46274dafc63cc7251e0b28035ca247f9e08b024fedd5384e61e75cc3",
+      "outputSha256": "36163d70d8378986310f304aea01fc9bbc507b5bea91de088116a4a00a9d29ac",
+      "bytes": 20786
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/shiv-face.webp",
+      "master": "contraband_shiv_v1.png",
+      "masterManifestName": "contraband_shiv_v1.png",
+      "masterSha256": "c4aaaa3d68fbf8279725013d297b78ff4a1c17a8cfb121a39e973eee76f48efe",
+      "outputSha256": "f84b045b3c30ac321d754f1798ee470e0a15e2aabd9f3dce022f5616cf6ec87e",
+      "bytes": 4046
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/shiv-face@2x.webp",
+      "master": "contraband_shiv_v1.png",
+      "masterManifestName": "contraband_shiv_v1.png",
+      "masterSha256": "c4aaaa3d68fbf8279725013d297b78ff4a1c17a8cfb121a39e973eee76f48efe",
+      "outputSha256": "08b4a78ae8882b824f203bba0f50e792e4969b7916dbe0052232d1d399f92109",
+      "bytes": 10698
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/wirebag-face.webp",
+      "master": "contraband_wirebag_v1.png",
+      "masterManifestName": "contraband_wirebag_v1.png",
+      "masterSha256": "6a0d7eb473608a7607ac97a74b6ef4a0022b752bc092f5f97c60895454baec31",
+      "outputSha256": "2a3be44aa86fdfd90045beaeec8e41d731f9cfe9180b988fcc96dfa262e48fb2",
+      "bytes": 7268
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/wirebag-face@2x.webp",
+      "master": "contraband_wirebag_v1.png",
+      "masterManifestName": "contraband_wirebag_v1.png",
+      "masterSha256": "6a0d7eb473608a7607ac97a74b6ef4a0022b752bc092f5f97c60895454baec31",
+      "outputSha256": "1830aadf079ebb4adb1fc4b479f15dece45954744b950886203492e29f12a11a",
+      "bytes": 20278
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/ghost-face.webp",
+      "master": "contraband_ghost_v1.png",
+      "masterManifestName": "contraband_ghost_v1.png",
+      "masterSha256": "8e0519e345194181cdea96e7a2fb0df8f4f6d31273df684965b5133f56a2d33d",
+      "outputSha256": "c635b4fdd50a6bde9ff5309c1b78b4345c632f84957692d075b2934d179ad6d5",
+      "bytes": 6440
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/ghost-face@2x.webp",
+      "master": "contraband_ghost_v1.png",
+      "masterManifestName": "contraband_ghost_v1.png",
+      "masterSha256": "8e0519e345194181cdea96e7a2fb0df8f4f6d31273df684965b5133f56a2d33d",
+      "outputSha256": "432696e518aa1cd29846fd8cca2f9cd65767c2d5fcf7584aeff10e20c8755dd9",
+      "bytes": 21494
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/fuse-face.webp",
+      "master": "contraband_fuse_v1.png",
+      "masterManifestName": "contraband_fuse_v1.png",
+      "masterSha256": "027eb3597a3ed5678ec8743e2e1b662b119e69f348297d2f60e4c20c5f1139db",
+      "outputSha256": "c0a4caa0eea17c7c8cdf1d1591ba627847628b0cb742e49a01fd71124285260d",
+      "bytes": 4972
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/fuse-face@2x.webp",
+      "master": "contraband_fuse_v1.png",
+      "masterManifestName": "contraband_fuse_v1.png",
+      "masterSha256": "027eb3597a3ed5678ec8743e2e1b662b119e69f348297d2f60e4c20c5f1139db",
+      "outputSha256": "8913ada662c0477e11337a9f935aa0e3d9d761cd7850d7d0519a8e9add7bed7f",
+      "bytes": 14970
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/magnet-face.webp",
+      "master": "contraband_magnet_v1.png",
+      "masterManifestName": "contraband_magnet_v1.png",
+      "masterSha256": "f0c2b6a57f1788a3caee0ffd8597eadbcf2691bcb4fed73a2ea79f78f48b6fa6",
+      "outputSha256": "9a6b964c89ac88a21bd657b7a97007430c97adc8c1f77861599aac77c7c086fa",
+      "bytes": 6298
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/magnet-face@2x.webp",
+      "master": "contraband_magnet_v1.png",
+      "masterManifestName": "contraband_magnet_v1.png",
+      "masterSha256": "f0c2b6a57f1788a3caee0ffd8597eadbcf2691bcb4fed73a2ea79f78f48b6fa6",
+      "outputSha256": "4e158fe1eb2000a32feffdf572d1f6edc5a1c25a0bbe94016c1bef0a9ac74be3",
+      "bytes": 21804
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/mark-face.webp",
+      "master": "contraband_mark_v1.png",
+      "masterManifestName": "contraband_mark_v1.png",
+      "masterSha256": "2ab63bdc21a6d880436e72a787ae50bf9d1edeb3e986db7be8b61e73bce32c49",
+      "outputSha256": "c57ca10c84205a9d83ef6cdb940dd528456b1ae1af02fad79ec9398f8336aab2",
+      "bytes": 5024
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/mark-face@2x.webp",
+      "master": "contraband_mark_v1.png",
+      "masterManifestName": "contraband_mark_v1.png",
+      "masterSha256": "2ab63bdc21a6d880436e72a787ae50bf9d1edeb3e986db7be8b61e73bce32c49",
+      "outputSha256": "f5564328c6f9f609b4947d54e8b8b17fa7f39a346a187e1394477e4f0b3f9646",
+      "bytes": 16784
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/double-down-face.webp",
+      "master": "contraband_double-down_v1.png",
+      "masterManifestName": "contraband_double-down_v1.png",
+      "masterSha256": "88dae3d3b760537c33bdbe8c3769f8b8309497f045f0b70217e96335c8ef1b55",
+      "outputSha256": "2248931d076677b2474f10c30cfefb86a639d5620bd62e39d64939df43c1acf3",
+      "bytes": 6636
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/contraband/double-down-face@2x.webp",
+      "master": "contraband_double-down_v1.png",
+      "masterManifestName": "contraband_double-down_v1.png",
+      "masterSha256": "88dae3d3b760537c33bdbe8c3769f8b8309497f045f0b70217e96335c8ef1b55",
+      "outputSha256": "6440e300bd48fbaa1c561a300cae2a17235ae88f4e97e3aa8b917bdee6241748",
+      "bytes": 22310
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/centerpiece.webp",
+      "master": "hardware_01-centerpiece_v1.png",
+      "masterManifestName": "hardware_01-centerpiece_v1.png",
+      "masterSha256": "08461b5c0308cb46caa7e7f2800475d1ef60495d688821ff1b053140f260669f",
+      "outputSha256": "2913548495eba424d485df8ea1f7959cd51de5bef92e07c0d36f33e6447e98de",
+      "bytes": 10988
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/centerpiece@2x.webp",
+      "master": "hardware_01-centerpiece_v1.png",
+      "masterManifestName": "hardware_01-centerpiece_v1.png",
+      "masterSha256": "08461b5c0308cb46caa7e7f2800475d1ef60495d688821ff1b053140f260669f",
+      "outputSha256": "1237783b04ff284056c40080e97d22cab0a5a938433b3682085c4b08aa21e952",
+      "bytes": 33790
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/bookends.webp",
+      "master": "hardware_02-bookends_v1.png",
+      "masterManifestName": "hardware_02-bookends_v1.png",
+      "masterSha256": "fb93b9050a2a830c3e814e1179639a198d2aaac6f2671ef6c64696c7a646492f",
+      "outputSha256": "558d88ad7c70d84acfc7827a947af767c4e3e1f10464666118e7b3bf301ff5af",
+      "bytes": 5838
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/bookends@2x.webp",
+      "master": "hardware_02-bookends_v1.png",
+      "masterManifestName": "hardware_02-bookends_v1.png",
+      "masterSha256": "fb93b9050a2a830c3e814e1179639a198d2aaac6f2671ef6c64696c7a646492f",
+      "outputSha256": "e4f6145905fdca0d60b4985f975c323011b86d38a5fe4255b7a5043114a68f31",
+      "bytes": 16580
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/engine.webp",
+      "master": "hardware_03-engine_v1.png",
+      "masterManifestName": "hardware_03-engine_v1.png",
+      "masterSha256": "b3062226318554716b630d73b5c7159032d3cc644d7380bed08aaf55755c7c2c",
+      "outputSha256": "00d93478a16111cd7338c7a92551e9efa9983a6ef0eafc183afdaf97772b44db",
+      "bytes": 9146
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/engine@2x.webp",
+      "master": "hardware_03-engine_v1.png",
+      "masterManifestName": "hardware_03-engine_v1.png",
+      "masterSha256": "b3062226318554716b630d73b5c7159032d3cc644d7380bed08aaf55755c7c2c",
+      "outputSha256": "a92af44b2d4f59607566a3060ec9e07a22e305ad41426327bbd60b08c206d0a8",
+      "bytes": 26488
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/loaded-die.webp",
+      "master": "hardware_04-weighted-core_v1.png",
+      "masterManifestName": "hardware_04-weighted-core_v1.png",
+      "masterSha256": "b46a1ceb289b200e4db7a44539dd900a51c32b3dc13a08b6852ca785b06c53c3",
+      "outputSha256": "b63b0e99e6a35cade4ec9fa927d38afd365a708177ea394f603384bde0056618",
+      "bytes": 8180
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/loaded-die@2x.webp",
+      "master": "hardware_04-weighted-core_v1.png",
+      "masterManifestName": "hardware_04-weighted-core_v1.png",
+      "masterSha256": "b46a1ceb289b200e4db7a44539dd900a51c32b3dc13a08b6852ca785b06c53c3",
+      "outputSha256": "ff36962cd1dbd618c22cb6fa305fa454675bc63f228d14c0d34b7ae1cfc6ffae",
+      "bytes": 25016
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/blood-pact.webp",
+      "master": "hardware_05-blood-pact_v1.png",
+      "masterManifestName": "hardware_05-blood-pact_v1.png",
+      "masterSha256": "b5344e92a4ff59b113b6a9f78ea23e218c5ac1dabb5aa4195d7cf23a3e3df050",
+      "outputSha256": "d07c22b4978d9f9d951165c10efbd3a72ee73f0a7fb95458e4fc049524a8f45f",
+      "bytes": 11366
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/blood-pact@2x.webp",
+      "master": "hardware_05-blood-pact_v1.png",
+      "masterManifestName": "hardware_05-blood-pact_v1.png",
+      "masterSha256": "b5344e92a4ff59b113b6a9f78ea23e218c5ac1dabb5aa4195d7cf23a3e3df050",
+      "outputSha256": "a58ffa513d8fb1cea88768ebc6af102d693010783a45f207e17783760231a93b",
+      "bytes": 34378
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/black-book.webp",
+      "master": "hardware_07-black-book_v1.png",
+      "masterManifestName": "hardware_07-black-book_v1.png",
+      "masterSha256": "846d2997eb4c0d3ad69d811024ed7d58a4fb7e9c036588bd086228fc5675d563",
+      "outputSha256": "728323f07d369bb6c0c7f63656f2005d79be194a1091a70bffc20991637153a9",
+      "bytes": 6936
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/black-book@2x.webp",
+      "master": "hardware_07-black-book_v1.png",
+      "masterManifestName": "hardware_07-black-book_v1.png",
+      "masterSha256": "846d2997eb4c0d3ad69d811024ed7d58a4fb7e9c036588bd086228fc5675d563",
+      "outputSha256": "23a2bd1c6f353614c0932c3bf86c8d0077e1f1f82a95f64888f3af87c359edb6",
+      "bytes": 21658
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/burner-phone.webp",
+      "master": "hardware_08-burner-phone_v1.png",
+      "masterManifestName": "hardware_08-burner-phone_v1.png",
+      "masterSha256": "b66ac36b31bcb1528ede38c7d79a38edd567dafcecccf72d68b8cfd72d598e72",
+      "outputSha256": "1cc76cf638465de5223e1c404eb4152374a2052b9dd50c763afb6934ff86dd52",
+      "bytes": 8846
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/burner-phone@2x.webp",
+      "master": "hardware_08-burner-phone_v1.png",
+      "masterManifestName": "hardware_08-burner-phone_v1.png",
+      "masterSha256": "b66ac36b31bcb1528ede38c7d79a38edd567dafcecccf72d68b8cfd72d598e72",
+      "outputSha256": "70bf39c0332d6cac8b6451178a60443bfbb1bb895b789a8880de9267d77f891e",
+      "bytes": 25782
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/shady-ledger.webp",
+      "master": "hardware_09-shady-ledger_v1.png",
+      "masterManifestName": "hardware_09-shady-ledger_v1.png",
+      "masterSha256": "5ae623767d4e9b1db4e167a0bd5100f8dd1ce255f83088d1fe4f98cd6dffd71e",
+      "outputSha256": "4205696b9f9c169070e1e2dce31e463a2ec66791b4a367391de53d516d195892",
+      "bytes": 7496
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/shady-ledger@2x.webp",
+      "master": "hardware_09-shady-ledger_v1.png",
+      "masterManifestName": "hardware_09-shady-ledger_v1.png",
+      "masterSha256": "5ae623767d4e9b1db4e167a0bd5100f8dd1ce255f83088d1fe4f98cd6dffd71e",
+      "outputSha256": "e430921d58890f664fad00312d68050600e364e31c199e1db9717411f1fbcba7",
+      "bytes": 22586
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/crowbar.webp",
+      "master": "hardware_10-crowbar_v1.png",
+      "masterManifestName": "hardware_10-crowbar_v1.png",
+      "masterSha256": "a4e26d4e37fa813d33d5844c27cc2eb94e58e2dc6e071486d8c590f4e140564d",
+      "outputSha256": "98d70762d6d26c66209cca27540962c2b98a8e9aac0cc14836d7651e9d21959f",
+      "bytes": 4710
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/crowbar@2x.webp",
+      "master": "hardware_10-crowbar_v1.png",
+      "masterManifestName": "hardware_10-crowbar_v1.png",
+      "masterSha256": "a4e26d4e37fa813d33d5844c27cc2eb94e58e2dc6e071486d8c590f4e140564d",
+      "outputSha256": "63ca1bcbe197bc316310857d4a7eb2ab14a746469260cc73bb1c01ebe9e8eeb1",
+      "bytes": 12552
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/fuse-box.webp",
+      "master": "hardware_11-fuse-box_v1.png",
+      "masterManifestName": "hardware_11-fuse-box_v1.png",
+      "masterSha256": "3e13be51cf2313146fe883d8ff4b70f6b74752529c717e4ccdc89611ef74e93e",
+      "outputSha256": "aaee203d4284d1b92e81064e6d768aa98d2848a1b620cae60bf28b825ecf5b95",
+      "bytes": 7932
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/fuse-box@2x.webp",
+      "master": "hardware_11-fuse-box_v1.png",
+      "masterManifestName": "hardware_11-fuse-box_v1.png",
+      "masterSha256": "3e13be51cf2313146fe883d8ff4b70f6b74752529c717e4ccdc89611ef74e93e",
+      "outputSha256": "572c6aca90630648d407b059350f0eab0c265735984c9dff86089febae44e955",
+      "bytes": 23314
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/mirror-rig.webp",
+      "master": "hardware_12-mirror-rig_v1.png",
+      "masterManifestName": "hardware_12-mirror-rig_v1.png",
+      "masterSha256": "3472f0d62289ccef0290c05a86423f33e7d84ece1951667211e06b8ac74bc9c7",
+      "outputSha256": "773ad8588c11d227b93b48bb924d236e4a6ffd3b14a84b7037acc4add95eaa02",
+      "bytes": 9530
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/mirror-rig@2x.webp",
+      "master": "hardware_12-mirror-rig_v1.png",
+      "masterManifestName": "hardware_12-mirror-rig_v1.png",
+      "masterSha256": "3472f0d62289ccef0290c05a86423f33e7d84ece1951667211e06b8ac74bc9c7",
+      "outputSha256": "40a064c7e8ffa9e71950a2423fd68cbfe5703fd820cf79c827d7819f6e83ed46",
+      "bytes": 28784
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/debt-collector.webp",
+      "master": "hardware_13-debt-collector_v1.png",
+      "masterManifestName": "hardware_13-debt-collector_v1.png",
+      "masterSha256": "200e630d3524e0993fbec417f25eb7f8a59508ef75aa29a75586e9997e8edf17",
+      "outputSha256": "88c5f0bd05f24d3c4ef1aebf886832cf53fa18068a3fa0d05d5c962c851cbb32",
+      "bytes": 7144
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/debt-collector@2x.webp",
+      "master": "hardware_13-debt-collector_v1.png",
+      "masterManifestName": "hardware_13-debt-collector_v1.png",
+      "masterSha256": "200e630d3524e0993fbec417f25eb7f8a59508ef75aa29a75586e9997e8edf17",
+      "outputSha256": "72fcb596c5164caf5ec99adb34cfc673e1648953cd6f44e165c1f24cd32bba7a",
+      "bytes": 20862
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/hot-streak-coil.webp",
+      "master": "hardware_14-hot-streak-coil_v1.png",
+      "masterManifestName": "hardware_14-hot-streak-coil_v1.png",
+      "masterSha256": "701576e6e090d64029e0d9708403662584d58af42c9572ae7a89c10755d9fa26",
+      "outputSha256": "7f41e7c3af3e2310d9f3ca6845e62f67ca7ff08eeadb084fe4a7ee1ea0b9e99f",
+      "bytes": 11816
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/hardware/hot-streak-coil@2x.webp",
+      "master": "hardware_14-hot-streak-coil_v1.png",
+      "masterManifestName": "hardware_14-hot-streak-coil_v1.png",
+      "masterSha256": "701576e6e090d64029e0d9708403662584d58af42c9572ae7a89c10755d9fa26",
+      "outputSha256": "3fb0e34de17ef401fe23abdc24967bfb59a8a1c73479db05d941749fc163ec82",
+      "bytes": 34512
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/consumables/second-wind.webp",
+      "master": "consumable_15-second-wind_v1.png",
+      "masterManifestName": "consumable_15-second-wind_v1.png",
+      "masterSha256": "f77d14498865bdcc73adfb58ab83f8a66c8a54e19c2613d8d5a896b87bbfa647",
+      "outputSha256": "a68a8b799feb53721ba29229c0de718533a0855a939a190e44525873764f0872",
+      "bytes": 9200
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/consumables/second-wind@2x.webp",
+      "master": "consumable_15-second-wind_v1.png",
+      "masterManifestName": "consumable_15-second-wind_v1.png",
+      "masterSha256": "f77d14498865bdcc73adfb58ab83f8a66c8a54e19c2613d8d5a896b87bbfa647",
+      "outputSha256": "d05a2b2c954ec674b8f8111e830d5b89473077e2203d5632d2b884229caf040d",
+      "bytes": 25696
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/consumables/smelling-salts.webp",
+      "master": "consumable_16-smelling-salts_v1.png",
+      "masterManifestName": "consumable_16-smelling-salts_v1.png",
+      "masterSha256": "78ab140fb3a16aad4bc73a94033af6e842c8973a2a4411b71ca2fc04e103d401",
+      "outputSha256": "35582106ac0963446342207742bc36aadec3cd3504fd090eb737d57359927736",
+      "bytes": 6544
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/consumables/smelling-salts@2x.webp",
+      "master": "consumable_16-smelling-salts_v1.png",
+      "masterManifestName": "consumable_16-smelling-salts_v1.png",
+      "masterSha256": "78ab140fb3a16aad4bc73a94033af6e842c8973a2a4411b71ca2fc04e103d401",
+      "outputSha256": "ef9adc63a02debcbd8651b8e8ee94b913917b6b7f2ea69f4f9bf5eee5b707fc8",
+      "bytes": 18846
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/consumables/dirty-wad.webp",
+      "master": "consumable_17-dirty-wad_v1.png",
+      "masterManifestName": "consumable_17-dirty-wad_v1.png",
+      "masterSha256": "ae7c034bf7abb899bb5c7517819bd2882f5e713304f5e068b51756138844e370",
+      "outputSha256": "3f2147c04c52091737fe56b209f6868882c923afd8da375122156a59400919cc",
+      "bytes": 7400
+    },
+    {
+      "kind": "itemIcon",
+      "output": "assets/art/consumables/dirty-wad@2x.webp",
+      "master": "consumable_17-dirty-wad_v1.png",
+      "masterManifestName": "consumable_17-dirty-wad_v1.png",
+      "masterSha256": "ae7c034bf7abb899bb5c7517819bd2882f5e713304f5e068b51756138844e370",
+      "outputSha256": "6da77afc28ac4ec8e87c4977cfcc0b2d2713c0de78f457940ee67f66f9210772",
+      "bytes": 22078
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/standard-frame.webp",
+      "master": "shopcard_standard-frame_v1.png",
+      "masterManifestName": "shopcard_standard-frame_v1.png",
+      "masterSha256": "61d10a0cd8c80dbfcac4ebd00f8a18d2a3f6fc2d4297050b66f1ac716b15357e",
+      "outputSha256": "d08b128c169bfa68309741dcde25b9c2316536c4092bee160a913dc2149768e3",
+      "bytes": 36498,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/rare-frame.webp",
+      "master": "shopcard_rare-frame_v1.png",
+      "masterManifestName": "shopcard_rare-frame_v1.png",
+      "masterSha256": "f28c5252cd3716be3ca283bc33cb1f65ebe9d597d290c2b6f6b4ac6b60a31bda",
+      "outputSha256": "e0bae91a313a632afb25930b179a41ec47a660b31bd5856448e537deb81c093b",
+      "bytes": 35484,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/dangerous-frame.webp",
+      "master": "shopcard_dangerous-frame_v1.png",
+      "masterManifestName": "shopcard_dangerous-frame_v1.png",
+      "masterSha256": "624ddc238ce55c1248a7565838e5c46f34c8ad9cf716fcb5fcc010fee76c7390",
+      "outputSha256": "c863c84ec95ef7e63785a12986686de661c1e5b9dccb34ff07703381942db1ea",
+      "bytes": 33958,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/price-tag-blank.webp",
+      "master": "shopcard_price-tag-blank_v1.png",
+      "masterManifestName": "shopcard_price-tag-blank_v1.png",
+      "masterSha256": "e898ca57a7373b98123dce5f2265ac6dae8b22fbf5a04a9c17500430b245624f",
+      "outputSha256": "b9582b1e157eaf46672797d73a3c14b5661b542e96e51ad22fa10229f96d9141",
+      "bytes": 84900,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/selected-overlay.webp",
+      "master": "shopcard_selected-overlay_v1.png",
+      "masterManifestName": "shopcard_selected-overlay_v1.png",
+      "masterSha256": "f10ac9f57aeb70c0f1db74405813fb56fae8cc9abf4242d250e79c8693bd149f",
+      "outputSha256": "eb1f02dbd06a87b28f0bb0ef5a5341f6dc46621ebafebe97a4e3c74002b92971",
+      "bytes": 44948,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/sold-unavailable-overlay.webp",
+      "master": "shopcard_sold-unavailable-overlay_v1.png",
+      "masterManifestName": "shopcard_sold-unavailable-overlay_v1.png",
+      "masterSha256": "fb5b27e88bcf8744ba52c9dbc432d71ffe9949424b876b3138b8f33c18b4aa77",
+      "outputSha256": "efee1d750f6324435502df3720acea031c5492624a0403e454fd7c84575603b6",
+      "bytes": 56342,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/section-header-blank.webp",
+      "master": "ui-header_section-header-blank_v1.png",
+      "masterManifestName": "ui-header_section-header-blank_v1.png",
+      "masterSha256": "aec624cd6bc0df3290ee962f01136d1989131d335677d46531348eaf724c40a1",
+      "outputSha256": "64371b43d91bd338458cbe4ca8e6ff620d68c55f44c22c520c80005e3b6a2004",
+      "bytes": 56722,
+      "trim": false
+    },
+    {
+      "kind": "shopCard",
+      "output": "assets/art/shop/shop-divider-blank.webp",
+      "master": "ui-divider_shop-divider-blank_v1.png",
+      "masterManifestName": "ui-divider_shop-divider-blank_v1.png",
+      "masterSha256": "f541f0dd71d8d650430d69575201c5b7672aadfabe3123a8000168cc031c5d93",
+      "outputSha256": "bcce014807db71f9fa5b99e21b48cf0a3ce9df86565525519d07fb6143106666",
+      "bytes": 118852,
+      "trim": true
+    }
+  ]
+}

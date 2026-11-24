@@ -1,0 +1,9 @@
+GROK BOT — GUTTERBONES 1977 BATCH 5.2 POLISH HANDOFF (19 NOV 2026)
+
+Treat /Projects/Gutterbones/ as the sole approved source art bank and LukeHolmes/Dices-and-Devices as code authority. The latest visual integration is stacked as art/visual-overhaul -> PR #94 art/s3-item-icons -> PR #95 art/s4-shop-cards. Use the new docs-only branch art/batch52-polish-handoff-2026-11-19 for planning and review, NOT main.
+
+Open the attached GROKBOT_CURSOR_Batch52_Handoff.md and manifest.csv and download gutterbones-batch52-polish-delta-v1.zip from /Projects/Gutterbones/07_UI-Batch5/02_Gameplay-HUD/Transition-Kit-v2/. Ingest the PNGs into a Cursor local checkout under art-production/batch-5-2/review/, verify SHA-256 and push them on a separate archive-only review commit, never directly to active assets/art/. The GitHub docs branch alone does not contain the new PNG binaries.
+
+We already have approved dice, front-entry eight-frame throwing hand, rat, cigarette ember/smoke, scenes, portraits, 13 hardware icons, consumables and all eight shop frames. NEVER regenerate those. The new Brass Knuckles, ashtray and nine cleaned HUD cutouts are unapproved. The ashtray has painted smoke: avoid simultaneous live smoke. Full-screen concept images are references only with fake numeric fixtures.
+
+Assign independent jobs: intake/provenance; visual-size/edge QA; archive-only binary sync; source-code component mapping; interaction + animation-safe layering; real browser QA for desktop/tablet/mobile; approval gate. Do not change gameplay rules, balance, RNG or saves. Never merge to main without explicit approval. Return concise PASS/FAIL/BLOCKED checkpoints, actual branch/commit, hashes, screenshot evidence and approvals needed.

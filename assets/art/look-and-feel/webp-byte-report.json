@@ -1,0 +1,105 @@
+{
+  "files": [
+    {
+      "out": "assets/art/look-and-feel/hand-front-spritesheet.webp",
+      "bytes": 55312,
+      "source": "approved/05_Animations/Dice-Throw-Hand/hand-front-spritesheet-native-rgba.png",
+      "sha256": "18bf4a6d942eef3409b75937c0e2dfeea5da1f43810a7b8abbd7833fa0f6242d",
+      "dimensions": [
+        888,
+        444
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/alley-rat-8frame.webp",
+      "bytes": 40874,
+      "source": "approved/05_Animations/Ambient-Rat/alley-rat-8frame-horizontal.png",
+      "sha256": "aab39c59cbb1a1ee6fbc6770035d51b8f74236654a1c749bc0d1b8971bf3cff5",
+      "dimensions": [
+        1280,
+        160
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/cigarette-ember-8frame.webp",
+      "bytes": 40874,
+      "source": "candidates/ambient-fx-v2.1/burning-cigarette-ember-8frame.png",
+      "sha256": "955ebb4499a1ab26dfa681caf9cb698343818f51d21ce87b200b8de5cb920e3c",
+      "dimensions": [
+        1024,
+        512
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/cigarette-smoke-rise-8frame.webp",
+      "bytes": 61008,
+      "source": "candidates/ambient-fx-v2.1/cigarette-smoke-rise-8frame.png",
+      "sha256": "2f2e8320e26578d300e5f388ebc630df33984a191c2ac624ad625bae231f1886",
+      "dimensions": [
+        512,
+        256
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/tungsten-bulb-flicker-8frame.webp",
+      "bytes": 56300,
+      "source": "candidates/ambient-fx-v2.1/tungsten-bulb-flicker-8frame.png",
+      "sha256": "e6d469a3f2c34615a37c1586c3b30fda5d4d4b5c9ea57af138ccc84723661088",
+      "dimensions": [
+        512,
+        256
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/cockroach-crawl-8frame.webp",
+      "bytes": 33104,
+      "source": "candidates/ambient-fx-v2.1/cockroach-crawl-8frame.png",
+      "sha256": "15c83a47f0f173c74b276bc89e7801d4edd80a42c70610ccaefef0e2e60a2e73",
+      "dimensions": [
+        512,
+        256
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/debris-rag-scrap-8frame.webp",
+      "bytes": 9970,
+      "source": "candidates/ambient-fx-v2.1/debris-rag-scrap-8frame.png",
+      "sha256": "945d81b464793ac9a2d39302413dea689efe25a33d3fd8d5d2c4807d069e6787",
+      "dimensions": [
+        384,
+        192
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/debris-betting-slip-8frame.webp",
+      "bytes": 14606,
+      "source": "candidates/ambient-fx-v2.1/debris-betting-slip-8frame.png",
+      "sha256": "f6079e0df1266e8dbfd4593634cd5e100ae7fada170970f52521cffb242212f8",
+      "dimensions": [
+        384,
+        192
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/cash-bill-one-8frame.webp",
+      "bytes": 18006,
+      "source": "candidates/ambient-fx-v2.1/cash-bill-one-8frame.png",
+      "sha256": "48a81679ca4b04c6ac3a25a916341867a3cfe6cbc5d048b16c9f388ed9bc8af0",
+      "dimensions": [
+        384,
+        192
+      ]
+    },
+    {
+      "out": "assets/art/look-and-feel/cash-betting-slip-8frame.webp",
+      "bytes": 22236,
+      "source": "candidates/ambient-fx-v2.1/cash-betting-slip-8frame.png",
+      "sha256": "f61173439bca918a1146a06a87390996bc24890f7199f6f4038f1a7acedf92cc",
+      "dimensions": [
+        384,
+        192
+      ]
+    }
+  ],
+  "total_bytes": 352290
+}
