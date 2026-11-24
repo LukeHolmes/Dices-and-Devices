@@ -17145,9 +17145,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const playSynergySequence = (result, onDone) => {
                 const events = result.synergyEvents || [];
                 const stepMs = reducedMotion ? 0 : (SYNERGY_TUNING.juiceStepMs || 150);
-                if (!events.length || reducedMotion) {
-                    if (reducedMotion) setChainStepsRevealed(null);
-                    if (!events.length) setSynergyChainBanner(null);
+                if (!events.length) {
+                    setSynergyChainBanner(null);
+                    onDone();
+                    return;
+                }
+                if (reducedMotion) {
+                    setChainStepsRevealed(null);
+                    setSynergyChainBanner({
+                        depth: result.chainDepth || events.length,
+                        steps: events.length,
+                        label: events[0]?.label || 'CHAIN'
+                    });
                     onDone();
                     return;
                 }

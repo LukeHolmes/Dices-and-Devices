@@ -120,7 +120,7 @@ test("e2e — carve returns to shop without skipping job round", async () => {
     assert.equal(before.phase, "CARVING");
     assert.equal(before.round, 2);
     await page.evaluate(() => {
-      const tile = document.querySelector('[data-layout-key="carving-layout"] button');
+      const tile = document.querySelector('[data-layout-key="carving-layout"] .carving-die-tile');
       tile?.click();
     });
     await page.waitForTimeout(900);
