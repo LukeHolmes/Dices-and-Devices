@@ -23,6 +23,12 @@ Two low-risk fixes from the analysis:
 **F3 — Softer first run:**
 - `FIRST_RUN_TUNING.openingTarget` **75 → 70** (standard `EARLY_GAME_TUNING.openingTarget` stays 75).
 
+### F1/F2 — Slop + upper rows (direct push to `main`, commit `98a7ea0`)
+- Slop (Chance): `sum + 5 chips ×1.22` → `sum ×1.0` (always-valid fallback, no longer dominant).
+- Upper rows: ONES–THREES `×1.5 → ×2.0`, FOURS–SIXES `×2.0 → ×2.2` (upper cap `2.5 → 3.0`).
+- Upper-section bonus (≥63 upper heat): `+0.5x → +1.0x`.
+- Updated tooltips + 10 test files. Verified green: `rules`, `synergy-baseline`, `synergy-chains`, `synergy-stage2/3`, `synergy-tier2`, `synergy-phase6`, `balance-top5-fixes`, `playtest5-economy-sim`, `playtest5-balance-bot`.
+
 ### Tests updated
 - `tests/gamble.test.cjs` — added "SOFT and HARD tiers are EV-neutral without flow".
 - `tests/balance.test.cjs` — `FIRST_RUN_TUNING` assertion now expects 70 (first run) vs 75 (standard).
@@ -53,15 +59,15 @@ From `docs/balance-analysis-2026-11-24.md` (all have exact implementation pointe
 
 | # | Issue | Status |
 |---|---|---|
-| F1 | Slop dominates; upper rows are dead options | **open** |
-| F2 | Upper-section bonus (63) is vestigial | **open** |
+| F1 | Slop dominates; upper rows are dead options | **done** (this session) |
+| F2 | Upper-section bonus (63) is vestigial | **done** (this session) |
 | F3 | First-run target cliff | **done** (this session) |
 | F4 | Persona imbalance (Enforcer / Hustler / Counter) | **open** |
 | F5 | Gamble tiers EV-monotonic | **done** (this session) |
 | F6 | Synergy late-game dominance (unmeasured) | **open** — run `sim-build-dominance.cjs` before tuning |
 | F7 | Debt spiral + Debt Collector loop | **open** |
 
-Suggested next: **F1+F2** (Slop + upper rows) — a coordinated change touching `calculateScore`, `CATEGORY_RULE_TOOLTIPS`, and 4 test files.
+Suggested next: **F4** (persona loadouts — re-run `scripts/sim-opening.cjs` + `scripts/balance-ev.cjs`) and **F6** (run `sim-build-dominance.cjs` before synergy tuning).
 
 ---
 
