@@ -7102,6 +7102,47 @@
         display: block !important;
     }
   }
+/* H8 */
+  @media (max-height: 420px) {
+    #root-gutterbones[data-phase="CARVING"] [data-layout-key="carving-layout"] {
+      display: grid !important;
+      grid-template-columns: 14rem minmax(0, 1fr);
+      gap: 0.5rem;
+      align-items: stretch;
+      padding-top: 2.25rem;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-shelf {
+      max-height: 100%;
+      overflow-y: auto;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-bone-strip {
+      position: relative !important;
+      min-height: 0;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-bone-strip .grid {
+      gap: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-die-tile {
+      height: min(28vh, 6rem) !important;
+      width: auto !important;
+      min-width: 3.25rem;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-bone-strip > button.absolute {
+      position: static !important;
+      margin-top: 0.35rem;
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+    #root-gutterbones[data-phase="CARVING"] .bone-held-label {
+      color: #1a1204 !important;
+      background: rgba(12, 9, 8, 0.82);
+      padding: 0.12rem 0.35rem;
+      border-radius: 0.2rem;
+      text-shadow: none;
+      bottom: -1.1rem;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
