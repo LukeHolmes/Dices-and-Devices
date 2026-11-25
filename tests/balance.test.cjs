@@ -33,8 +33,8 @@ test("opening balance — quota curve smoothed (R2–R4 steps, R6 anchor)", () =
   assert.ok(r6 >= 290 && r6 <= 320, `R6 anchor ${r6}`);
 });
 
-test("FIRST_RUN_TUNING — first-run opening target matches standard R1 quota", () => {
+test("FIRST_RUN_TUNING — first run is softer than standard R1 quota", () => {
   const { html } = require("./helpers/game.cjs");
-  assert.match(html, /FIRST_RUN_TUNING[\s\S]*openingTarget:\s*75/);
+  assert.match(html, /FIRST_RUN_TUNING[\s\S]*openingTarget:\s*70/);
   assert.match(html, /EARLY_GAME_TUNING[\s\S]*openingTarget:\s*75/);
 });

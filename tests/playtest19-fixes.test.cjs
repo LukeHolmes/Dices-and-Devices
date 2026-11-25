@@ -81,7 +81,7 @@ async function resumePlayHeavy(page) {
 }
 
 for (const vp of VIEWPORTS) {
-  test(`e2e — run intel DETAILS popover in viewport @ ${vp.name}`, async () => {
+  test(`e2e — run intel DETAILS popover in viewport @ ${vp.name}`, { skip: "run-intel summary removed by Option C redesign" }, async () => {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     try {

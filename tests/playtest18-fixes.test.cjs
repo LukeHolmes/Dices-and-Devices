@@ -254,7 +254,7 @@ const INTEL_STATES = [
 
 for (const vp of VIEWPORTS) {
   for (const state of INTEL_STATES) {
-    test(`e2e — run intel summary ${state.id} @ ${vp.name}`, async () => {
+    test(`e2e — run intel summary ${state.id} @ ${vp.name}`, { skip: "run-intel summary removed by Option C redesign" }, async () => {
       const browser = await chromium.launch({ headless: true });
       const page = await browser.newPage();
       try {

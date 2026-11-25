@@ -78,7 +78,7 @@ const INTEL_VIEWPORTS = [
 ];
 
 for (const vp of INTEL_VIEWPORTS) {
-  test(`e2e — inline run intel fully visible @ ${vp.name}`, async () => {
+  test(`e2e — inline run intel fully visible @ ${vp.name}`, { skip: "run-intel summary removed by Option C redesign" }, async () => {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     try {

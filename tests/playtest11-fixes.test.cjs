@@ -139,7 +139,7 @@ test("e2e — resolution and breakdown never overlap (layout audit)", async () =
   }
 });
 
-test("e2e — roll disabled while score overlay open", async () => {
+test("e2e — roll disabled while score overlay open", { skip: "score flow changed by Option C redesign (no score-breakdown overlay)" }, async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
