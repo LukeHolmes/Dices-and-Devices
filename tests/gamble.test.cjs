@@ -54,6 +54,12 @@ test("HARD tier pays 1.5x stake on win", () => {
   assert.equal(out.winAmount, Math.round(out.stake * 1.5));
 });
 
+test("SOFT and HARD tiers are EV-neutral without flow", () => {
+  const g = loadGamble();
+  assert.equal(g.winProbability("SOFT", 0), 0.5);
+  assert.equal(g.winProbability("HARD", 0), 0.4);
+});
+
 test("flow streak increases win probability with cap", () => {
   const g = loadGamble();
   const p0 = g.winProbability("FAIR", 0);
