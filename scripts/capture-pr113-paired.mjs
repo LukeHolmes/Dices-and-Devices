@@ -81,7 +81,14 @@ async function seedPlay(page, base) {
   await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.resumeSavedRun());
   await page.waitForSelector('[data-tutorial="roll-btn"]:not([disabled])', { timeout: 60_000 });
   await page.click('[data-tutorial="roll-btn"]');
-  await page.waitForTimeout(450);
+  await page.waitForFunction(
+    () => {
+      const lane = document.querySelector('[data-layout-key="play-dice-lane"]');
+      return lane && lane.querySelectorAll('button').length >= 5;
+    },
+    { timeout: 60_000 },
+  );
+  await page.waitForTimeout(350);
 }
 
 async function seedShop(page, base) {
