@@ -7039,6 +7039,30 @@
         color: #1a1204 !important;
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
     }
+/* H6 */
+  @media (max-width: 767px) {
+    #root-gutterbones [data-layout-key="lineup-grid"].lineup-persona-grid {
+      flex: 0 0 auto;
+      min-height: min(46vh, 22rem);
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(9.5rem, 42vw);
+      grid-template-columns: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.25rem;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card {
+      scroll-snap-align: start;
+      min-width: 9.5rem;
+    }
+    #root-gutterbones .gb-screen:has([data-layout-key="lineup-grid"]) {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
