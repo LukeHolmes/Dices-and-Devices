@@ -1,0 +1,79 @@
+diff --git a/index.html b/index.html
+index 8ffef91..b7fea9e 100644
+--- a/index.html
++++ b/index.html
+@@ -9665,6 +9665,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+         const [lineupToast, setLineupToast] = useState(null);
+         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
+         const runRandomRef = useRef(() => Math.random());
++        const simSeededGameplay = () =>
++            dailyRunActive || e2eRunSeededRef.current
++            || (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function');
++        const gameplayRandom = () => (simSeededGameplay() ? runRandomRef.current() : Math.random());
+         const e2eRunSeededRef = useRef(false);
+         const e2eRngCallCountRef = useRef(0);
+         const e2eRunSeedValueRef = useRef(null);
+@@ -11737,7 +11741,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 runRandomRef.current = cfg.rng;
+             } else if (GutterbonesReplay?.personaStartModifiers?.(p.id)?.length) {
+                 setRunModifierIds(GutterbonesReplay.personaStartModifiers(p.id));
+-                runRandomRef.current = () => Math.random();
++                if (!e2eRunSeededRef.current) {
++                    runRandomRef.current = typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
++                        ? window.__GB_SIM_GAME_RANDOM__
++                        : () => Math.random();
++                }
++            } else if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') {
++                setRunModifierIds([]);
++                if (!e2eRunSeededRef.current) {
++                    runRandomRef.current = window.__GB_SIM_GAME_RANDOM__;
++                }
+             } else {
+                 setRunModifierIds([]);
+                 if (!e2eRunSeededRef.current) {
+@@ -11748,7 +11761,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setTutorialStepIndex(0);
+             tutorialPayoutCountRef.current = 0;
+             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
+-            const arcPickRng = (dailyRunActive || e2eRunSeededRef.current)
++            const arcPickRng = (dailyRunActive || e2eRunSeededRef.current
++                || typeof window.__GB_SIM_GAME_RANDOM__ === 'function')
+                 ? runRandomRef.current()
+                 : Math.random();
+             const runArcId = tutorial
+@@ -12041,7 +12055,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 return;
+             }
+             const junkieBoss = activeBoss?.id === 'JUNKIE';
+-            const runRandomFn = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
++            const runRandomFn = () => gameplayRandom();
+             const e2eFastDice = typeof window !== 'undefined'
+                 && typeof window.__GB_E2E_QUERY__ === 'function'
+                 && window.__GB_E2E_QUERY__();
+@@ -12093,7 +12107,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setRollingSlots(prev => prev.map((_, i) => i === idx));
+             const settleMs = reducedMotion ? 0 : getDiceSettleMs(typeof audioSettings !== 'undefined' ? audioSettings : {}, reducedMotion) + 120;
+             scheduleTimeout(() => {
+-                const pillRng = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
++                const pillRng = () => gameplayRandom();
+                 setDice(prev => {
+                     const next = [...prev];
+                     const die = next[idx];
+@@ -12153,7 +12167,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             const grant = tutGrant || EARLY_GAME_TUNING.openingStashGrant || 0;
+             if (grant <= 0) return;
+             setStash(grant);
+-            const sniffRng = () => ((dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current() : Math.random());
++            const sniffRng = () => gameplayRandom();
+             const slot = tutorialActiveRef.current && GutterbonesTutorial
+                 ? GutterbonesTutorial.TUNING.openingSniffSlot
+                 : Math.floor(sniffRng() * 5);
+@@ -12836,7 +12850,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             if (!preservePaths) setSelectedShopPathId(null);
+             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
+             setActiveShopTag(offerTag);
+-            const rng = (dailyRunActive || e2eRunSeededRef.current) ? runRandomRef.current : Math.random;
++            const rng = simSeededGameplay() ? runRandomRef.current : Math.random;
+             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
+             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
+             const consumablePoolSeed = Object.values(CONSUMABLES).filter(

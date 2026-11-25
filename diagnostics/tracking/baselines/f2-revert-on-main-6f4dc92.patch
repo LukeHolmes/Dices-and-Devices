@@ -1,0 +1,25 @@
+diff --git a/index.html b/index.html
+index 21f2dc7..ff628c2 100644
+--- a/index.html
++++ b/index.html
+@@ -7407,17 +7407,17 @@ const GutterbonesRules = (() => {
+         const runUpperHeat = Math.max(0, Number(context.runUpperHeat) || 0);
+         const upperBonusActive = runUpperHeat >= 63;
+         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
+-            mult += 1;
++            mult += 0.5;
+         }
+         if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
+-            mult = Math.min(mult, 3);
++            mult = Math.min(mult, 2.5);
+         }
+         const categoryBaseChips = chips;
+         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
+         const categoryMult = mult;
+         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
+         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
+-            pushStep('multiplier', 'UPPER BONUS', '+1x (upper section ≥63)', '+1x');
++            pushStep('multiplier', 'UPPER BONUS', '+0.5x (upper section ≥63)', '+0.5x');
+         }
+         const markBonus = Math.max(0, Math.floor(Number(synergyState?.categoryMarks?.[catId]) || 0));
+         if (markBonus > 0) {

@@ -1,0 +1,8 @@
+ts,rid,seed,context,commit,workflow_run_url,approved,approval_id,outcome_visible,notes
+2026-11-11T11:02:00+00:00,55,435545,ci-nightly,25d5266,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Historical exposure logged per Luke D2 (accept)
+2026-11-11T11:02:00+00:00,56,443464,ci-nightly,25d5266,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Historical exposure logged per Luke D2 (accept)
+2026-11-11T11:02:00+00:00,57,451383,ci-nightly,25d5266,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Historical exposure logged per Luke D2 (accept)
+2026-11-11T11:02:00+00:00,58,459302,ci-nightly,25d5266,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Historical exposure logged per Luke D2 (accept)
+2026-11-11T11:02:00+00:00,59,467221,ci-nightly,25d5266,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Historical exposure logged per Luke D2 (accept)
+2026-11-12T03:15:00+00:00,55,435545,ci-nightly,89210e3,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Post-lock nightly run #3+ pattern (8 total post-lock)
+2026-11-18T11:47:00+00:00,55,435545,ci-nightly,7d649ef,https://github.com/LukeHolmes/Dices-and-Devices/actions/workflows/nightly-full-replay.yml,N,,Y,Nightly run #9 success; holdout rids executed unguarded on main
