@@ -5835,11 +5835,25 @@
         box-shadow: none !important;
         gap: 0.25rem 0.35rem !important;
     }
+    #root-gutterbones[data-batch52-art="1"] .play-status-bar {
+        background: url("assets/art/batch-5-2/atlas/ui-topbar-segmented-ink.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+        padding: 0.12rem 0.18rem !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round {
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-ink.webp") center / 100% 100% no-repeat !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp") center / 100% 100% no-repeat !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt {
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp") center / 100% 100% no-repeat !important;
+    }
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
-        background: url("assets/art/batch-5-2/hud/status-chip-paper.webp") center / 100% 100% no-repeat !important;
         background-color: transparent !important;
         border: 0 !important;
         color: #1a1208 !important;
@@ -5849,7 +5863,7 @@
         padding: 0.16rem 0.55rem !important;
     }
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
-        background: url("assets/art/batch-5-2/hud/status-gauge-split.webp") center / 100% 100% no-repeat !important;
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-felt.webp") center / 100% 100% no-repeat !important;
         background-color: transparent !important;
         border: 0 !important;
         min-width: 8.8rem;
@@ -5869,8 +5883,9 @@
         grid-column: 2;
         height: 0.5rem !important;
         margin: 0 0.45rem 0 0.12rem;
-        background: rgba(10, 8, 6, 0.82) !important;
-        border: 1px solid rgba(212, 180, 110, 0.35) !important;
+        background: url("assets/art/batch-5-2/atlas/hud-progressbar-paper.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+        box-shadow: inset 0 0 0 1px rgba(212, 180, 110, 0.22);
     }
     #root-gutterbones[data-batch52-art="1"] .play-rolls-pips {
         position: relative !important;
@@ -5881,7 +5896,7 @@
         height: auto !important;
         margin: 0.18rem auto 0.22rem !important;
         padding: 0 !important;
-        background: url("assets/art/batch-5-2/hud/plays-counter-six-slot.webp") center / 100% 100% no-repeat !important;
+        background: url("assets/art/batch-5-2/atlas/hud-plays-counter-atlas.webp") center / 100% 100% no-repeat !important;
         z-index: 31;
     }
     #root-gutterbones[data-batch52-art="1"] .play-rolls-pips::before {
@@ -5998,6 +6013,61 @@
     }
     #root-gutterbones[data-batch52-art="1"] [data-layout-key="play-roll-btn"] .roll-ready-pulse-inner {
         opacity: 0.35;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-fill {
+        background-image: url("assets/art/batch-5-2/atlas/hud-progressbar-ink.webp"), linear-gradient(90deg, #6e1d24, #b91c1c, #f59e0b) !important;
+        background-size: 100% 100%, auto !important;
+        background-repeat: no-repeat, repeat !important;
+        background-blend-mode: overlay, normal;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="help-dossier"] {
+        background: url("assets/art/batch-5-2/atlas/ui-dossier-clipboard.webp") center top / 100% 100% no-repeat !important;
+        background-color: rgba(26, 26, 26, 0.94) !important;
+        border-color: transparent !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact,
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--open {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-round.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .build-indicator-root {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-laurel.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+        color: #1a1208 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .build-indicator-root .text-gray-400 {
+        color: #3a2a12 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="next-threat-badge-trigger"] {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-starburst.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-route-pagination button:first-of-type,
+    #root-gutterbones[data-batch52-art="1"] .shop-item-pagination button:first-of-type {
+        background: url("assets/art/batch-5-2/atlas/ui-control-button-left.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+        color: #1a1208 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-route-pagination button:last-of-type,
+    #root-gutterbones[data-batch52-art="1"] .shop-item-pagination button:last-of-type {
+        background: url("assets/art/batch-5-2/atlas/ui-control-button-right.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+        color: #1a1208 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="shop-intel-button"] {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-round.webp") center / contain no-repeat !important;
+        border: 0 !important;
+        color: transparent !important;
+        text-indent: -9999px;
+        overflow: hidden;
+    }
+    .gb-atlas-inline-icon {
+        display: inline-block;
+        width: 0.85rem;
+        height: 0.85rem;
+        object-fit: contain;
+        vertical-align: -0.15em;
+        margin-right: 0.12rem;
     }
     @media (min-width: 501px) and (max-width: 1199px) {
         #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
@@ -6234,11 +6304,20 @@
         text-shadow: none !important;
         min-height: 1.85rem;
     }
+    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--round {
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-ink.webp") center / 100% 100% no-repeat !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--cash,
+    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--pill {
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp") center / 100% 100% no-repeat !important;
+    }
+    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--debt {
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp") center / 100% 100% no-repeat !important;
+    }
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--round,
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--cash,
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--debt,
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--pill {
-        background: url("assets/art/batch-5-2/hud/status-chip-paper.webp") center / 100% 100% no-repeat !important;
         padding: 0.16rem 0.55rem !important;
         font-weight: 700;
     }
@@ -6246,8 +6325,8 @@
         flex: 1 1 5.5rem;
         min-width: 6.8rem;
         max-width: 100%;
-        background-color: #e8e0d0 !important;
-        background: url("assets/art/batch-5-2/hud/status-gauge-split.webp") center / 100% 100% no-repeat !important;
+        background-color: transparent !important;
+        background: url("assets/art/batch-5-2/atlas/hud-statusplate-felt.webp") center / 100% 100% no-repeat !important;
         padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
         display: grid !important;
         grid-template-columns: 24% 1fr;
@@ -6262,7 +6341,8 @@
         grid-column: 2;
         height: 0.5rem !important;
         margin: 0 0.45rem 0 0.12rem;
-        background: rgba(10, 8, 6, 0.82) !important;
+        background: url("assets/art/batch-5-2/atlas/hud-progressbar-paper.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
         border: 1px solid rgba(212, 180, 110, 0.35) !important;
     }
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-fill {
@@ -6715,6 +6795,56 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
             min-height: 0 !important;
             flex-shrink: 0 !important;
+            max-height: 3.25rem !important;
+            overflow: hidden !important;
+            z-index: 4 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > .font-mono {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 1 auto !important;
+            max-height: min(20vh, 10.5rem) !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            flex: 1 1 0 !important;
+            min-height: 5rem !important;
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            overflow-y: auto !important;
+        }
+    }
+    @media (min-width: 1024px) and (min-height: 821px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 1 auto !important;
+            max-height: min(28vh, 15.5rem) !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black,
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > .font-mono {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            max-height: 3.5rem !important;
+            margin-top: 0.25rem !important;
+            padding-top: 0.25rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            flex: 1 1 0 !important;
+            min-height: 9rem !important;
         }
     }
 
@@ -13532,7 +13662,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             onClick={onToggleBreakdown}
             aria-expanded={breakdownOpen}
         >
-            <span className="play-status-segment play-status-segment--round" title="Round">◷ R{displayJobRound('PLAY', round)}</span>
+            <span className="play-status-segment play-status-segment--round" title="Round"><img className="gb-atlas-inline-icon" src="assets/art/batch-5-2/atlas/hud-statusplate-ink.webp" alt="" loading="lazy" width="14" height="14" decoding="async" />R{displayJobRound('PLAY', round)}</span>
             <span className="play-status-segment play-status-segment--quota" title="Heat quota">
                 <span className="play-status-quota-track" role="presentation" aria-hidden="true">
                     <span className={`play-status-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
@@ -13541,7 +13671,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             </span>
             <span className="play-status-segment play-status-segment--cash street-ledger-icon street-ledger-icon--cash" title="Dirty cash">${Math.max(0, displayGold)}</span>
             <span className={`play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt${debt > 0 ? '' : ' play-status-segment--debt-clear'}`} title="Debt">IOU ${debt}</span>
-            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills">💊 {discards}</span>
+            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills"><img className="gb-atlas-inline-icon" src="assets/art/batch-5-2/atlas/ui-badge-round.webp" alt="" loading="lazy" width="14" height="14" decoding="async" aria-hidden="true" />{discards}</span>
         </button>
     );
 
@@ -13558,7 +13688,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     aria-expanded={detailOpen}
                     title={detailOpen ? 'Hide boss intel' : 'Show boss intel'}
                 >
-                    <span className="boss-warrant-name" aria-hidden>⚠ {shortName}</span>
+                    <span className="boss-warrant-name" aria-hidden><img className="gb-atlas-inline-icon" src="assets/art/batch-5-2/atlas/ui-badge-starburst.webp" alt="" loading="lazy" width="14" height="14" decoding="async" aria-hidden="true" />{shortName}</span>
                     <span className="boss-warrant-rule">{boss.desc}</span>
                 </button>
                 {detailOpen && runDetail && (
