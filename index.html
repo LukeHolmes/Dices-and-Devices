@@ -7157,6 +7157,20 @@
       background: linear-gradient(90deg, transparent, rgba(199, 139, 22, 0.85), transparent) !important;
       border: 0;
     }
+/* M2 */
+  @media (max-height: 500px), (max-width: 420px) {
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.75rem;
+      font-size: 11px !important;
+      line-height: 1.25;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-stats-row > div {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
