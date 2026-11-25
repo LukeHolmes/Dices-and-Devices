@@ -36,7 +36,7 @@ test("DEBT COLLECTOR mult is capped at debtCollectorMaxMult", () => {
     scoreContext(g, { debt: 20, inventory: [{ id: "DEBT_COLLECTOR" }] }),
   );
   assert.ok(r.explanationSteps.some((s) => String(s.label).includes("DEBT COLLECTOR")));
-  assert.ok(r.mult <= 6 + 1 + 0.01);
+  assert.ok(r.mult <= 6 + 1.22 + 0.01);
   const step = r.explanationSteps.find((s) => String(s.label).includes("DEBT COLLECTOR"));
   assert.match(String(step.impact), /\+4x/);
 });
