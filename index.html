@@ -7063,6 +7063,45 @@
       overflow-x: hidden;
     }
   }
+/* H7, B3 */
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
+        display: block !important;
+    }
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 900px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
+      display: none !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-debt-footer"].shop-debt-footer {
+      display: block !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+      max-height: 8.5rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+      max-height: min(22vh, 10.5rem) !important;
+      overflow-y: auto !important;
+    }
+  }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt .shop-section-header {
+        margin-bottom: 0.35rem;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-control-grid button {
+        font-size: max(12px, 0.75rem) !important;
+        min-height: 44px !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-footer {
+        display: none;
+    }
+  @media (max-height: 450px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-debt {
+        display: none !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-debt-footer"].shop-debt-footer {
+        display: block !important;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
