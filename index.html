@@ -5355,14 +5355,14 @@
             padding: 0.12rem 0.32rem !important;
             font-size: max(9px, 0.52rem) !important;
         }
-        #root-gutterbones[data-ui-redesign="1"] .play-status-quota-track {
+        #root-gutterbones[data-ui-redesign="1"]:not([data-batch52-art="1"]) .play-status-quota-track {
             display: none;
         }
         #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
             font-size: max(9px, 0.52rem);
             padding: 0.32rem 0.4rem;
         }
-        #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp {
+        #root-gutterbones[data-ui-redesign="1"]:not([data-batch52-art="1"]) .boss-warrant-stamp {
             flex: 0 1 auto;
             max-width: 4.75rem;
         }
@@ -5836,31 +5836,24 @@
         gap: 0.25rem 0.35rem !important;
     }
     #root-gutterbones[data-batch52-art="1"] .play-status-bar {
-        background: url("assets/art/batch-5-2/atlas/ui-topbar-segmented-ink.webp") center / 100% 100% no-repeat !important;
-        border: 0 !important;
+        background-color: rgba(22, 20, 18, 0.94) !important;
+        background-image: none !important;
+        border: 1px solid rgba(199, 139, 22, 0.35) !important;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
         padding: 0.12rem 0.18rem !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round {
-        background: url("assets/art/batch-5-2/atlas/hud-statusplate-ink.webp") center / 100% 100% no-repeat !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
-        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp") center / 100% 100% no-repeat !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt {
-        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp") center / 100% 100% no-repeat !important;
     }
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+        background: transparent !important;
         background-color: transparent !important;
         border: 0 !important;
-        color: #1a1208 !important;
         font-weight: 700;
         text-shadow: none !important;
         min-height: 1.85rem;
         padding: 0.16rem 0.55rem !important;
+        font-size: max(11px, 0.6875rem) !important;
     }
     #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
         background: url("assets/art/batch-5-2/atlas/hud-statusplate-felt.webp") center / 100% 100% no-repeat !important;
@@ -5869,20 +5862,10 @@
         min-width: 8.8rem;
         min-height: 2.1rem;
         padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
-        display: grid !important;
-        grid-template-columns: 24% 1fr;
-        align-items: center;
-        gap: 0 !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums {
-        color: #1a1208 !important;
-        font-weight: 700;
-        grid-column: 1;
     }
     #root-gutterbones[data-batch52-art="1"] .play-status-quota-track {
-        grid-column: 2;
         height: 0.5rem !important;
-        margin: 0 0.45rem 0 0.12rem;
+        margin: 0;
         background: url("assets/art/batch-5-2/atlas/hud-progressbar-paper.webp") center / 100% 100% no-repeat !important;
         border: 0 !important;
         box-shadow: inset 0 0 0 1px rgba(212, 180, 110, 0.22);
@@ -6015,12 +5998,7 @@
         opacity: 0.35;
     }
     #root-gutterbones[data-batch52-art="1"] .play-status-quota-fill {
-        background-image:
-            linear-gradient(90deg, rgba(139, 105, 20, 0.92), rgba(199, 139, 22, 0.95), rgba(232, 197, 71, 0.92)),
-            url("assets/art/batch-5-2/atlas/hud-progressbar-ink.webp") !important;
-        background-size: 100% 100%, 100% 100% !important;
-        background-repeat: no-repeat, no-repeat !important;
-        background-blend-mode: multiply, normal !important;
+        background: linear-gradient(90deg, #8b6914, #c78b16, #e8c547) !important;
         box-shadow: inset 0 0 0 1px rgba(26, 18, 4, 0.35);
         border-radius: inherit;
         opacity: 0.98;
@@ -6029,11 +6007,6 @@
         background: url("assets/art/batch-5-2/atlas/ui-dossier-clipboard.webp") center top / 100% 100% no-repeat !important;
         background-color: rgba(26, 26, 26, 0.94) !important;
         border-color: transparent !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact,
-    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--open {
-        background: url("assets/art/batch-5-2/atlas/ui-badge-round.webp") center / 100% 100% no-repeat !important;
-        border: 0 !important;
     }
     #root-gutterbones[data-batch52-art="1"] .build-indicator-root {
         background: url("assets/art/batch-5-2/atlas/ui-badge-laurel.webp") center / 100% 100% no-repeat !important;
@@ -6101,6 +6074,173 @@
         vertical-align: -0.15em;
         margin-right: 0.12rem;
     }
+    .gb-hud-decor {
+        display: inline-block;
+        flex: 0 0 auto;
+        width: 0.85rem;
+        height: 0.85rem;
+        background: center / contain no-repeat;
+        vertical-align: -0.1em;
+        margin-right: 0.1rem;
+        opacity: 0.92;
+        pointer-events: none;
+    }
+    .gb-hud-decor--round { background-image: url("assets/art/batch-5-2/atlas/ui-badge-starburst.webp"); }
+    .gb-hud-decor--cash,
+    .gb-hud-decor--pill { background-image: url("assets/art/batch-5-2/atlas/ui-badge-round.webp"); }
+    .gb-hud-decor--debt { background-image: url("assets/art/batch-5-2/atlas/ui-badge-laurel.webp"); }
+    .gb-boss-warrant-decor {
+        display: inline-block;
+        flex: 0 0 auto;
+        width: 0.75rem;
+        height: 0.75rem;
+        margin-right: 0.12rem;
+        background: url("assets/art/batch-5-2/atlas/ui-badge-starburst.webp") center / contain no-repeat;
+        opacity: 0.9;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.08rem !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+        position: relative;
+        isolation: isolate;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-round-label,
+    #root-gutterbones[data-batch52-art="1"] .play-status-cash-label,
+    #root-gutterbones[data-batch52-art="1"] .play-status-debt-label,
+    #root-gutterbones[data-batch52-art="1"] .play-status-pill-label,
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums {
+        position: relative;
+        z-index: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round {
+        background: rgba(39, 39, 42, 0.94) !important;
+        border: 1px solid rgba(161, 161, 170, 0.38) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+        background: rgba(245, 236, 214, 0.94) !important;
+        border: 1px solid rgba(212, 180, 110, 0.45) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt {
+        background: rgba(236, 223, 198, 0.9) !important;
+        border: 1px solid rgba(180, 140, 90, 0.45) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.28rem !important;
+        min-width: 4.85rem;
+        grid-template-columns: unset !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums {
+        order: 0;
+        flex: 0 0 auto;
+        color: #fca5a5 !important;
+        font-weight: 700;
+        font-size: max(11px, 0.6875rem) !important;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.65);
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-track {
+        order: 1;
+        display: block !important;
+        flex: 1 1 auto;
+        min-width: 1.65rem;
+        grid-column: unset !important;
+    }
+    @media (min-width: 768px) {
+        #root-gutterbones[data-batch52-art="1"] .play-status-round-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-cash-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-debt-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-pill-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+            font-size: max(12px, 0.75rem) !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--round {
+            color: #fafafa !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash .play-status-cash-label {
+            color: #34d399 !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt .play-status-debt-label {
+            color: #f87171 !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill .play-status-pill-label {
+            color: #22d3ee !important;
+        }
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones[data-batch52-art="1"] .play-status-round-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-cash-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-debt-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-pill-label,
+        #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums {
+            font-size: max(11px, 0.6875rem) !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-quota-track {
+            display: block !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--round .play-status-round-label {
+            color: #fafafa !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash .play-status-cash-label {
+            color: #34d399 !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt .play-status-debt-label {
+            color: #f87171 !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill .play-status-pill-label {
+            color: #22d3ee !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .play-status-bar .play-status-segment {
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact {
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+            font-size: max(9px, 0.56rem) !important;
+            padding: 0.12rem 0.28rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .boss-warrant-name {
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+        }
+    }
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact,
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--open {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.1rem;
+        background: none !important;
+        border: 1px solid rgba(248, 113, 113, 0.45) !important;
+        color: #fca5a5 !important;
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact .boss-warrant-name {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
     @media (min-width: 501px) and (max-width: 1199px) {
         #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
             left: max(0.9rem, 2%);
@@ -6129,7 +6269,7 @@
         #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
             min-height: 1.5rem;
             padding: 0.1rem 0.34rem !important;
-            font-size: 9px !important;
+            font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
             min-width: 6.2rem;
@@ -6336,23 +6476,6 @@
         text-shadow: none !important;
         min-height: 1.85rem;
     }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--round {
-        background: url("assets/art/batch-5-2/atlas/hud-statusplate-ink.webp") center / 100% 100% no-repeat !important;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--cash,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--pill {
-        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-clean.webp") center / 100% 100% no-repeat !important;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--debt {
-        background: url("assets/art/batch-5-2/atlas/hud-statusplate-paper-worn.webp") center / 100% 100% no-repeat !important;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--round,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--cash,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--debt,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--pill {
-        padding: 0.16rem 0.55rem !important;
-        font-weight: 700;
-    }
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--quota {
         flex: 1 1 5.5rem;
         min-width: 6.8rem;
@@ -6360,22 +6483,6 @@
         background-color: transparent !important;
         background: url("assets/art/batch-5-2/atlas/hud-statusplate-felt.webp") center / 100% 100% no-repeat !important;
         padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
-        display: grid !important;
-        grid-template-columns: 24% 1fr;
-        align-items: center;
-        gap: 0 !important;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-nums {
-        color: #1a1208 !important;
-        grid-column: 1;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-track {
-        grid-column: 2;
-        height: 0.5rem !important;
-        margin: 0 0.45rem 0 0.12rem;
-        background: url("assets/art/batch-5-2/atlas/hud-progressbar-paper.webp") center / 100% 100% no-repeat !important;
-        border: 0 !important;
-        border: 1px solid rgba(212, 180, 110, 0.35) !important;
     }
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-fill {
         background: linear-gradient(90deg, #6e1d24, #b91c1c, #f59e0b) !important;
@@ -6408,11 +6515,11 @@
             gap: 0.08rem 0.14rem !important;
             overflow: hidden;
         }
-        #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment {
-            flex-shrink: 1 !important;
+        #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment:not(.play-status-segment--quota) {
+            flex-shrink: 0 !important;
             min-width: 0 !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow: visible !important;
+            text-overflow: clip !important;
         }
         #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .street-ledger-cluster--actions {
             flex: 0 0 auto;
@@ -6830,25 +6937,9 @@
             padding: 0.35rem !important;
             isolation: isolate !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-fence,
-        #root-gutterbones[data-phase="SHOP"] .shop-options-debt,
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block .mt-3,
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-panel-divider {
-            display: none !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block {
-            margin-bottom: 0.25rem !important;
-            padding: 0.3rem 0.35rem 0.35rem !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-section-header {
-            margin-bottom: 0.25rem !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled > .mb-3.border-b {
-            margin-bottom: 0.35rem !important;
-            padding-bottom: 0.35rem !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-fixter-line {
-            display: none !important;
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
+            max-height: 2.25rem !important;
+            overflow-y: auto !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-refresh-stock"] {
             position: relative !important;
@@ -13808,16 +13899,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             onClick={onToggleBreakdown}
             aria-expanded={breakdownOpen}
         >
-            <span className="play-status-segment play-status-segment--round" title="Round"><img className="gb-atlas-inline-icon" src="assets/art/batch-5-2/atlas/hud-statusplate-ink.webp" alt="" loading="lazy" width="14" height="14" decoding="async" />R{displayJobRound('PLAY', round)}</span>
+            <span className="play-status-segment play-status-segment--round" title="Round">
+                <span className="gb-hud-decor gb-hud-decor--round" aria-hidden="true" />
+                <span className="play-status-round-label">R{displayJobRound('PLAY', round)}</span>
+            </span>
             <span className="play-status-segment play-status-segment--quota" title="Heat quota">
-                <span className="play-status-quota-track" role="presentation" aria-hidden="true">
+                <span className="play-status-quota-nums">{displayScore}/{currentTarget}</span>
+                <span className="play-status-quota-track" role="presentation">
                     <span className={`play-status-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
                 </span>
-                <span className="play-status-quota-nums">{displayScore}/{currentTarget}</span>
             </span>
-            <span className="play-status-segment play-status-segment--cash street-ledger-icon street-ledger-icon--cash" title="Dirty cash">${Math.max(0, displayGold)}</span>
-            <span className={`play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt${debt > 0 ? '' : ' play-status-segment--debt-clear'}`} title="Debt">IOU ${debt}</span>
-            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills"><img className="gb-atlas-inline-icon" src="assets/art/batch-5-2/atlas/ui-badge-round.webp" alt="" loading="lazy" width="14" height="14" decoding="async" aria-hidden="true" />{discards}</span>
+            <span className="play-status-segment play-status-segment--cash street-ledger-icon street-ledger-icon--cash" title="Dirty cash">
+                <span className="gb-hud-decor gb-hud-decor--cash" aria-hidden="true" />
+                <span className="play-status-cash-label">${Math.max(0, displayGold)}</span>
+            </span>
+            <span className={`play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt${debt > 0 ? '' : ' play-status-segment--debt-clear'}`} title="Debt">
+                <span className="gb-hud-decor gb-hud-decor--debt" aria-hidden="true" />
+                <span className="play-status-debt-label">IOU ${debt}</span>
+            </span>
+            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills">
+                <span className="gb-hud-decor gb-hud-decor--pill" aria-hidden="true" />
+                <span className="play-status-pill-label">{discards}</span>
+            </span>
         </button>
     );
 
@@ -13834,7 +13937,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     aria-expanded={detailOpen}
                     title={detailOpen ? 'Hide boss intel' : 'Show boss intel'}
                 >
-                    <span className="boss-warrant-name" aria-hidden><img className="gb-atlas-inline-icon" src="assets/art/batch-5-2/atlas/ui-badge-starburst.webp" alt="" loading="lazy" width="14" height="14" decoding="async" aria-hidden="true" />{shortName}</span>
+                    <span className="gb-boss-warrant-decor" aria-hidden="true" />
+                    <span className="boss-warrant-name">{shortName}</span>
                     <span className="boss-warrant-rule">{boss.desc}</span>
                 </button>
                 {detailOpen && runDetail && (
