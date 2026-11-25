@@ -7382,7 +7382,7 @@ const GutterbonesRules = (() => {
                 break;
             }
             case 'Y': valid = maxCount + wilds >= 5; if (valid) { chips = 50; mult *= 5; } break;
-            case 'C': valid = sum > 0; chips = valid ? sum + 5 : 0; if (valid) mult *= 1.22; break;
+            case 'C': valid = sum > 0; chips = valid ? sum : 0; break;
         }
         if (!valid) {
             const invalidReason = (() => {
@@ -7402,22 +7402,22 @@ const GutterbonesRules = (() => {
             pushStep('system', 'INVALID PAYOUT', invalidReason, 0);
             return { valid: false, chips: 0, mult: 0, total: 0, gDelta: 0, triggers: [], flowMult, explanationSteps, hardwareTriggerCount, categoryName, reason: invalidReason, ...emptySynergyResult() };
         }
-        if (['ONES', 'TWOS', 'THREES'].includes(catId)) mult *= 1.5;
-        if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 2;
+        if (['ONES', 'TWOS', 'THREES'].includes(catId)) mult *= 2;
+        if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 2.2;
         const runUpperHeat = Math.max(0, Number(context.runUpperHeat) || 0);
         const upperBonusActive = runUpperHeat >= 63;
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult += 0.5;
+            mult += 1;
         }
         if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult = Math.min(mult, 2.5);
+            mult = Math.min(mult, 3);
         }
         const categoryBaseChips = chips;
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         const categoryMult = mult;
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            pushStep('multiplier', 'UPPER BONUS', '+0.5x (upper section ≥63)', '+0.5x');
+            pushStep('multiplier', 'UPPER BONUS', '+1x (upper section ≥63)', '+1x');
         }
         const markBonus = Math.max(0, Math.floor(Number(synergyState?.categoryMarks?.[catId]) || 0));
         if (markBonus > 0) {
@@ -10318,19 +10318,19 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
     };
 
     const CATEGORY_RULE_TOOLTIPS = {
-        ONES: 'Sum of 1s ×1.5 mult (wilds count as 1; upper cap 2.5x).',
-        TWOS: 'Sum of 2s ×1.5 mult (upper cap 2.5x).',
-        THREES: 'Sum of 3s ×1.5 mult (upper cap 2.5x).',
-        FOURS: 'Sum of 4s ×2 mult (upper cap 2.5x).',
-        FIVES: 'Sum of 5s ×2 mult (upper cap 2.5x).',
-        SIXES: 'Sum of 6s ×2 mult (upper cap 2.5x; five 6s ≈ 60–75 heat).',
+        ONES: 'Sum of 1s ×2 mult (wilds count as 1; upper cap 3x).',
+        TWOS: 'Sum of 2s ×2 mult (upper cap 3x).',
+        THREES: 'Sum of 3s ×2 mult (upper cap 3x).',
+        FOURS: 'Sum of 4s ×2.2 mult (upper cap 3x).',
+        FIVES: 'Sum of 5s ×2.2 mult (upper cap 3x).',
+        SIXES: 'Sum of 6s ×2.2 mult (upper cap 3x; five 6s ≈ 66 heat).',
         TOK: 'Three of a kind — 20 chips ×2 mult.',
         FOK: 'Four of a kind — 35 chips ×3 mult.',
         FH: 'Full house (3+2) — 30 chips ×3 mult.',
         SS: 'Small straight (4 in a row) — 30 chips ×2 mult.',
         LS: 'Large straight (5 in a row) — 40 chips ×3 mult.',
         Y: 'Five of a kind — 50 chips ×5 mult.',
-        C: 'Chance — sum of faces +5 chips ×1.22 mult.'
+        C: 'Chance — sum of faces (no multiplier).'
     };
 
     const CATEGORIES = {

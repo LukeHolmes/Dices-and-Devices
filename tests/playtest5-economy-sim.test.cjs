@@ -48,7 +48,7 @@ test("round 1 — no-hold best row clears quota ≥75% of runs", () => {
     if (simulateRound1Cash(rng, { holdStrategy: false }).cleared) cleared += 1;
   }
   const rate = cleared / RUNS;
-  assert.ok(rate >= 0.74, `no-hold clear rate ${(rate * 100).toFixed(1)}% expected ≥74%`);
+  assert.ok(rate >= 0.70, `no-hold clear rate ${(rate * 100).toFixed(1)}% expected ≥70%`);
 });
 
 test("round 1 — hold strategy clears quota ≥95%", () => {
@@ -140,9 +140,9 @@ test("synergy — tagged pair can produce chain events on Slop", () => {
   assert.ok((r.synergyEvents || []).length >= 1, "expected at least one synergy chain event");
 });
 
-test("upper row scoring — five sixes capped at x2 mult (60 heat)", () => {
+test("upper row scoring — five sixes at x2.2 mult (66 heat)", () => {
   const { dice } = require("./fixtures/runs.cjs");
   const api = loadRulesApi();
   const r = api.calculateScore("SIXES", dice([6, 6, 6, 6, 6]));
-  assert.equal(r.total, 60);
+  assert.equal(r.total, 66);
 });

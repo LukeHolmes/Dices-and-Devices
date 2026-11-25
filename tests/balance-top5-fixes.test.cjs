@@ -277,16 +277,16 @@ test("refreshShop charges discounted refresh cost", () => {
 test("category tooltips match calculateScore on canonical dice", () => {
   const g = createGame(snapshot());
   const cases = [
-    ["ONES", [1, 1, 1, 2, 3], 4],
-    ["FOURS", [4, 4, 4, 2, 3], 24],
-    ["C", [1, 2, 3, 4, 5], 24],
-    ["SIXES", [6, 6, 6, 6, 6], 60],
+    ["ONES", [1, 1, 1, 2, 3], 6],
+    ["FOURS", [4, 4, 4, 2, 3], 26],
+    ["C", [1, 2, 3, 4, 5], 15],
+    ["SIXES", [6, 6, 6, 6, 6], 66],
     ["TOK", [2, 2, 2, 4, 5], 40],
   ];
   for (const [cat, values, total] of cases) {
     assert.equal(g.api.calculateScore(cat, dice(values)).total, total);
   }
-  assert.match(html, /five 6s ≈ 60–75 heat/);
+  assert.match(html, /five 6s ≈ 66 heat/);
   assert.match(html, /\+20 chips on Triad when synergy chains are on/);
   assert.match(html, /payouts run at ~55%/);
 });
