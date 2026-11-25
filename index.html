@@ -6983,6 +6983,42 @@
     #root-gutterbones[data-look-and-feel="1"]:not([data-phase="PLAY"]) .look-and-feel-ambient {
         display: none !important;
     }
+
+
+    /* === art/qa-high-medium-fixes (presentation only) === */
+/* H2, M6 */
+    #root-gutterbones [data-layout-key="rap-sheet"] .rap-sheet-stat-value {
+        color: #f5ecd6 !important;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] [data-layout-key="rap-sheet-archetype"] {
+        background: rgba(26, 18, 4, 0.88) !important;
+        border-color: rgba(199, 139, 22, 0.55) !important;
+        color: #d6c9b0 !important;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] [data-layout-key="rap-sheet-archetype"] .text-gray-600,
+    #root-gutterbones [data-layout-key="rap-sheet"] [data-layout-key="rap-sheet-archetype"] .text-gray-800 {
+        color: #e8dfd0 !important;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] .h-32.w-32 {
+        background: rgba(12, 9, 8, 0.72) !important;
+        box-shadow: inset 0 0 0 2px rgba(199, 139, 22, 0.35);
+    }
+  @media (max-height: 420px) {
+    #root-gutterbones [data-layout-key="rap-sheet-wrap"] .gb-modal-body {
+      display: grid !important;
+      grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr);
+      gap: 0.65rem;
+      align-items: start;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
+      grid-column: 1 / -1;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] .h-32.w-32 {
+      width: 5.5rem !important;
+      height: 5.5rem !important;
+      margin: 0 !important;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
