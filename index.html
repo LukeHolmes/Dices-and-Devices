@@ -7178,6 +7178,23 @@
     #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"].gb-modal-fit {
         max-width: min(48rem, 96vw) !important;
     }
+/* M5 */
+  @media (max-width: 480px) {
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"] {
+      rotate: 0deg;
+      max-width: calc(100vw - 1rem) !important;
+      transform: none;
+    }
+    #root-gutterbones[data-phase="VICTORY"] .victory-cash-rain {
+      z-index: 5 !important;
+    }
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"] {
+      z-index: 20;
+    }
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"] .text-gray-500 {
+      color: #3f3f46 !important;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
