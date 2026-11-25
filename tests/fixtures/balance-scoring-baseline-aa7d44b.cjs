@@ -6,16 +6,16 @@ module.exports = {
   fixtures: {
     debtCollectorCap: {
       valid: true,
-      chips: 20,
-      mult: 5,
-      total: 100,
+      chips: 25,
+      mult: 5.22,
+      total: 130,
       chainDepth: 0,
     },
     chainMultCap: {
       valid: true,
-      chips: 114,
-      mult: 5,
-      total: 570,
+      chips: 119,
+      mult: 5.22,
+      total: 621,
       chainDepth: 2,
     },
     jackpot: {

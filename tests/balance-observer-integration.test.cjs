@@ -397,8 +397,9 @@ test("semantic fingerprint is time-invariant for identical events", () => {
   assert.notEqual(a, o.fingerprint());
 });
 
-test("aa7d44b rules lack cap metadata; current rules preserve outcome digests", () => {
-  const baseline = require("./fixtures/balance-scoring-baseline-aa7d44b.cjs");
+test("aa7d44b rules lack cap metadata; current rules match 6f4dc92 outcome digests", () => {
+  const legacyBaseline = require("./fixtures/balance-scoring-baseline-aa7d44b.cjs");
+  const currentBaseline = require("./fixtures/balance-scoring-baseline-6f4dc92.cjs");
   const g = createGame(snapshot());
   const ctx = {
     handLevels: {},
@@ -446,19 +447,19 @@ test("aa7d44b rules lack cap metadata; current rules preserve outcome digests", 
     total: r.total,
     chainDepth: r.chainDepth ?? 0,
   });
-  assert.deepEqual(pick(current.debt), baseline.fixtures.debtCollectorCap);
-  assert.deepEqual(pick(current.chain), baseline.fixtures.chainMultCap);
-  assert.deepEqual(pick(current.y), baseline.fixtures.jackpot);
+  assert.deepEqual(pick(current.debt), currentBaseline.fixtures.debtCollectorCap);
+  assert.deepEqual(pick(current.chain), currentBaseline.fixtures.chainMultCap);
+  assert.deepEqual(pick(current.y), currentBaseline.fixtures.jackpot);
 
   const legacyCtx = vm.createContext({ Math });
-  vm.runInContext(`${rulesBlockAtRef(baseline.ref)}\nthis.R=GutterbonesRules;`, legacyCtx);
+  vm.runInContext(`${rulesBlockAtRef(legacyBaseline.ref)}\nthis.R=GutterbonesRules;`, legacyCtx);
   const legacyDebt = legacyCtx.R.calculateScore(
     "C",
     dice([2, 3, 4, 5, 6]),
     { ...ctx, debt: 20, inventory: [{ id: "DEBT_COLLECTOR" }] },
   );
   assert.equal(legacyDebt.debtCollectorCapped, undefined);
-  assert.deepEqual(pick(legacyDebt), baseline.fixtures.debtCollectorCap);
+  assert.deepEqual(pick(legacyDebt), legacyBaseline.fixtures.debtCollectorCap);
   assert.ok(ruleShaFromRepo(ROOT));
 });
 

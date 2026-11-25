@@ -31,7 +31,10 @@ function simulateRound1Cash(rng, { holdStrategy = false } = {}) {
     holdStrategy,
   });
   let gold = 25;
-  const hustle = heat > 0 ? Math.max(1, Math.min(6, Math.floor(heat / 60))) : 0;
+  const hustle =
+    heat > 0
+      ? Math.max(1, Math.min(7, Math.floor(heat / 72)))
+      : 0;
   gold += hustle;
   if (heat >= OPENING_TARGET) {
     const unused = 0;
@@ -41,6 +44,8 @@ function simulateRound1Cash(rng, { holdStrategy = false } = {}) {
   return { cleared: heat >= OPENING_TARGET, gold, heat };
 }
 
+// KNOWN MEASUREMENT FAILURE (M2): On main since 98a7ea0, this fails at 294/400 (73.5%) vs
+// pre-change 299/400 (74.75%). Threshold stays 0.74 — do not loosen to hide the regression.
 test("round 1 — no-hold best row clears quota ≥75% of runs", () => {
   const rng = mulberry32(SEED);
   let cleared = 0;
@@ -48,7 +53,7 @@ test("round 1 — no-hold best row clears quota ≥75% of runs", () => {
     if (simulateRound1Cash(rng, { holdStrategy: false }).cleared) cleared += 1;
   }
   const rate = cleared / RUNS;
-  assert.ok(rate >= 0.70, `no-hold clear rate ${(rate * 100).toFixed(1)}% expected ≥70%`);
+  assert.ok(rate >= 0.74, `no-hold clear rate ${(rate * 100).toFixed(1)}% expected ≥74%`);
 });
 
 test("round 1 — hold strategy clears quota ≥95%", () => {
@@ -85,7 +90,10 @@ test("multi-round — ~2 shop items affordable by round 3, no runaway quota", ()
     const minItemCost = 18;
     while (round <= 3) {
       const heat = simulateRound({ pills: 3, plays: 4, rng, totalRuns: 3, holdStrategy: true });
-      gold += heat > 0 ? Math.max(1, Math.min(6, Math.floor(heat / 60))) : 0;
+      gold +=
+        heat > 0
+          ? Math.max(1, Math.min(7, Math.floor(heat / 72)))
+          : 0;
       if (heat < target) break;
       gold += 8 + Math.min(5, Math.floor(gold / 5));
       if (gold >= minItemCost) {
