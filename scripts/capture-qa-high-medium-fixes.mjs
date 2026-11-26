@@ -263,14 +263,14 @@ async function verifyScreen(page, screenId) {
   }
   if (spec.assert === 'debt-buttons') {
     await page.waitForFunction(() => {
-      const pay = [...document.querySelectorAll('.shop-debt-control-grid button')].find((b) => /PAY \$10/.test(b.textContent || ''));
-      const clear = [...document.querySelectorAll('.shop-debt-control-grid button')].find((b) => /CLEAR/.test(b.textContent || ''));
+      const pay = document.querySelector('[data-layout-key="shop-debt-pay"], [data-layout-key="shop-debt-footer-pay"]');
+      const clear = document.querySelector('[data-layout-key="shop-debt-clear"], [data-layout-key="shop-debt-footer-clear"]');
       return !!(pay && clear);
     }, { timeout: 15000 });
   }
   if (spec.assert === 'no-debt-label') {
     await page.waitForFunction(() => {
-      const pay = [...document.querySelectorAll('.shop-debt-control-grid button')].find((b) => /PAY \$10/.test(b.textContent || ''));
+      const pay = document.querySelector('[data-layout-key="shop-debt-pay"], [data-layout-key="shop-debt-footer-pay"]');
       const label = document.querySelector('.shop-options-debt .shop-debt-empty-label');
       return !pay && label && /no debt/i.test(label.textContent || '');
     }, { timeout: 15000 });

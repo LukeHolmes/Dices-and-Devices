@@ -2549,11 +2549,15 @@
         }
         #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer .stash-program-grid {
             flex: 0 0 auto !important;
-            min-height: 3.55rem !important;
-            max-height: min(7.25rem, 30vh) !important;
-            overflow-y: auto !important;
+            min-height: 3.75rem !important;
+            max-height: min(8rem, 32vh) !important;
+            overflow: visible !important;
             overscroll-behavior: contain;
-            margin-bottom: 0.45rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer .shop-program-slot {
+            min-height: 2.85rem !important;
+            box-sizing: border-box !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer [data-layout-key="shop-hit-streets"] {
             flex: 0 0 auto !important;
@@ -2576,10 +2580,17 @@
             padding-bottom: 0.12rem !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
-            margin-bottom: 0.35rem !important;
-            padding: 0.25rem 0.4rem !important;
-            font-size: max(10px, 0.65rem) !important;
-            line-height: 1.25 !important;
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-fixter-line {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block > .shop-section-header {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled > .mb-3 {
+            margin-bottom: 0.2rem !important;
+            padding-bottom: 0.2rem !important;
         }
     }
     @media (min-width: 768px) and (max-width: 1366px) and (min-height: 700px) and (max-height: 1024px) {
@@ -6798,7 +6809,7 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) !important;
-            grid-template-rows: minmax(0, 48%) minmax(0, 52%) !important;
+            grid-template-rows: minmax(0, 1fr) minmax(0, auto) !important;
             height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             min-height: 0 !important;
@@ -6862,13 +6873,16 @@
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
             min-height: 0 !important;
-            max-height: min(20vh, 10.5rem) !important;
+            max-height: none !important;
             overflow-x: hidden !important;
-            overflow-y: auto !important;
-            flex: 0 1 auto !important;
+            overflow-y: visible !important;
+            flex: 0 0 auto !important;
             position: relative !important;
             z-index: 6 !important;
             isolation: isolate !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > .shop-routes-scroll {
+            min-height: min(56vh, 34rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-options-block {
             position: relative !important;
@@ -6973,8 +6987,8 @@
             font-size: 0.95rem !important;
             line-height: 1.1 !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"]:has([data-layout-key="shop-debt-footer"]) {
-            grid-template-rows: minmax(0, 46%) minmax(0, 54%) !important;
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) [data-layout-key="shop-route-pagination"] {
+            margin-bottom: 0.1rem !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-debt-warning {
             display: none !important;
@@ -7001,8 +7015,13 @@
             font-size: max(10px, 0.65rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .stash-program-grid {
-            max-height: min(4.6rem, 12.5vh) !important;
-            margin-bottom: 0.2rem !important;
+            max-height: min(5.5rem, 14vh) !important;
+            margin-bottom: 0.25rem !important;
+            overflow: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-program-slot {
+            min-height: 2.75rem !important;
+            box-sizing: border-box !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled,
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
@@ -7337,21 +7356,24 @@
       display: block !important;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-options-block {
-      max-height: 8.5rem;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-    #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-      max-height: min(22vh, 10.5rem) !important;
-      overflow-y: auto !important;
+      max-height: none;
+      overflow: visible;
     }
   }
-    #root-gutterbones[data-phase="SHOP"] .shop-options-debt .shop-section-header {
-        margin-bottom: 0.35rem;
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-inline-row .shop-debt-control-grid {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.35rem !important;
     }
-    #root-gutterbones[data-phase="SHOP"] .shop-debt-control-grid button {
-        font-size: max(12px, 0.75rem) !important;
-        min-height: 44px !important;
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-inline-row .shop-debt-control-grid button {
+        font-size: max(10px, 0.62rem) !important;
+        min-height: 36px !important;
+        padding: 0.15rem 0.35rem !important;
+        line-height: 1.2 !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-footer.shop-debt-inline-row {
+        margin-bottom: 0.25rem !important;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-debt-footer {
         display: none;
@@ -7531,7 +7553,7 @@
     }
     #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
       flex: 1 1 0 !important;
-      min-height: 0 !important;
+      min-height: min(42vh, 20rem) !important;
       max-height: none !important;
       overflow-x: hidden !important;
       overflow-y: auto !important;
@@ -22010,6 +22032,95 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                     return { ok: bad.length === 0, bad: bad.slice(0, 20), count: bad.length, vw, vh, minFontPx };
                 },
+                auditShopScrollZeroPaint: () => {
+                    const root = document.getElementById('root-gutterbones');
+                    if (!root || root.getAttribute('data-phase') !== 'SHOP') {
+                        return { ok: true, skipped: true, reason: 'not-shop' };
+                    }
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const shopAuditVp = (vw === 768 && vh === 1024)
+                        || (vw === 1024 && vh === 768)
+                        || (vw === 1280 && vh === 720)
+                        || (vw === 1366 && vh === 768);
+                    if (!shopAuditVp) {
+                        return { ok: true, skipped: true, reason: 'viewport', vw, vh };
+                    }
+                    const isPaintTargetVisible = (el) => {
+                        if (!(el instanceof HTMLElement)) return false;
+                        const st = window.getComputedStyle(el);
+                        if (st.display === 'none' || st.visibility === 'hidden' || parseFloat(st.opacity) === 0) return false;
+                        const r = el.getBoundingClientRect();
+                        return r.width > 1.5 && r.height > 1.5;
+                    };
+                    const resetScroll = () => {
+                        window.scrollTo(0, 0);
+                        root.querySelectorAll('.gb-screen, .shop-routes-scroll, .shop-routes-body, .gb-route-list, [data-layout-key="shop-routes-panel"]').forEach((el) => {
+                            if (el instanceof HTMLElement) el.scrollTop = 0;
+                        });
+                    };
+                    resetScroll();
+                    const sampleElementPaint = (el, key) => {
+                        if (!isPaintTargetVisible(el)) {
+                            return { kind: 'target-not-visible', key };
+                        }
+                        const r = el.getBoundingClientRect();
+                        const ys = [
+                            r.top + Math.min(4, Math.max(1, r.height * 0.15)),
+                            r.top + r.height * 0.5,
+                            r.bottom - Math.min(4, Math.max(1, r.height * 0.15)),
+                        ];
+                        const cx = Math.min(vw - 2, Math.max(2, r.left + r.width / 2));
+                        const misses = [];
+                        ys.forEach((y, idx) => {
+                            const cy = Math.min(vh - 2, Math.max(2, y));
+                            const stack = document.elementsFromPoint(cx, cy);
+                            const hit = stack.some((node) => node === el || el.contains(node));
+                            if (!hit) {
+                                const top = stack[0];
+                                misses.push({
+                                    sample: idx === 0 ? 'top' : idx === 1 ? 'center' : 'bottom',
+                                    cy,
+                                    cover: top && (top.getAttribute?.('data-layout-key') || top.className || top.tagName),
+                                });
+                            }
+                        });
+                        if (misses.length) {
+                            return {
+                                kind: 'unpainted-at-scroll-zero',
+                                key,
+                                misses,
+                                rect: { top: r.top, bottom: r.bottom, left: r.left, right: r.right, h: r.height, w: r.width },
+                            };
+                        }
+                        return null;
+                    };
+                    const bad = [];
+                    const pushTarget = (el, key, required = true) => {
+                        if (!el && !required) return;
+                        if (!el && required) {
+                            bad.push({ kind: 'target-missing', key });
+                            return;
+                        }
+                        const fail = sampleElementPaint(el, key);
+                        if (fail) bad.push(fail);
+                    };
+                    pushTarget(root.querySelector('[data-layout-key="shop-refresh-stock"]'), 'shop-refresh-stock');
+                    const routeCard = root.querySelector('[data-layout-key="shop-route-card"]');
+                    pushTarget(routeCard, 'shop-route-card');
+                    const payCandidates = [...root.querySelectorAll('[data-layout-key="shop-debt-pay"], [data-layout-key="shop-debt-footer-pay"]')].filter(isPaintTargetVisible);
+                    const clearCandidates = [...root.querySelectorAll('[data-layout-key="shop-debt-clear"], [data-layout-key="shop-debt-footer-clear"]')].filter(isPaintTargetVisible);
+                    if (payCandidates.length) pushTarget(payCandidates[0], payCandidates[0].getAttribute('data-layout-key') || 'shop-debt-pay');
+                    if (clearCandidates.length) pushTarget(clearCandidates[0], clearCandidates[0].getAttribute('data-layout-key') || 'shop-debt-clear');
+                    root.querySelectorAll('[data-layout-key^="shop-program-"]').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        pushTarget(el, el.getAttribute('data-layout-key') || 'shop-program', true);
+                    });
+                    pushTarget(root.querySelector('[data-layout-key="shop-hit-streets"]'), 'shop-hit-streets');
+                    return { ok: bad.length === 0, bad: bad.slice(0, 24), count: bad.length, vw, vh, scrollTops: {
+                        routesScroll: root.querySelector('.shop-routes-scroll')?.scrollTop ?? null,
+                    } };
+                },
                 auditShopFooterOverlap: () => {
                     const root = document.getElementById('root-gutterbones');
                     if (!root || root.getAttribute('data-phase') !== 'SHOP') {
@@ -22154,10 +22265,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const bs = window.getComputedStyle(el);
                         return bs.display !== 'none' && bs.visibility !== 'hidden' && parseFloat(bs.opacity) > 0;
                     });
+                    const layoutStyleEarly = shopLayout instanceof HTMLElement ? window.getComputedStyle(shopLayout) : null;
+                    const columnStackShop = vw < 1024
+                        || layoutStyleEarly?.flexDirection === 'column'
+                        || layoutStyleEarly?.flexDirection === 'column-reverse';
                     if (buyBtn instanceof HTMLElement) {
-                        buyBtn.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
-                        hitTest(buyBtn);
-                    } else {
+                        if (!columnStackShop) {
+                            buyBtn.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+                            hitTest(buyBtn);
+                        }
+                    } else if (!columnStackShop) {
                         bad.push({ kind: 'buy-not-hit-testable', reason: buyButtons.length ? 'all-hidden' : 'none-enabled' });
                     }
                     const scrollHost = panel.querySelector('.shop-routes-scroll');
@@ -22204,16 +22321,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const routeCard = routeCandidates.find((el) => el.classList.contains('ring-2') || el.classList.contains('ring-[#0df]'))
                         || routeCandidates[0]
                         || null;
-                    if (shortLandscapeShop && scrollHost instanceof HTMLElement && routeCard instanceof HTMLElement) {
-                        const footerTop = fr.top;
-                        const hostTop = scrollHost.getBoundingClientRect().top;
-                        for (let i = 0; i < 32; i += 1) {
-                            const cr = routeCard.getBoundingClientRect();
-                            if (cr.bottom <= footerTop - 4 && cr.top >= hostTop + 2) break;
-                            scrollHost.scrollTop += 36;
-                            if (scrollHost.scrollTop + scrollHost.clientHeight >= scrollHost.scrollHeight - 2) break;
-                        }
-                    }
                     if (tabletPortraitShop && scrollHost instanceof HTMLElement && routeCard instanceof HTMLElement) {
                         const hostR = scrollHost.getBoundingClientRect();
                         const cr0 = routeCard.getBoundingClientRect();
@@ -22286,14 +22393,21 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     } else {
                         bad.push({ kind: 'route-card-missing' });
                     }
+                    const paintAudit = typeof window.__GB_LAYOUT_AUDIT__.auditShopScrollZeroPaint === 'function'
+                        ? window.__GB_LAYOUT_AUDIT__.auditShopScrollZeroPaint()
+                        : { ok: true, skipped: true };
+                    if (!paintAudit.skipped && !paintAudit.ok) {
+                        bad.push(...(paintAudit.bad || []));
+                    }
                     return {
                         ok: bad.length === 0,
-                        bad: bad.slice(0, 20),
+                        bad: bad.slice(0, 24),
                         count: bad.length,
                         vw,
                         vh,
                         footer: { top: fr.top, bottom: fr.bottom, h: fr.height },
                         routeVisibleRatio,
+                        paintAudit: paintAudit.skipped ? undefined : { ok: paintAudit.ok, count: paintAudit.count },
                     };
                 },
                 auditShopRoutesColumnReachable: () => {
@@ -22303,7 +22417,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     }
                     const panel = root.querySelector('[data-layout-key="shop-routes-panel"]');
                     const hitStreets = root.querySelector('[data-layout-key="shop-hit-streets"]');
-                    const debtBtns = [...root.querySelectorAll('.shop-options-debt .shop-debt-control-grid button')];
+                    const debtBtns = [...root.querySelectorAll(
+                        '[data-layout-key="shop-debt-pay"], [data-layout-key="shop-debt-clear"], [data-layout-key="shop-debt-footer-pay"], [data-layout-key="shop-debt-footer-clear"]'
+                    )];
                     const stashGrid = root.querySelector('[data-layout-key="shop-stash-panel"] .stash-program-grid');
                     const vh = window.innerHeight;
                     const bad = [];
@@ -23854,39 +23970,39 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         <span>REFRESH STOCK</span>
                                         <span>${shopRefreshCost}</span>
                                     </button>
-                                    <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
-                                    <ShopPanelDivider />
-                                    <div className="shop-options-fence overflow-y-auto overscroll-contain pr-0.5">
-                                        <ShopSectionHeader>FENCE HARDWARE</ShopSectionHeader>
-                                        {inventory.length === 0 ? (
-                                            <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
-                                        ) : (
-                                            <div className="space-y-2 max-h-[6.5rem] overflow-y-auto pr-1">
-                                                {inventory.map(item => (
-                                                    <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
-                                                        <span className="font-mono text-[10px] text-gray-200 min-w-0 break-words leading-snug">{item.name}</span>
-                                                        <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-2 min-h-[44px] font-mono text-xs hover:bg-green-900/30">
-                                                            SELL ${getHardwareSellValue(item)}
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                    <div className="mt-1 text-[10px] font-mono text-gray-500 leading-tight">Refreshes used this stop: {shopRefreshes}</div>
+                                    {inventory.length > 0 && (
+                                        <>
+                                            <ShopPanelDivider />
+                                            <div className="shop-options-fence overflow-y-auto overscroll-contain pr-0.5">
+                                                <ShopSectionHeader>FENCE HARDWARE</ShopSectionHeader>
+                                                <div className="space-y-2 max-h-[6.5rem] overflow-y-auto pr-1">
+                                                    {inventory.map(item => (
+                                                        <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
+                                                            <span className="font-mono text-[10px] text-gray-200 min-w-0 break-words leading-snug">{item.name}</span>
+                                                            <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-2 min-h-[44px] font-mono text-xs hover:bg-green-900/30">
+                                                                SELL ${getHardwareSellValue(item)}
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </>
+                                    )}
                                     <ShopPanelDivider />
-                                    <div className="shop-options-debt">
-                                        <ShopSectionHeader>DEBT CONTROL</ShopSectionHeader>
+                                    <div className="shop-options-debt shop-debt-inline-row mt-1">
                                         {debt > 0 ? (
-                                            <div className="grid grid-cols-2 gap-2 shop-debt-control-grid">
-                                                <button onClick={() => payDebtFromCash(10)} disabled={gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
+                                            <div className="shop-debt-control-grid flex flex-wrap items-stretch gap-1.5">
+                                                <span data-layout-key="shop-debt-label" className="shop-debt-inline-label self-center font-mono text-[10px] uppercase tracking-wider text-gray-400 shrink-0 px-0.5">DEBT</span>
+                                                <button type="button" data-layout-key="shop-debt-pay" onClick={() => payDebtFromCash(10)} disabled={gold <= 0} className="shop-debt-pay-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
                                                     PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
                                                 </button>
-                                                <button onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                <button type="button" data-layout-key="shop-debt-clear" onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={gold <= 0} className="shop-debt-clear-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
                                                     CLEAR ${debtClearCashNeeded}
                                                 </button>
                                             </div>
                                         ) : (
-                                            <p className="shop-debt-empty-label font-mono text-xs text-gray-400 px-0.5 py-1">No debt.</p>
+                                            <p className="shop-debt-empty-label font-mono text-xs text-gray-400 px-0.5 py-0.5">No debt.</p>
                                         )}
                                     </div>
                                 </div>
@@ -23957,13 +24073,13 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     })}
                                 </div>
                                 {debt > 0 && (
-                                <div data-layout-key="shop-debt-footer" className="shop-debt-footer mb-2">
-                                    <ShopSectionHeader>DEBT</ShopSectionHeader>
-                                    <div className="grid grid-cols-2 gap-1.5">
-                                        <button type="button" onClick={() => payDebtFromCash(10)} disabled={gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40">
+                                <div data-layout-key="shop-debt-footer" className="shop-debt-footer shop-debt-inline-row mb-1.5">
+                                    <div className="shop-debt-control-grid flex flex-wrap items-stretch gap-1.5">
+                                        <span className="shop-debt-inline-label self-center font-mono text-[10px] uppercase tracking-wider text-gray-400 shrink-0 px-0.5">DEBT</span>
+                                        <button type="button" data-layout-key="shop-debt-footer-pay" onClick={() => payDebtFromCash(10)} disabled={gold <= 0} className="shop-debt-pay-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40">
                                             PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
                                         </button>
-                                        <button type="button" onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40">
+                                        <button type="button" data-layout-key="shop-debt-footer-clear" onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={gold <= 0} className="shop-debt-clear-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40">
                                             CLEAR ${debtClearCashNeeded}
                                         </button>
                                     </div>
@@ -23973,7 +24089,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     {PROGRAMS.map((p) => (
                                         <div
                                             key={p.id}
-                                            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded border font-mono text-[length:var(--gb-min-font)] ${stash >= p.cost ? 'border-[#0df]/50 text-cyan-100 bg-cyan-950/20' : 'border-gray-700 text-gray-500 bg-gray-900/40'}`}
+                                            data-layout-key={`shop-program-${p.id}`}
+                                            className={`shop-program-slot flex flex-col items-center justify-center py-1.5 px-1 rounded border font-mono text-[length:var(--gb-min-font)] ${stash >= p.cost ? 'border-[#0df]/50 text-cyan-100 bg-cyan-950/20' : 'border-gray-700 text-gray-500 bg-gray-900/40'}`}
                                             title={`${p.desc} (alley only)`}
                                         >
                                             <span className="font-bold">{p.name}</span>

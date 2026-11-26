@@ -22,6 +22,7 @@ const VIEWPORTS = [
 ];
 
 const COLUMN_AUDIT_VIEWPORTS = new Set(["1024x768", "1280x720", "1366x768"]);
+const PAINT_AUDIT_VIEWPORTS = new Set(["768x1024", "1024x768", "1280x720", "1366x768"]);
 
 let server;
 let baseUrl;
@@ -113,6 +114,24 @@ for (const vpName of COLUMN_AUDIT_VIEWPORTS) {
       await bootShop(page, { debt });
       const column = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopRoutesColumnReachable());
       assert.ok(column.ok, `${vp.name} debt=${debt}: ${JSON.stringify(column)}`);
+      await page.close();
+    });
+  }
+}
+
+for (const vpName of PAINT_AUDIT_VIEWPORTS) {
+  for (const debt of [0, 24]) {
+    const vp = VIEWPORTS.find((row) => row.name === vpName);
+    if (!vp) continue;
+    test(`shop scroll-zero paint @ ${vp.name} debt=${debt}`, async () => {
+      const page = await browser.newPage();
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+      await bootShop(page, { debt });
+      const paint = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopScrollZeroPaint());
+      assert.ok(paint.ok, `${vp.name} debt=${debt} paint: ${JSON.stringify(paint)}`);
+      const overlap = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopFooterOverlap());
+      assert.ok(overlap.ok, `${vp.name} debt=${debt} overlap: ${JSON.stringify(overlap)}`);
       await page.close();
     });
   }
