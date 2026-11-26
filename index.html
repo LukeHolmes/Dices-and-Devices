@@ -7406,18 +7406,23 @@ const GutterbonesRules = (() => {
         if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 2.2;
         const runUpperHeat = Math.max(0, Number(context.runUpperHeat) || 0);
         const upperBonusActive = runUpperHeat >= 63;
+        const simF2Revert = typeof window !== 'undefined' && window.__GB_SIM_SCORING_VARIANT__ === 'F2_REVERT';
+        const upperBonusAdd = simF2Revert ? 0.5 : 1;
+        const upperMultCap = simF2Revert ? 2.5 : 3;
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult += 1;
+            mult += upperBonusAdd;
         }
         if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult = Math.min(mult, 3);
+            mult = Math.min(mult, upperMultCap);
         }
         const categoryBaseChips = chips;
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         const categoryMult = mult;
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            pushStep('multiplier', 'UPPER BONUS', '+1x (upper section ≥63)', '+1x');
+            const bonusLabel = simF2Revert ? '+0.5x (upper section ≥63)' : '+1x (upper section ≥63)';
+            const bonusStep = simF2Revert ? '+0.5x' : '+1x';
+            pushStep('multiplier', 'UPPER BONUS', bonusLabel, bonusStep);
         }
         const markBonus = Math.max(0, Math.floor(Number(synergyState?.categoryMarks?.[catId]) || 0));
         if (markBonus > 0) {
@@ -17370,6 +17375,7 @@ if (typeof window !== 'undefined') {
                     round,
                     total: result.total || 0,
                     heat: result.total || 0,
+                    categoryMult: result.mult != null ? result.mult : null,
                     valid: !!result.valid,
                     isSlop: catId === 'C',
                     isUpper,

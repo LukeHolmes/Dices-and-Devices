@@ -211,7 +211,18 @@ async function bootPage(page, baseUrl, viewport) {
   }
 }
 
+async function installScoringVariant(page) {
+  const variant = process.env.SIM_SCORING_VARIANT || "";
+  if (!variant) return;
+  if (page.__gbScoringVariantInstalled === variant) return;
+  await page.addInitScript((v) => {
+    window.__GB_SIM_SCORING_VARIANT__ = v;
+  }, variant);
+  page.__gbScoringVariantInstalled = variant;
+}
+
 async function installGameSeedBeforeNav(page, seed) {
+  await installScoringVariant(page);
   if (process.env.SIM_SEED_GAME !== "1") return;
   await ensureHarnessDeterminism(page);
   await page.addInitScript((gameSeed) => {

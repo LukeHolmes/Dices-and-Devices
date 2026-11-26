@@ -51,9 +51,9 @@ const BASELINES = {
     branch: "",
     rulesCommit: "6f4dc92d93f832ec327db6e6e846f2f6dd185445",
     ref: "6f4dc92d93f832ec327db6e6e846f2f6dd185445",
-    patchFile: "diagnostics/tracking/baselines/f2-revert-on-main-6f4dc92.patch",
-    harnessPatchFile: "diagnostics/tracking/baselines/r-main-instrumented-7d649ef.patch",
-    patchNote: "F1 retained; F2 upper bonus +0.5 cap 2.5 only in worktree fixture",
+    useHarnessRoot: true,
+    scoringVariant: "F2_REVERT",
+    patchNote: "F1 retained; F2 via __GB_SIM_SCORING_VARIANT__ (harness fixture, not shipped)",
   },
   "R-main": {
     label: "R-main",
@@ -423,6 +423,7 @@ async function main() {
       SIM_STREET_RAT_PROFILE: "1",
       SIM_POLICY_REVISION: FIXED_POLICY_REVISION,
       SIM_LINK_OBSERVER: "1",
+      ...(baselineMeta.scoringVariant ? { SIM_SCORING_VARIANT: baselineMeta.scoringVariant } : {}),
       ...(args.ruleExperimentArm ? { SIM_RULE_EXPERIMENTS: args.ruleExperimentArm } : {}),
     },
   };
@@ -456,6 +457,37 @@ async function main() {
     policySha,
   });
   appendRunRows(csvPath, rows);
+
+  const telemPath = path.join(RUNS_DIR, `${batchId}.telem.jsonl`);
+  const capDefault = baselineMeta.scoringVariant === "F2_REVERT" ? 2.5 : 3;
+  const telemLines = allResults.map((r) => {
+    const t = r.telem || {};
+    const hands = t.hands || [];
+    const validHands = hands.filter((h) => h.valid);
+    const upperAfter = hands.filter((h) => h.isUpper && h.valid && h.upperBonusActiveBefore);
+    const upperAtCap = upperAfter.filter((h) => Number(h.categoryMult) >= capDefault - 0.01);
+    const round1Cleared = (t.roundEvents || []).some((e) => e.kind === "round_cleared" && e.round === 1);
+    return JSON.stringify({
+      rid: r.rid,
+      seed: r.seed,
+      outcome: r.outcome,
+      max_round: r.maxRound,
+      round1_cleared: round1Cleared,
+      upper_bonus_activation: t.upperBonusActivation || null,
+      upper_at_cap_share: upperAfter.length ? upperAtCap.length / upperAfter.length : null,
+      upper_after_bonus_hands: upperAfter.length,
+      slop_pick_share: validHands.length
+        ? validHands.filter((h) => h.isSlop).length / validHands.length
+        : null,
+      boss_clears: t.bossClears || {},
+      boss_enters: t.bossEnters || {},
+      gamble_choices: (t.gambleChoices || []).length,
+      early_debt_events: (t.earlyDebtEvents || []).length,
+    });
+  });
+  if (telemLines.length) {
+    fs.appendFileSync(telemPath, `${telemLines.join("\n")}\n`, "utf8");
+  }
 
   const summary = {
     batchId,

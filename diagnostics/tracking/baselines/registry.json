@@ -23,8 +23,9 @@
       "label": "6f4dc92-Bp",
       "rulesCommit": "6f4dc92d93f832ec327db6e6e846f2f6dd185445",
       "harnessBaselineKey": "6f4dc92-Bp",
+      "scoringVariant": "F2_REVERT",
       "patchFile": "diagnostics/tracking/baselines/f2-revert-on-main-6f4dc92.patch",
-      "notes": "F1 (Slop/upper mult) unchanged; F2 upper bonus +0.5 cap 2.5 via worktree fixture only"
+      "notes": "F1 unchanged; F2 via SIM_SCORING_VARIANT on harness root (patch kept as reference)"
     },
     "R-main-i": {
       "label": "R-main-i",

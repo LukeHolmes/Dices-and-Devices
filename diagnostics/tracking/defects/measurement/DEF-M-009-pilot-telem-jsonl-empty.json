@@ -1,0 +1,11 @@
+{
+  "id": "DEF-M-009",
+  "class": "measurement",
+  "status": "resolved",
+  "title": "F1F2 pilot telem.jsonl rows missing e2e hand/round telemetry",
+  "symptom": "F1F2-PILOT-*.telem.jsonl had null upper_bonus_activation, round1_cleared false for all runs, and empty boss maps despite plausible max_round depth.",
+  "root_cause": "Pilot batches completed on harness commit 7f59b1e before telem.jsonl aggregation matched live __GB_SIM_TELEM__ collection; jsonl reflected empty in-run telem while CSV outcomes were valid.",
+  "resolution": "Rebuild telem sidecars with scripts/rebuild-telem-jsonl.cjs on measure branch (harness root + SIM_SCORING_VARIANT for Bp); leave pilot CSV append-only.",
+  "opened": "2026-11-25",
+  "resolved": "2026-11-26"
+}
