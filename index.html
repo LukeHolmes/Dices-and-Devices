@@ -6814,62 +6814,94 @@
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             min-height: 0 !important;
             overflow: hidden !important;
-            gap: 0.5rem !important;
+            gap: 0.35rem !important;
+            align-content: stretch !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
-            min-height: 0 !important;
+            min-height: min(58vh, 24rem) !important;
             max-height: 100% !important;
-            height: 100% !important;
+            height: auto !important;
             overflow: hidden !important;
             display: flex !important;
             flex-direction: column !important;
-            flex: 1 1 auto !important;
+            flex: 1 1 0 !important;
+            align-self: stretch !important;
+            position: relative !important;
+            z-index: 3 !important;
+            isolation: isolate !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            min-height: 0 !important;
-            max-height: 100% !important;
-            height: 100% !important;
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] > .flex.justify-between {
+            margin-bottom: 0.5rem !important;
+            padding-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] h2 {
+            font-size: clamp(1.75rem, 6vw, 2.25rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-economy-rules-details {
+            margin-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-economy-rules-details summary {
+            font-size: max(10px, 0.62rem) !important;
+            line-height: 1.2 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-economy-rules-details:not([open]) .shop-economy-rules {
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
             overflow: hidden !important;
-            display: grid !important;
-            grid-template-columns: minmax(0, 1fr) !important;
-            grid-template-rows: minmax(0, 1fr) minmax(0, auto) !important;
-            grid-template-areas: "shop-scroll" "shop-footer" !important;
-            align-content: stretch !important;
-            flex: 1 1 auto !important;
-            pointer-events: auto !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-workbench,
         #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
+            flex: 1 1 auto !important;
             min-height: 0 !important;
             height: auto !important;
             max-height: none !important;
-            flex: 1 1 auto !important;
             overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
-            min-height: 0 !important;
-            height: auto !important;
+            min-height: min(20rem, 52vh) !important;
             max-height: none !important;
             flex: 1 1 auto !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
         }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] > .flex.justify-between.items-end.mb-4 {
+            margin-bottom: 0.35rem !important;
+            padding-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            min-height: 0 !important;
+            max-height: none !important;
+            height: auto !important;
+            overflow: hidden !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-rows: auto auto !important;
+            grid-template-areas: "shop-scroll" "shop-footer" !important;
+            align-content: start !important;
+            flex: 0 0 auto !important;
+            align-self: stretch !important;
+            position: relative !important;
+            z-index: 2 !important;
+            pointer-events: auto !important;
+        }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > .shop-routes-scroll {
             grid-area: shop-scroll !important;
             min-height: 0 !important;
-            max-height: 100% !important;
-            height: 100% !important;
-            flex: none !important;
+            max-height: none !important;
+            height: auto !important;
+            flex: 0 0 auto !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
             display: flex !important;
             flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
             mask-image: none !important;
             -webkit-mask-image: none !important;
             position: relative !important;
             z-index: 1 !important;
-            contain: layout paint !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
             min-height: 0 !important;
@@ -6880,9 +6912,6 @@
             position: relative !important;
             z-index: 6 !important;
             isolation: isolate !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > .shop-routes-scroll {
-            min-height: min(56vh, 34rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-options-block {
             position: relative !important;
@@ -6912,7 +6941,7 @@
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
             min-height: 0 !important;
             max-height: none !important;
-            flex: 0 1 auto !important;
+            flex: 0 0 auto !important;
             overflow: visible !important;
             position: relative !important;
             z-index: 2 !important;
@@ -22055,7 +22084,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     };
                     const resetScroll = () => {
                         window.scrollTo(0, 0);
-                        root.querySelectorAll('.gb-screen, .shop-routes-scroll, .shop-routes-body, .gb-route-list, [data-layout-key="shop-routes-panel"]').forEach((el) => {
+                        root.querySelectorAll('.gb-screen, .shop-routes-scroll, .shop-routes-body, .gb-route-list, [data-layout-key="shop-routes-panel"], [data-layout-key="shop-items-panel"], .shop-items-panel').forEach((el) => {
                             if (el instanceof HTMLElement) el.scrollTop = 0;
                         });
                     };
@@ -22117,7 +22146,26 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         pushTarget(el, el.getAttribute('data-layout-key') || 'shop-program', true);
                     });
                     pushTarget(root.querySelector('[data-layout-key="shop-hit-streets"]'), 'shop-hit-streets');
-                    return { ok: bad.length === 0, bad: bad.slice(0, 24), count: bad.length, vw, vh, scrollTops: {
+                    const stockPanel = root.querySelector('[data-tutorial="shop-panel"]');
+                    const itemsPanel = stockPanel?.querySelector('[data-layout-key="shop-items-panel"]') || stockPanel?.querySelector('.shop-items-panel');
+                    const buyButtons = itemsPanel
+                        ? [...itemsPanel.querySelectorAll('[data-layout-key="shop-buy-button"]')].filter((el) => el instanceof HTMLElement)
+                        : [];
+                    const firstBuy = buyButtons.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        const card = el.closest('.shop-item-card');
+                        if (card instanceof HTMLElement && card.classList.contains('shop-item-card--sold')) return false;
+                        return st.display !== 'none' && st.visibility !== 'hidden' && parseFloat(st.opacity) > 0 && !el.disabled;
+                    }) || buyButtons.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        return st.display !== 'none' && st.visibility !== 'hidden' && parseFloat(st.opacity) > 0;
+                    });
+                    if (firstBuy instanceof HTMLElement) {
+                        pushTarget(firstBuy, 'shop-buy-button-first');
+                    } else {
+                        bad.push({ kind: 'target-missing', key: 'shop-buy-button-first' });
+                    }
+                    return { ok: bad.length === 0, bad: bad.slice(0, 28), count: bad.length, vw, vh, scrollTops: {
                         routesScroll: root.querySelector('.shop-routes-scroll')?.scrollTop ?? null,
                     } };
                 },
@@ -23866,7 +23914,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col lg:flex-row gap-3 lg:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 ? <span className="block text-sm text-red-300 font-normal">IOU ${debt}</span> : null}</div></div></div>
-                                <p className="text-xs font-mono text-amber-200/85 mb-2 leading-snug line-clamp-2 md:line-clamp-none">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
+                                <details className="shop-economy-rules-details mb-2 shrink-0">
+                                    <summary className="text-[10px] font-mono text-amber-200/60 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">Show shop rules</summary>
+                                    <p className="shop-economy-rules text-xs font-mono text-amber-200/85 mt-1 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
+                                </details>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
                                     <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
                                         Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
