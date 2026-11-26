@@ -47,7 +47,7 @@ test('roll hand validates both PNG fallback images before readiness', () => {
 test('Rap Sheet and boss labels have separate high-contrast styling', () => {
   assert.match(html, /\[data-layout-key="rap-sheet"\] \.rap-sheet-stat-label\s*{\s*color: #e8dfd0 !important/);
   assert.match(html, /\[data-layout-key="rap-sheet"\] \.text-green-800/);
-  assert.match(html, /boss-intro-name-plate \.shop-section-header__label\s*{[\s\S]*?font-size: clamp\(1\.35rem, 4\.2vw, 2\.35rem\) !important/);
+  assert.match(html, /boss-intro-name-plate \.shop-section-header__label\s*{[\s\S]*?font-size: clamp\(1\.15rem, 3\.2vw, 1\.9rem\) !important/);
 });
 
 test('runtime size total includes look-and-feel asset bytes', () => {

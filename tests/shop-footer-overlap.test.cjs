@@ -16,9 +16,13 @@ const VIEWPORTS = [
   { name: "844x390", width: 844, height: 390 },
   { name: "768x1024", width: 768, height: 1024 },
   { name: "1024x768", width: 1024, height: 768 },
+  { name: "1280x720", width: 1280, height: 720 },
   { name: "1366x768", width: 1366, height: 768 },
   { name: "1920x1080", width: 1920, height: 1080 },
 ];
+
+const COLUMN_AUDIT_VIEWPORTS = new Set(["1024x768", "1280x720", "1366x768"]);
+const PAINT_AUDIT_VIEWPORTS = new Set(["768x1024", "1024x768", "1280x720", "1366x768"]);
 
 let server;
 let baseUrl;
@@ -47,8 +51,13 @@ after(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function bootShop(page) {
-  const payload = plain(createGame(fixtures.snapshot()).api.normalizeSavedRun(fixtures.shopBusy()));
+async function bootShop(page, { debt = 0 } = {}) {
+  const payload = plain(
+    createGame(fixtures.snapshot()).api.normalizeSavedRun({
+      ...fixtures.shopBusy(),
+      debt,
+    }),
+  );
   await page.evaluate(
     ({ key, data }) => {
       localStorage.setItem(
@@ -76,9 +85,54 @@ for (const vp of VIEWPORTS) {
     const page = await browser.newPage();
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
-    await bootShop(page);
+    const needDebtRow = vp.name === "1366x768";
+    await bootShop(page, { debt: needDebtRow ? 24 : 0 });
     const audit = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopFooterOverlap());
     assert.ok(audit.ok, `${vp.name}: ${JSON.stringify(audit)}`);
+    if (vp.name === "768x1024" || COLUMN_AUDIT_VIEWPORTS.has(vp.name)) {
+      const column = await page.evaluate(() => {
+        const auditApi = window.__GB_LAYOUT_AUDIT__;
+        if (!auditApi || typeof auditApi.auditShopRoutesColumnReachable !== "function") {
+          return { ok: false, bad: [{ kind: "missing-audit", hasAudit: !!auditApi }] };
+        }
+        return auditApi.auditShopRoutesColumnReachable();
+      });
+      assert.ok(column.ok, `${vp.name} column: ${JSON.stringify(column)}`);
+    }
     await page.close();
   });
+}
+
+for (const vpName of COLUMN_AUDIT_VIEWPORTS) {
+  for (const debt of [0, 24]) {
+    const vp = VIEWPORTS.find((row) => row.name === vpName);
+    if (!vp) continue;
+    test(`shop routes footer pinned @ ${vp.name} debt=${debt}`, async () => {
+      const page = await browser.newPage();
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+      await bootShop(page, { debt });
+      const column = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopRoutesColumnReachable());
+      assert.ok(column.ok, `${vp.name} debt=${debt}: ${JSON.stringify(column)}`);
+      await page.close();
+    });
+  }
+}
+
+for (const vpName of PAINT_AUDIT_VIEWPORTS) {
+  for (const debt of [0, 24]) {
+    const vp = VIEWPORTS.find((row) => row.name === vpName);
+    if (!vp) continue;
+    test(`shop scroll-zero paint @ ${vp.name} debt=${debt}`, async () => {
+      const page = await browser.newPage();
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`${baseUrl}/index.html?layoutAudit=1`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+      await bootShop(page, { debt });
+      const paint = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopScrollZeroPaint());
+      assert.ok(paint.ok, `${vp.name} debt=${debt} paint: ${JSON.stringify(paint)}`);
+      const overlap = await page.evaluate(() => window.__GB_LAYOUT_AUDIT__.auditShopFooterOverlap());
+      assert.ok(overlap.ok, `${vp.name} debt=${debt} overlap: ${JSON.stringify(overlap)}`);
+      await page.close();
+    });
+  }
 }

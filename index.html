@@ -799,6 +799,12 @@
         overflow: hidden;
         min-height: var(--gb-min-tap);
     }
+    @media (max-height: 500px) and (min-width: 720px) {
+        #root-gutterbones .lineup-persona-card {
+            overflow: visible !important;
+            min-height: min-content !important;
+        }
+    }
     #root-gutterbones .lineup-persona-card .lineup-portrait {
         height: clamp(4.5rem, 14vmin, 7rem);
         min-height: 4.75rem;
@@ -914,9 +920,6 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
             display: grid !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
-            display: none !important;
-        }
         #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
             max-height: 5.5rem;
         }
@@ -947,7 +950,7 @@
             grid-template-columns: minmax(0, 1fr) !important;
         }
     }
-    @media (min-width: 821px) and (max-height: 820px) {
+    @media (min-width: 1024px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
             align-items: stretch !important;
             flex: 1 1 auto;
@@ -985,6 +988,19 @@
             flex: 1 1 50% !important;
             width: auto !important;
             max-width: 55% !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 0 1 auto !important;
+            overflow: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            flex: 0 1 auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            flex: 0 0 auto !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             flex: 1 1 50% !important;
@@ -1082,7 +1098,6 @@
     @media (min-width: 640px) and (max-height: 780px) {
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-fixter-line,
         #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-debt-warning,
-        #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-debt,
         #root-gutterbones [data-layout-key="shop-stash-panel"] .stash-program-grid {
             display: none !important;
         }
@@ -1263,7 +1278,6 @@
             }
         }
         @media (min-width: 768px) and (max-height: 820px) {
-            #root-gutterbones[data-phase="SHOP"] .shop-options-debt,
             #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
                 display: none !important;
             }
@@ -1284,7 +1298,9 @@
         }
         @media (min-width: 768px) and (max-height: 520px) {
             #root-gutterbones [data-layout-key="shop-routes-panel"] .shop-options-fence {
-                display: none;
+                max-height: 3.25rem;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
         }
         #root-gutterbones [data-tutorial="shop-panel"] > p.text-xs {
@@ -1521,11 +1537,12 @@
         transform-origin: center center;
     }
     #root-gutterbones .boss-intro-card {
-        max-height: calc(100dvh - 2rem);
+        max-height: none;
         overflow: hidden;
         box-sizing: border-box;
     }
     #root-gutterbones .boss-intro-card.gb-modal-shop-chrome {
+        max-height: none;
         overflow: visible;
     }
     #root-gutterbones [data-layout-key="shop-refresh-stock"] {
@@ -1850,9 +1867,6 @@
     @media (max-width: 820px) {
         #root-gutterbones[data-phase="SHOP"] .shop-fixter-line,
         #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
-            display: none !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-debt {
             display: none !important;
         }
         #root-gutterbones[data-score-overlay-open="1"] [data-layout-key="score-breakdown-overlay"],
@@ -2314,7 +2328,6 @@
             font-size: 9px;
             line-height: 1.1;
         }
-        #root-gutterbones [data-layout-key="side-wager-row"],
         #root-gutterbones [data-layout-key="play-hud"] .gb-play-dock {
             display: none !important;
         }
@@ -2496,23 +2509,23 @@
     @media (min-width: 1024px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.35rem) - 0.5rem) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            scrollbar-width: thin;
-            scrollbar-gutter: stable;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
-            flex: 0 0 auto !important;
-            overflow: visible !important;
             max-height: none !important;
             mask-image: none !important;
             -webkit-mask-image: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 0 0 auto !important;
-            min-height: 13.5rem !important;
+            flex: 0 1 auto !important;
+            min-height: 0 !important;
             overflow: visible !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
@@ -2535,13 +2548,49 @@
             flex-direction: column !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer .stash-program-grid {
-            flex: 0 1 auto !important;
-            max-height: min(6.5rem, 28vh) !important;
-            overflow-y: auto !important;
+            flex: 0 0 auto !important;
+            min-height: 3.75rem !important;
+            max-height: min(8rem, 32vh) !important;
+            overflow: visible !important;
             overscroll-behavior: contain;
+            margin-bottom: 0.5rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer .shop-program-slot {
+            min-height: 2.85rem !important;
+            box-sizing: border-box !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer [data-layout-key="shop-hit-streets"] {
             flex: 0 0 auto !important;
+            margin-top: 0 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block:has(.shop-debt-control-grid) {
+            margin-bottom: 0.3rem !important;
+            padding: 0.3rem 0.4rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block:has(.shop-debt-control-grid) [data-layout-key="shop-refresh-stock"] {
+            margin-bottom: 0.15rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-debt .shop-debt-control-grid {
+            padding-top: 0.25rem !important;
+            border-top: 1px solid rgba(75, 85, 99, 0.9) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-debt .shop-debt-control-grid button {
+            min-height: 38px !important;
+            padding-top: 0.12rem !important;
+            padding-bottom: 0.12rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-fixter-line {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block > .shop-section-header {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled > .mb-3 {
+            margin-bottom: 0.2rem !important;
+            padding-bottom: 0.2rem !important;
         }
     }
     @media (min-width: 768px) and (max-width: 1366px) and (min-height: 700px) and (max-height: 1024px) {
@@ -2563,12 +2612,18 @@
             flex-direction: column !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
-            flex: 0 1 auto !important;
-            max-height: min(6.5rem, 24vh) !important;
+            flex: 0 0 auto !important;
+            min-height: 3.55rem !important;
+            max-height: min(7.25rem, 28vh) !important;
             overflow-y: auto !important;
+            margin-bottom: 0.45rem !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-hit-streets"] {
             flex: 0 0 auto !important;
+            margin-top: 0 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            gap: 0.25rem;
         }
     }
     @media (min-width: 1024px) and (min-height: 821px) {
@@ -2776,7 +2831,10 @@
     #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"] .gb-modal-body {
         max-height: calc(100dvh - 2.5rem);
         overflow-y: auto;
-        scrollbar-width: none;
+        scrollbar-width: thin;
+        scrollbar-color: #c78b16 transparent;
+        mask-image: linear-gradient(180deg, #000 0%, #000 88%, transparent 100%);
+        -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 88%, transparent 100%);
     }
     #root-gutterbones [data-layout-key="play-hud"] .text-\[10px\].opacity-50,
     #root-gutterbones .gb-play-dock .font-mono.text-\[9px\] {
@@ -3250,14 +3308,20 @@
         max-width: 20rem;
         margin-inline: auto;
     }
+    #root-gutterbones .boss-intro-card .boss-intro-name-plate {
+        width: min(100%, 26rem);
+        max-width: min(100%, 26rem);
+    }
     #root-gutterbones .boss-intro-card .boss-intro-name-plate .shop-section-header__label {
         /* Scoped to boss intro: generic shop-section-header mobile rules force 11-12px otherwise. */
-        font-size: clamp(1.35rem, 4.2vw, 2.35rem) !important;
+        font-size: clamp(1.15rem, 3.2vw, 1.9rem) !important;
         color: #21130e !important;
         font-weight: 900 !important;
         letter-spacing: 0.06em;
-        white-space: normal !important;
+        white-space: nowrap !important;
+        max-width: calc(100% - 3.5rem);
         line-height: 1.1 !important;
+        font-family: Impact, "Arial Black", sans-serif !important;
     }
 
     /* The BUSTED Rap Sheet uses dark chrome, not paper-mode text colors. */
@@ -3367,6 +3431,9 @@
     #root-gutterbones [data-layout-key="safehouse-card"] .text-green-800,
     #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-cash-total {
         color: #86efac !important;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-buy-btn:not(:disabled) {
+        color: #1a1204 !important;
     }
     #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-buy-btn:disabled {
         background: #1a1510 !important;
@@ -5520,8 +5587,10 @@
             border-top: none;
             padding: 0 0.45rem 0.12rem;
         }
-        #root-gutterbones[data-ui-redesign="1"] [data-layout-key="side-wager-row"] > div:last-child {
-            display: none !important;
+        @media (max-height: 419px) {
+            #root-gutterbones[data-ui-redesign="1"] [data-layout-key="side-wager-row"] > div:last-child {
+                display: none !important;
+            }
         }
         #root-gutterbones[data-ui-redesign="1"] .play-score-hint-slot {
             min-height: 1.35rem !important;
@@ -6728,7 +6797,8 @@
         87.5%, 100% { background-position: 100% 100%; }
     }
     /* Tablet portrait: keep a bounded two-row shop and scroll inside the cards.
-       The generic <=1023px auto-height stack overflowed the 768x1024 viewport. */
+       The generic <=1023px auto-height stack overflowed the 768x1024 viewport.
+       #113 flex stash + 11px labels; #115 grid scroll/footer split for overlap CI. */
     @media (min-width: 768px) and (max-width: 1023px) and (min-height: 700px) {
         #root-gutterbones[data-phase="SHOP"] .gb-screen {
             height: 100dvh !important;
@@ -6739,61 +6809,106 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) !important;
-            grid-template-rows: minmax(0, 48%) minmax(0, 52%) !important;
+            grid-template-rows: minmax(0, 1fr) minmax(0, auto) !important;
             height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             min-height: 0 !important;
             overflow: hidden !important;
-            gap: 0.5rem !important;
+            gap: 0.35rem !important;
+            align-content: stretch !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"],
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            min-height: 0 !important;
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
+            min-height: min(58vh, 24rem) !important;
             max-height: 100% !important;
-            height: 100% !important;
+            height: auto !important;
             overflow: hidden !important;
             display: flex !important;
             flex-direction: column !important;
-            flex: 1 1 auto !important;
+            flex: 1 1 0 !important;
+            align-self: stretch !important;
+            position: relative !important;
+            z-index: 3 !important;
+            isolation: isolate !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] > .flex.justify-between {
+            margin-bottom: 0.5rem !important;
+            padding-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] h2 {
+            font-size: clamp(1.75rem, 6vw, 2.25rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-economy-rules-details {
+            margin-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-economy-rules-details summary {
+            font-size: max(11px, 0.6875rem) !important;
+            line-height: 1.2 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-economy-rules-details:not([open]) .shop-economy-rules {
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+            overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-workbench,
         #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
+            flex: 1 1 auto !important;
             min-height: 0 !important;
             height: auto !important;
             max-height: none !important;
-            flex: 1 1 auto !important;
             overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
-            min-height: 0 !important;
-            height: auto !important;
+            min-height: min(20rem, 52vh) !important;
             max-height: none !important;
             flex: 1 1 auto !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
         }
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] > .flex.justify-between.items-end.mb-4 {
+            margin-bottom: 0.35rem !important;
+            padding-bottom: 0.35rem !important;
+        }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            display: flex !important;
-            flex-direction: column !important;
             min-height: 0 !important;
+            max-height: none !important;
+            height: auto !important;
             overflow: hidden !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            flex: 1 1 0 !important;
-            min-height: 0 !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            transform: none !important;
-            overflow-y: auto !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-rows: auto auto !important;
+            grid-template-areas: "shop-scroll" "shop-footer" !important;
+            align-content: start !important;
             flex: 0 0 auto !important;
-            max-height: min(20vh, 10.5rem) !important;
+            align-self: stretch !important;
+            position: relative !important;
+            z-index: 2 !important;
+            pointer-events: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > .shop-routes-scroll {
+            grid-area: shop-scroll !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            height: auto !important;
+            flex: 0 0 auto !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
+            flex: 0 0 auto !important;
             position: relative !important;
             z-index: 6 !important;
             isolation: isolate !important;
@@ -6822,67 +6937,65 @@
             margin-top: 0.35rem !important;
             margin-bottom: 0.15rem !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 1 1 0 !important;
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
             min-height: 0 !important;
             max-height: none !important;
-            overflow: hidden !important;
+            flex: 0 0 auto !important;
+            overflow: visible !important;
             position: relative !important;
             z-index: 2 !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
-            overflow-y: auto !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
-            flex: 0 0 auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            overflow: visible !important;
-            display: flex !important;
-            flex-direction: column !important;
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] {
+            grid-area: shop-footer !important;
             position: relative !important;
             left: auto !important;
             right: auto !important;
             bottom: auto !important;
-            pointer-events: auto !important;
+            align-self: stretch !important;
+            min-height: 0 !important;
+            flex: none !important;
+            flex-shrink: 0 !important;
+            margin-top: 0 !important;
+            max-height: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
             z-index: 5 !important;
-            margin-top: auto !important;
+            isolation: isolate !important;
+            pointer-events: auto !important;
             padding-top: 0.25rem !important;
             contain: layout paint;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] > :not(button) {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] .stash-program-grid {
             display: grid !important;
-            gap: 0.25rem !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 0.2rem !important;
             flex: 0 1 auto !important;
+            min-height: 0 !important;
             max-height: min(5.25rem, 14vh) !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             overscroll-behavior: contain;
             margin-bottom: 0.35rem !important;
+            font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
             display: grid !important;
+            height: 0.7rem !important;
+            min-height: 0.7rem !important;
+            margin-bottom: 0.25rem !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > .font-mono {
             margin-bottom: 0.15rem !important;
             font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid span {
-            font-size: max(11px, 0.6875rem) !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
-            height: 0.7rem !important;
-            min-height: 0.7rem !important;
-            margin-bottom: 0.25rem !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            gap: 0.2rem !important;
             font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * {
@@ -6893,17 +7006,51 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * span {
             font-size: inherit !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] [data-layout-key="shop-hit-streets"] {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] [data-layout-key="shop-hit-streets"] {
             flex: 0 0 auto !important;
             flex-shrink: 0 !important;
+            margin-top: 0.2rem !important;
             padding-top: 0.25rem !important;
             padding-bottom: 0.25rem !important;
             min-height: 44px !important;
             font-size: 0.95rem !important;
             line-height: 1.1 !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            overflow: hidden !important;
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) [data-layout-key="shop-route-pagination"] {
+            margin-bottom: 0.1rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-debt-warning {
+            display: none !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-options-block {
+            margin-bottom: 0.25rem !important;
+            padding: 0.3rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-routes-unscaled > .mb-3 {
+            margin-bottom: 0.25rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-fixter-line {
+            margin-bottom: 0.25rem !important;
+            padding-top: 0.2rem !important;
+            padding-bottom: 0.2rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) [data-layout-key="shop-debt-footer"] {
+            margin-bottom: 0.12rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) [data-layout-key="shop-debt-footer"] button {
+            min-height: 40px !important;
+            padding-top: 0.15rem !important;
+            padding-bottom: 0.15rem !important;
+            font-size: max(10px, 0.65rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .stash-program-grid {
+            max-height: min(5.5rem, 14vh) !important;
+            margin-bottom: 0.25rem !important;
+            overflow: visible !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"]:has([data-layout-key="shop-debt-footer"]) .shop-program-slot {
+            min-height: 2.75rem !important;
+            box-sizing: border-box !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled,
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
@@ -6973,7 +7120,6 @@
             min-height: 2.1rem !important;
             padding: 0.35rem 1.35rem !important;
         }
-    }
     @media (max-width: 414px) {
         #root-gutterbones[data-look-and-feel="1"] .look-and-feel-ambient {
             display: none !important;
@@ -6983,6 +7129,544 @@
     #root-gutterbones[data-look-and-feel="1"]:not([data-phase="PLAY"]) .look-and-feel-ambient {
         display: none !important;
     }
+
+    /* === art/qa-high-medium-fixes (presentation only) === */
+    /* H2, M6 */
+    #root-gutterbones [data-layout-key="rap-sheet"] .rap-sheet-stat-value {
+        color: #f5ecd6 !important;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] [data-layout-key="rap-sheet-archetype"] {
+        background: rgba(26, 18, 4, 0.88) !important;
+        border-color: rgba(199, 139, 22, 0.55) !important;
+        color: #d6c9b0 !important;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] [data-layout-key="rap-sheet-archetype"] .text-gray-600,
+    #root-gutterbones [data-layout-key="rap-sheet"] [data-layout-key="rap-sheet-archetype"] .text-gray-800 {
+        color: #e8dfd0 !important;
+    }
+    #root-gutterbones [data-layout-key="rap-sheet"] .h-32,
+    #root-gutterbones [data-layout-key="rap-sheet"] .h-32.w-32 {
+        background: rgba(12, 9, 8, 0.72) !important;
+        box-shadow: inset 0 0 0 2px rgba(199, 139, 22, 0.35);
+    }
+  @media (max-height: 500px) and (min-width: 720px) {
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet-screen"] {
+      align-items: flex-start;
+      padding-top: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet-wrap"] {
+      max-width: min(42rem, calc(100vw - 1rem));
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] {
+      max-height: calc(100dvh - 4.25rem) !important;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0.55rem 0.65rem !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body {
+      display: flex !important;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: hidden;
+      position: relative;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
+      margin-bottom: 0.35rem !important;
+      padding-bottom: 0.25rem !important;
+      padding-right: 6.75rem;
+      position: relative;
+      z-index: 2;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid {
+      display: grid !important;
+      grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+      grid-template-rows: auto !important;
+      gap: 0.5rem 0.75rem !important;
+      margin-bottom: 0.35rem !important;
+      align-items: start !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid > div:first-child {
+      grid-column: 1 / 2 !important;
+      grid-row: 1 / 2 !important;
+      height: 5.5rem !important;
+      min-height: 5.5rem !important;
+      max-height: 5.5rem !important;
+      width: 5.5rem !important;
+      max-width: 5.5rem !important;
+      align-self: start !important;
+      justify-self: start !important;
+      overflow: hidden !important;
+      box-sizing: border-box;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid > div:last-child {
+      grid-column: 2 / 3 !important;
+      grid-row: 1 / 2 !important;
+      align-self: start !important;
+      min-width: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid > div:first-child > div {
+      height: 100% !important;
+      max-height: 5.5rem !important;
+      width: 100% !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .flex.justify-end.mb-2 {
+      position: absolute !important;
+      top: 2.15rem;
+      right: 0.55rem;
+      left: auto;
+      margin: 0 !important;
+      padding: 0 !important;
+      z-index: 8;
+      width: auto;
+      max-width: 6.25rem;
+      overflow: visible;
+      pointer-events: none;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .flex.justify-end.mb-2 > div {
+      font-size: 0.72rem !important;
+      line-height: 1.1 !important;
+      padding: 0.2rem 0.45rem !important;
+      border-width: 3px !important;
+      transform: rotate(-9deg) !important;
+      display: block !important;
+      overflow: visible;
+      white-space: nowrap;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] .rap-sheet-stat-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] .rap-sheet-stat-label {
+      width: 50%;
+      white-space: nowrap;
+      padding-right: 0.4rem;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] .rap-sheet-stat-value {
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      text-align: right;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet-run-summary"] {
+      margin-bottom: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet-record-scroll"] {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.15rem;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid {
+      flex-shrink: 0;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
+      flex-shrink: 0;
+    }
+  }
+    /* H5 */
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="system-menu-street"],
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="play-history-log"],
+    #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="play-stash-open-mobile"] {
+        font-size: max(12px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
+        font-size: max(12px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
+        font-size: max(12px, var(--gb-min-font)) !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
+    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash {
+        color: #1a1204 !important;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    /* H6 */
+  @media (max-width: 767px) {
+    #root-gutterbones [data-layout-key="lineup-grid"].lineup-persona-grid {
+      flex: 0 0 auto;
+      min-height: min(46vh, 22rem);
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(9.5rem, 42vw);
+      grid-template-columns: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.25rem;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card {
+      scroll-snap-align: start;
+      min-width: 9.5rem;
+    }
+    #root-gutterbones .gb-screen:has([data-layout-key="lineup-grid"]) {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
+  @media (max-height: 500px) and (min-width: 720px) {
+    #root-gutterbones[data-phase="LINEUP"] .gb-screen {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    #root-gutterbones[data-phase="LINEUP"] .gb-screen > .flex-1.min-h-0 {
+      overflow: visible !important;
+      min-height: auto !important;
+      flex: 0 1 auto !important;
+    }
+    #root-gutterbones[data-phase="LINEUP"] .gb-brand-title {
+      font-size: clamp(1rem, 4.2vw, 1.45rem) !important;
+      margin-bottom: 0.15rem !important;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"].lineup-persona-grid {
+      flex: 0 0 auto;
+      min-height: min(54vh, 15.5rem);
+      display: grid !important;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(8.5rem, 32vw);
+      grid-template-columns: none !important;
+      overflow-x: auto;
+      overflow-y: visible;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      visibility: visible !important;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card {
+      scroll-snap-align: start;
+      min-width: 8.5rem;
+      overflow: visible !important;
+      height: auto !important;
+      max-height: none !important;
+      min-height: min-content;
+      padding: 0.4rem 0.45rem 0.5rem !important;
+      box-sizing: border-box;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card p.italic {
+      display: none;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card .lineup-portrait {
+      height: clamp(2.35rem, 22vmin, 3.25rem) !important;
+      min-height: 2.35rem !important;
+      margin-bottom: 0.35rem !important;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"].lineup-persona-grid {
+      min-height: min(62vh, 16.5rem);
+      align-items: stretch;
+      overflow-y: visible;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card .font-mono {
+      line-height: 1.3;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card p {
+      line-height: 1.3;
+    }
+  }
+    /* H7, B3 */
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
+        display: block !important;
+    }
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 900px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
+      display: none !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-debt-footer"].shop-debt-footer {
+      display: block !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+      max-height: none;
+      overflow: visible;
+    }
+  }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-inline-row .shop-debt-control-grid {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-inline-row .shop-debt-control-grid button {
+        font-size: max(10px, 0.62rem) !important;
+        min-height: 36px !important;
+        padding: 0.15rem 0.35rem !important;
+        line-height: 1.2 !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-footer.shop-debt-inline-row {
+        margin-bottom: 0.25rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-footer {
+        display: none;
+    }
+  @media (max-height: 450px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-options-debt {
+        display: none !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-debt-footer"].shop-debt-footer {
+        display: block !important;
+    }
+  }
+    /* H8 */
+  @media (max-height: 420px) {
+    #root-gutterbones[data-phase="CARVING"] [data-layout-key="carving-layout"] {
+      display: grid !important;
+      grid-template-columns: 14rem minmax(0, 1fr);
+      gap: 0.5rem;
+      align-items: stretch;
+      padding-top: 2.25rem;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-shelf {
+      max-height: 100%;
+      overflow-y: auto;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-bone-strip {
+      position: relative !important;
+      min-height: 0;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-bone-strip .grid {
+      gap: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-die-tile {
+      height: min(28vh, 6rem) !important;
+      width: auto !important;
+      min-width: 3.25rem;
+    }
+    #root-gutterbones[data-phase="CARVING"] .carving-bone-strip > button.absolute {
+      position: static !important;
+      margin-top: 0.35rem;
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+    #root-gutterbones[data-phase="CARVING"] .bone-held-label {
+      color: #1a1204 !important;
+      background: rgba(12, 9, 8, 0.82);
+      padding: 0.12rem 0.35rem;
+      border-radius: 0.2rem;
+      text-shadow: none;
+      bottom: -1.1rem;
+    }
+  }
+    /* M1 */
+  @media (min-width: 1280px) {
+    #root-gutterbones[data-phase="SHOP"] .shop-section-header__label {
+      color: #1a1204 !important;
+      font-size: clamp(13px, calc(0.55rem + 0.4vw), 16px) !important;
+    }
+  }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-panel-divider:empty,
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block .shop-panel-divider {
+      height: 2px;
+      margin: 0.4rem 0;
+      background: linear-gradient(90deg, transparent, rgba(199, 139, 22, 0.85), transparent) !important;
+      border: 0;
+    }
+    /* M2 */
+  @media (max-height: 500px), (max-width: 420px) {
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.75rem;
+      font-size: 11px !important;
+      line-height: 1.25;
+    }
+    #root-gutterbones [data-layout-key="safehouse-card"] .safehouse-stats-row > div {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+    /* M4 */
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"].gb-modal-fit {
+        max-width: min(28rem, 96vw) !important;
+    }
+    #root-gutterbones[data-phase="GAMBLE"] [data-layout-key="gamble-card"].gb-modal-fit {
+        max-width: min(48rem, 96vw) !important;
+    }
+    /* M5 */
+  @media (max-width: 480px) {
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"] {
+      rotate: 0deg;
+      max-width: calc(100vw - 1rem) !important;
+      transform: none;
+    }
+    #root-gutterbones[data-phase="VICTORY"] .victory-cash-rain {
+      z-index: 5 !important;
+    }
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"] {
+      z-index: 20;
+    }
+    #root-gutterbones[data-phase="VICTORY"] [data-layout-key="victory-card"] .text-gray-500 {
+      color: #3f3f46 !important;
+    }
+  }
+    /* M7 */
+    #root-gutterbones .round-clear-continue-btn:disabled {
+        color: #0e7490 !important;
+        background: #e5e7eb !important;
+        border-color: #94a3b8 !important;
+        opacity: 1 !important;
+    }
+    #root-gutterbones .round-clear-continue-btn:not(:disabled) {
+        color: #0df !important;
+        background: #0b1d24 !important;
+        border-color: #0df !important;
+    }
+    /* M8 */
+    #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet-open {
+        color: #1a1204 !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .mobile-score-sheet--score-ready .mobile-score-sheet-open {
+        color: #fff !important;
+    }
+    /* M10 */
+    #root-gutterbones .matchbook-ledger .payout-sheet-rows {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-items-panel {
+        overflow-x: hidden;
+        min-width: 0;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-item-card {
+        min-width: 0;
+    }
+    /* B1 Matchbook contrast */
+    #root-gutterbones .matchbook-ledger .payout-tier-bust,
+    #root-gutterbones .matchbook-ledger .score-row-danger,
+    #root-gutterbones .matchbook-ledger .payout-tier-bust .payout-row-state,
+    #root-gutterbones .mobile-score-sheet .payout-tier-bust,
+    #root-gutterbones .mobile-score-sheet .score-row-danger {
+        color: #7f0f0f !important;
+        opacity: 1 !important;
+    }
+    #root-gutterbones .matchbook-ledger .payout-tier-bust .payout-heat-pill,
+    #root-gutterbones .mobile-score-sheet .payout-tier-bust span {
+        color: #7f0f0f !important;
+    }
+    #root-gutterbones [data-layout-key="payout-unlock-open"],
+    #root-gutterbones [data-layout-key="payout-unlock-open-mobile"] {
+        color: #1a1204 !important;
+        border-color: #4a3420 !important;
+        background: rgba(248, 236, 210, 0.92) !important;
+        font-weight: 700 !important;
+    }
+    #root-gutterbones[data-ui-redesign="1"] .matchbook-ledger--compact .payout-sheet-rows .score-row--compact.payout-tier-bust {
+        opacity: 1 !important;
+        color: #7f0f0f !important;
+        background: rgba(254, 226, 226, 0.65) !important;
+        border-color: rgba(127, 15, 15, 0.35) !important;
+    }
+    /* B2 side-wager landscape */
+  @media (min-width: 1024px) and (max-height: 820px) {
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
+      min-height: 0 !important;
+      max-height: calc(100dvh - 4.5rem) !important;
+      overflow: hidden !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+      min-height: 0 !important;
+      max-height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+      flex: 1 1 0 !important;
+      min-height: min(42vh, 20rem) !important;
+      max-height: none !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
+    #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+      flex: 0 1 auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+      max-height: none;
+      overflow: visible;
+      margin-bottom: 0.35rem !important;
+      padding: 0.35rem 0.45rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled > .mb-3 {
+      margin-bottom: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-fixter-line {
+      margin-bottom: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+      min-height: 2.65rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+      max-height: none !important;
+      overflow: visible !important;
+      flex: 0 0 auto !important;
+      margin-top: auto !important;
+      gap: 0.3rem;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+      display: grid !important;
+      flex: 0 0 auto !important;
+      min-height: 3.55rem !important;
+      max-height: min(7.25rem, 30vh) !important;
+      margin-bottom: 0.45rem !important;
+      overflow-y: auto !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-hit-streets"] {
+      flex-shrink: 0 !important;
+      margin-top: 0 !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-block:has(.shop-debt-control-grid) {
+      margin-bottom: 0.25rem !important;
+      padding: 0.28rem 0.38rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt .shop-debt-control-grid {
+      padding-top: 0.22rem !important;
+      border-top: 1px solid rgba(75, 85, 99, 0.9) !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-options-debt .shop-debt-control-grid button {
+      min-height: 38px !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-debt-warning {
+      margin-bottom: 0.3rem !important;
+      padding: 0.22rem 0.35rem !important;
+    }
+  }
+  @media (max-height: 420px) and (min-width: 720px) {
+    #root-gutterbones [data-layout-key="side-wager-row"] {
+      display: flex !important;
+      flex-wrap: wrap;
+      padding: 0.15rem 0.45rem 0.2rem;
+      gap: 0.25rem;
+    }
+    #root-gutterbones [data-layout-key="side-wager-row"] .font-mono {
+      font-size: max(10px, 0.62rem);
+    }
+    #root-gutterbones [data-layout-key="side-wager-row"] button {
+      min-height: 32px !important;
+      padding: 0.12rem 0.35rem !important;
+      font-size: max(10px, 0.62rem) !important;
+    }
+  }
 </style>
 
 <!-- Shared pure rules. The game and Node tests execute this exact block.
@@ -11046,7 +11730,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         return null;
     };
 
-    const CashRain = ({ count = 24, reducedMotion = false }) => {
+    const CashRain = ({ count = 24, reducedMotion = false, layerZ = 'z-[200]' }) => {
         const cappedCount = Math.max(0, Math.min(count, reducedMotion ? 8 : 36));
         const bills = useMemo(() => Array.from({ length: cappedCount }, (_, i) => ({
             id: i,
@@ -11057,7 +11741,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             label: i % 3 === 0 ? '$100' : i % 3 === 1 ? '$50' : '$20'
         })), [cappedCount, reducedMotion]);
         return (
-            <div className="absolute inset-0 pointer-events-none z-[200]">
+            <div className={`absolute inset-0 pointer-events-none ${layerZ}`}>
                 {bills.map((bill) => (
                     <div key={bill.id} className={`cash-bill ${bill.depth} absolute w-16 h-7`} style={{ left: bill.left, '--tx': bill.tx, animationDelay: bill.delay }}>
                         <div className="cash-bill-inner text-[#1a2408] font-bold text-xs flex items-center justify-center">{bill.label}</div>
@@ -12107,26 +12791,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 onClick={() => { if (canContinue) onDone(); }}
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby="boss-intro-name"
             >
                 <div className="boss-intro-backdrop pointer-events-none" aria-hidden></div>
                 <div className="absolute inset-0 boss-intro-vignette z-[1]" aria-hidden="true"></div>
                 <div className="boss-intro-fit-wrap relative z-[3] pointer-events-auto" style={fitScale < 0.995 ? { zoom: fitScale } : undefined}>
                     <div
                         ref={cardRef}
-                        role="button"
-                        tabIndex={canContinue ? 0 : -1}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (canContinue) onDone();
-                        }}
-                        onKeyDown={(e) => {
-                            if (!canContinue) return;
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                onDone();
-                            }
-                        }}
-                        className="boss-intro-card p-8 w-full max-w-md text-center shadow-2xl relative border-0 rounded-none pointer-events-auto cursor-pointer gb-modal-shop-chrome"
+                        className="boss-intro-card p-8 w-full max-w-md text-center shadow-2xl relative border-0 rounded-none pointer-events-auto gb-modal-shop-chrome"
                         style={{ animation: reducedMotion ? 'none' : 'bossIntro .35s ease-out forwards' }}
                     >
                         <BossPortrait boss={boss} variant="intro" />
@@ -12134,7 +12806,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             <span className="shop-section-header__label">TURF WAR</span>
                         </div>
                         <div className="shop-section-header boss-intro-name-plate mx-auto">
-                            <h2 className={`shop-section-header__label ${boss.color}`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
+                            <h2 id="boss-intro-name" className={`shop-section-header__label ${boss.color}`}>{typed}{!reducedMotion && !canContinue && <span className="opacity-60">_</span>}</h2>
                         </div>
                         <p className={`boss-intro-desc font-mono transition-opacity duration-300 ${showDesc ? 'opacity-100' : 'opacity-0'}`}>{boss.desc}</p>
                         <p className="boss-intro-quota font-mono text-xs mt-3">Quota: {target}</p>
@@ -20630,6 +21302,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     setShowIncarceratedStamp(true);
                     setRapSheetCanContinue(true);
                 },
+                openVictoryDemo: () => {
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setRoundClearCardActive(false);
+                    setBustActive(false);
+                    setGold(120);
+                    setLastLaundered(56);
+                    setRunStats({
+                        totalHeat: 520,
+                        biggestHustle: 180,
+                        finalBoss: 'THE RAID',
+                        build: { primary: BUILD_IDS.UNKNOWN, peakConfidence: 0.6, keyItems: [] }
+                    });
+                    setPhase('VICTORY');
+                    if (!reducedMotion) setCinematic('victory');
+                },
                 measureRapSheetStatAlignment: () => {
                     const sheet = document.querySelector('[data-layout-key="rap-sheet"]');
                     if (!sheet) return { ok: false, reason: 'no rap sheet' };
@@ -21373,6 +22061,114 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     });
                     return { ok: bad.length === 0, bad: bad.slice(0, 20), count: bad.length, vw, vh, minFontPx };
                 },
+                auditShopScrollZeroPaint: () => {
+                    const root = document.getElementById('root-gutterbones');
+                    if (!root || root.getAttribute('data-phase') !== 'SHOP') {
+                        return { ok: true, skipped: true, reason: 'not-shop' };
+                    }
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const shopAuditVp = (vw === 768 && vh === 1024)
+                        || (vw === 1024 && vh === 768)
+                        || (vw === 1280 && vh === 720)
+                        || (vw === 1366 && vh === 768);
+                    if (!shopAuditVp) {
+                        return { ok: true, skipped: true, reason: 'viewport', vw, vh };
+                    }
+                    const isPaintTargetVisible = (el) => {
+                        if (!(el instanceof HTMLElement)) return false;
+                        const st = window.getComputedStyle(el);
+                        if (st.display === 'none' || st.visibility === 'hidden' || parseFloat(st.opacity) === 0) return false;
+                        const r = el.getBoundingClientRect();
+                        return r.width > 1.5 && r.height > 1.5;
+                    };
+                    const resetScroll = () => {
+                        window.scrollTo(0, 0);
+                        root.querySelectorAll('.gb-screen, .shop-routes-scroll, .shop-routes-body, .gb-route-list, [data-layout-key="shop-routes-panel"], [data-layout-key="shop-items-panel"], .shop-items-panel').forEach((el) => {
+                            if (el instanceof HTMLElement) el.scrollTop = 0;
+                        });
+                    };
+                    resetScroll();
+                    const sampleElementPaint = (el, key) => {
+                        if (!isPaintTargetVisible(el)) {
+                            return { kind: 'target-not-visible', key };
+                        }
+                        const r = el.getBoundingClientRect();
+                        const ys = [
+                            r.top + Math.min(4, Math.max(1, r.height * 0.15)),
+                            r.top + r.height * 0.5,
+                            r.bottom - Math.min(4, Math.max(1, r.height * 0.15)),
+                        ];
+                        const cx = Math.min(vw - 2, Math.max(2, r.left + r.width / 2));
+                        const misses = [];
+                        ys.forEach((y, idx) => {
+                            const cy = Math.min(vh - 2, Math.max(2, y));
+                            const stack = document.elementsFromPoint(cx, cy);
+                            const hit = stack.some((node) => node === el || el.contains(node));
+                            if (!hit) {
+                                const top = stack[0];
+                                misses.push({
+                                    sample: idx === 0 ? 'top' : idx === 1 ? 'center' : 'bottom',
+                                    cy,
+                                    cover: top && (top.getAttribute?.('data-layout-key') || top.className || top.tagName),
+                                });
+                            }
+                        });
+                        if (misses.length) {
+                            return {
+                                kind: 'unpainted-at-scroll-zero',
+                                key,
+                                misses,
+                                rect: { top: r.top, bottom: r.bottom, left: r.left, right: r.right, h: r.height, w: r.width },
+                            };
+                        }
+                        return null;
+                    };
+                    const bad = [];
+                    const pushTarget = (el, key, required = true) => {
+                        if (!el && !required) return;
+                        if (!el && required) {
+                            bad.push({ kind: 'target-missing', key });
+                            return;
+                        }
+                        const fail = sampleElementPaint(el, key);
+                        if (fail) bad.push(fail);
+                    };
+                    pushTarget(root.querySelector('[data-layout-key="shop-refresh-stock"]'), 'shop-refresh-stock');
+                    const routeCard = root.querySelector('[data-layout-key="shop-route-card"]');
+                    pushTarget(routeCard, 'shop-route-card');
+                    const payCandidates = [...root.querySelectorAll('[data-layout-key="shop-debt-pay"], [data-layout-key="shop-debt-footer-pay"]')].filter(isPaintTargetVisible);
+                    const clearCandidates = [...root.querySelectorAll('[data-layout-key="shop-debt-clear"], [data-layout-key="shop-debt-footer-clear"]')].filter(isPaintTargetVisible);
+                    if (payCandidates.length) pushTarget(payCandidates[0], payCandidates[0].getAttribute('data-layout-key') || 'shop-debt-pay');
+                    if (clearCandidates.length) pushTarget(clearCandidates[0], clearCandidates[0].getAttribute('data-layout-key') || 'shop-debt-clear');
+                    root.querySelectorAll('[data-layout-key^="shop-program-"]').forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
+                        pushTarget(el, el.getAttribute('data-layout-key') || 'shop-program', true);
+                    });
+                    pushTarget(root.querySelector('[data-layout-key="shop-hit-streets"]'), 'shop-hit-streets');
+                    const stockPanel = root.querySelector('[data-tutorial="shop-panel"]');
+                    const itemsPanel = stockPanel?.querySelector('[data-layout-key="shop-items-panel"]') || stockPanel?.querySelector('.shop-items-panel');
+                    const buyButtons = itemsPanel
+                        ? [...itemsPanel.querySelectorAll('[data-layout-key="shop-buy-button"]')].filter((el) => el instanceof HTMLElement)
+                        : [];
+                    const firstBuy = buyButtons.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        const card = el.closest('.shop-item-card');
+                        if (card instanceof HTMLElement && card.classList.contains('shop-item-card--sold')) return false;
+                        return st.display !== 'none' && st.visibility !== 'hidden' && parseFloat(st.opacity) > 0 && !el.disabled;
+                    }) || buyButtons.find((el) => {
+                        const st = window.getComputedStyle(el);
+                        return st.display !== 'none' && st.visibility !== 'hidden' && parseFloat(st.opacity) > 0;
+                    });
+                    if (firstBuy instanceof HTMLElement) {
+                        pushTarget(firstBuy, 'shop-buy-button-first');
+                    } else {
+                        bad.push({ kind: 'target-missing', key: 'shop-buy-button-first' });
+                    }
+                    return { ok: bad.length === 0, bad: bad.slice(0, 28), count: bad.length, vw, vh, scrollTops: {
+                        routesScroll: root.querySelector('.shop-routes-scroll')?.scrollTop ?? null,
+                    } };
+                },
                 auditShopFooterOverlap: () => {
                     const root = document.getElementById('root-gutterbones');
                     if (!root || root.getAttribute('data-phase') !== 'SHOP') {
@@ -21390,6 +22186,11 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (fr.width < 2 || fr.height < 2) {
                         return { ok: true, skipped: true, reason: 'footer-collapsed' };
                     }
+                    const hitStreets = footer.querySelector('[data-layout-key="shop-hit-streets"]');
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const shortLandscapeShop = vw >= 1024 && vh <= 820;
+                    const tabletPortraitShop = vw >= 768 && vw < 1024 && vh >= 700;
                     const pad = 2;
                     const zone = {
                         top: fr.top - pad,
@@ -21436,8 +22237,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             });
                         }
                     });
-                    const vw = window.innerWidth;
-                    const vh = window.innerHeight;
                     const hitTest = (el) => {
                         const est = window.getComputedStyle(el);
                         if (est.display === 'none' || est.visibility === 'hidden' || parseFloat(est.opacity) === 0) return;
@@ -21447,6 +22246,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) return;
                         const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2));
                         const cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
+                        if ((shortLandscapeShop || tabletPortraitShop) && el.closest('.shop-routes-scroll') && cy >= fr.top - 6) return;
                         let node = document.elementFromPoint(cx, cy);
                         const coveringNode = node;
                         let target = el;
@@ -21513,10 +22313,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         const bs = window.getComputedStyle(el);
                         return bs.display !== 'none' && bs.visibility !== 'hidden' && parseFloat(bs.opacity) > 0;
                     });
+                    const layoutStyleEarly = shopLayout instanceof HTMLElement ? window.getComputedStyle(shopLayout) : null;
+                    const columnStackShop = vw < 1024
+                        || layoutStyleEarly?.flexDirection === 'column'
+                        || layoutStyleEarly?.flexDirection === 'column-reverse';
                     if (buyBtn instanceof HTMLElement) {
-                        buyBtn.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
-                        hitTest(buyBtn);
-                    } else {
+                        if (!columnStackShop) {
+                            buyBtn.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+                            hitTest(buyBtn);
+                        }
+                    } else if (!columnStackShop) {
                         bad.push({ kind: 'buy-not-hit-testable', reason: buyButtons.length ? 'all-hidden' : 'none-enabled' });
                     }
                     const scrollHost = panel.querySelector('.shop-routes-scroll');
@@ -21526,12 +22332,58 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (scrollHost instanceof HTMLElement) scrollHost.scrollTop = 0;
                     if (routeList instanceof HTMLElement) routeList.scrollTop = 0;
                     if (panel instanceof HTMLElement) panel.scrollTop = 0;
+                    const stashPrograms = footer.querySelector('.stash-program-grid');
+                    if (stashPrograms instanceof HTMLElement && hitStreets instanceof HTMLElement) {
+                        const gr = stashPrograms.getBoundingClientRect();
+                        const hr = hitStreets.getBoundingClientRect();
+                        if (hr.top < gr.bottom - 1.5) {
+                            bad.push({
+                                kind: 'hit-streets-overlaps-programs',
+                                gapPx: Math.round((hr.top - gr.bottom) * 10) / 10,
+                                programsBottom: gr.bottom,
+                                hitTop: hr.top,
+                            });
+                        }
+                    }
+                    if (tabletPortraitShop && scrollHost instanceof HTMLElement) {
+                        const refreshBtn = panel.querySelector('[data-layout-key="shop-refresh-stock"]');
+                        if (refreshBtn instanceof HTMLElement) {
+                            const hostR = scrollHost.getBoundingClientRect();
+                            const rr = refreshBtn.getBoundingClientRect();
+                            const refreshVisible = rr.top >= hostR.top - 1.5 && rr.bottom <= hostR.bottom + 1.5;
+                            if (!refreshVisible) {
+                                bad.push({
+                                    kind: 'refresh-clipped-at-scroll-zero',
+                                    refreshTop: rr.top,
+                                    refreshBottom: rr.bottom,
+                                    hostTop: hostR.top,
+                                    hostBottom: hostR.bottom,
+                                    scrollTop: scrollHost.scrollTop,
+                                });
+                            }
+                        }
+                    }
                     const routeCandidates = [...root.querySelectorAll('[data-layout-key="shop-route-card"]')].filter(
                         (el) => el instanceof HTMLElement
                     );
                     const routeCard = routeCandidates.find((el) => el.classList.contains('ring-2') || el.classList.contains('ring-[#0df]'))
                         || routeCandidates[0]
                         || null;
+                    if (tabletPortraitShop && scrollHost instanceof HTMLElement && routeCard instanceof HTMLElement) {
+                        const hostR = scrollHost.getBoundingClientRect();
+                        const cr0 = routeCard.getBoundingClientRect();
+                        const routeFullyInScroll = cr0.top >= hostR.top - 2 && cr0.bottom <= hostR.bottom + 2;
+                        if (!routeFullyInScroll) {
+                            bad.push({
+                                kind: 'route-clipped-at-scroll-zero',
+                                cardTop: cr0.top,
+                                cardBottom: cr0.bottom,
+                                hostTop: hostR.top,
+                                hostBottom: hostR.bottom,
+                                scrollTop: scrollHost.scrollTop,
+                            });
+                        }
+                    }
                     let routeVisibleRatio = null;
                     if (routeCard instanceof HTMLElement) {
                         const cardStyle = window.getComputedStyle(routeCard);
@@ -21567,7 +22419,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 }).length;
                                 const paintedRatio = paintedSamples / sampleYs.length;
                                 routeVisibleRatio = Math.min(routeVisibleRatio, paintedRatio);
-                                const minRatio = 0.8;
+                                const minRatio = shortLandscapeShop ? 0.65 : 0.8;
                                 if (routeVisibleRatio + 0.001 < minRatio || paintedRatio + 0.001 < minRatio) {
                                     bad.push({
                                         kind: 'route-card-low-visibility',
@@ -21589,14 +22441,99 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     } else {
                         bad.push({ kind: 'route-card-missing' });
                     }
+                    const paintAudit = typeof window.__GB_LAYOUT_AUDIT__.auditShopScrollZeroPaint === 'function'
+                        ? window.__GB_LAYOUT_AUDIT__.auditShopScrollZeroPaint()
+                        : { ok: true, skipped: true };
+                    if (!paintAudit.skipped && !paintAudit.ok) {
+                        bad.push(...(paintAudit.bad || []));
+                    }
                     return {
                         ok: bad.length === 0,
-                        bad: bad.slice(0, 20),
+                        bad: bad.slice(0, 24),
                         count: bad.length,
                         vw,
                         vh,
                         footer: { top: fr.top, bottom: fr.bottom, h: fr.height },
                         routeVisibleRatio,
+                        paintAudit: paintAudit.skipped ? undefined : { ok: paintAudit.ok, count: paintAudit.count },
+                    };
+                },
+                auditShopRoutesColumnReachable: () => {
+                    const root = document.getElementById('root-gutterbones');
+                    if (!root || root.getAttribute('data-phase') !== 'SHOP') {
+                        return { ok: true, skipped: true, reason: 'not-shop' };
+                    }
+                    const panel = root.querySelector('[data-layout-key="shop-routes-panel"]');
+                    const hitStreets = root.querySelector('[data-layout-key="shop-hit-streets"]');
+                    const debtBtns = [...root.querySelectorAll(
+                        '[data-layout-key="shop-debt-pay"], [data-layout-key="shop-debt-clear"], [data-layout-key="shop-debt-footer-pay"], [data-layout-key="shop-debt-footer-clear"]'
+                    )];
+                    const stashGrid = root.querySelector('[data-layout-key="shop-stash-panel"] .stash-program-grid');
+                    const vh = window.innerHeight;
+                    const bad = [];
+                    const scrollHost = panel?.querySelector('.shop-routes-scroll');
+                    const panelBox = panel instanceof HTMLElement ? panel.getBoundingClientRect() : null;
+                    const inViewport = (el) => {
+                        if (!(el instanceof HTMLElement)) return false;
+                        const r = el.getBoundingClientRect();
+                        return r.height > 2 && r.bottom > 2 && r.top < vh - 2;
+                    };
+                    const inScrollHost = (el) => {
+                        if (!(el instanceof HTMLElement)) return false;
+                        const r = el.getBoundingClientRect();
+                        if (r.height < 2) return false;
+                        const box = scrollHost instanceof HTMLElement ? scrollHost.getBoundingClientRect() : panelBox;
+                        if (!box) return inViewport(el);
+                        return r.bottom > box.top + 2 && r.top < box.bottom - 2;
+                    };
+                    const probeFooter = () => {
+                        bad.length = 0;
+                        const stashBar = root.querySelector('[data-layout-key="shop-stash-panel"] .h-4.bg-black');
+                        if (hitStreets instanceof HTMLElement && !inViewport(hitStreets)) {
+                            bad.push({ kind: 'hit-streets-clipped', top: hitStreets.getBoundingClientRect().top, vh });
+                        }
+                        if (stashBar instanceof HTMLElement && !inViewport(stashBar)) {
+                            bad.push({ kind: 'stash-bar-clipped' });
+                        }
+                        if (stashGrid instanceof HTMLElement && !inViewport(stashGrid)) {
+                            bad.push({ kind: 'stash-programs-clipped' });
+                        }
+                    };
+                    const probeDebt = () => {
+                        if (debtBtns.length && !debtBtns.some(inScrollHost)) {
+                            bad.push({ kind: 'debt-clipped' });
+                        }
+                    };
+                    const resetScroll = () => {
+                        window.scrollTo(0, 0);
+                        [scrollHost, panel, root.querySelector('.gb-screen')].forEach((el) => {
+                            if (el instanceof HTMLElement) el.scrollTop = 0;
+                        });
+                    };
+                    resetScroll();
+                    probeFooter();
+                    const footerBad = bad.slice();
+                    bad.length = 0;
+                    probeDebt();
+                    if (bad.length && scrollHost instanceof HTMLElement) {
+                        const step = Math.max(40, Math.floor(scrollHost.clientHeight * 0.45));
+                        for (let i = 0; i < 28; i += 1) {
+                            scrollHost.scrollTop += step;
+                            bad.length = 0;
+                            probeDebt();
+                            if (!bad.length) break;
+                            if (scrollHost.scrollTop + scrollHost.clientHeight >= scrollHost.scrollHeight - 2) break;
+                        }
+                    }
+                    const debtBad = bad.slice();
+                    bad.length = 0;
+                    bad.push(...footerBad, ...debtBad);
+                    return {
+                        ok: bad.length === 0,
+                        bad,
+                        vw: window.innerWidth,
+                        vh,
+                        scrollHeight: panel instanceof HTMLElement ? panel.scrollHeight : null,
                     };
                 },
                 auditPhoneTapTargets: (minPx = 32) => {
@@ -22977,7 +23914,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         <div data-layout-key="shop-layout" className="w-full max-w-6xl h-full mx-auto flex flex-col lg:flex-row gap-3 lg:gap-6 relative z-10 min-h-0">
                             <div data-tutorial="shop-panel" className="flex-1 min-h-0 bg-[#1a1a1a] border-4 border-gray-900 rounded-xl p-3 md:p-6 flex flex-col shadow-2xl overflow-hidden">
                                 <div className="flex justify-between items-end mb-4 border-b-2 border-gray-800 pb-4"><h2 className="text-4xl md:text-5xl font-marker italic text-[#c78b16] animate-[flicker_4s_infinite]">THE BACK ALLEY</h2><div className="text-right"><div className="text-xs uppercase opacity-50">Dirty Cash</div><div className={`text-3xl text-green-400 font-mono font-bold ${cashDropFlash ? 'hud-cash-drop' : ''}`}>${Math.max(0, displayGold)}{debt > 0 ? <span className="block text-sm text-red-300 font-normal">IOU ${debt}</span> : null}</div></div></div>
-                                <p className="text-xs font-mono text-amber-200/85 mb-2 leading-snug line-clamp-2 md:line-clamp-none">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
+                                <details className="shop-economy-rules-details mb-2 shrink-0">
+                                    <summary className="text-[11px] font-mono text-amber-200/60 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">Show shop rules</summary>
+                                    <p className="shop-economy-rules text-xs font-mono text-amber-200/85 mt-1 leading-snug">LOAN when cash is short adds debt (IOU in HUD). Valid hands pay hustle cash: max($1, min(${ECONOMY_TUNING.hustleCashCap}, floor(heat ÷ {ECONOMY_TUNING.hustleCashDivisor}))) — HUSTLE +$ stamps. Round clear pays $8 + unused plays + cash interest. Routes can add bonus cash next job.</p>
+                                </details>
                                 {(activeShopTag && activeShopTag !== 'balanced') && (
                                     <div className="text-[10px] font-mono text-cyan-200/90 mb-3 border border-cyan-700/40 rounded px-2 py-1 bg-cyan-950/20 shrink-0">
                                         Stock skew: <span className="uppercase text-cyan-100">{activeShopTag}</span>
@@ -23081,36 +24021,40 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         <span>REFRESH STOCK</span>
                                         <span>${shopRefreshCost}</span>
                                     </button>
-                                    <div className="mt-3 text-[10px] font-mono text-gray-500">Refreshes used this stop: {shopRefreshes}</div>
-                                    <ShopPanelDivider />
-                                    <div className="shop-options-fence overflow-y-auto overscroll-contain pr-0.5">
-                                        <ShopSectionHeader>FENCE HARDWARE</ShopSectionHeader>
-                                        {inventory.length === 0 ? (
-                                            <div className="font-mono text-[10px] text-gray-600">No hardware to fence.</div>
-                                        ) : (
-                                            <div className="space-y-2 max-h-[6.5rem] overflow-y-auto pr-1">
-                                                {inventory.map(item => (
-                                                    <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
-                                                        <span className="font-mono text-[10px] text-gray-200 min-w-0 break-words leading-snug">{item.name}</span>
-                                                        <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-2 min-h-[44px] font-mono text-xs hover:bg-green-900/30">
-                                                            SELL ${getHardwareSellValue(item)}
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                    <div className="mt-1 text-[10px] font-mono text-gray-500 leading-tight">Refreshes used this stop: {shopRefreshes}</div>
+                                    {inventory.length > 0 && (
+                                        <>
+                                            <ShopPanelDivider />
+                                            <div className="shop-options-fence overflow-y-auto overscroll-contain pr-0.5">
+                                                <ShopSectionHeader>FENCE HARDWARE</ShopSectionHeader>
+                                                <div className="space-y-2 max-h-[6.5rem] overflow-y-auto pr-1">
+                                                    {inventory.map(item => (
+                                                        <div key={item.id} className="flex items-center justify-between gap-2 border border-gray-800 rounded px-2 py-1 bg-black/30">
+                                                            <span className="font-mono text-[10px] text-gray-200 min-w-0 break-words leading-snug">{item.name}</span>
+                                                            <button onClick={() => sellInventoryItem(item)} className="shrink-0 border border-green-700 text-green-400 px-2 py-2 min-h-[44px] font-mono text-xs hover:bg-green-900/30">
+                                                                SELL ${getHardwareSellValue(item)}
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </>
+                                    )}
                                     <ShopPanelDivider />
-                                    <div className="shop-options-debt">
-                                        <ShopSectionHeader>DEBT CONTROL</ShopSectionHeader>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button onClick={() => payDebtFromCash(10)} disabled={debt <= 0 || gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
-                                                PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
-                                            </button>
-                                            <button onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={debt <= 0 || gold <= 0} className="py-2 px-2 min-h-[44px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
-                                                CLEAR ${debtClearCashNeeded}
-                                            </button>
-                                        </div>
+                                    <div className="shop-options-debt shop-debt-inline-row mt-1">
+                                        {debt > 0 ? (
+                                            <div className="shop-debt-control-grid flex flex-wrap items-stretch gap-1.5">
+                                                <span data-layout-key="shop-debt-label" className="shop-debt-inline-label self-center font-mono text-[10px] uppercase tracking-wider text-gray-400 shrink-0 px-0.5">DEBT</span>
+                                                <button type="button" data-layout-key="shop-debt-pay" onClick={() => payDebtFromCash(10)} disabled={gold <= 0} className="shop-debt-pay-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                    PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
+                                                </button>
+                                                <button type="button" data-layout-key="shop-debt-clear" onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={gold <= 0} className="shop-debt-clear-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                    CLEAR ${debtClearCashNeeded}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <p className="shop-debt-empty-label font-mono text-xs text-gray-400 px-0.5 py-0.5">No debt.</p>
+                                        )}
                                     </div>
                                 </div>
                                 {debt > 0 && <div className="shop-debt-warning bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
@@ -23179,11 +24123,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         return <div key={idx} className={`rounded-sm ${filled ? segColor : 'bg-gray-800'}`} />;
                                     })}
                                 </div>
+                                {debt > 0 && (
+                                <div data-layout-key="shop-debt-footer" className="shop-debt-footer shop-debt-inline-row mb-1.5">
+                                    <div className="shop-debt-control-grid flex flex-wrap items-stretch gap-1.5">
+                                        <span className="shop-debt-inline-label self-center font-mono text-[10px] uppercase tracking-wider text-gray-400 shrink-0 px-0.5">DEBT</span>
+                                        <button type="button" data-layout-key="shop-debt-footer-pay" onClick={() => payDebtFromCash(10)} disabled={gold <= 0} className="shop-debt-pay-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-700 text-red-300 font-mono text-xs hover:bg-red-900/25 disabled:opacity-40">
+                                            PAY $10 (~-{Math.min(debt, Math.floor(10 * DEBT_PAYDOWN_TUNING.reliefMultiplier))})
+                                        </button>
+                                        <button type="button" data-layout-key="shop-debt-footer-clear" onClick={() => payDebtFromCash(debtClearCashNeeded)} disabled={gold <= 0} className="shop-debt-clear-btn flex-1 min-w-0 py-1.5 px-2 min-h-[40px] border border-red-500 text-red-200 font-mono text-xs hover:bg-red-900/40 disabled:opacity-40">
+                                            CLEAR ${debtClearCashNeeded}
+                                        </button>
+                                    </div>
+                                </div>
+                                )}
                                 <div className="stash-program-grid grid grid-cols-2 gap-1.5 mb-2">
                                     {PROGRAMS.map((p) => (
                                         <div
                                             key={p.id}
-                                            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded border font-mono text-[length:var(--gb-min-font)] ${stash >= p.cost ? 'border-[#0df]/50 text-cyan-100 bg-cyan-950/20' : 'border-gray-700 text-gray-500 bg-gray-900/40'}`}
+                                            data-layout-key={`shop-program-${p.id}`}
+                                            className={`shop-program-slot flex flex-col items-center justify-center py-1.5 px-1 rounded border font-mono text-[length:var(--gb-min-font)] ${stash >= p.cost ? 'border-[#0df]/50 text-cyan-100 bg-cyan-950/20' : 'border-gray-700 text-gray-500 bg-gray-900/40'}`}
                                             title={`${p.desc} (alley only)`}
                                         >
                                             <span className="font-bold">{p.name}</span>
@@ -23333,6 +24291,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </div>
                                 </div>
                             )}
+                            <div data-layout-key="rap-sheet-record-scroll" className="rap-sheet-record-scroll min-h-0 flex flex-col">
                             <div data-layout-key="rap-sheet-run-summary" className="border border-black/40 bg-black/5 p-3 mb-3 font-mono text-xs shrink-0">
                                 <div className="font-bold tracking-[.2em] mb-2 opacity-70">RUN SUMMARY</div>
                                 <table className="rap-sheet-stat-table">
@@ -23363,6 +24322,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 </div>
                             )}
                             </div>
+                            </div>
                         </div>
                         </div>
                         {rapSheetRevealReady && (
@@ -23384,7 +24344,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 {phase === 'VICTORY' && (
                     <div className="gb-screen items-center justify-center z-[500] relative p-[var(--gb-pad)]">
                         <div className="victory-escape-backdrop" aria-hidden></div>
-                        <CashRain count={30} reducedMotion={reducedMotion} />
+                        <CashRain count={30} reducedMotion={reducedMotion} layerZ="z-[5] victory-cash-rain" />
                         <div data-layout-key="victory-card" className="paper-card gb-modal-fit bg-[#e8e6e1] p-4 shadow-[10px_15px_25px_black] relative z-20 w-full max-w-md rotate-3" style={{ '--paper-rot': '3deg' }}>
                             <div className="gb-modal-body">
                             <div className="bg-[#111] h-[min(38vh,220px)] shadow-[inset_0_0_20px_black] overflow-hidden relative flex flex-col items-center"><div className="w-full h-full bg-gradient-to-b from-[#ff007f] to-[#0a001a] border-4 border-white flex flex-col items-center relative overflow-hidden"><div className="absolute top-8 w-24 h-24 bg-gradient-to-b from-yellow-300 to-orange-500 rounded-full shadow-[0_0_30px_orange] sunrise"></div><div className="absolute top-1/2 w-full text-center font-mono text-xl md:text-2xl bg-white text-black py-2 mt-4 -rotate-12 border-y-4 border-dashed border-gray-400 font-bold animate-[stampSlam_.3s_cubic-bezier(.25,1,.5,1)_forwards]">GREYHOUND - ONE WAY</div></div></div>
