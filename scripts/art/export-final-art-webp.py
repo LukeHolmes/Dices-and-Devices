@@ -71,10 +71,13 @@ def clean_edge_crop(im: Image.Image, pad: int = 12) -> Image.Image:
     # soften 1px fringe halo on opaque edge
     a = cropped.split()[3]
     a = a.point(lambda p: 0 if p < 8 else min(255, p))
+    cropped = cropped.copy()
     cropped.putalpha(a)
     w, h = cropped.size
     canvas = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
-    canvas.alpha_composite(cropped, (pad, pad))
+    mask = cropped.split()[3]
+    # paste with explicit mask — alpha_composite premultiplies semi-transparent edge pixels
+    canvas.paste(cropped, (pad, pad), mask)
     return canvas
 
 

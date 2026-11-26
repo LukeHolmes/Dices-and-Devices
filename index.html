@@ -2526,7 +2526,49 @@
             min-height: min-content !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer {
+            flex: 0 0 auto !important;
             flex-shrink: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            margin-top: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer .stash-program-grid {
+            flex: 0 1 auto !important;
+            max-height: min(6.5rem, 28vh) !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-stash-panel.shop-routes-footer [data-layout-key="shop-hit-streets"] {
+            flex: 0 0 auto !important;
+        }
+    }
+    @media (min-width: 768px) and (max-width: 1366px) and (min-height: 700px) and (max-height: 1024px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 0 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            flex: 0 0 auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            margin-top: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+            flex: 0 1 auto !important;
+            max-height: min(6.5rem, 24vh) !important;
+            overflow-y: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-hit-streets"] {
+            flex: 0 0 auto !important;
         }
     }
     @media (min-width: 1024px) and (min-height: 821px) {
@@ -5355,14 +5397,14 @@
             padding: 0.12rem 0.32rem !important;
             font-size: max(9px, 0.52rem) !important;
         }
-        #root-gutterbones[data-ui-redesign="1"] .play-status-quota-track {
+        #root-gutterbones[data-ui-redesign="1"]:not([data-batch52-art="1"]) .play-status-quota-track {
             display: none;
         }
         #root-gutterbones[data-ui-redesign="1"] .play-status-bar {
             font-size: max(9px, 0.52rem);
             padding: 0.32rem 0.4rem;
         }
-        #root-gutterbones[data-ui-redesign="1"] .boss-warrant-stamp {
+        #root-gutterbones[data-ui-redesign="1"]:not([data-batch52-art="1"]) .boss-warrant-stamp {
             flex: 0 1 auto;
             max-width: 4.75rem;
         }
@@ -5835,43 +5877,6 @@
         box-shadow: none !important;
         gap: 0.25rem 0.35rem !important;
     }
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
-        background: url("assets/art/batch-5-2/hud/status-chip-paper.webp") center / 100% 100% no-repeat !important;
-        background-color: transparent !important;
-        border: 0 !important;
-        color: #1a1208 !important;
-        font-weight: 700;
-        text-shadow: none !important;
-        min-height: 1.85rem;
-        padding: 0.16rem 0.55rem !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
-        background: url("assets/art/batch-5-2/hud/status-gauge-split.webp") center / 100% 100% no-repeat !important;
-        background-color: transparent !important;
-        border: 0 !important;
-        min-width: 8.8rem;
-        min-height: 2.1rem;
-        padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
-        display: grid !important;
-        grid-template-columns: 24% 1fr;
-        align-items: center;
-        gap: 0 !important;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-quota-nums {
-        color: #1a1208 !important;
-        font-weight: 700;
-        grid-column: 1;
-    }
-    #root-gutterbones[data-batch52-art="1"] .play-status-quota-track {
-        grid-column: 2;
-        height: 0.5rem !important;
-        margin: 0 0.45rem 0 0.12rem;
-        background: rgba(10, 8, 6, 0.82) !important;
-        border: 1px solid rgba(212, 180, 110, 0.35) !important;
-    }
     #root-gutterbones[data-batch52-art="1"] .play-rolls-pips {
         position: relative !important;
         display: block !important;
@@ -5999,6 +6004,126 @@
     #root-gutterbones[data-batch52-art="1"] [data-layout-key="play-roll-btn"] .roll-ready-pulse-inner {
         opacity: 0.35;
     }
+    #root-gutterbones[data-batch52-art="1"] .play-status-quota-fill {
+        background: linear-gradient(90deg, #8b6914, #c78b16, #e8c547) !important;
+        box-shadow: inset 0 0 0 1px rgba(26, 18, 4, 0.35);
+        border-radius: inherit;
+        opacity: 0.98;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="help-dossier"] {
+        background: url("assets/art/batch-5-2/atlas/ui-dossier-clipboard.webp") center top / 100% 100% no-repeat !important;
+        background-color: rgba(26, 26, 26, 0.94) !important;
+        border-color: transparent !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .build-indicator-root {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-laurel.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+        color: #1a1208 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .build-indicator-root .text-gray-400 {
+        color: #3a2a12 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="next-threat-badge-trigger"] {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-starburst.webp") center / 100% 100% no-repeat !important;
+        border: 0 !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-atlas-chevron-btn {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        padding: 0.35rem 0.75rem !important;
+        border: 0 !important;
+        background-color: transparent !important;
+        overflow: visible !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-atlas-chevron-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: center / 100% 100% no-repeat;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-route-pagination .shop-atlas-chevron-btn--prev::before,
+    #root-gutterbones[data-batch52-art="1"] .shop-item-pagination .shop-atlas-chevron-btn--prev::before {
+        background-image: url("assets/art/batch-5-2/atlas/ui-control-button-left.webp");
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-route-pagination .shop-atlas-chevron-btn--next::before,
+    #root-gutterbones[data-batch52-art="1"] .shop-item-pagination .shop-atlas-chevron-btn--next::before {
+        background-image: url("assets/art/batch-5-2/atlas/ui-control-button-right.webp");
+    }
+    #root-gutterbones[data-batch52-art="1"] .shop-pagination-glyph {
+        position: relative;
+        z-index: 2;
+        color: #f5ecd6 !important;
+        font-size: 1.15rem;
+        line-height: 1;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 1px #000;
+        pointer-events: none;
+    }
+    #root-gutterbones[data-batch52-art="1"] [data-layout-key="shop-intel-button"] {
+        background: url("assets/art/batch-5-2/atlas/ui-badge-round.webp") center / contain no-repeat !important;
+        border: 0 !important;
+        color: #1a1208 !important;
+        font-weight: 700 !important;
+        position: relative;
+        z-index: 1;
+    }
+    .gb-atlas-inline-icon {
+        display: inline-block;
+        width: 0.85rem;
+        height: 0.85rem;
+        object-fit: contain;
+        vertical-align: -0.15em;
+        margin-right: 0.12rem;
+    }
+    .gb-boss-warrant-decor {
+        display: inline-block;
+        flex: 0 0 auto;
+        width: 0.75rem;
+        height: 0.75rem;
+        margin-right: 0.12rem;
+        background: url("assets/art/batch-5-2/atlas/ui-badge-starburst.webp") center / contain no-repeat;
+        opacity: 0.9;
+        pointer-events: none;
+    }
+    @media (max-width: 767px) {
+        #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact {
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+            font-size: max(9px, 0.56rem) !important;
+            padding: 0.12rem 0.28rem !important;
+        }
+        #root-gutterbones[data-batch52-art="1"] .boss-warrant-name {
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+        }
+    }
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact,
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--open {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.1rem;
+        background: none !important;
+        border: 1px solid rgba(248, 113, 113, 0.45) !important;
+        color: #fca5a5 !important;
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
+    #root-gutterbones[data-batch52-art="1"] .boss-warrant-stamp--compact .boss-warrant-name {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
     @media (min-width: 501px) and (max-width: 1199px) {
         #root-gutterbones[data-batch52-art="1"] .batch52-ashtray-prop {
             left: max(0.9rem, 2%);
@@ -6021,18 +6146,6 @@
         }
     }
     @media (max-width: 500px) {
-        #root-gutterbones[data-batch52-art="1"] .play-status-segment--round,
-        #root-gutterbones[data-batch52-art="1"] .play-status-segment--cash,
-        #root-gutterbones[data-batch52-art="1"] .play-status-segment--debt,
-        #root-gutterbones[data-batch52-art="1"] .play-status-segment--pill {
-            min-height: 1.5rem;
-            padding: 0.1rem 0.34rem !important;
-            font-size: 9px !important;
-        }
-        #root-gutterbones[data-batch52-art="1"] .play-status-segment--quota {
-            min-width: 6.2rem;
-            min-height: 1.65rem;
-        }
         #root-gutterbones[data-batch52-art="1"] .play-rolls-pips {
             width: min(92%, 280px) !important;
         }
@@ -6219,7 +6332,7 @@
         opacity: 0.55;
     }
 
-    /* LAF dark strip + Batch 5.2 (#97) paper status-chip plates */
+    /* LAF + Batch 5.2: flex tweaks only — status strip uses LAF tints (no HUD plate WebP) */
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-bar {
         gap: 0.25rem 0.35rem !important;
         padding: 0.18rem 0.28rem !important;
@@ -6229,44 +6342,15 @@
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment {
         flex: 0 1 auto;
         border-right: 0 !important;
-        background-color: #e8e0d0 !important;
-        color: #1a1208 !important;
+        background: transparent !important;
+        background-image: none !important;
         text-shadow: none !important;
         min-height: 1.85rem;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--round,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--cash,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--debt,
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--pill {
-        background: url("assets/art/batch-5-2/hud/status-chip-paper.webp") center / 100% 100% no-repeat !important;
-        padding: 0.16rem 0.55rem !important;
-        font-weight: 700;
     }
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--quota {
         flex: 1 1 5.5rem;
         min-width: 6.8rem;
         max-width: 100%;
-        background-color: #e8e0d0 !important;
-        background: url("assets/art/batch-5-2/hud/status-gauge-split.webp") center / 100% 100% no-repeat !important;
-        padding: 0.18rem 0.4rem 0.18rem 0.18rem !important;
-        display: grid !important;
-        grid-template-columns: 24% 1fr;
-        align-items: center;
-        gap: 0 !important;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-nums {
-        color: #1a1208 !important;
-        grid-column: 1;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-track {
-        grid-column: 2;
-        height: 0.5rem !important;
-        margin: 0 0.45rem 0 0.12rem;
-        background: rgba(10, 8, 6, 0.82) !important;
-        border: 1px solid rgba(212, 180, 110, 0.35) !important;
-    }
-    #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-quota-fill {
-        background: linear-gradient(90deg, #6e1d24, #b91c1c, #f59e0b) !important;
     }
     #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--debt-clear {
         opacity: 0.55;
@@ -6296,11 +6380,11 @@
             gap: 0.08rem 0.14rem !important;
             overflow: hidden;
         }
-        #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment {
-            flex-shrink: 1 !important;
+        #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment:not(.play-status-segment--quota) {
+            flex-shrink: 0 !important;
             min-width: 0 !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow: visible !important;
+            text-overflow: clip !important;
         }
         #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .street-ledger-cluster--actions {
             flex: 0 0 auto;
@@ -6313,7 +6397,6 @@
             min-height: 1.5rem;
             padding: 0.1rem 0.34rem !important;
             font-size: max(10px, 0.58rem) !important;
-            background-size: 100% 100% !important;
         }
         #root-gutterbones[data-look-and-feel="1"][data-batch52-art="1"] .play-status-segment--quota {
             min-width: 3.5rem;
@@ -6656,7 +6739,7 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-layout"] {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) !important;
-            grid-template-rows: minmax(0, 52%) minmax(0, 48%) !important;
+            grid-template-rows: minmax(0, 48%) minmax(0, 52%) !important;
             height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.5rem)) !important;
             min-height: 0 !important;
@@ -6689,35 +6772,208 @@
             overflow-x: hidden !important;
             overflow-y: auto !important;
         }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            transform: none !important;
+            overflow-y: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
+            flex: 0 0 auto !important;
+            max-height: min(20vh, 10.5rem) !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            position: relative !important;
+            z-index: 6 !important;
+            isolation: isolate !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-block {
+            position: relative !important;
+            z-index: 6 !important;
+            margin-bottom: 0.35rem !important;
+            padding: 0.35rem !important;
+            isolation: isolate !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-options-fence {
+            max-height: 2.25rem !important;
+            overflow-y: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-refresh-stock"] {
+            position: relative !important;
+            z-index: 8 !important;
+            isolation: isolate !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-route-pagination-row {
+            position: relative !important;
+            z-index: 4 !important;
+            flex: 0 0 auto !important;
+            isolation: isolate !important;
+            margin-top: 0.35rem !important;
+            margin-bottom: 0.15rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            flex: 1 1 0 !important;
             min-height: 0 !important;
             max-height: none !important;
-            flex: 1 1 auto !important;
+            overflow: hidden !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            overflow-y: auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            flex: 0 0 auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            pointer-events: auto !important;
+            z-index: 5 !important;
+            margin-top: auto !important;
+            padding-top: 0.25rem !important;
+            contain: layout paint;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+            display: grid !important;
+            gap: 0.25rem !important;
+            flex: 0 1 auto !important;
+            max-height: min(5.25rem, 14vh) !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+            margin-bottom: 0.35rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
+            display: grid !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > .font-mono {
+            margin-bottom: 0.15rem !important;
+            font-size: max(11px, 0.6875rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid span {
+            font-size: max(11px, 0.6875rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
+            height: 0.7rem !important;
+            min-height: 0.7rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 0.2rem !important;
+            font-size: max(11px, 0.6875rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * {
+            padding: 0.12rem 0.2rem !important;
+            min-height: 1.65rem !important;
+            font-size: max(11px, 0.6875rem) !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * span {
+            font-size: inherit !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] [data-layout-key="shop-hit-streets"] {
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+            min-height: 44px !important;
+            font-size: 0.95rem !important;
+            line-height: 1.1 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled,
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
+            overflow-x: hidden !important;
+        }
+    }
+    @media (min-width: 1024px) and (min-height: 821px) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
             overflow: hidden !important;
             display: flex !important;
             flex-direction: column !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-            min-height: 0 !important;
-            max-height: min(26vh, 15rem) !important;
-            overflow-x: hidden !important;
-            overflow-y: auto !important;
             flex: 0 1 auto !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
-        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
-            min-height: 0 !important;
-            max-height: none !important;
-            flex: 1 1 auto !important;
+            max-height: min(26vh, 14.5rem) !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
+            overscroll-behavior: contain;
+            position: relative !important;
+            z-index: 3 !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
+            flex: 1 1 0 !important;
+            min-height: 7.5rem !important;
+            overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
+            flex: 0 0 auto !important;
             min-height: 0 !important;
-            flex-shrink: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            display: flex !important;
+            flex-direction: column !important;
+            margin-top: auto !important;
+            z-index: 1 !important;
+            padding-top: 0.25rem !important;
+            contain: layout paint;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+            flex: 0 1 auto !important;
+            max-height: min(8rem, 26vh) !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * {
+            padding: 0.25rem 0.35rem !important;
+            min-height: 2.35rem !important;
         }
     }
 
+    @media (min-width: 768px) {
+        #root-gutterbones[data-phase="SHOP"] .shop-section-header__label {
+            font-size: 13px !important;
+            line-height: 1.25 !important;
+            letter-spacing: 0.1em !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] .shop-section-header {
+            min-height: 2.1rem !important;
+            padding: 0.35rem 1.35rem !important;
+        }
+    }
     @media (max-width: 414px) {
         #root-gutterbones[data-look-and-feel="1"] .look-and-feel-ambient {
             display: none !important;
@@ -13511,6 +13767,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         );
     };
 
+    const HUD_ATLAS_ROUND = 'assets/art/batch-5-2/atlas/ui-badge-starburst.webp';
+    const HUD_ATLAS_PILL = 'assets/art/batch-5-2/atlas/ui-badge-round.webp';
+    const HUD_ATLAS_WARN = 'assets/art/batch-5-2/atlas/ui-badge-laurel.webp';
+
     const PlayStatusBar = ({
         round,
         displayScore,
@@ -13532,7 +13792,10 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             onClick={onToggleBreakdown}
             aria-expanded={breakdownOpen}
         >
-            <span className="play-status-segment play-status-segment--round" title="Round">◷ R{displayJobRound('PLAY', round)}</span>
+            <span className="play-status-segment play-status-segment--round" title="Round">
+                <img src={HUD_ATLAS_ROUND} className="gb-atlas-inline-icon" width="15" height="15" alt="" aria-hidden="true" />
+                R{displayJobRound('PLAY', round)}
+            </span>
             <span className="play-status-segment play-status-segment--quota" title="Heat quota">
                 <span className="play-status-quota-track" role="presentation" aria-hidden="true">
                     <span className={`play-status-quota-fill ${quotaFillTone} ${scorePulse ? 'score-pulse' : ''}`} style={{ width: `${quotaProgressPct}%` }} />
@@ -13540,8 +13803,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 <span className="play-status-quota-nums">{displayScore}/{currentTarget}</span>
             </span>
             <span className="play-status-segment play-status-segment--cash street-ledger-icon street-ledger-icon--cash" title="Dirty cash">${Math.max(0, displayGold)}</span>
-            <span className={`play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt${debt > 0 ? '' : ' play-status-segment--debt-clear'}`} title="Debt">IOU ${debt}</span>
-            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills">💊 {discards}</span>
+            <span className={`play-status-segment play-status-segment--debt street-ledger-icon street-ledger-icon--debt${debt > 0 ? '' : ' play-status-segment--debt-clear'}`} title="Debt">
+                {debt > 0 ? <img src={HUD_ATLAS_WARN} className="gb-atlas-inline-icon" width="15" height="15" alt="" aria-hidden="true" /> : null}
+                IOU ${debt}
+            </span>
+            <span className={`play-status-segment play-status-segment--pill street-ledger-icon street-ledger-icon--pill ${discards <= 1 ? 'danger-count-pulse' : ''}`} title="Pills">
+                <img src={HUD_ATLAS_PILL} className="gb-atlas-inline-icon" width="15" height="15" alt="" aria-hidden="true" />
+                {discards}
+            </span>
         </button>
     );
 
@@ -13558,7 +13827,8 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     aria-expanded={detailOpen}
                     title={detailOpen ? 'Hide boss intel' : 'Show boss intel'}
                 >
-                    <span className="boss-warrant-name" aria-hidden>⚠ {shortName}</span>
+                    <span className="gb-boss-warrant-decor" aria-hidden="true" />
+                    <span className="boss-warrant-name">{shortName}</span>
                     <span className="boss-warrant-rule">{boss.desc}</span>
                 </button>
                 {detailOpen && runDetail && (
@@ -22725,9 +22995,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                         <>
                                             {pageCount > 1 && (
                                                 <div className="shop-item-pagination flex items-center justify-between gap-2 mb-2 font-mono text-xs" data-layout-key="shop-item-pagination">
-                                                    <button type="button" aria-label="Previous stock page" disabled={safePage <= 0} onClick={() => setShopItemPage((p) => Math.max(0, p - 1))} className="border border-gray-600 text-gray-200 px-3 py-2 min-h-[44px] disabled:opacity-40">←</button>
+                                                    <button type="button" aria-label="Previous stock page" disabled={safePage <= 0} onClick={() => setShopItemPage((p) => Math.max(0, p - 1))} className="shop-atlas-chevron-btn shop-atlas-chevron-btn--prev border border-gray-600 text-gray-200 px-3 py-2 min-h-[44px] min-w-[44px] disabled:opacity-40"><span className="shop-pagination-glyph" aria-hidden="true">←</span></button>
                                                     <span className="text-gray-400 tracking-wider">STOCK {safePage + 1}/{pageCount}</span>
-                                                    <button type="button" aria-label="Next stock page" disabled={safePage >= pageCount - 1} onClick={() => setShopItemPage((p) => Math.min(pageCount - 1, p + 1))} className="border border-gray-600 text-gray-200 px-3 py-2 min-h-[44px] disabled:opacity-40">→</button>
+                                                    <button type="button" aria-label="Next stock page" disabled={safePage >= pageCount - 1} onClick={() => setShopItemPage((p) => Math.min(pageCount - 1, p + 1))} className="shop-atlas-chevron-btn shop-atlas-chevron-btn--next border border-gray-600 text-gray-200 px-3 py-2 min-h-[44px] min-w-[44px] disabled:opacity-40"><span className="shop-pagination-glyph" aria-hidden="true">→</span></button>
                                                 </div>
                                             )}
                                 <div ref={shopItemsBodyRef} data-layout-key="shop-items-panel" className="shop-items-panel gb-panel-scroll grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 content-start min-h-0">{visibleShopItems.map(item => {
@@ -22845,37 +23115,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 </div>
                                 {debt > 0 && <div className="shop-debt-warning bg-red-900/30 border border-red-600 p-2 text-xs text-red-400 mb-4 debt-pulse font-mono">WARNING: Unpaid debt (${debt}). Quota will spike.</div>}
                                 </div>
-                                {(() => {
-                                    const perPage = Math.max(1, shopRoutesPerPage || 1);
-                                    const pageCount = Math.max(1, Math.ceil((paths?.length || 0) / perPage));
-                                    const safePage = Math.min(shopRoutePage, pageCount - 1);
-                                    if (pageCount <= 1) return null;
-                                    return (
-                                        <div className="shop-route-pagination shop-route-pagination-row shrink-0" data-layout-key="shop-route-pagination">
-                                            <button
-                                                type="button"
-                                                aria-label="Previous route page"
-                                                disabled={safePage <= 0}
-                                                onClick={() => setShopRoutePage((p) => Math.max(0, p - 1))}
-                                                className="border border-gray-600 text-gray-200 font-mono disabled:opacity-40"
-                                            >
-                                                ←
-                                            </button>
-                                            <div className="font-mono text-xs text-gray-400 tracking-wider">
-                                                ROUTE {safePage + 1}/{pageCount}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                aria-label="Next route page"
-                                                disabled={safePage >= pageCount - 1}
-                                                onClick={() => setShopRoutePage((p) => Math.min(pageCount - 1, p + 1))}
-                                                className="border border-gray-600 text-gray-200 font-mono disabled:opacity-40"
-                                            >
-                                                →
-                                            </button>
-                                        </div>
-                                    );
-                                })()}
                                 <div ref={shopRoutesBodyRef} className="shop-routes-body min-h-0 flex-1 flex flex-col">
                                 {(() => {
                                     const perPage = Math.max(1, shopRoutesPerPage || 1);
@@ -22899,6 +23138,37 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     );
                                 })()}
                                 </div>
+                                {(() => {
+                                    const perPage = Math.max(1, shopRoutesPerPage || 1);
+                                    const pageCount = Math.max(1, Math.ceil((paths?.length || 0) / perPage));
+                                    const safePage = Math.min(shopRoutePage, pageCount - 1);
+                                    if (pageCount <= 1) return null;
+                                    return (
+                                        <div className="shop-route-pagination shop-route-pagination-row shrink-0" data-layout-key="shop-route-pagination">
+                                            <button
+                                                type="button"
+                                                aria-label="Previous route page"
+                                                disabled={safePage <= 0}
+                                                onClick={() => setShopRoutePage((p) => Math.max(0, p - 1))}
+                                                className="shop-atlas-chevron-btn shop-atlas-chevron-btn--prev border border-gray-600 text-gray-200 font-mono min-h-[44px] min-w-[44px] disabled:opacity-40"
+                                            >
+                                                <span className="shop-pagination-glyph" aria-hidden="true">←</span>
+                                            </button>
+                                            <div className="font-mono text-xs text-gray-400 tracking-wider">
+                                                ROUTE {safePage + 1}/{pageCount}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                aria-label="Next route page"
+                                                disabled={safePage >= pageCount - 1}
+                                                onClick={() => setShopRoutePage((p) => Math.min(pageCount - 1, p + 1))}
+                                                className="shop-atlas-chevron-btn shop-atlas-chevron-btn--next border border-gray-600 text-gray-200 font-mono min-h-[44px] min-w-[44px] disabled:opacity-40"
+                                            >
+                                                <span className="shop-pagination-glyph" aria-hidden="true">→</span>
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
                                 </div>
                                 <div data-layout-key="shop-stash-panel" className="shop-stash-panel shop-routes-footer shrink-0 mt-2 pt-2 border-t border-gray-800">
                                 <div className="font-mono text-[10px] text-[#0df] mb-1.5 tracking-wide">STASH {Math.round(stash)}% · spend in the alley</div>
