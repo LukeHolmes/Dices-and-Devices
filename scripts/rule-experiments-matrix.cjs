@@ -55,19 +55,9 @@ function analyzePerRidLinks(summary) {
   const rows = summary.linkObserverByRid || {};
   for (const lo of Object.values(rows)) {
     if (!lo) continue;
-    const famHits = new Set();
-    let anyActivity = false;
-    for (const [fam, stages] of Object.entries(lo.families || {})) {
-      const scored = stages.scored || 0;
-      const rolled = stages.rolled_together || 0;
-      const carved = stages.carved_separate || 0;
-      if (scored > 0 || rolled > 0 || carved > 0) {
-        famHits.add(fam);
-        anyActivity = true;
-      }
-    }
-    if (anyActivity) out.runsWithLink += 1;
-    if (famHits.size >= 2) out.runs2Families += 1;
+    const scored = Object.values(lo.families || {}).filter((stages) => stages.scored > 0);
+    if (scored.length) out.runsWithLink += 1;
+    if (scored.length >= 2) out.runs2Families += 1;
   }
   return out;
 }
@@ -137,30 +127,34 @@ function runSim(policyLabel, arm) {
   };
 }
 
-const results = [];
-for (const arm of ARMS) {
-  for (const policy of ["wp3", "legacy"]) {
-    process.stderr.write(`matrix arm=${arm.id} policy=${policy} n=${GAMES}\n`);
-    results.push(runSim(policy, arm));
+module.exports = { analyzePerRidLinks };
+
+if (require.main === module) {
+  const results = [];
+  for (const arm of ARMS) {
+    for (const policy of ["wp3", "legacy"]) {
+      process.stderr.write(`matrix arm=${arm.id} policy=${policy} n=${GAMES}\n`);
+      results.push(runSim(policy, arm));
+    }
   }
+
+  const report = {
+    generatedAt: new Date().toISOString(),
+    games: GAMES,
+    maxSteps: MAX_STEPS,
+    seedRids: `0-${GAMES - 1}`,
+    holdout: "55-59 excluded",
+    e3Applied: "+$5 starting gold (chosen over −$6 first sink; see GutterbonesRuleExperiments.TUNING)",
+    gates: {
+      runs2Families: "≥13/50",
+      meanMaxRound: "≥6.8",
+      winRate: "10–30%",
+      missedClears: 0,
+    },
+    rows: results,
+  };
+
+  const out = process.env.EXP_MATRIX_OUT || "/opt/cursor/artifacts/rule-experiments-matrix.json";
+  fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
+  console.log(JSON.stringify(report, null, 2));
 }
-
-const report = {
-  generatedAt: new Date().toISOString(),
-  games: GAMES,
-  maxSteps: MAX_STEPS,
-  seedRids: `0-${GAMES - 1}`,
-  holdout: "55-59 excluded",
-  e3Applied: "+$5 starting gold (chosen over −$6 first sink; see GutterbonesRuleExperiments.TUNING)",
-  gates: {
-    runs2Families: "≥13/50",
-    meanMaxRound: "≥6.8",
-    winRate: "10–30%",
-    missedClears: 0,
-  },
-  rows: results,
-};
-
-const out = process.env.EXP_MATRIX_OUT || "/opt/cursor/artifacts/rule-experiments-matrix.json";
-fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
-console.log(JSON.stringify(report, null, 2));

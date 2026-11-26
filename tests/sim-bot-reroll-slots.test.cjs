@@ -105,6 +105,15 @@ test("browser — WP2 keepDiceForReroll keeps slots 0 and 4 for lone Ghost/Echo"
     });
     assert.ok(ledgerReason, "observer should record keep_for_reroll");
     assert.deepEqual(ledgerReason.kept, [true, false, false, false, true]);
+    await page.waitForFunction(() => window.__GB_E2E__.getState().keptSlots[4]);
+    await page.evaluate(() => {
+      // Pick the sixth standard face on each free die so every reroll is observable.
+      Math.random = () => 0.95;
+      window.__GB_E2E__.rollOnce();
+    });
+    await page.waitForFunction(() => window.__GB_E2E__.getDiceLaneForPolicy()[1].value === 6);
+    const lane = await page.evaluate(() => window.__GB_E2E__.getDiceLaneForPolicy().map(d => d.value));
+    assert.deepEqual(lane, [3, 6, 6, 6, 1]);
   } finally {
     await browser.close();
   }

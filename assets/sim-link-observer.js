@@ -140,23 +140,22 @@
                     obs._runFlags[flag] = true;
                 }
             }
-            if (!dice) return;
-            const fam2 = familyForItemId(faceId);
-            if (fam2) obs.evaluateLaneMilestones(dice, []);
         };
 
-        obs.evaluateLaneMilestones = (dice, inventory) => {
-            if (!obs.enabled || !global.GutterbonesSimBotPolicy?.evaluateOrganicPredicates) return;
-            const preds = global.GutterbonesSimBotPolicy.evaluateOrganicPredicates({ dice, inventory });
-            const fam = preds.family;
-            if (!fam || fam === 'other') return;
-            const { ghost, echo } = global.GutterbonesSimBotPolicy.ghostEchoIndices?.(dice) || { ghost: [], echo: [] };
-            if (ghost.length && echo.length) {
-                bump(fam, 'rolled_together');
-            }
-            if (preds.fulfilled?.some((f) => f.includes('adjacent') || f.includes('end_values_match'))) {
-                bump(fam, 'slot_aligned');
-            }
+        // Sample once per payout. Exposure uses the raw roll; alignment uses the
+        // production scoring order, including Mirror Rig, Echo and destroyed dice.
+        obs.evaluateLaneMilestones = (dice, inventory, rules, hardwareDisabled) => {
+            if (!obs.enabled || !inventory.some((item) => item.id === 'BOOKENDS')) return;
+            const family = 'ghost_echo→bookends_retrigger';
+            const policy = global.GutterbonesSimBotPolicy;
+            const raw = policy.ghostEchoIndices(dice);
+            if (!raw.ghost.length || !raw.echo.length) return;
+            bump(family, 'rolled_together');
+            const { scoringDice } = rules.prepScoringDice(dice, inventory, hardwareDisabled);
+            const { resolved, destroyed } = rules.resolveDice(scoringDice);
+            const live = resolved.map((die, i) => destroyed.has(i) ? null : die);
+            if (!hardwareDisabled && live[0] && live[4] && live[0].value === live[4].value
+                && policy.ghostEchoMinDistance(live) === 1) bump(family, 'slot_aligned');
         };
 
         obs.recordScoredLinks = (chainLinks) => {

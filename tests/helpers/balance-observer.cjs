@@ -65,6 +65,7 @@ function installBrowserObserverShim(sandbox, observer) {
   sandbox.GutterbonesBalanceObserver = GBO;
   sandbox.__GB_BALANCE_OBSERVER__ = observer;
   sandbox.balanceObserverActive = () => balanceObserverActiveFromWindow(sandbox.window);
+  sandbox.linkObserverActive = () => !!sandbox.window.__GB_SIM_TELEM__?.linkObserver?.enabled;
   if (!sandbox.window.GutterbonesBalanceObserver) {
     sandbox.window.GutterbonesBalanceObserver = GBO;
   }

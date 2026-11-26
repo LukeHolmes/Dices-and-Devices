@@ -580,3 +580,13 @@ test("recordStateCommit API records react verification payload", () => {
   assert.equal(ev.commit.kind, "purchase");
   assert.equal(ev.commit.match.value, true);
 });
+
+test("replaying a seeded die update uses its accepted draw each time", () => {
+  const { api } = createGame(snapshot());
+  const [die] = dice([1]);
+  const options = { fixedDraw: 0, runRandomFn() { throw Error("unexpected additional draw"); } };
+  const first = api.resolveDieAfterRoll(die, 0, options);
+  const second = api.resolveDieAfterRoll(die, 0, options);
+  assert.equal(first.value, 1);
+  assert.deepEqual(first, second);
+});
