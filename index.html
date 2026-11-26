@@ -7053,22 +7053,71 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      position: relative;
     }
     #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
       margin-bottom: 0.35rem !important;
       padding-bottom: 0.25rem !important;
+      padding-right: 6.75rem;
+      position: relative;
+      z-index: 2;
     }
     #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid {
       display: grid !important;
-      grid-template-columns: minmax(5.25rem, 6.5rem) minmax(0, 1fr) !important;
-      gap: 0.45rem 0.65rem !important;
+      grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+      grid-template-rows: auto !important;
+      gap: 0.5rem 0.75rem !important;
       margin-bottom: 0.35rem !important;
+      align-items: start !important;
     }
     #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid > div:first-child {
-      height: 5.25rem !important;
-      min-height: 5.25rem !important;
-      max-height: 5.25rem !important;
-      min-width: 5.25rem;
+      grid-column: 1 / 2 !important;
+      grid-row: 1 / 2 !important;
+      height: 5.5rem !important;
+      min-height: 5.5rem !important;
+      max-height: 5.5rem !important;
+      width: 5.5rem !important;
+      max-width: 5.5rem !important;
+      align-self: start !important;
+      justify-self: start !important;
+      overflow: hidden !important;
+      box-sizing: border-box;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid > div:last-child {
+      grid-column: 2 / 3 !important;
+      grid-row: 1 / 2 !important;
+      align-self: start !important;
+      min-width: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid > div:first-child > div {
+      height: 100% !important;
+      max-height: 5.5rem !important;
+      width: 100% !important;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .flex.justify-end.mb-2 {
+      position: absolute !important;
+      top: 2.15rem;
+      right: 0.55rem;
+      left: auto;
+      margin: 0 !important;
+      padding: 0 !important;
+      z-index: 8;
+      width: auto;
+      max-width: 6.25rem;
+      overflow: visible;
+      pointer-events: none;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .flex.justify-end.mb-2 > div {
+      font-size: 0.72rem !important;
+      line-height: 1.1 !important;
+      padding: 0.2rem 0.45rem !important;
+      border-width: 3px !important;
+      transform: rotate(-9deg) !important;
+      display: block !important;
+      overflow: visible;
+      white-space: nowrap;
     }
     #root-gutterbones[data-phase="RAP_SHEET"] .rap-sheet-stat-table {
       table-layout: fixed;
