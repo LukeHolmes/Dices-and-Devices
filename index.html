@@ -7145,6 +7145,22 @@
     #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet-run-summary"] {
       margin-bottom: 0.35rem !important;
     }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet-record-scroll"] {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.15rem;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .gb-modal-body > .grid {
+      flex-shrink: 0;
+    }
+    #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
+      flex-shrink: 0;
+    }
   }
     /* H5 */
     #root-gutterbones[data-ui-redesign="1"] .street-ledger-cluster--actions [data-layout-key="system-menu-street"],
@@ -23988,6 +24004,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     </div>
                                 </div>
                             )}
+                            <div data-layout-key="rap-sheet-record-scroll" className="rap-sheet-record-scroll min-h-0 flex flex-col">
                             <div data-layout-key="rap-sheet-run-summary" className="border border-black/40 bg-black/5 p-3 mb-3 font-mono text-xs shrink-0">
                                 <div className="font-bold tracking-[.2em] mb-2 opacity-70">RUN SUMMARY</div>
                                 <table className="rap-sheet-stat-table">
@@ -24017,6 +24034,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                     {dailyShareBanner}
                                 </div>
                             )}
+                            </div>
                             </div>
                         </div>
                         </div>
