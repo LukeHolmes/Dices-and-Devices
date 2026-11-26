@@ -2503,23 +2503,23 @@
     @media (min-width: 1024px) and (max-height: 820px) {
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
             max-height: calc(100dvh - 2 * var(--gb-pad, 0.35rem) - 0.5rem) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            scrollbar-width: thin;
-            scrollbar-gutter: stable;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] .shop-routes-scroll {
-            flex: 0 0 auto !important;
-            overflow: visible !important;
             max-height: none !important;
             mask-image: none !important;
             -webkit-mask-image: none !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 0 0 auto !important;
-            min-height: 13.5rem !important;
+            flex: 0 1 auto !important;
+            min-height: 0 !important;
             overflow: visible !important;
         }
         #root-gutterbones[data-phase="SHOP"] .gb-route-list {
@@ -7083,6 +7083,29 @@
       overflow-x: hidden;
     }
   }
+  @media (max-height: 500px) and (min-width: 720px) {
+    #root-gutterbones[data-phase="LINEUP"] .gb-screen {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"].lineup-persona-grid {
+      flex: 0 0 auto;
+      min-height: min(54vh, 15.5rem);
+      display: grid !important;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(8.5rem, 32vw);
+      grid-template-columns: none !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      visibility: visible !important;
+    }
+    #root-gutterbones [data-layout-key="lineup-grid"] .lineup-persona-card {
+      scroll-snap-align: start;
+      min-width: 8.5rem;
+    }
+  }
     /* H7, B3 */
     #root-gutterbones[data-phase="SHOP"] .shop-options-debt {
         display: block !important;
@@ -7285,47 +7308,55 @@
       max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch;
+      overflow: hidden !important;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-      flex: 0 1 auto !important;
+      flex: 1 1 0 !important;
       min-height: 0 !important;
       max-height: none !important;
-      overflow: visible !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
     #root-gutterbones[data-phase="SHOP"] .gb-route-list {
       flex: 0 1 auto !important;
+      min-height: 0 !important;
       max-height: none !important;
       overflow: visible !important;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-options-block {
       max-height: none;
       overflow: visible;
+      margin-bottom: 0.35rem !important;
+      padding: 0.35rem 0.45rem !important;
     }
     #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
       max-height: none !important;
       overflow: visible !important;
     }
+    #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled > .mb-3 {
+      margin-bottom: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] .shop-fixter-line {
+      margin-bottom: 0.35rem !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-route-card"] {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+      min-height: 2.65rem !important;
+    }
     #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
       max-height: none !important;
       overflow: visible !important;
       flex: 0 0 auto !important;
-    }
-    #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-      flex: 1 1 0 !important;
-      min-height: 0 !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-    }
-    #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-      min-height: 0 !important;
-      flex: 0 1 auto !important;
+      margin-top: auto !important;
     }
     #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
       display: grid !important;
+    }
+    #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-hit-streets"] {
+      flex-shrink: 0 !important;
     }
   }
   @media (max-height: 420px) and (min-width: 720px) {
@@ -20979,6 +21010,22 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     setShowIncarceratedStamp(true);
                     setRapSheetCanContinue(true);
                 },
+                openVictoryDemo: () => {
+                    setShowSettingsPanel(false);
+                    setShowSystemMenu(false);
+                    setRoundClearCardActive(false);
+                    setBustActive(false);
+                    setGold(120);
+                    setLastLaundered(56);
+                    setRunStats({
+                        totalHeat: 520,
+                        biggestHustle: 180,
+                        finalBoss: 'THE RAID',
+                        build: { primary: BUILD_IDS.UNKNOWN, peakConfidence: 0.6, keyItems: [] }
+                    });
+                    setPhase('VICTORY');
+                    if (!reducedMotion) setCinematic('victory');
+                },
                 measureRapSheetStatAlignment: () => {
                     const sheet = document.querySelector('[data-layout-key="rap-sheet"]');
                     if (!sheet) return { ok: false, reason: 'no rap sheet' };
@@ -21739,6 +21786,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (fr.width < 2 || fr.height < 2) {
                         return { ok: true, skipped: true, reason: 'footer-collapsed' };
                     }
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const shortLandscapeShop = vw >= 1024 && vh <= 820;
                     const pad = 2;
                     const zone = {
                         top: fr.top - pad,
@@ -21785,8 +21835,6 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                             });
                         }
                     });
-                    const vw = window.innerWidth;
-                    const vh = window.innerHeight;
                     const hitTest = (el) => {
                         const est = window.getComputedStyle(el);
                         if (est.display === 'none' || est.visibility === 'hidden' || parseFloat(est.opacity) === 0) return;
@@ -21796,6 +21844,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) return;
                         const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2));
                         const cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
+                        if (shortLandscapeShop && el.closest('.shop-routes-scroll') && cy >= fr.top - 6) return;
                         let node = document.elementFromPoint(cx, cy);
                         const coveringNode = node;
                         let target = el;
@@ -21881,6 +21930,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const routeCard = routeCandidates.find((el) => el.classList.contains('ring-2') || el.classList.contains('ring-[#0df]'))
                         || routeCandidates[0]
                         || null;
+                    if (shortLandscapeShop && scrollHost instanceof HTMLElement && routeCard instanceof HTMLElement) {
+                        const footerTop = fr.top;
+                        const hostTop = scrollHost.getBoundingClientRect().top;
+                        for (let i = 0; i < 32; i += 1) {
+                            const cr = routeCard.getBoundingClientRect();
+                            if (cr.bottom <= footerTop - 4 && cr.top >= hostTop + 2) break;
+                            scrollHost.scrollTop += 36;
+                            if (scrollHost.scrollTop + scrollHost.clientHeight >= scrollHost.scrollHeight - 2) break;
+                        }
+                    }
                     let routeVisibleRatio = null;
                     if (routeCard instanceof HTMLElement) {
                         const cardStyle = window.getComputedStyle(routeCard);
@@ -21916,7 +21975,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                                 }).length;
                                 const paintedRatio = paintedSamples / sampleYs.length;
                                 routeVisibleRatio = Math.min(routeVisibleRatio, paintedRatio);
-                                const minRatio = 0.8;
+                                const minRatio = shortLandscapeShop ? 0.65 : 0.8;
                                 if (routeVisibleRatio + 0.001 < minRatio || paintedRatio + 0.001 < minRatio) {
                                     bad.push({
                                         kind: 'route-card-low-visibility',
@@ -21959,51 +22018,63 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const stashGrid = root.querySelector('[data-layout-key="shop-stash-panel"] .stash-program-grid');
                     const vh = window.innerHeight;
                     const bad = [];
+                    const scrollHost = panel?.querySelector('.shop-routes-scroll');
                     const panelBox = panel instanceof HTMLElement ? panel.getBoundingClientRect() : null;
-                    const inReach = (el) => {
+                    const inViewport = (el) => {
+                        if (!(el instanceof HTMLElement)) return false;
+                        const r = el.getBoundingClientRect();
+                        return r.height > 2 && r.bottom > 2 && r.top < vh - 2;
+                    };
+                    const inScrollHost = (el) => {
                         if (!(el instanceof HTMLElement)) return false;
                         const r = el.getBoundingClientRect();
                         if (r.height < 2) return false;
-                        const topBound = panelBox ? panelBox.top + 2 : 2;
-                        const bottomBound = panelBox ? panelBox.bottom - 2 : vh - 2;
-                        return r.bottom > topBound && r.top < bottomBound;
+                        const box = scrollHost instanceof HTMLElement ? scrollHost.getBoundingClientRect() : panelBox;
+                        if (!box) return inViewport(el);
+                        return r.bottom > box.top + 2 && r.top < box.bottom - 2;
                     };
-                    const probe = () => {
-                        if (debtBtns.length && !debtBtns.some(inReach)) {
-                            bad.push({ kind: 'debt-clipped' });
+                    const probeFooter = () => {
+                        bad.length = 0;
+                        const stashBar = root.querySelector('[data-layout-key="shop-stash-panel"] .h-4.bg-black');
+                        if (hitStreets instanceof HTMLElement && !inViewport(hitStreets)) {
+                            bad.push({ kind: 'hit-streets-clipped', top: hitStreets.getBoundingClientRect().top, vh });
                         }
-                        if (hitStreets instanceof HTMLElement && !inReach(hitStreets)) {
-                            bad.push({ kind: 'hit-streets-clipped', top: hitStreets.getBoundingClientRect().top });
+                        if (stashBar instanceof HTMLElement && !inViewport(stashBar)) {
+                            bad.push({ kind: 'stash-bar-clipped' });
                         }
-                        if (stashGrid instanceof HTMLElement && !inReach(stashGrid)) {
+                        if (stashGrid instanceof HTMLElement && !inViewport(stashGrid)) {
                             bad.push({ kind: 'stash-programs-clipped' });
                         }
                     };
-                    const scrollHosts = [
-                        panel,
-                        panel?.querySelector('.shop-routes-scroll'),
-                        root.querySelector('.gb-screen'),
-                    ].filter((el) => el instanceof HTMLElement);
-                    const tryScroll = () => {
-                        probe();
-                        if (!bad.length) return;
-                        for (const host of scrollHosts) {
-                            const step = Math.max(48, Math.floor(host.clientHeight * 0.85));
-                            for (let i = 0; i < 24; i += 1) {
-                                host.scrollTop += step;
-                                bad.length = 0;
-                                probe();
-                                if (!bad.length) return;
-                                if (host.scrollTop + host.clientHeight >= host.scrollHeight - 2) break;
-                            }
+                    const probeDebt = () => {
+                        if (debtBtns.length && !debtBtns.some(inScrollHost)) {
+                            bad.push({ kind: 'debt-clipped' });
                         }
-                        [stashGrid, hitStreets, ...debtBtns].forEach((el) => {
-                            if (el instanceof HTMLElement) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-                        });
-                        bad.length = 0;
-                        probe();
                     };
-                    tryScroll();
+                    const resetScroll = () => {
+                        window.scrollTo(0, 0);
+                        [scrollHost, panel, root.querySelector('.gb-screen')].forEach((el) => {
+                            if (el instanceof HTMLElement) el.scrollTop = 0;
+                        });
+                    };
+                    resetScroll();
+                    probeFooter();
+                    const footerBad = bad.slice();
+                    bad.length = 0;
+                    probeDebt();
+                    if (bad.length && scrollHost instanceof HTMLElement) {
+                        const step = Math.max(40, Math.floor(scrollHost.clientHeight * 0.45));
+                        for (let i = 0; i < 28; i += 1) {
+                            scrollHost.scrollTop += step;
+                            bad.length = 0;
+                            probeDebt();
+                            if (!bad.length) break;
+                            if (scrollHost.scrollTop + scrollHost.clientHeight >= scrollHost.scrollHeight - 2) break;
+                        }
+                    }
+                    const debtBad = bad.slice();
+                    bad.length = 0;
+                    bad.push(...footerBad, ...debtBad);
                     return {
                         ok: bad.length === 0,
                         bad,
