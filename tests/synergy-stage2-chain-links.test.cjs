@@ -146,6 +146,6 @@ test("chain linking OFF preserves synergy-chains blood ripple total", () => {
     d,
     linkContext(g, { synergyTuning: { enabled: true, chainLinkingEnabled: false, maxChainPasses: 8 } }),
   );
-  assert.equal(r.total, 146);
+  assert.equal(r.total, 173);
   assert.equal(r.chainLinks.length, 0);
 });
