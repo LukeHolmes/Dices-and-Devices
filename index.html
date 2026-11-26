@@ -6755,7 +6755,8 @@
         87.5%, 100% { background-position: 100% 100%; }
     }
     /* Tablet portrait: keep a bounded two-row shop and scroll inside the cards.
-       The generic <=1023px auto-height stack overflowed the 768x1024 viewport. */
+       The generic <=1023px auto-height stack overflowed the 768x1024 viewport.
+       #113 flex stash + 11px labels; #115 grid scroll/footer split for overlap CI. */
     @media (min-width: 768px) and (max-width: 1023px) and (min-height: 700px) {
         #root-gutterbones[data-phase="SHOP"] .gb-screen {
             height: 100dvh !important;
@@ -6773,8 +6774,7 @@
             overflow: hidden !important;
             gap: 0.5rem !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"],
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+        #root-gutterbones[data-phase="SHOP"] [data-tutorial="shop-panel"] {
             min-height: 0 !important;
             max-height: 100% !important;
             height: 100% !important;
@@ -6782,6 +6782,19 @@
             display: flex !important;
             flex-direction: column !important;
             flex: 1 1 auto !important;
+        }
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
+            min-height: 0 !important;
+            max-height: 100% !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-rows: minmax(0, 1fr) minmax(0, auto) !important;
+            grid-template-areas: "shop-scroll" "shop-footer" !important;
+            align-content: stretch !important;
+            flex: 1 1 auto !important;
+            pointer-events: auto !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-workbench,
         #root-gutterbones[data-phase="SHOP"] .shop-items-shell {
@@ -6799,28 +6812,29 @@
             overflow-x: hidden !important;
             overflow-y: auto !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] {
-            display: flex !important;
-            flex-direction: column !important;
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > .shop-routes-scroll {
+            grid-area: shop-scroll !important;
             min-height: 0 !important;
-            overflow: hidden !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            flex: 1 1 0 !important;
-            min-height: 0 !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            transform: none !important;
+            max-height: 100% !important;
+            height: 100% !important;
+            flex: none !important;
+            overflow-x: hidden !important;
             overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+            display: flex !important;
+            flex-direction: column !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            position: relative !important;
+            z-index: 1 !important;
+            contain: layout paint !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled {
-            flex: 0 0 auto !important;
+            min-height: 0 !important;
             max-height: min(20vh, 10.5rem) !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
+            flex: 0 1 auto !important;
             position: relative !important;
             z-index: 6 !important;
             isolation: isolate !important;
@@ -6849,67 +6863,65 @@
             margin-top: 0.35rem !important;
             margin-bottom: 0.15rem !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-body {
-            flex: 1 1 0 !important;
+        #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
+        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
             min-height: 0 !important;
             max-height: none !important;
-            overflow: hidden !important;
+            flex: 0 1 auto !important;
+            overflow: visible !important;
             position: relative !important;
             z-index: 2 !important;
         }
-        #root-gutterbones[data-phase="SHOP"] .gb-route-list {
-            overflow-y: auto !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] {
-            flex: 0 0 auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            overflow: visible !important;
-            display: flex !important;
-            flex-direction: column !important;
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] {
+            grid-area: shop-footer !important;
             position: relative !important;
             left: auto !important;
             right: auto !important;
             bottom: auto !important;
-            pointer-events: auto !important;
+            align-self: stretch !important;
+            min-height: 0 !important;
+            flex: none !important;
+            flex-shrink: 0 !important;
+            margin-top: 0 !important;
+            max-height: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
             z-index: 5 !important;
-            margin-top: auto !important;
+            isolation: isolate !important;
+            pointer-events: auto !important;
             padding-top: 0.25rem !important;
             contain: layout paint;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > :not(button) {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] > :not(button) {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] .stash-program-grid {
             display: grid !important;
-            gap: 0.25rem !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 0.2rem !important;
             flex: 0 1 auto !important;
+            min-height: 0 !important;
             max-height: min(5.25rem, 14vh) !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             overscroll-behavior: contain;
             margin-bottom: 0.35rem !important;
+            font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
             display: grid !important;
+            height: 0.7rem !important;
+            min-height: 0.7rem !important;
+            margin-bottom: 0.25rem !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] > .font-mono {
             margin-bottom: 0.15rem !important;
             font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid span {
-            font-size: max(11px, 0.6875rem) !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .h-4.bg-black {
-            height: 0.7rem !important;
-            min-height: 0.7rem !important;
-            margin-bottom: 0.25rem !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            gap: 0.2rem !important;
             font-size: max(11px, 0.6875rem) !important;
         }
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * {
@@ -6920,17 +6932,15 @@
         #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] .stash-program-grid > * span {
             font-size: inherit !important;
         }
-        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-stash-panel"] [data-layout-key="shop-hit-streets"] {
+        #root-gutterbones[data-phase="SHOP"] [data-layout-key="shop-routes-panel"] > [data-layout-key="shop-stash-panel"] [data-layout-key="shop-hit-streets"] {
             flex: 0 0 auto !important;
             flex-shrink: 0 !important;
+            margin-top: auto !important;
             padding-top: 0.25rem !important;
             padding-bottom: 0.25rem !important;
             min-height: 44px !important;
             font-size: 0.95rem !important;
             line-height: 1.1 !important;
-        }
-        #root-gutterbones[data-phase="SHOP"] .shop-routes-scroll {
-            overflow: hidden !important;
         }
         #root-gutterbones[data-phase="SHOP"] .shop-routes-unscaled,
         #root-gutterbones[data-phase="SHOP"] .shop-routes-body,
@@ -7000,7 +7010,6 @@
             min-height: 2.1rem !important;
             padding: 0.35rem 1.35rem !important;
         }
-    }
     @media (max-width: 414px) {
         #root-gutterbones[data-look-and-feel="1"] .look-and-feel-ambient {
             display: none !important;
