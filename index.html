@@ -7060,8 +7060,7 @@
       flex: 1 1 auto;
       min-height: 0;
       overflow-x: hidden;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow-y: hidden;
       position: relative;
     }
     #root-gutterbones[data-phase="RAP_SHEET"] [data-layout-key="rap-sheet"] .border-b-2.mb-6 {
@@ -21931,6 +21930,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const vw = window.innerWidth;
                     const vh = window.innerHeight;
                     const shortLandscapeShop = vw >= 1024 && vh <= 820;
+                    const tabletPortraitShop = vw >= 768 && vw < 1024 && vh >= 700;
                     const pad = 2;
                     const zone = {
                         top: fr.top - pad,
@@ -21986,7 +21986,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) return;
                         const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2));
                         const cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
-                        if (shortLandscapeShop && el.closest('.shop-routes-scroll') && cy >= fr.top - 6) return;
+                        if ((shortLandscapeShop || tabletPortraitShop) && el.closest('.shop-routes-scroll') && cy >= fr.top - 6) return;
                         let node = document.elementFromPoint(cx, cy);
                         const coveringNode = node;
                         let target = el;
@@ -22066,13 +22066,25 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     if (scrollHost instanceof HTMLElement) scrollHost.scrollTop = 0;
                     if (routeList instanceof HTMLElement) routeList.scrollTop = 0;
                     if (panel instanceof HTMLElement) panel.scrollTop = 0;
+                    if (tabletPortraitShop && scrollHost instanceof HTMLElement) {
+                        const refreshBtn = panel.querySelector('[data-layout-key="shop-refresh-stock"]');
+                        if (refreshBtn instanceof HTMLElement) {
+                            const sr = scrollHost.getBoundingClientRect();
+                            const rr = refreshBtn.getBoundingClientRect();
+                            if (rr.bottom > sr.bottom - 2) {
+                                scrollHost.scrollTop += rr.bottom - sr.bottom + 8;
+                            } else if (rr.top < sr.top + 2) {
+                                scrollHost.scrollTop -= sr.top + 2 - rr.top;
+                            }
+                        }
+                    }
                     const routeCandidates = [...root.querySelectorAll('[data-layout-key="shop-route-card"]')].filter(
                         (el) => el instanceof HTMLElement
                     );
                     const routeCard = routeCandidates.find((el) => el.classList.contains('ring-2') || el.classList.contains('ring-[#0df]'))
                         || routeCandidates[0]
                         || null;
-                    if (shortLandscapeShop && scrollHost instanceof HTMLElement && routeCard instanceof HTMLElement) {
+                    if ((shortLandscapeShop || tabletPortraitShop) && scrollHost instanceof HTMLElement && routeCard instanceof HTMLElement) {
                         const footerTop = fr.top;
                         const hostTop = scrollHost.getBoundingClientRect().top;
                         for (let i = 0; i < 32; i += 1) {
