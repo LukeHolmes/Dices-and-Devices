@@ -18224,13 +18224,32 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             };
             const placeGuarantee = (item, slotIndex) => {
                 if (!item || picks.some((p) => p.id === item.id)) return;
-                const slot = Math.max(0, Math.min(3, slotIndex));
-                if (picks.length >= 4) {
-                    picks[slot] = item;
-                    return;
+                const prefer = Math.max(0, Math.min(3, slotIndex));
+                const isProtectedPick = (pick) => pick?.id === 'SMELLING_SALTS';
+                const slotOrder = [prefer, 0, 1, 2, 3].filter((s, i, arr) => arr.indexOf(s) === i);
+                const trySlot = (slot) => {
+                    if (picks.length >= 4) {
+                        if (slot >= 4) return false;
+                        if (isProtectedPick(picks[slot])) return false;
+                        picks[slot] = item;
+                        return true;
+                    }
+                    if (slot > picks.length) return false;
+                    if (slot < picks.length) {
+                        if (isProtectedPick(picks[slot])) return false;
+                        picks[slot] = item;
+                        return true;
+                    }
+                    if (slot === picks.length && picks.length < 4) {
+                        picks.push(item);
+                        return true;
+                    }
+                    return false;
+                };
+                for (const slot of slotOrder) {
+                    if (trySlot(slot)) return;
                 }
-                if (picks.length <= slot) picks.push(item);
-                else picks[slot] = item;
+                if (picks.length < 4) picks.push(item);
             };
 
             if (offerTag && offerTag !== 'balanced' && !picks.some((item) => tagMatchesOffer(offerTag, item))) {

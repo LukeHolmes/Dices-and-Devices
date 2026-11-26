@@ -65,16 +65,29 @@ test("boss turf path uses mod 1 without inherited route perks", () => {
   assert.equal(cleanBoss.shopRefreshDiscount, undefined);
 });
 
-function runShopHarness({ randomSeq, meta, offerTag = "balanced", round = 4 }) {
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function runShopHarness({ randomSeq, meta, offerTag = "balanced", round = 4, rngFactory }) {
   const g = createGame(snapshot({ round, gold: 40, stash: 20, phase: "SHOP" }));
   const routesCtx = vm.createContext({ Math });
   vm.runInContext(routesSource, routesCtx);
   let draw = 0;
   const seq = randomSeq;
-  const rng = () => {
-    const v = seq[draw++ % seq.length];
-    return v;
-  };
+  const rng = rngFactory
+    ? rngFactory()
+    : (() => {
+        const v = seq[draw++ % seq.length];
+        return v;
+      });
   const captured = [];
   const source = `${sliceAction("generateShop", "refreshShop")}\nthis.run = () => generateShop();`;
   const sandbox = {
@@ -142,6 +155,32 @@ function runShopHarness({ randomSeq, meta, offerTag = "balanced", round = 4 }) {
   sandbox.run();
   return captured;
 }
+
+test("early smelling salts rate stays near baseline after guarantee slots", () => {
+  const g = createGame(snapshot());
+  const meta = {
+    unlockedFaceIds: Object.keys(g.api.FACE_DATABASE),
+    unlockedHardwareIds: g.api.DEFAULT_META_STATE.unlockedHardwareIds,
+  };
+  let shops = 0;
+  let salts = 0;
+  for (let seed = 0; seed < 100; seed++) {
+    const rng = mulberry32(seed);
+    for (let round = 1; round <= 4; round++) {
+      const offerTag = round >= 3 ? "hardware" : "balanced";
+      const ids = runShopHarness({
+        meta,
+        round,
+        offerTag,
+        rngFactory: () => rng,
+      });
+      shops += 1;
+      if (ids.includes("SMELLING_SALTS")) salts += 1;
+    }
+  }
+  const pct = salts / shops;
+  assert.ok(pct >= 0.89, `expected ≥89% smelling salts, got ${(pct * 100).toFixed(1)}%`);
+});
 
 test("shop guarantees occupy distinct slots and respect hardware unlocks", () => {
   const unlocked = createGame(snapshot()).api.DEFAULT_META_STATE.unlockedHardwareIds;
