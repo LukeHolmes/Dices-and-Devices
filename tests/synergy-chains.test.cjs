@@ -144,3 +144,17 @@ test("Crooked Cop: face chains run, hardware chains skipped", () => {
   assert.ok(r.synergyEvents.some((e) => e.id === "blood_ripple"));
   assert.equal(r.synergyEvents.some((e) => e.id === "engine_link"), false);
 });
+
+test("synergyTuning disabled suppresses blood_ripple chain", () => {
+  const g = createGame(snapshot());
+  const d = dice([6, 0, 2, 3, 4]);
+  d[0] = bone(6, 0, { faceId: "BLOOD_6", type: "blood" });
+  d[1] = bone(0, 1, { faceId: "SHIV_FACE", type: "destructive" });
+  const r = g.api.GutterbonesRules.calculateScore(
+    "C",
+    d,
+    synergyContext(g, { synergyTuning: { enabled: false, maxChainPasses: 8 } }),
+  );
+  assert.equal(r.synergyEvents.length, 0);
+  assert.equal(r.chainDepth, 0);
+});
