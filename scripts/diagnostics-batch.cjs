@@ -91,10 +91,7 @@ function git(cmd) {
   return spawnSync("git", cmd, { cwd: ROOT, encoding: "utf8" });
 }
 
-function harnessCommit() {
-  const r = git(["rev-parse", "HEAD"]);
-  return (r.stdout || "").trim() || "";
-}
+const { harnessCommit } = require("./harness-commit.cjs");
 
 function policyCommit() {
   const p = path.join(ROOT, "assets/sim-bot-policy.js");
@@ -120,6 +117,8 @@ function parseArgs(argv) {
     holdoutApprovalId: "",
     dryRun: false,
     worktreeAuto: true,
+    strategy: "builder",
+    simPolicyRevision: FIXED_POLICY_REVISION,
   };
   for (const arg of argv) {
     if (arg.startsWith("--baseline=")) out.baseline = arg.slice(11);
@@ -137,6 +136,8 @@ function parseArgs(argv) {
     else if (arg.startsWith("--holdout-approval-id=")) out.holdoutApprovalId = arg.slice(22);
     else if (arg === "--dry-run") out.dryRun = true;
     else if (arg === "--no-worktree") out.worktreeAuto = false;
+    else if (arg.startsWith("--strategy=")) out.strategy = arg.slice(11) || "builder";
+    else if (arg.startsWith("--sim-policy-revision=")) out.simPolicyRevision = arg.slice(22);
     else if (arg === "--help" || arg === "-h") out.help = true;
   }
   return out;
@@ -159,6 +160,8 @@ Options:
   --experiment-id=ID        Experiment registry id
   --job-id=ID               Bridge job id (optional)
   --holdout-approval-id=ID  Required to run holdout rids 55-59
+  --strategy=NAME           Sim bot strategy (default builder)
+  --sim-policy-revision=REV Override SIM_POLICY_REVISION (default phase-b-v1)
   --dry-run                 Validate plan only
   --no-worktree             Do not auto-create git worktrees for baselines
 `);
@@ -237,6 +240,7 @@ async function runRidWindow({
   viewports,
   rulesRoot,
   ruleExperimentArm,
+  strategyName = "builder",
 }) {
   const { runOneGame, pickViewports, startServer } = require(path.join(ROOT, "tests/sim/run.cjs"));
   const viewportsList = pickViewports(viewports);
@@ -247,7 +251,7 @@ async function runRidWindow({
 
   const jobs = buildRidWindows(rids, replicate).map((j) => ({
     ...j,
-    strategy: "builder",
+    strategy: strategyName,
     viewport: viewportsList[(j.rid >> 2) % viewportsList.length],
   }));
 
@@ -425,7 +429,7 @@ async function main() {
     simEnv: {
       SIM_SEED_GAME: "1",
       SIM_STREET_RAT_PROFILE: "1",
-      SIM_POLICY_REVISION: FIXED_POLICY_REVISION,
+      SIM_POLICY_REVISION: args.simPolicyRevision || FIXED_POLICY_REVISION,
       SIM_LINK_OBSERVER: "1",
       ...(baselineMeta.scoringVariant ? { SIM_SCORING_VARIANT: baselineMeta.scoringVariant } : {}),
       ...(args.ruleExperimentArm ? { SIM_RULE_EXPERIMENTS: args.ruleExperimentArm } : {}),
@@ -446,6 +450,7 @@ async function main() {
     viewports: args.viewports,
     rulesRoot,
     ruleExperimentArm: args.ruleExperimentArm,
+    strategyName: args.strategy,
   });
 
   Object.assign(process.env, prevEnv);
