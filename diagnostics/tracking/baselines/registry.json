@@ -10,7 +10,8 @@
       "label": "c36f3b4-pre",
       "rulesCommit": "c36f3b4122fe1c5e8612c8285b6e448501b9e28e",
       "harnessBaselineKey": "c36f3b4-pre",
-      "notes": "pre-98a7ea0 rules; optional r-main instrumented patch in worktree for SIM_SEED_GAME"
+      "harnessPatchFile": "diagnostics/tracking/baselines/c36-sim-telem-ensure.patch",
+      "notes": "pre-98a7ea0 rules; c36-sim-telem-ensure.patch for link-observer telem parity"
     },
     "6f4dc92-main": {
       "label": "6f4dc92-main",

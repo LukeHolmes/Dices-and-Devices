@@ -347,6 +347,9 @@ async function runOneGame(
     traceReplay,
   };
   await prepareSimRunStart(page, seed);
+  await page.waitForFunction(() => typeof window.__GB_SIM_TELEM__?.record === "function", {
+    timeout: 60_000,
+  });
   const useClock = clockModeActive();
   const result = useClock
     ? await runBotEvaluateWithClock(page, evaluatePayload)
@@ -360,15 +363,13 @@ async function runOneGame(
           traceReplay: traceReplayFlag,
         }) => {
           if (linkObsFlag && typeof GutterbonesSimLinkObserver !== "undefined") {
-            window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
-              hands: [],
-              roundEvents: [],
-              shopPolicySteps: [],
-            };
-            window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
-              enabled: true,
-              policyRevision: policyRev,
-            });
+            const telem = window.__GB_SIM_TELEM__;
+            if (telem && typeof telem.record === "function" && !telem.linkObserver) {
+              telem.linkObserver = GutterbonesSimLinkObserver.create({
+                enabled: true,
+                policyRevision: policyRev,
+              });
+            }
           }
           // eslint-disable-next-line no-eval
           const play = eval("(" + botSource + ")");

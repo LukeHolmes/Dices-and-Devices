@@ -30,6 +30,7 @@ const {
   digestRunResult,
   normalizeRunOutcome,
 } = require(path.join(ROOT, "tests/helpers/run-results-csv.cjs"));
+const { buildTelemSidecarLine } = require(path.join(ROOT, "scripts/telem-sidecar.cjs"));
 
 const BASELINES = {
   "c36f3b4-pre": {
@@ -37,6 +38,7 @@ const BASELINES = {
     branch: "",
     rulesCommit: "c36f3b4122fe1c5e8612c8285b6e448501b9e28e",
     ref: "c36f3b4122fe1c5e8612c8285b6e448501b9e28e",
+    harnessPatchFile: "diagnostics/tracking/baselines/c36-sim-telem-ensure.patch",
     patchNote: "pre-98a7ea0 rules; gameplay RNG may fall back to Math.random without per-pin instrumentation",
   },
   "6f4dc92-main": {
@@ -191,6 +193,8 @@ function ensureRulesRoot(baseline, explicitRoot, worktreeAuto) {
   if (!fs.existsSync(wantHtml) || !fs.existsSync(stampPath) || fs.readFileSync(stampPath, "utf8").trim() !== wantStamp) {
     if (fs.existsSync(wtDir)) {
       git(["worktree", "remove", "-f", wtDir]);
+    } else {
+      git(["worktree", "prune"]);
     }
     fs.mkdirSync(path.dirname(wtDir), { recursive: true });
     const branchRef = meta.branch || meta.ref;
@@ -458,33 +462,17 @@ async function main() {
   });
   appendRunRows(csvPath, rows);
 
-  const telemPath = path.join(RUNS_DIR, `${batchId}.telem.jsonl`);
+  const telemPath = path.join(RUNS_DIR, `${batchId}.telem-v2.jsonl`);
   const capDefault = baselineMeta.scoringVariant === "F2_REVERT" ? 2.5 : 3;
-  const telemLines = allResults.map((r) => {
-    const t = r.telem || {};
-    const hands = t.hands || [];
-    const validHands = hands.filter((h) => h.valid);
-    const upperAfter = hands.filter((h) => h.isUpper && h.valid && h.upperBonusActiveBefore);
-    const upperAtCap = upperAfter.filter((h) => Number(h.categoryMult) >= capDefault - 0.01);
-    const round1Cleared = (t.roundEvents || []).some((e) => e.kind === "round_cleared" && e.round === 1);
-    return JSON.stringify({
-      rid: r.rid,
-      seed: r.seed,
-      outcome: r.outcome,
-      max_round: r.maxRound,
-      round1_cleared: round1Cleared,
-      upper_bonus_activation: t.upperBonusActivation || null,
-      upper_at_cap_share: upperAfter.length ? upperAtCap.length / upperAfter.length : null,
-      upper_after_bonus_hands: upperAfter.length,
-      slop_pick_share: validHands.length
-        ? validHands.filter((h) => h.isSlop).length / validHands.length
-        : null,
-      boss_clears: t.bossClears || {},
-      boss_enters: t.bossEnters || {},
-      gamble_choices: (t.gambleChoices || []).length,
-      early_debt_events: (t.earlyDebtEvents || []).length,
-    });
-  });
+  const telemLines = allResults.map((r) =>
+    JSON.stringify(
+      buildTelemSidecarLine(r, {
+        capDefault,
+        harnessCommit: harnessSha,
+        telemVersion: "v2",
+      }),
+    ),
+  );
   if (telemLines.length) {
     fs.appendFileSync(telemPath, `${telemLines.join("\n")}\n`, "utf8");
   }

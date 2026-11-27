@@ -19208,68 +19208,79 @@ if (typeof window !== 'undefined') {
                         ? GutterbonesSimBotPolicy.LEGACY_REVISION
                         : '2026-11-11-phase-b-v1');
                 window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
-                if (
-                    params.get('linkObserver') === '1'
-                    && typeof GutterbonesSimLinkObserver !== 'undefined'
-                    && !window.__GB_SIM_TELEM__?.linkObserver
-                ) {
-                    window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {};
-                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
-                        enabled: true,
-                        policyRevision: simPolicyRev,
-                    });
-                }
-                window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
-                    hands: [],
-                    roundEvents: [],
-                    shopPolicySteps: [],
-                    bossClears: {},
-                    bossEnters: {},
-                    gambleChoices: [],
-                    earlyDebtEvents: [],
-                    upperBonusActivation: null,
-                    record(entry) {
-                        this.hands.push({ ...entry, at: this.hands.length });
-                    },
-                    recordRoundEvent(entry) {
-                        this.roundEvents.push({ ...entry, at: this.roundEvents.length });
-                        if (entry.kind === 'round_play_start' && entry.bossId) {
-                            this.bossEnters[entry.bossId] = (this.bossEnters[entry.bossId] || 0) + 1;
-                        }
-                        if (entry.kind === 'round_cleared' && entry.bossId) {
-                            this.bossClears[entry.bossId] = (this.bossClears[entry.bossId] || 0) + 1;
-                        }
-                    },
-                    recordGambleChoice(entry) {
-                        this.gambleChoices = this.gambleChoices || [];
-                        this.gambleChoices.push({ ...entry, at: this.gambleChoices.length });
-                    },
-                    recordEarlyDebt(entry) {
-                        this.earlyDebtEvents = this.earlyDebtEvents || [];
-                        this.earlyDebtEvents.push({ ...entry, at: this.earlyDebtEvents.length });
-                    },
-                    noteUpperBonusActivation({ round, handIndex, upperHeat }) {
-                        if (this.upperBonusActivation) return;
-                        this.upperBonusActivation = { round, handIndex, upperHeat };
-                    },
-                    recordShopPolicyStep(entry) {
-                        this.shopPolicySteps = this.shopPolicySteps || [];
-                        this.shopPolicySteps.push({
-                            ...entry,
-                            at: this.shopPolicySteps.length,
+                (function gbEnsureSimTelem() {
+                    const t = (window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {});
+                    if (!Array.isArray(t.hands)) t.hands = [];
+                    if (!Array.isArray(t.roundEvents)) t.roundEvents = [];
+                    if (!Array.isArray(t.shopPolicySteps)) t.shopPolicySteps = [];
+                    if (!t.bossClears) t.bossClears = {};
+                    if (!t.bossEnters) t.bossEnters = {};
+                    if (!Array.isArray(t.gambleChoices)) t.gambleChoices = [];
+                    if (!Array.isArray(t.earlyDebtEvents)) t.earlyDebtEvents = [];
+                    if (t.upperBonusActivation === undefined) t.upperBonusActivation = null;
+                    if (typeof t.record !== 'function') {
+                        t.record = function record(entry) {
+                            this.hands.push({ ...entry, at: this.hands.length });
+                        };
+                    }
+                    if (typeof t.recordRoundEvent !== 'function') {
+                        t.recordRoundEvent = function recordRoundEvent(entry) {
+                            this.roundEvents.push({ ...entry, at: this.roundEvents.length });
+                            if (entry.kind === 'round_play_start' && entry.bossId) {
+                                this.bossEnters[entry.bossId] = (this.bossEnters[entry.bossId] || 0) + 1;
+                            }
+                            if (entry.kind === 'round_cleared' && entry.bossId) {
+                                this.bossClears[entry.bossId] = (this.bossClears[entry.bossId] || 0) + 1;
+                            }
+                        };
+                    }
+                    if (typeof t.recordGambleChoice !== 'function') {
+                        t.recordGambleChoice = function recordGambleChoice(entry) {
+                            this.gambleChoices.push({ ...entry, at: this.gambleChoices.length });
+                        };
+                    }
+                    if (typeof t.recordEarlyDebt !== 'function') {
+                        t.recordEarlyDebt = function recordEarlyDebt(entry) {
+                            this.earlyDebtEvents.push({ ...entry, at: this.earlyDebtEvents.length });
+                        };
+                    }
+                    if (typeof t.noteUpperBonusActivation !== 'function') {
+                        t.noteUpperBonusActivation = function noteUpperBonusActivation({ round, handIndex, upperHeat }) {
+                            if (this.upperBonusActivation) return;
+                            this.upperBonusActivation = { round, handIndex, upperHeat };
+                        };
+                    }
+                    if (typeof t.recordShopPolicyStep !== 'function') {
+                        t.recordShopPolicyStep = function recordShopPolicyStep(entry) {
+                            this.shopPolicySteps.push({
+                                ...entry,
+                                at: this.shopPolicySteps.length,
+                            });
+                        };
+                    }
+                    if (typeof t.reset !== 'function') {
+                        t.reset = function reset() {
+                            this.hands.length = 0;
+                            this.roundEvents.length = 0;
+                            this.shopPolicySteps = [];
+                            this.bossClears = {};
+                            this.bossEnters = {};
+                            this.gambleChoices = [];
+                            this.earlyDebtEvents = [];
+                            this.upperBonusActivation = null;
+                        };
+                    }
+                    if (
+                        params.get('linkObserver') === '1'
+                        && typeof GutterbonesSimLinkObserver !== 'undefined'
+                        && !t.linkObserver
+                    ) {
+                        t.linkObserver = GutterbonesSimLinkObserver.create({
+                            enabled: true,
+                            policyRevision: simPolicyRev,
                         });
-                    },
-                    reset() {
-                        this.hands.length = 0;
-                        this.roundEvents.length = 0;
-                        this.shopPolicySteps = [];
-                        this.bossClears = {};
-                        this.bossEnters = {};
-                        this.gambleChoices = [];
-                        this.earlyDebtEvents = [];
-                        this.upperBonusActivation = null;
-                    },
-                };
+                    }
+                })();
                 if (!window.__GB_E2E__) window.__GB_E2E__ = {};
                 Object.assign(window.__GB_E2E__, {
                     resumeSavedRun: () => {
