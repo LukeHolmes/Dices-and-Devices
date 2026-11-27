@@ -1,0 +1,14 @@
+{
+  "id": "DEF-M-006",
+  "kind": "measurement",
+  "title": "Budget exhaustion mislabeled as BUST (forceForfeit after max steps)",
+  "status": "fixed",
+  "evidence": [
+    "Job pt-20261119-mwnekq7o4zc (laptop): R78-i @580ac14, seeds 0–31676, steps=12000, max_round=1, outcome=BUST",
+    "Gate CSVs REPRO-DEFM005-20261119-instrumented-v4/v4c: ~45% R78-i rows steps=budget, max_round=1, outcome=BUST"
+  ],
+  "root_cause": "tests/sim/in-page-bot.js called forceForfeitRun after maxSteps and mapped RAP_SHEET to outcome BUST",
+  "fix_harness_commit": "pending-this-commit",
+  "gameplay_defect": false,
+  "notes": "Stall at round 1 under Street Rat builder policy is a separate harness/policy investigation; budget rows are not comparable busts."
+}

@@ -1,0 +1,8 @@
+{
+  "id": "DEF-M-002",
+  "title": "Holdout rids 55-59 not guarded in tests/sim/run.cjs",
+  "kind": "measurement",
+  "status": "mitigated",
+  "repro_command": "npm run sim:nightly",
+  "notes": "diagnostics-batch.cjs enforces holdout guard; main nightly unchanged per scope."
+}

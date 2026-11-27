@@ -1,0 +1,47 @@
+# Manual-dispatch only: sharded large batches (not enabled for push/schedule).
+name: Diagnostics sim shard (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: R-main or R78
+        required: true
+        default: R-main
+      rid_start:
+        description: First rid (inclusive)
+        required: true
+        default: "0"
+      rid_count:
+        description: Number of contiguous rids
+        required: true
+        default: "50"
+      max_steps:
+        description: Step budget
+        required: true
+        default: "12000"
+
+jobs:
+  sim_shard:
+    if: false # Draft scaffold — enable only after Luke approves D9
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+      - name: Run diagnostics batch shard
+        env:
+          SIM_SEED_GAME: "1"
+          SIM_STREET_RAT_PROFILE: "1"
+          SIM_POLICY_REVISION: "2026-11-11-phase-b-v1"
+          SIM_LINK_OBSERVER: "1"
+          WP2_RID_OFFSET: ${{ inputs.rid_start }}
+        run: |
+          node scripts/diagnostics-batch.cjs \
+            --baseline=${{ inputs.baseline }} \
+            --rids=${{ inputs.rid_start }}-$((${{ inputs.rid_start }} + ${{ inputs.rid_count }} - 1)) \
+            --max-steps=${{ inputs.max_steps }} \
+            --parallel=4

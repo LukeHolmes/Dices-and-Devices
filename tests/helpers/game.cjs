@@ -122,6 +122,7 @@ function createGame(snapshot = {}, options = {}) {
     performance: { now: () => Date.now() },
     console: { warn: (...args) => warnings.push(args), log: noOp },
     window: {
+      __GB_SIM_SCORING_VARIANT__: options.scoringVariant || "",
       localStorage: {
         getItem: (key) => storage.get(key) ?? null,
         setItem: (key, value) => {

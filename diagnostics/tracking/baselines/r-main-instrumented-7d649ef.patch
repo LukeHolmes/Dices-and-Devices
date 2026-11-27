@@ -1,0 +1,209 @@
+diff --git a/index.html b/index.html
+index 9c349a7..6684bbc 100644
+--- a/index.html
++++ b/index.html
+@@ -5950,8 +5950,11 @@ const GutterbonesStory = (() => {
+         };
+     };
+ 
+-    const pickRandomArcId = (random = Math.random()) => {
+-        const r = Math.max(0, Math.min(0.999999, Number(random) || 0));
++    const pickRandomArcId = (random) => {
++        const roll = random !== undefined && random !== null
++            ? random
++            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
++        const r = Math.max(0, Math.min(0.999999, Number(roll) || 0));
+         return ARC_IDS[Math.floor(r * ARC_IDS.length)] || DEFAULT_ARC_ID;
+     };
+ 
+@@ -6515,11 +6518,14 @@ const GutterbonesGamble = (() => {
+         return Math.min(0.95, Math.max(0.05, p));
+     };
+ 
+-    const resolveFlip = ({ tierId = 'FAIR', flowStreak = 0, gold = 0, random = Math.random() }) => {
++    const resolveFlip = ({ tierId = 'FAIR', flowStreak = 0, gold = 0, random } = {}) => {
++        const roll = random !== undefined && random !== null
++            ? random
++            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+         const tier = tierById(tierId);
+         const stake = stakeForTier(gold, tier.id);
+         const pWin = winProbability(tier.id, flowStreak);
+-        const won = random < pWin;
++        const won = roll < pWin;
+         const winAmount = won ? Math.max(1, Math.round(stake * tier.winMult)) : 0;
+         const lossAmount = won ? 0 : Math.max(1, Math.round(stake * tier.lossMult));
+         return {
+@@ -6537,9 +6543,12 @@ const GutterbonesGamble = (() => {
+ 
+     const formatWinPercent = (p) => `${Math.round(p * 100)}%`;
+ 
+-    const resolveBlueprintFlip = ({ flowStreak = 0, gold = 0, random = Math.random(), pickBlueprintId }) => {
+-        const outcome = resolveFlip({ tierId: 'FAIR', flowStreak, gold, random });
+-        const blueprintId = outcome.won && typeof pickBlueprintId === 'function' ? pickBlueprintId(random) : null;
++    const resolveBlueprintFlip = ({ flowStreak = 0, gold = 0, random, pickBlueprintId } = {}) => {
++        const roll = random !== undefined && random !== null
++            ? random
++            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
++        const outcome = resolveFlip({ tierId: 'FAIR', flowStreak, gold, random: roll });
++        const blueprintId = outcome.won && typeof pickBlueprintId === 'function' ? pickBlueprintId(roll) : null;
+         return { ...outcome, blueprintId };
+     };
+ 
+@@ -7136,6 +7145,11 @@ const GutterbonesHardening = (() => {
+     });
+ })();
+ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHardening;
++if (typeof window !== 'undefined') {
++    window.gbSimGameplayRandom = () => (
++        typeof window.__GB_SIM_GAME_RANDOM__ === 'function' ? window.__GB_SIM_GAME_RANDOM__() : Math.random()
++    );
++}
+ </script>
+ 
+ <script type="text/babel">
+@@ -7245,9 +7259,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+         FLOW_SAVE_ONCE: { id: 'FLOW_SAVE_ONCE', name: 'Flow Save', desc: 'First whiff each round does not reset FLOW.' }
+     });
+ 
+-    const pickRandomBlueprintId = (random = Math.random()) => {
++    const pickRandomBlueprintId = (random) => {
++        const roll = random !== undefined && random !== null
++            ? random
++            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+         const ids = Object.keys(BLUEPRINT_CATALOG);
+-        return ids[Math.floor(Math.max(0, Math.min(0.999999, random)) * ids.length)] || ids[0];
++        return ids[Math.floor(Math.max(0, Math.min(0.999999, roll)) * ids.length)] || ids[0];
+     };
+ 
+     const PROGRAMS = [
+@@ -11781,6 +11798,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+         const [lineupToast, setLineupToast] = useState(null);
+         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
+         const runRandomRef = useRef(() => Math.random());
++        const simSeededGameplay = () =>
++            dailyRunActive || (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function');
++        const gameplayRandom = () => (simSeededGameplay() ? runRandomRef.current() : Math.random());
+         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
+         const sacrificePlayPenaltyRef = useRef(0);
+         const sacrificeBonusRef = useRef(0);
+@@ -14010,7 +14030,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 runRandomRef.current = cfg.rng;
+             } else if (GutterbonesReplay?.personaStartModifiers?.(p.id)?.length) {
+                 setRunModifierIds(GutterbonesReplay.personaStartModifiers(p.id));
+-                runRandomRef.current = () => Math.random();
++                runRandomRef.current = typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
++                    ? window.__GB_SIM_GAME_RANDOM__
++                    : () => Math.random();
++            } else if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') {
++                setRunModifierIds([]);
++                runRandomRef.current = window.__GB_SIM_GAME_RANDOM__;
+             } else {
+                 setRunModifierIds([]);
+                 runRandomRef.current = () => Math.random();
+@@ -14019,7 +14044,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setTutorialStepIndex(0);
+             tutorialPayoutCountRef.current = 0;
+             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
+-            const arcPickRng = daily ? runRandomRef.current() : Math.random();
++            const arcPickRng = (daily || typeof window.__GB_SIM_GAME_RANDOM__ === 'function')
++                ? runRandomRef.current()
++                : Math.random();
+             const runArcId = tutorial
+                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
+                 : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
+@@ -14394,7 +14421,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 return;
+             }
+             const junkieBoss = activeBoss?.id === 'JUNKIE';
+-            const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
++            const runRandomFn = () => gameplayRandom();
+             const e2eFastDice = typeof window !== 'undefined'
+                 && typeof window.__GB_E2E_QUERY__ === 'function'
+                 && window.__GB_E2E_QUERY__();
+@@ -14501,7 +14528,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                     const next = [...prev];
+                     const die = next[idx];
+                     if (!die) return prev;
+-                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
++                    const face = die.faces[Math.floor(gameplayRandom() * die.faces.length)];
+                     const isStandard = face.type === 'standard';
+                     const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
+                     let value = isStandard
+@@ -14515,7 +14542,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                         faceLabel: isStandard ? null : face.label,
+                         faceStyle: isStandard ? null : face.style,
+                         type: isStandard ? 'standard' : face.type,
+-                        id: Math.random()
++                        id: gameplayRandom()
+                     };
+                     return next;
+                 });
+@@ -14601,7 +14628,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setStash(grant);
+             const slot = tutorialActiveRef.current && GutterbonesTutorial
+                 ? GutterbonesTutorial.TUNING.openingSniffSlot
+-                : Math.floor(Math.random() * 5);
++                : Math.floor(gameplayRandom() * 5);
+             rerollBoneSlot(slot, { consumePill: false, silent: true });
+             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
+             spawnPaperStamp('FREE SNIFF', '#0f766e');
+@@ -15223,7 +15250,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             const outcome = GutterbonesGamble.resolveBlueprintFlip({
+                 flowStreak,
+                 gold,
+-                random: Math.random(),
++                random: gameplayRandom(),
+                 pickBlueprintId: () => pickRandomBlueprintId()
+             });
+             if (balanceObserverActive()) {
+@@ -15272,7 +15299,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                     tierId,
+                     flowStreak,
+                     gold,
+-                    random: Math.random()
++                    random: gameplayRandom()
+                 });
+                 if (balanceObserverActive()) {
+                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
+@@ -15427,7 +15454,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             setStash(s => s - p.cost);
+             if (p.id === 'SNIFF') {
+                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
+-                rerollBoneSlot(free[Math.floor(Math.random() * free.length)], { consumePill: false, silent: true });
++                rerollBoneSlot(free[Math.floor(gameplayRandom() * free.length)], { consumePill: false, silent: true });
+             }
+             if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
+             if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
+@@ -15504,7 +15531,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             if (!preservePaths) setSelectedShopPathId(null);
+             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
+             setActiveShopTag(offerTag);
+-            const rng = dailyRunActive ? runRandomRef.current : Math.random;
++            const rng = simSeededGameplay() ? runRandomRef.current : Math.random;
+             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
+             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
+             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
+@@ -15557,10 +15584,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                 weight += kitPityWeight(item);
+                 return weight;
+             };
++            const weightedSortJitter = (item, extraWeightFn) =>
++                baseWeight(item) + extraWeightFn(item) + (rng() * 0.35);
+             const weightedSort = (items, extraWeight = () => 0) => items
+-                .map(item => ({ item, weight: baseWeight(item) + extraWeight(item) + (rng() * 0.35) }))
++                .map((item) => ({ item, weight: weightedSortJitter(item, extraWeight) }))
+                 .sort((a, b) => b.weight - a.weight)
+-                .map(entry => entry.item);
++                .map((entry) => entry.item);
+ 
+             const facePool = weightedSort(faces);
+             const hardwarePool = weightedSort(hardware);
+@@ -16342,7 +16371,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
+             if (path.grantRandomConsumable) {
+                 const pool = Object.values(CONSUMABLES);
+-                const drop = pool[Math.floor(Math.random() * pool.length)];
++                const drop = pool[Math.floor(gameplayRandom() * pool.length)];
+                 if (drop) {
+                     setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
+                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);

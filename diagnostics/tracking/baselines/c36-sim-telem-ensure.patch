@@ -1,0 +1,95 @@
+diff --git a/index.html b/index.html
+index 51a835c..f96931e 100644
+--- a/index.html
++++ b/index.html
+@@ -19127,40 +19127,57 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
+                         ? GutterbonesSimBotPolicy.LEGACY_REVISION
+                         : '2026-11-11-phase-b-v1');
+                 window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
+-                if (
+-                    params.get('linkObserver') === '1'
+-                    && typeof GutterbonesSimLinkObserver !== 'undefined'
+-                    && !window.__GB_SIM_TELEM__?.linkObserver
+-                ) {
+-                    window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {};
+-                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
+-                        enabled: true,
+-                        policyRevision: simPolicyRev,
+-                    });
+-                }
+-                window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
+-                    hands: [],
+-                    roundEvents: [],
+-                    shopPolicySteps: [],
+-                    record(entry) {
+-                        this.hands.push({ ...entry, at: this.hands.length });
+-                    },
+-                    recordRoundEvent(entry) {
+-                        this.roundEvents.push({ ...entry, at: this.roundEvents.length });
+-                    },
+-                    recordShopPolicyStep(entry) {
+-                        this.shopPolicySteps = this.shopPolicySteps || [];
+-                        this.shopPolicySteps.push({
+-                            ...entry,
+-                            at: this.shopPolicySteps.length,
++                (function gbEnsureSimTelem() {
++                    const t = (window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {});
++                    if (!Array.isArray(t.hands)) t.hands = [];
++                    if (!Array.isArray(t.roundEvents)) t.roundEvents = [];
++                    if (!Array.isArray(t.shopPolicySteps)) t.shopPolicySteps = [];
++                    if (!t.bossClears) t.bossClears = {};
++                    if (!t.bossEnters) t.bossEnters = {};
++                    if (typeof t.record !== 'function') {
++                        t.record = function record(entry) {
++                            this.hands.push({ ...entry, at: this.hands.length });
++                        };
++                    }
++                    if (typeof t.recordRoundEvent !== 'function') {
++                        t.recordRoundEvent = function recordRoundEvent(entry) {
++                            this.roundEvents.push({ ...entry, at: this.roundEvents.length });
++                            if (entry.kind === 'round_play_start' && entry.bossId) {
++                                this.bossEnters[entry.bossId] = (this.bossEnters[entry.bossId] || 0) + 1;
++                            }
++                            if (entry.kind === 'round_cleared' && entry.bossId) {
++                                this.bossClears[entry.bossId] = (this.bossClears[entry.bossId] || 0) + 1;
++                            }
++                        };
++                    }
++                    if (typeof t.recordShopPolicyStep !== 'function') {
++                        t.recordShopPolicyStep = function recordShopPolicyStep(entry) {
++                            this.shopPolicySteps.push({
++                                ...entry,
++                                at: this.shopPolicySteps.length,
++                            });
++                        };
++                    }
++                    if (typeof t.reset !== 'function') {
++                        t.reset = function reset() {
++                            this.hands.length = 0;
++                            this.roundEvents.length = 0;
++                            this.shopPolicySteps = [];
++                            this.bossClears = {};
++                            this.bossEnters = {};
++                        };
++                    }
++                    if (
++                        params.get('linkObserver') === '1'
++                        && typeof GutterbonesSimLinkObserver !== 'undefined'
++                        && !t.linkObserver
++                    ) {
++                        t.linkObserver = GutterbonesSimLinkObserver.create({
++                            enabled: true,
++                            policyRevision: simPolicyRev,
+                         });
+-                    },
+-                    reset() {
+-                        this.hands.length = 0;
+-                        this.roundEvents.length = 0;
+-                        this.shopPolicySteps = [];
+-                    },
+-                };
++                    }
++                })();
+                 if (!window.__GB_E2E__) window.__GB_E2E__ = {};
+                 Object.assign(window.__GB_E2E__, {
+                     resumeSavedRun: () => {

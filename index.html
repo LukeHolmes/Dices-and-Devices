@@ -7662,18 +7662,23 @@ const GutterbonesRules = (() => {
         if (['FOURS', 'FIVES', 'SIXES'].includes(catId)) mult *= 2.2;
         const runUpperHeat = Math.max(0, Number(context.runUpperHeat) || 0);
         const upperBonusActive = runUpperHeat >= 63;
+        const simF2Revert = typeof window !== 'undefined' && window.__GB_SIM_SCORING_VARIANT__ === 'F2_REVERT';
+        const upperBonusAdd = simF2Revert ? 0.5 : 1;
+        const upperMultCap = simF2Revert ? 2.5 : 3;
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult += 1;
+            mult += upperBonusAdd;
         }
         if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            mult = Math.min(mult, 3);
+            mult = Math.min(mult, upperMultCap);
         }
         const categoryBaseChips = chips;
         pushStep('base', `${categoryName.toUpperCase()} BASE`, `${chips} chips`, chips);
         const categoryMult = mult;
         pushStep('multiplier', 'CATEGORY MULT', `x${mult.toFixed(2)}`, `x${mult.toFixed(2)}`);
         if (upperBonusActive && ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId)) {
-            pushStep('multiplier', 'UPPER BONUS', '+1x (upper section ≥63)', '+1x');
+            const bonusLabel = simF2Revert ? '+0.5x (upper section ≥63)' : '+1x (upper section ≥63)';
+            const bonusStep = simF2Revert ? '+0.5x' : '+1x';
+            pushStep('multiplier', 'UPPER BONUS', bonusLabel, bonusStep);
         }
         const markBonus = Math.max(0, Math.floor(Number(synergyState?.categoryMarks?.[catId]) || 0));
         if (markBonus > 0) {
@@ -8489,8 +8494,11 @@ const GutterbonesStory = (() => {
         };
     };
 
-    const pickRandomArcId = (random = Math.random()) => {
-        const r = Math.max(0, Math.min(0.999999, Number(random) || 0));
+    const pickRandomArcId = (random) => {
+        const roll = random !== undefined && random !== null
+            ? random
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+        const r = Math.max(0, Math.min(0.999999, Number(roll) || 0));
         return ARC_IDS[Math.floor(r * ARC_IDS.length)] || DEFAULT_ARC_ID;
     };
 
@@ -9054,11 +9062,14 @@ const GutterbonesGamble = (() => {
         return Math.min(0.95, Math.max(0.05, p));
     };
 
-    const resolveFlip = ({ tierId = 'FAIR', flowStreak = 0, gold = 0, random = Math.random() }) => {
+    const resolveFlip = ({ tierId = 'FAIR', flowStreak = 0, gold = 0, random } = {}) => {
+        const roll = random !== undefined && random !== null
+            ? random
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
         const tier = tierById(tierId);
         const stake = stakeForTier(gold, tier.id);
         const pWin = winProbability(tier.id, flowStreak);
-        const won = random < pWin;
+        const won = roll < pWin;
         const winAmount = won ? Math.max(1, Math.round(stake * tier.winMult)) : 0;
         const lossAmount = won ? 0 : Math.max(1, Math.round(stake * tier.lossMult));
         return {
@@ -9076,9 +9087,12 @@ const GutterbonesGamble = (() => {
 
     const formatWinPercent = (p) => `${Math.round(p * 100)}%`;
 
-    const resolveBlueprintFlip = ({ flowStreak = 0, gold = 0, random = Math.random(), pickBlueprintId }) => {
-        const outcome = resolveFlip({ tierId: 'FAIR', flowStreak, gold, random });
-        const blueprintId = outcome.won && typeof pickBlueprintId === 'function' ? pickBlueprintId(random) : null;
+    const resolveBlueprintFlip = ({ flowStreak = 0, gold = 0, random, pickBlueprintId } = {}) => {
+        const roll = random !== undefined && random !== null
+            ? random
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
+        const outcome = resolveFlip({ tierId: 'FAIR', flowStreak, gold, random: roll });
+        const blueprintId = outcome.won && typeof pickBlueprintId === 'function' ? pickBlueprintId(roll) : null;
         return { ...outcome, blueprintId };
     };
 
@@ -9675,6 +9689,11 @@ const GutterbonesHardening = (() => {
     });
 })();
 if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHardening;
+if (typeof window !== 'undefined') {
+    window.gbSimGameplayRandom = () => (
+        typeof window.__GB_SIM_GAME_RANDOM__ === 'function' ? window.__GB_SIM_GAME_RANDOM__() : Math.random()
+    );
+}
 </script>
 
 <script type="text/babel">
@@ -9784,9 +9803,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         FLOW_SAVE_ONCE: { id: 'FLOW_SAVE_ONCE', name: 'Flow Save', desc: 'First whiff each round does not reset FLOW.' }
     });
 
-    const pickRandomBlueprintId = (random = Math.random()) => {
+    const pickRandomBlueprintId = (random) => {
+        const roll = random !== undefined && random !== null
+            ? random
+            : (typeof window !== 'undefined' && window.gbSimGameplayRandom ? window.gbSimGameplayRandom() : Math.random());
         const ids = Object.keys(BLUEPRINT_CATALOG);
-        return ids[Math.floor(Math.max(0, Math.min(0.999999, random)) * ids.length)] || ids[0];
+        return ids[Math.floor(Math.max(0, Math.min(0.999999, roll)) * ids.length)] || ids[0];
     };
 
     const PROGRAMS = [
@@ -14555,6 +14577,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const [lineupToast, setLineupToast] = useState(null);
         const [showRecordsPanel, setShowRecordsPanel] = useState(false);
         const runRandomRef = useRef(() => Math.random());
+        const simSeededGameplay = () =>
+            dailyRunActive || (typeof window !== 'undefined' && typeof window.__GB_SIM_GAME_RANDOM__ === 'function');
+        const gameplayRandom = () => (simSeededGameplay() ? runRandomRef.current() : Math.random());
         const modifierFlagsRef = useRef({ sacrificeUsed: false, shopInterestRound: null });
         const sacrificePlayPenaltyRef = useRef(0);
         const sacrificeBonusRef = useRef(0);
@@ -16481,6 +16506,14 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
         const registerDebtSpike = (shortage, source = 'shortage') => {
             const debtSpike = Math.max(1, Math.ceil(shortage * ECONOMY_TUNING.shortageToDebtRatio));
             setDebt(d => d + debtSpike);
+            if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordEarlyDebt && round >= 1 && round <= 3) {
+                window.__GB_SIM_TELEM__.recordEarlyDebt({
+                    round,
+                    source,
+                    debtSpike,
+                    shortage,
+                });
+            }
             const sourceLabel = source.toUpperCase();
             spawnHitCallout(`+DEBT (${sourceLabel})`);
             cascadeTriggers([{ name: 'DEBT', value: `+${debtSpike} ${sourceLabel}` }]);
@@ -16809,7 +16842,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 runRandomRef.current = cfg.rng;
             } else if (GutterbonesReplay?.personaStartModifiers?.(p.id)?.length) {
                 setRunModifierIds(GutterbonesReplay.personaStartModifiers(p.id));
-                runRandomRef.current = () => Math.random();
+                runRandomRef.current = typeof window.__GB_SIM_GAME_RANDOM__ === 'function'
+                    ? window.__GB_SIM_GAME_RANDOM__
+                    : () => Math.random();
+            } else if (typeof window.__GB_SIM_GAME_RANDOM__ === 'function') {
+                setRunModifierIds([]);
+                runRandomRef.current = window.__GB_SIM_GAME_RANDOM__;
             } else {
                 setRunModifierIds([]);
                 runRandomRef.current = () => Math.random();
@@ -16818,7 +16856,9 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setTutorialStepIndex(0);
             tutorialPayoutCountRef.current = 0;
             if (tutorial && GutterbonesTutorial) GutterbonesTutorial.resetRollCounter();
-            const arcPickRng = daily ? runRandomRef.current() : Math.random();
+            const arcPickRng = (daily || typeof window.__GB_SIM_GAME_RANDOM__ === 'function')
+                ? runRandomRef.current()
+                : Math.random();
             const runArcId = tutorial
                 ? (GutterbonesStory?.DEFAULT_ARC_ID || 'witness')
                 : (GutterbonesStory?.pickRandomArcId?.(arcPickRng) || GutterbonesStory?.DEFAULT_ARC_ID || 'witness');
@@ -17174,7 +17214,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 return;
             }
             const junkieBoss = activeBoss?.id === 'JUNKIE';
-            const runRandomFn = () => (dailyRunActive ? runRandomRef.current() : Math.random());
+            const runRandomFn = () => gameplayRandom();
             const e2eFastDice = typeof window !== 'undefined'
                 && typeof window.__GB_E2E_QUERY__ === 'function'
                 && window.__GB_E2E_QUERY__();
@@ -17281,7 +17321,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     const next = [...prev];
                     const die = next[idx];
                     if (!die) return prev;
-                    const face = die.faces[Math.floor(Math.random() * die.faces.length)];
+                    const face = die.faces[Math.floor(gameplayRandom() * die.faces.length)];
                     const isStandard = face.type === 'standard';
                     const RE = typeof GutterbonesRuleExperiments !== 'undefined' ? GutterbonesRuleExperiments : null;
                     let value = isStandard
@@ -17295,7 +17335,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         faceLabel: isStandard ? null : face.label,
                         faceStyle: isStandard ? null : face.style,
                         type: isStandard ? 'standard' : face.type,
-                        id: Math.random()
+                        id: gameplayRandom()
                     };
                     return next;
                 });
@@ -17381,7 +17421,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setStash(grant);
             const slot = tutorialActiveRef.current && GutterbonesTutorial
                 ? GutterbonesTutorial.TUNING.openingSniffSlot
-                : Math.floor(Math.random() * 5);
+                : Math.floor(gameplayRandom() * 5);
             rerollBoneSlot(slot, { consumePill: false, silent: true });
             setOpeningSniffBanner(`FREE OPENING SNIFF — rerolled bone ${slot + 1}. Stash at 25% for programs (does not spend Pills).`);
             spawnPaperStamp('FREE SNIFF', '#0f766e');
@@ -17590,9 +17630,28 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 });
             }
             if (typeof window !== "undefined" && window.__GB_SIM_TELEM__?.record) {
+                const priorUpper = runStats.upperHeat || 0;
+                const isUpper = ['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(catId);
+                const nextUpper = isUpper ? priorUpper + (result.total || 0) : priorUpper;
+                if (priorUpper < 63 && nextUpper >= 63) {
+                    window.__GB_SIM_TELEM__.noteUpperBonusActivation?.({
+                        round,
+                        handIndex: window.__GB_SIM_TELEM__.hands.length,
+                        upperHeat: nextUpper,
+                    });
+                }
                 window.__GB_SIM_TELEM__.record({
+                    categoryId: catId,
+                    round,
                     total: result.total || 0,
+                    heat: result.total || 0,
+                    categoryMult: result.mult != null ? result.mult : null,
                     valid: !!result.valid,
+                    isSlop: catId === 'C',
+                    isUpper,
+                    upperHeatBefore: priorUpper,
+                    upperHeatAfter: nextUpper,
+                    upperBonusActiveBefore: priorUpper >= 63,
                     chainDepth: result.chainDepth != null ? result.chainDepth : null,
                     chainLinks: result.chainLinks || [],
                     synergyChainIds: (result.synergyEvents || []).map((e) => e.chainId).filter(Boolean),
@@ -18086,7 +18145,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             const outcome = GutterbonesGamble.resolveBlueprintFlip({
                 flowStreak,
                 gold,
-                random: Math.random(),
+                random: gameplayRandom(),
                 pickBlueprintId: () => pickRandomBlueprintId()
             });
             if (balanceObserverActive()) {
@@ -18135,8 +18194,18 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     tierId,
                     flowStreak,
                     gold,
-                    random: Math.random()
+                    random: gameplayRandom()
                 });
+                if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordGambleChoice) {
+                    window.__GB_SIM_TELEM__.recordGambleChoice({
+                        round,
+                        tierId,
+                        doubleDown: true,
+                        won: !!outcome.won,
+                        stake: outcome.stake,
+                        goldDelta: outcome.won ? outcome.winAmount : -outcome.lossAmount,
+                    });
+                }
                 if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'gamble',
@@ -18162,6 +18231,16 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                     AudioSystem.playTone(120, 'sawtooth', 0.18);
                 }
             } else {
+                if (typeof window !== 'undefined' && window.__GB_SIM_TELEM__?.recordGambleChoice) {
+                    window.__GB_SIM_TELEM__.recordGambleChoice({
+                        round,
+                        tierId: 'SAFE',
+                        doubleDown: false,
+                        won: null,
+                        stake: 0,
+                        goldDelta: 0,
+                    });
+                }
                 if (balanceObserverActive()) {
                     window.GutterbonesBalanceObserver.notify((obs) => obs.recordAction({
                         kind: 'gamble',
@@ -18290,7 +18369,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             setStash(s => s - p.cost);
             if (p.id === 'SNIFF') {
                 const free = dice.map((_, i) => i).filter(i => !kept[i]);
-                rerollBoneSlot(free[Math.floor(Math.random() * free.length)], { consumePill: false, silent: true });
+                rerollBoneSlot(free[Math.floor(gameplayRandom() * free.length)], { consumePill: false, silent: true });
             }
             if (p.id === 'BRIBE') setTarget(t => Math.max(25, Math.floor(t * .85)));
             if (p.id === 'FIX') setDice(prev => prev.map((d,i) => i === 0 || d.faceId ? d : { ...d, value: prev[0].value }));
@@ -18367,7 +18446,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (!preservePaths) setSelectedShopPathId(null);
             const offerTag = nextShopTagRef.current || nextShopTag || 'balanced';
             setActiveShopTag(offerTag);
-            const rng = dailyRunActive ? runRandomRef.current : Math.random;
+            const rng = simSeededGameplay() ? runRandomRef.current : Math.random;
             const faces = Object.values(FACE_DATABASE).filter(face => meta.unlockedFaceIds.includes(face.id) && isShopFaceAvailable(face, meta));
             const hardware = Object.values(DEVISES).filter(d => meta.unlockedHardwareIds.includes(d.id) && !inventory.some(i => i.id === d.id));
             const consumablePoolSeed = Object.values(CONSUMABLES).filter(
@@ -18420,10 +18499,12 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                 weight += kitPityWeight(item);
                 return weight;
             };
+            const weightedSortJitter = (item, extraWeightFn) =>
+                baseWeight(item) + extraWeightFn(item) + (rng() * 0.35);
             const weightedSort = (items, extraWeight = () => 0) => items
-                .map(item => ({ item, weight: baseWeight(item) + extraWeight(item) + (rng() * 0.35) }))
+                .map((item) => ({ item, weight: weightedSortJitter(item, extraWeight) }))
                 .sort((a, b) => b.weight - a.weight)
-                .map(entry => entry.item);
+                .map((entry) => entry.item);
 
             const facePool = weightedSort(faces);
             const hardwarePool = weightedSort(hardware);
@@ -19218,7 +19299,7 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
             if (path.fillStash && path.boss?.id !== 'INFORMANT') setStash(100);
             if (path.grantRandomConsumable) {
                 const pool = Object.values(CONSUMABLES);
-                const drop = pool[Math.floor(Math.random() * pool.length)];
+                const drop = pool[Math.floor(gameplayRandom() * pool.length)];
                 if (drop) {
                     setConsumables(prev => [...prev, { ...drop, instanceId: Math.random() }]);
                     setFixerLine(`Smuggle bonus pocketed: ${drop.name}.`);
@@ -19397,40 +19478,79 @@ if (typeof window !== 'undefined') window.GutterbonesHardening = GutterbonesHard
                         ? GutterbonesSimBotPolicy.LEGACY_REVISION
                         : '2026-11-11-phase-b-v1');
                 window.__GB_SIM_POLICY__ = Object.freeze({ revision: simPolicyRev });
-                if (
-                    params.get('linkObserver') === '1'
-                    && typeof GutterbonesSimLinkObserver !== 'undefined'
-                    && !window.__GB_SIM_TELEM__?.linkObserver
-                ) {
-                    window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {};
-                    window.__GB_SIM_TELEM__.linkObserver = GutterbonesSimLinkObserver.create({
-                        enabled: true,
-                        policyRevision: simPolicyRev,
-                    });
-                }
-                window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {
-                    hands: [],
-                    roundEvents: [],
-                    shopPolicySteps: [],
-                    record(entry) {
-                        this.hands.push({ ...entry, at: this.hands.length });
-                    },
-                    recordRoundEvent(entry) {
-                        this.roundEvents.push({ ...entry, at: this.roundEvents.length });
-                    },
-                    recordShopPolicyStep(entry) {
-                        this.shopPolicySteps = this.shopPolicySteps || [];
-                        this.shopPolicySteps.push({
-                            ...entry,
-                            at: this.shopPolicySteps.length,
+                (function gbEnsureSimTelem() {
+                    const t = (window.__GB_SIM_TELEM__ = window.__GB_SIM_TELEM__ || {});
+                    if (!Array.isArray(t.hands)) t.hands = [];
+                    if (!Array.isArray(t.roundEvents)) t.roundEvents = [];
+                    if (!Array.isArray(t.shopPolicySteps)) t.shopPolicySteps = [];
+                    if (!t.bossClears) t.bossClears = {};
+                    if (!t.bossEnters) t.bossEnters = {};
+                    if (!Array.isArray(t.gambleChoices)) t.gambleChoices = [];
+                    if (!Array.isArray(t.earlyDebtEvents)) t.earlyDebtEvents = [];
+                    if (t.upperBonusActivation === undefined) t.upperBonusActivation = null;
+                    if (typeof t.record !== 'function') {
+                        t.record = function record(entry) {
+                            this.hands.push({ ...entry, at: this.hands.length });
+                        };
+                    }
+                    if (typeof t.recordRoundEvent !== 'function') {
+                        t.recordRoundEvent = function recordRoundEvent(entry) {
+                            this.roundEvents.push({ ...entry, at: this.roundEvents.length });
+                            if (entry.kind === 'round_play_start' && entry.bossId) {
+                                this.bossEnters[entry.bossId] = (this.bossEnters[entry.bossId] || 0) + 1;
+                            }
+                            if (entry.kind === 'round_cleared' && entry.bossId) {
+                                this.bossClears[entry.bossId] = (this.bossClears[entry.bossId] || 0) + 1;
+                            }
+                        };
+                    }
+                    if (typeof t.recordGambleChoice !== 'function') {
+                        t.recordGambleChoice = function recordGambleChoice(entry) {
+                            this.gambleChoices.push({ ...entry, at: this.gambleChoices.length });
+                        };
+                    }
+                    if (typeof t.recordEarlyDebt !== 'function') {
+                        t.recordEarlyDebt = function recordEarlyDebt(entry) {
+                            this.earlyDebtEvents.push({ ...entry, at: this.earlyDebtEvents.length });
+                        };
+                    }
+                    if (typeof t.noteUpperBonusActivation !== 'function') {
+                        t.noteUpperBonusActivation = function noteUpperBonusActivation({ round, handIndex, upperHeat }) {
+                            if (this.upperBonusActivation) return;
+                            this.upperBonusActivation = { round, handIndex, upperHeat };
+                        };
+                    }
+                    if (typeof t.recordShopPolicyStep !== 'function') {
+                        t.recordShopPolicyStep = function recordShopPolicyStep(entry) {
+                            this.shopPolicySteps.push({
+                                ...entry,
+                                at: this.shopPolicySteps.length,
+                            });
+                        };
+                    }
+                    if (typeof t.reset !== 'function') {
+                        t.reset = function reset() {
+                            this.hands.length = 0;
+                            this.roundEvents.length = 0;
+                            this.shopPolicySteps = [];
+                            this.bossClears = {};
+                            this.bossEnters = {};
+                            this.gambleChoices = [];
+                            this.earlyDebtEvents = [];
+                            this.upperBonusActivation = null;
+                        };
+                    }
+                    if (
+                        params.get('linkObserver') === '1'
+                        && typeof GutterbonesSimLinkObserver !== 'undefined'
+                        && !t.linkObserver
+                    ) {
+                        t.linkObserver = GutterbonesSimLinkObserver.create({
+                            enabled: true,
+                            policyRevision: simPolicyRev,
                         });
-                    },
-                    reset() {
-                        this.hands.length = 0;
-                        this.roundEvents.length = 0;
-                        this.shopPolicySteps = [];
-                    },
-                };
+                    }
+                })();
                 if (!window.__GB_E2E__) window.__GB_E2E__ = {};
                 Object.assign(window.__GB_E2E__, {
                     resumeSavedRun: () => {

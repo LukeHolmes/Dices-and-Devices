@@ -1,0 +1,47 @@
+{
+  "approval": {
+    "by": "Luke",
+    "quotedAt": "2026-11-25T20:00:00+00:00",
+    "timezoneNote": "Dublin",
+    "quote": "PR-M1: measure F1/F2 arms against c36f3b4, 6f4dc92, and F2-revert fixture on main harness root"
+  },
+  "baselines": {
+    "c36f3b4-pre": {
+      "label": "c36f3b4-pre",
+      "rulesCommit": "c36f3b4122fe1c5e8612c8285b6e448501b9e28e",
+      "harnessBaselineKey": "c36f3b4-pre",
+      "harnessPatchFile": "diagnostics/tracking/baselines/c36-sim-telem-ensure.patch",
+      "notes": "pre-98a7ea0 rules; c36-sim-telem-ensure.patch for link-observer telem parity"
+    },
+    "6f4dc92-main": {
+      "label": "6f4dc92-main",
+      "rulesCommit": "6f4dc92d93f832ec327db6e6e846f2f6dd185445",
+      "harnessBaselineKey": "6f4dc92-main",
+      "useHarnessRoot": true,
+      "notes": "current main rules pin; diagnostics harness root (measurement hooks only)"
+    },
+    "6f4dc92-Bp": {
+      "label": "6f4dc92-Bp",
+      "rulesCommit": "6f4dc92d93f832ec327db6e6e846f2f6dd185445",
+      "harnessBaselineKey": "6f4dc92-Bp",
+      "scoringVariant": "F2_REVERT",
+      "patchFile": "diagnostics/tracking/baselines/f2-revert-on-main-6f4dc92.patch",
+      "notes": "F1 unchanged; F2 via SIM_SCORING_VARIANT on harness root (patch kept as reference)"
+    },
+    "R-main-i": {
+      "label": "R-main-i",
+      "originalRulesCommit": "7d649ef894dda8c3dbad77760e5fd3ecc943b4ba",
+      "instrumentedBranch": "baseline/r-main-instrumented",
+      "instrumentedCommit": "807d8849090df4d7299b6bf7acc1eda6d4a6c55e",
+      "patchFile": "diagnostics/tracking/baselines/r-main-instrumented-7d649ef.patch"
+    },
+    "R78-i": {
+      "label": "R78-i",
+      "originalRulesCommit": "59e11dcf92db3fccba1e44f9ac57f801710577d0",
+      "instrumentedBranch": "baseline/r78-instrumented",
+      "instrumentedCommit": "abf7cb8ff3b89c607287be9176fca0c0e539236a",
+      "patchFile": "diagnostics/tracking/baselines/r78-instrumented-59e11dc.patch"
+    }
+  },
+  "unchangedOriginals": ["c36f3b4-pre", "6f4dc92-main", "6f4dc92-Bp"]
+}

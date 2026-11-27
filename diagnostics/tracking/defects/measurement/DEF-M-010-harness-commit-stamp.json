@@ -1,0 +1,40 @@
+{
+  "id": "DEF-M-010",
+  "class": "measurement",
+  "status": "resolved",
+  "title": "harness_commit CSV stamp ignores dirty working tree",
+  "symptom": "Batch CSV and telem-v2 rows recorded git HEAD only while measurement harness code on disk differed (e.g. F1F2-1k batches stamped 9c20c0f during DEF-M-009 telem fix on an uncommitted tree).",
+  "root_cause": "diagnostics-batch.cjs harnessCommit() used `git rev-parse HEAD` only; uncommitted harness changes were not reflected in row metadata.",
+  "resolution": "scripts/harness-commit.cjs stamps HEAD when clean, else `HEAD+w{sha256(diff+porcelain)[:16]}`. Future batches use this; existing rows are annotated via audit script, not rewritten.",
+  "opened": "2026-11-27",
+  "resolved": "2026-11-27",
+  "affected_artifacts": [
+    {
+      "path": "diagnostics/tracking/runs/F1F2-1K-c36f3b4-pre.csv",
+      "rows": 1000,
+      "recorded_harness_commit": "9c20c0f1a7edc77b06f35a7a33ec96897f4f4323",
+      "note": "Ran with DEF-M-009 fix on dirty tree atop 9c20c0f; shipped fix in a76d0d1 / artifacts fa9c235"
+    },
+    {
+      "path": "diagnostics/tracking/runs/F1F2-1K-6f4dc92-main.csv",
+      "rows": 1000,
+      "recorded_harness_commit": "9c20c0f1a7edc77b06f35a7a33ec96897f4f4323"
+    },
+    {
+      "path": "diagnostics/tracking/runs/F1F2-1K-6f4dc92-Bp.csv",
+      "rows": 1000,
+      "recorded_harness_commit": "9c20c0f1a7edc77b06f35a7a33ec96897f4f4323",
+      "typo_fix_path": "diagnostics/tracking/runs/F1F2-1K-6f4dc92-Bp.csv"
+    },
+    {
+      "path": "diagnostics/tracking/runs/F1F2-PILOT-*-telem-v2.jsonl",
+      "rows": "100 per arm",
+      "recorded_harness_commit": "9c20c0f1a7edc77b06f35a7a33ec96897f4f4323"
+    },
+    {
+      "path": "diagnostics/tracking/runs/F1F2-PILOT-*.telem.jsonl",
+      "rows": "100 per arm (v1 sidecars)",
+      "recorded_harness_commit": "varies / empty telem"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "DEF-M-008",
+  "title": "F2-revert (Bp) arm used patched worktree without PR-M1 extended telemetry",
+  "status": "resolved",
+  "class": "measurement",
+  "foundAt": "2026-11-25",
+  "resolvedAt": "2026-11-25",
+  "symptom": "Smoke pilots on 6f4dc92-main vs 6f4dc92-Bp reported identical avg max_round (7.9) for rids 0-9; cross-arm upperBonusActivation/categoryId comparison was impossible on Bp worktree.",
+  "rootCause": "Bp baseline served rules from .worktrees/6f4dc92-Bp (F2 patch verified: mult += 0.5, cap 2.5) while main served harness root with extended __GB_SIM_TELEM__. Aggregate bust depth matched before upper-bonus scoring deltas were observable in telemetry.",
+  "fix": "Bp arm now uses harness root with SIM_SCORING_VARIANT=F2_REVERT (__GB_SIM_SCORING_VARIANT__) so rules fixture and telemetry share one index.html. Worktree patch retained as reference only.",
+  "notGameplay": true
+}
